@@ -29,7 +29,7 @@ const SNIPPETS = [
   {
     id: "chatgpt",
     label: "ChatGPT desktop",
-    hint: "Settings → Connectors → Advanced → Developer mode → Create. Use the streamable HTTP URL (expose it with a tunnel if the app requires https):",
+    hint: "Run `npm start`, enable developer mode for connectors in ChatGPT settings, and add a custom connector with this streamable HTTP URL (use a tunnel if it requires https):",
     code: `${origin}/mcp`,
   },
 ];
