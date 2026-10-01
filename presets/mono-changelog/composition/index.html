@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Mono Changelog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fafafa; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #fafafa; color: #0a0a0a; font-family: "IBM Plex Sans", system-ui, sans-serif; }
+      .clip { position: absolute; inset: 0; visibility: hidden; }
+      .tag { position: absolute; left: 200px; top: 200px; font-family: "IBM Plex Mono", monospace; font-size: 28px; border: 2px solid #0a0a0a; padding: 8px 18px; border-radius: 8px; }
+      .title { position: absolute; left: 200px; top: 290px; font-size: 104px; font-weight: 600; letter-spacing: -0.03em; }
+      .date { position: absolute; left: 200px; top: 430px; font-family: "IBM Plex Mono", monospace; font-size: 28px; color: #737373; }
+      .list { position: absolute; left: 200px; right: 200px; top: 540px; }
+      .item { display: grid; grid-template-columns: 160px 1fr auto; align-items: baseline; gap: 30px; padding: 26px 0; border-top: 2px solid #e5e5e5; }
+      .kind { font-family: "IBM Plex Mono", monospace; font-size: 24px; text-transform: uppercase; letter-spacing: 0.08em; }
+      .kind.new { color: #0a0a0a; }
+      .kind.fix { color: #737373; }
+      .what { font-size: 44px; font-weight: 600; letter-spacing: -0.01em; }
+      .meta { font-family: "IBM Plex Mono", monospace; font-size: 24px; color: #737373; }
+      .end { position: absolute; left: 0; right: 0; top: 440px; text-align: center; font-size: 84px; font-weight: 600; letter-spacing: -0.03em; }
+      .end-sub { position: absolute; left: 0; right: 0; top: 570px; text-align: center; font-family: "IBM Plex Mono", monospace; font-size: 30px; color: #737373; }
+      .caret { display: inline-block; width: 4px; height: 80px; background: #0a0a0a; vertical-align: -10px; margin-left: 10px; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="mono-changelog" data-width="1920" data-height="1080">
+      <div id="scene-list" class="clip" data-start="0" data-duration="5.6" data-track-index="1">
+        <div class="tag" id="tag">v2.4.0</div>
+        <h1 class="title" id="title">What's new in Relay</h1>
+        <div class="date" id="date">Released 29 Sep 2026</div>
+        <div class="list">
+          <div class="item" id="i1"><span class="kind new">New</span><span class="what">Offline drafts that sync when you reconnect</span><span class="meta">#1182</span></div>
+          <div class="item" id="i2"><span class="kind new">New</span><span class="what">Search is 3× faster on large workspaces</span><span class="meta">#1207</span></div>
+          <div class="item" id="i3"><span class="kind fix">Fixed</span><span class="what">Embeds respect dark mode</span><span class="meta">#1219</span></div>
+        </div>
+      </div>
+
+      <div id="scene-end" class="clip" data-start="5.6" data-duration="1.9" data-track-index="1">
+        <div class="end" id="end">Update now<span class="caret" id="caret"></span></div>
+        <div class="end-sub" id="end-sub">relay.dev/changelog</div>
+      </div>
+    </div>
+
+    <script>
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power2.out" } });
+
+      tl.from("#tag", { opacity: 0, y: 12, duration: 0.4 }, 0.1)
+        .from("#title", { opacity: 0, y: 24, duration: 0.6 }, 0.25)
+        .from("#date", { opacity: 0, duration: 0.4 }, 0.6)
+        .from("#i1, #i2, #i3", { opacity: 0, y: 30, duration: 0.5, stagger: 0.55 }, 1.1)
+        .from("#i1, #i2, #i3", { borderTopColor: "#fafafa", duration: 0.5, stagger: 0.55 }, 1.1)
+        .to("#scene-list .list, #title, #tag, #date", { opacity: 0, duration: 0.4, ease: "power1.in" }, 5.15);
+
+      tl.from("#end", { opacity: 0, y: 20, duration: 0.5 }, 5.65)
+        .from("#end-sub", { opacity: 0, duration: 0.4 }, 6.0)
+        .to("#caret", { opacity: 0, duration: 0.01, repeat: 5, yoyo: true, repeatDelay: 0.25 }, 5.8);
+
+      tl.set({}, {}, 7.5);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["mono-changelog"] = tl;
+    </script>
+  </body>
+</html>

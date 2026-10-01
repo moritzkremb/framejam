@@ -1,0 +1,65 @@
+{
+  "id": "neon-terminal",
+  "name": "Neon Terminal",
+  "tagline": "Typed commands, green phosphor glow, a glitch cut to the logo.",
+  "description": "Developer-tool launch style. A terminal window types a real command, output lines pop in with check marks, then a glitch transition reveals the product name with a glowing install chip.",
+  "mood": [
+    "technical",
+    "energetic",
+    "dark"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7.5,
+  "palette": {
+    "background": "#050806",
+    "surface": "#060e09",
+    "primary": "#3dff8f",
+    "text": "#c8ffd9",
+    "muted": "#4f7a5d",
+    "warning": "#ffd23d",
+    "border": "#1f3d29"
+  },
+  "fonts": {
+    "mono": {
+      "family": "JetBrains Mono",
+      "weights": [
+        400,
+        700,
+        800
+      ],
+      "source": "Google Fonts",
+      "usage": "Everything. Terminal text 34px, logo 150px weight 800"
+    }
+  },
+  "easing": {
+    "typing": "steps(n) where n = character count",
+    "enter": "power2.out",
+    "logo": "expo.out",
+    "chip": "back.out(2)",
+    "glitch": "none (0.04s yoyo jitters)"
+  },
+  "transitions": [
+    "glitch skew + fade",
+    "scanline overlay throughout"
+  ],
+  "textAnimations": [
+    "typewriter via width + steps()",
+    "blinking block cursor",
+    "line-by-line output reveal",
+    "horizontal squeeze-in on logo (scaleX 1.6 → 1)"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 3.7,
+    "notes": "Output lines every 0.3–0.4s, like a real CLI. Hold the final URL line ~1s before the glitch."
+  },
+  "tags": [
+    "devtools",
+    "launch",
+    "cli",
+    "terminal"
+  ],
+  "guide": "- Use real commands and believable output (timings, counts, URLs). Never lorem ipsum.\n- Type commands with a width tween and ease steps(<characters>), ~22 chars per second. Keep the block cursor blinking (0.01s opacity yoyo, 0.25s repeatDelay).\n- Output: muted (#4f7a5d) for progress, green check marks (#3dff8f) for success, yellow ▲ for highlights.\n- Keep the scanline overlay (repeating 2px lines, 22% black) above everything.\n- Transition out with 3–4 quick skewX jitters (0.05s) then fade; reveal the product name by squeezing scaleX from 1.6 to 1 with expo.out (animate transforms, not letter-spacing).\n- End on a pill-shaped install command chip in the primary green."
+}

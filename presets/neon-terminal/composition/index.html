@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Neon Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #050806; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #0c1a10 0%, #050806 70%); color: #c8ffd9; font-family: "JetBrains Mono", ui-monospace, monospace; }
+      .clip { position: absolute; inset: 0; visibility: hidden; }
+      .scanlines { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0 2px, transparent 2px 4px); pointer-events: none; z-index: 20; }
+      .window { position: absolute; left: 260px; top: 170px; width: 1400px; height: 740px; border: 2px solid #1f3d29; border-radius: 18px; background: rgba(6, 14, 9, 0.92); box-shadow: 0 0 80px rgba(61, 255, 143, 0.12), inset 0 0 60px rgba(61, 255, 143, 0.04); }
+      .bar { height: 56px; border-bottom: 2px solid #1f3d29; display: flex; align-items: center; gap: 12px; padding: 0 24px; }
+      .dot { width: 16px; height: 16px; border-radius: 50%; background: #1f3d29; }
+      .bar .title { margin-left: 18px; font-size: 20px; color: #4f7a5d; }
+      .body { padding: 44px 56px; font-size: 34px; line-height: 1.7; }
+      .prompt { color: #3dff8f; }
+      .muted { color: #4f7a5d; }
+      .ok { color: #3dff8f; }
+      .warn { color: #ffd23d; }
+      .line { white-space: pre; }
+      .type { display: inline-block; overflow: hidden; white-space: pre; vertical-align: bottom; }
+      .cursor { display: inline-block; width: 18px; height: 38px; background: #3dff8f; vertical-align: -6px; box-shadow: 0 0 18px #3dff8f; }
+      .big { position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-size: 150px; font-weight: 800; letter-spacing: -0.04em; color: #3dff8f; text-shadow: 0 0 40px rgba(61,255,143,0.55); }
+      .sub { position: absolute; left: 0; right: 0; top: 560px; text-align: center; font-size: 40px; color: #8fbf9f; }
+      .chip { position: absolute; left: 50%; top: 690px; transform: translateX(-50%); border: 2px solid #3dff8f; color: #3dff8f; padding: 14px 30px; border-radius: 999px; font-size: 30px; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="neon-terminal" data-width="1920" data-height="1080">
+      <div id="scene-terminal" class="clip" data-start="0" data-duration="4.6" data-track-index="1">
+        <div class="window" id="window">
+          <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="title">~/launch — zsh</span></div>
+          <div class="body">
+            <div class="line"><span class="prompt">❯ </span><span class="type" id="cmd">npx relay deploy --prod</span><span class="cursor" id="cursor1"></span></div>
+            <div class="line muted" id="out1">  resolving 214 packages…</div>
+            <div class="line" id="out2"><span class="ok">  ✓</span> built in <span class="ok">1.8s</span>   <span class="muted">(was 41s)</span></div>
+            <div class="line" id="out3"><span class="ok">  ✓</span> 38 edge regions warmed</div>
+            <div class="line" id="out4"><span class="warn">  ▲</span> 0 cold starts</div>
+            <div class="line" id="out5"><span class="prompt">  →</span> https://relay.dev/<span class="ok">live</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene-logo" class="clip" data-start="4.6" data-duration="2.9" data-track-index="1">
+        <div class="big" id="big">relay 3.0</div>
+        <div class="sub" id="sub">Deploys that finish before your coffee does.</div>
+        <div class="chip" id="chip">npm i -g relay</div>
+      </div>
+      <div class="scanlines"></div>
+    </div>
+
+    <script>
+      var tl = gsap.timeline({ paused: true });
+
+      tl.from("#window", { scale: 0.94, opacity: 0, duration: 0.5, ease: "power2.out" }, 0)
+        .fromTo("#cmd", { width: 0 }, { width: "auto", duration: 1.1, ease: "steps(24)" }, 0.45)
+        .to("#cursor1", { opacity: 0, duration: 0.01, repeat: 7, yoyo: true, repeatDelay: 0.25 }, 0.2)
+        .from("#out1", { opacity: 0, duration: 0.05 }, 1.75)
+        .from("#out2", { opacity: 0, x: -10, duration: 0.15 }, 2.2)
+        .from("#out3", { opacity: 0, x: -10, duration: 0.15 }, 2.55)
+        .from("#out4", { opacity: 0, x: -10, duration: 0.15 }, 2.85)
+        .from("#out5", { opacity: 0, x: -10, duration: 0.15 }, 3.2)
+        .to("#window", { skewX: 8, x: 30, duration: 0.05, yoyo: true, repeat: 3, ease: "none" }, 4.3)
+        .to("#window", { opacity: 0, scale: 1.04, duration: 0.2 }, 4.4);
+
+      tl.from("#big", { opacity: 0, scaleX: 1.6, duration: 0.7, ease: "expo.out" }, 4.6)
+        .fromTo("#big", { x: -14 }, { x: 0, duration: 0.04, repeat: 5, yoyo: true, ease: "none" }, 4.75)
+        .from("#sub", { opacity: 0, y: 20, duration: 0.5, ease: "power2.out" }, 5.1)
+        .from("#chip", { opacity: 0, scale: 0.8, duration: 0.45, ease: "back.out(2)" }, 5.5);
+
+      tl.set({}, {}, 7.5);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["neon-terminal"] = tl;
+    </script>
+  </body>
+</html>

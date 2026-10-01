@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Soft Gradient SaaS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fbf8ff; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #fbf8ff; color: #1d1840; font-family: "Plus Jakarta Sans", system-ui, sans-serif; }
+      .clip { position: absolute; inset: 0; visibility: hidden; }
+      .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.85; }
+      .headline { position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-size: 120px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.02; }
+      .headline .grad { background: linear-gradient(90deg, #7c5cff, #ff7ab6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .lede { position: absolute; left: 0; right: 0; top: 620px; text-align: center; font-size: 40px; font-weight: 500; color: #5d5880; }
+      .card { position: absolute; background: rgba(255,255,255,0.72); border: 1px solid rgba(255,255,255,0.9); border-radius: 36px; box-shadow: 0 30px 80px rgba(80, 60, 160, 0.16); backdrop-filter: blur(20px); }
+      .inbox { left: 560px; top: 200px; width: 800px; padding: 44px 48px; }
+      .inbox h3 { font-size: 34px; font-weight: 800; margin-bottom: 26px; display: flex; justify-content: space-between; }
+      .inbox h3 span { color: #7c5cff; font-size: 28px; }
+      .row { display: flex; align-items: center; gap: 22px; padding: 22px 0; border-top: 1px solid #ece8f7; font-size: 30px; font-weight: 600; }
+      .check { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #7c5cff, #ff7ab6); display: grid; place-items: center; color: white; font-size: 26px; flex: none; }
+      .row small { margin-left: auto; color: #9b96b8; font-size: 24px; font-weight: 500; }
+      .pill { position: absolute; padding: 18px 30px; border-radius: 999px; background: white; font-size: 28px; font-weight: 700; box-shadow: 0 20px 50px rgba(80,60,160,0.14); }
+      .cta { position: absolute; left: 50%; top: 760px; transform: translateX(-50%); padding: 26px 54px; border-radius: 999px; background: #1d1840; color: white; font-size: 34px; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="soft-gradient-saas" data-width="1920" data-height="1080">
+      <div class="blob" id="blob1" style="left: -120px; top: -160px; width: 900px; height: 900px; background: #c9b8ff"></div>
+      <div class="blob" id="blob2" style="left: 1150px; top: 380px; width: 900px; height: 900px; background: #ffc2dc"></div>
+      <div class="blob" id="blob3" style="left: 700px; top: 700px; width: 600px; height: 600px; background: #b8f0ff"></div>
+
+      <div id="scene-hook" class="clip" data-start="0" data-duration="2.6" data-track-index="1">
+        <h1 class="headline" id="hook"><span id="hook1">Inbox zero.</span><br /><span class="grad" id="hook2">Every single day.</span></h1>
+        <p class="lede" id="lede">Tidy sorts, snoozes and drafts replies while you sleep.</p>
+      </div>
+
+      <div id="scene-product" class="clip" data-start="2.6" data-duration="2.9" data-track-index="1">
+        <div class="card inbox" id="inbox">
+          <h3>Morning sweep <span>3 done</span></h3>
+          <div class="row" id="r1"><div class="check">✓</div>Invoices filed to Finance<small>12</small></div>
+          <div class="row" id="r2"><div class="check">✓</div>Newsletters snoozed to Friday<small>31</small></div>
+          <div class="row" id="r3"><div class="check">✓</div>Replies drafted for review<small>4</small></div>
+        </div>
+        <div class="pill" id="p1" style="left: 300px; top: 300px">⚡ 2h saved / week</div>
+        <div class="pill" id="p2" style="left: 1400px; top: 720px">🔒 Never trains on your mail</div>
+      </div>
+
+      <div id="scene-cta" class="clip" data-start="5.5" data-duration="2" data-track-index="1">
+        <h1 class="headline" id="cta-head" style="top: 380px">Meet <span class="grad">Tidy</span>.</h1>
+        <div class="cta" id="cta">Start free — tidy.so</div>
+      </div>
+    </div>
+
+    <script>
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+
+      tl.to("#blob1", { x: 220, y: 120, duration: 7.5, ease: "sine.inOut" }, 0)
+        .to("#blob2", { x: -260, y: -140, duration: 7.5, ease: "sine.inOut" }, 0)
+        .to("#blob3", { x: 180, y: -220, scale: 1.3, duration: 7.5, ease: "sine.inOut" }, 0);
+
+      tl.from("#hook1", { y: 50, opacity: 0, filter: "blur(12px)", duration: 0.8 }, 0.15)
+        .from("#hook2", { y: 50, opacity: 0, filter: "blur(12px)", duration: 0.8 }, 0.45)
+        .from("#lede", { y: 20, opacity: 0, duration: 0.6 }, 0.95)
+        .to("#hook, #lede", { y: -40, opacity: 0, duration: 0.45, ease: "power2.in" }, 2.15);
+
+      tl.from("#inbox", { y: 120, opacity: 0, scale: 0.92, duration: 0.8, ease: "back.out(1.4)" }, 2.6)
+        .from("#r1, #r2, #r3", { x: -30, opacity: 0, duration: 0.5, stagger: 0.22 }, 3.0)
+        .from("#r1 .check, #r2 .check, #r3 .check", { scale: 0, duration: 0.45, stagger: 0.22, ease: "back.out(3)" }, 3.1)
+        .from("#p1", { y: 40, opacity: 0, duration: 0.6, ease: "back.out(2)" }, 3.6)
+        .from("#p2", { y: 40, opacity: 0, duration: 0.6, ease: "back.out(2)" }, 3.85)
+        .to("#p1, #p2", { y: -12, duration: 1.2, yoyo: true, repeat: 1, ease: "sine.inOut" }, 4.3);
+
+      tl.from("#cta-head", { scale: 0.9, opacity: 0, duration: 0.7, ease: "back.out(1.6)" }, 5.55)
+        .from("#cta", { y: 30, opacity: 0, duration: 0.6, ease: "back.out(2)" }, 5.9);
+
+      tl.set({}, {}, 7.5);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["soft-gradient-saas"] = tl;
+    </script>
+  </body>
+</html>
