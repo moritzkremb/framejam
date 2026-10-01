@@ -1,0 +1,76 @@
+{
+  "id": "agent-ui-demo",
+  "name": "Agent UI Demo",
+  "tagline": "A glowing prompt bar, shimmering step-by-step agent status and a confirmation card that lands.",
+  "description": "Light, airy product-demo style for AI agents and assistants. A pill prompt bar floats on a soft blue glow and types a real request, a cursor sends it, the request becomes a chat bubble, agent steps appear one by one with a shimmer sweeping each line, earlier steps dim, and result cards slide in with a green check that draws itself.",
+  "mood": [
+    "calm",
+    "helpful",
+    "trustworthy"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 9,
+  "palette": {
+    "background": "#f6f6f4",
+    "surface": "#ffffff",
+    "bubble": "#ebebe8",
+    "text": "#1f1f1f",
+    "muted": "#6f6f6f",
+    "faint": "#a5a5a5",
+    "accent": "#3d6bff",
+    "glow": "rgba(120,165,255,0.45)",
+    "success": "#19a974"
+  },
+  "fonts": {
+    "display": {
+      "family": "Inter",
+      "weights": [
+        600
+      ],
+      "source": "Google Fonts",
+      "usage": "Card titles 34px, wordmark 136px tracking -0.04em"
+    },
+    "body": {
+      "family": "Inter",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Prompt 32px, steps 36px medium, meta 26px muted"
+    }
+  },
+  "easing": {
+    "enter": "expo.out",
+    "step": "power3.out",
+    "shimmer": "none",
+    "cursor": "power3.inOut",
+    "tick": "power2.out"
+  },
+  "transitions": [
+    "prompt bar lifts and fades as the request becomes a chat bubble",
+    "cards slide in from the right with expo.out",
+    "hard cut to the light lockup"
+  ],
+  "textAnimations": [
+    "prompt types character by character (19ms)",
+    "each agent step rises 14px, then a light shimmer band sweeps across it",
+    "finished steps fade to grey; the final step turns green with the check",
+    "SVG check draws on with dashoffset"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 3,
+    "notes": "Prompt ~2.3s, agent steps every 0.5s, the found place appears with step three and the confirmation after the last step, then a long hold and a ~1.6s lockup."
+  },
+  "tags": [
+    "ai-agent",
+    "product-demo",
+    "ui",
+    "light",
+    "chat"
+  ],
+  "guide": "- Off-white #f6f6f4 canvas, white surfaces with very soft shadows, one blue accent #3d6bff. Green #19a974 only for success.\n- Start on a large pill prompt bar sitting in a blurred blue glow, greeted by name (\"What can I book for you, Maya?\").\n- Type a specific, human request, then show the agent's work as short status lines with a sparkle icon and a › chevron; each gets a shimmer sweep (a moving light gradient band, transform only).\n- Dim completed steps; make the final step concrete (\"Holding 7:30 at Osteria Nove\").\n- Land the outcome as cards: an image tile and a confirmation card with a drawn check and exact details.\n- End on a simple dot + wordmark lockup and one muted line with the URL."
+}

@@ -138,9 +138,16 @@ presets/neon-terminal/
   poster.jpg
 ```
 
-Built-in presets: **Swiss Editorial**, **Neon Terminal**, **Soft Gradient SaaS**, **Kinetic Captions** (9:16),
-**Noir Quote**, **Data Story**, **Retro Pop** (1:1), and **Mono Changelog**. Every one passes `hyperframes lint` with
-no errors. To re-render the previews:
+Built-in presets (21):
+
+- **Swiss Editorial**, **Neon Terminal**, **Soft Gradient SaaS**, **Kinetic Captions** (9:16), **Noir Quote**,
+  **Data Story**, **Retro Pop** (1:1), and **Mono Changelog**.
+- Studied from the Skillry Opus 5.5 gallery and What Ships launch films, with original copy and no brand assets:
+  **Paper Marker**, **Bauhaus Grid** (1:1), **Dot Matrix**, **Verb Reel** (9:16), **Mincho Editorial**,
+  **Red Band Title**, **Pixel Arcade** (1:1), **Midnight Launch**, **Cream Serif Launch**, **Agent UI Demo**,
+  **Dot Field Showreel**, **Blueprint Explainer**, and **Topo Credits**.
+
+Every one passes `hyperframes lint` with no errors. To re-render the previews:
 
 ```bash
 npm run render:presets            # or: npm run render:presets -- noir-quote

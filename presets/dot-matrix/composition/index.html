@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Dot Matrix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f1ede4; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f1ede4; color: #161616; font-family: "JetBrains Mono", monospace; }
+      #board { position: absolute; left: 75px; top: 330px; width: 1804px; height: 308px; }
+      .d { position: absolute; width: 34px; height: 34px; border-radius: 50%; }
+      #scan { position: absolute; top: 300px; left: 0; width: 6px; height: 370px; background: #ff2e88; opacity: 0; }
+      .hud { position: absolute; font-size: 18px; letter-spacing: 0.12em; text-transform: uppercase; color: #ff2e88; }
+      .tick { position: absolute; background: #ff2e88; }
+      #caption { position: absolute; left: 0; right: 0; top: 720px; text-align: center; font-size: 30px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #ff2e88; }
+      #foot { position: absolute; left: 0; right: 0; top: 800px; text-align: center; font-size: 24px; letter-spacing: 0.04em; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="dot-matrix" data-width="1920" data-height="1080" data-duration="7.5">
+      <div class="tick" style="left: 60px; top: 60px; width: 40px; height: 2px"></div>
+      <div class="tick" style="left: 60px; top: 60px; width: 2px; height: 40px"></div>
+      <div class="tick" style="right: 60px; top: 60px; width: 40px; height: 2px"></div>
+      <div class="tick" style="right: 60px; top: 60px; width: 2px; height: 40px"></div>
+      <div class="tick" style="left: 60px; bottom: 60px; width: 40px; height: 2px"></div>
+      <div class="tick" style="left: 60px; bottom: 60px; width: 2px; height: 40px"></div>
+      <div class="tick" style="right: 60px; bottom: 60px; width: 40px; height: 2px"></div>
+      <div class="tick" style="right: 60px; bottom: 60px; width: 2px; height: 40px"></div>
+      <div class="hud" id="hudTL" style="left: 120px; top: 70px">01 / Uptime</div>
+      <div class="hud" style="right: 120px; top: 70px">Beacon status — live</div>
+      <div class="hud" id="hudBL" style="left: 120px; bottom: 70px">00:00:00</div>
+      <div class="hud" style="right: 120px; bottom: 70px">Q3 2026</div>
+      <div id="board"></div>
+      <div id="scan"></div>
+      <div id="caption">Days without an outage</div>
+      <div id="foot">beacon.dev — status pages that tell the truth</div>
+    </div>
+
+    <script>
+      var FONT = {
+        "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+        "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+        "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+        "4": ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+        "7": ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+        "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+        "9": ["01110", "10001", "10001", "01111", "00001", "00010", "01100"],
+        "+": ["00000", "00100", "00100", "11111", "00100", "00100", "00000"],
+        ".": ["00000", "00000", "00000", "00000", "00000", "01100", "01100"],
+        "%": ["11001", "11010", "00010", "00100", "01000", "01011", "10011"],
+        " ": ["00000", "00000", "00000", "00000", "00000", "00000", "00000"]
+      };
+      var CHARS = 7, COLS = CHARS * 6 - 1, ROWS = 7, PITCH = 44;
+      function litMap(str) {
+        var m = [];
+        for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+          var ci = Math.floor(c / 6), cc = c % 6;
+          m.push(cc < 5 && FONT[str[ci]][r][cc] === "1");
+        }
+        return m;
+      }
+      var STATES = [
+        { str: "  100  ", bg: "#f1ede4", on: "#161616", off: "rgba(22,22,22,0.08)", x: 0 },
+        { str: "  +17  ", bg: "#0b0b0b", on: "#ff2e88", off: "rgba(255,255,255,0.07)", x: 0 },
+        { str: "99.98% ", bg: "#f1ede4", on: "#161616", off: "rgba(22,22,22,0.08)", x: 3 * PITCH }
+      ];
+      var board = document.getElementById("board");
+      var dots = [];
+      for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+        var d = document.createElement("div");
+        d.className = "d";
+        d.style.left = c * PITCH + "px";
+        d.style.top = r * PITCH + "px";
+        board.appendChild(d);
+        dots.push({ el: d, col: c });
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      var first = litMap(STATES[0].str);
+      dots.forEach(function (d, i) {
+        gsap.set(d.el, { backgroundColor: first[i] ? STATES[0].on : STATES[0].off, scale: first[i] ? 1 : 0.55 });
+        if (first[i]) tl.from(d.el, { scale: 0, duration: 0.3, ease: "back.out(3)" }, 0.2 + ((i * 37) % 97) / 97 * 0.7);
+      });
+
+      function relight(state, at) {
+        var m = litMap(state.str);
+        tl.set("#stage", { backgroundColor: state.bg }, at)
+          .set(["#hudBL", "#foot"], { color: state.bg === "#0b0b0b" ? "#f1ede4" : "#161616" }, at)
+          .to("#board", { x: state.x, duration: 0.5, ease: "power3.inOut" }, at)
+          .fromTo("#scan", { x: 100, opacity: 1 }, { x: 1820, opacity: 1, duration: 0.62, ease: "none", immediateRender: false }, at)
+          .set("#scan", { opacity: 0 }, at + 0.62);
+        dots.forEach(function (d, i) {
+          tl.to(d.el, { backgroundColor: m[i] ? state.on : state.off, scale: m[i] ? 1 : 0.55, duration: 0.16, ease: "power2.out" }, at + d.col * 0.0145);
+        });
+      }
+      relight(STATES[1], 2.5);
+      var litB = litMap(STATES[1].str);
+      tl.to(dots.filter(function (d, i) { return litB[i]; }).map(function (d) { return d.el; }), { scale: 1.14, duration: 0.22, yoyo: true, repeat: 1, ease: "sine.inOut", stagger: { each: 0.01, from: "center" } }, 3.5);
+      relight(STATES[2], 4.8);
+      tl.to("#foot", { opacity: 1, duration: 0.4, ease: "power2.out" }, 6.1);
+
+      var clock = { f: 0 };
+      var captions = ["Days without an outage", "Incidents caught before users noticed", "Uptime · July–September"];
+      var huds = ["01 / Uptime", "02 / Alerts", "03 / Quarter"];
+      tl.to(clock, {
+        f: 225, duration: 7.5, ease: "none",
+        onUpdate: function () {
+          var f = Math.round(clock.f), t = f / 30, k = t < 2.5 ? 0 : t < 4.8 ? 1 : 2;
+          document.getElementById("hudBL").textContent = "00:00:" + String(Math.floor(f / 30)).padStart(2, "0") + ":" + String(f % 30).padStart(2, "0");
+          document.getElementById("caption").textContent = captions[k];
+          document.getElementById("hudTL").textContent = huds[k];
+        }
+      }, 0);
+      tl.from("#caption", { opacity: 0, y: 16, duration: 0.3, ease: "power2.out" }, 0.9)
+        .fromTo("#caption", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", immediateRender: false }, 2.8)
+        .fromTo("#caption", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out", immediateRender: false }, 5.1);
+
+      tl.set({}, {}, 7.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["dot-matrix"] = tl;
+    </script>
+  </body>
+</html>

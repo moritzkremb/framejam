@@ -1,0 +1,70 @@
+{
+  "id": "dot-matrix",
+  "name": "Dot Matrix",
+  "tagline": "Big numbers lit on a dot board that re-lights column by column, with hard cream-to-black cuts.",
+  "description": "Stat-reel style for status pages, milestones and metrics. A 41×7 board of round dots spells each number in a 5×7 bitmap font; between stats a hot-pink scan line sweeps across and every dot re-lights in column order while the background cuts between cream and black. Mono HUD corners and a frame timecode keep it technical.",
+  "mood": [
+    "precise",
+    "technical",
+    "confident"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7.5,
+  "palette": {
+    "background": "#f1ede4",
+    "backgroundDark": "#0b0b0b",
+    "dot": "#161616",
+    "accent": "#ff2e88",
+    "dotOff": "rgba(22,22,22,0.08)",
+    "dotOffDark": "rgba(255,255,255,0.07)"
+  },
+  "fonts": {
+    "display": {
+      "family": "Dot grid (5×7 bitmap built from divs)",
+      "weights": [],
+      "source": "Generated in the composition",
+      "usage": "34px dots on a 44px pitch, 7 characters wide"
+    },
+    "body": {
+      "family": "JetBrains Mono",
+      "weights": [
+        500,
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Uppercase captions 30px and HUD labels 18px, tracking 0.12–0.14em, in accent pink"
+    }
+  },
+  "easing": {
+    "pop": "back.out(3)",
+    "relight": "power2.out",
+    "shift": "power3.inOut",
+    "scan": "none"
+  },
+  "transitions": [
+    "hard background cut (cream ↔ black) on the scan line",
+    "column-ordered relight, 14.5ms per column",
+    "board slides half a character to keep odd-length numbers centred"
+  ],
+  "textAnimations": [
+    "lit dots pop in with a seeded pseudo-random stagger (never Math.random)",
+    "whole board breathes +12% from the centre once per stat",
+    "caption swaps and rises 16px after each relight",
+    "frame timecode in the HUD"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 2.4,
+    "notes": "One number per beat of ~2.4s. The relight itself takes ~0.6s; let each number sit for at least 1.5s before the next sweep."
+  },
+  "tags": [
+    "stats",
+    "numbers",
+    "led",
+    "status",
+    "hud"
+  ],
+  "guide": "- Build numbers from a fixed grid of round dots and a 5×7 bitmap font; never swap in a text font for the hero number.\n- Unlit dots stay visible at 8% and scale 0.55, so the board reads as hardware. Lit dots are ink on cream or hot pink #ff2e88 on black.\n- Change numbers by re-colouring dots column by column behind a pink scan line, and cut the background on the same frame.\n- Use seeded staggers (index math) instead of random so parallel render workers agree.\n- Every number needs an uppercase mono caption saying exactly what it counts (\"Incidents caught before users noticed\").\n- Frame with thin pink corner ticks, a section label top-left, product name top-right and a timecode bottom-left."
+}

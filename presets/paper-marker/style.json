@@ -1,0 +1,70 @@
+{
+  "id": "paper-marker",
+  "name": "Paper Marker",
+  "tagline": "Huge kinetic type on paper, marker notes that draw themselves, and hard switches to black.",
+  "description": "Hand-made explainer style for product launches and one-idea pitches. Slamming heavy type on a warm paper canvas, red-pen arrows and circles that draw on, a yellow highlighter swipe, and hard cuts between paper and ink-black every 1.5–2 seconds.",
+  "mood": [
+    "smart",
+    "hand-made",
+    "punchy"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "background": "#f4efe4",
+    "ink": "#1c1a17",
+    "dark": "#141210",
+    "highlighter": "#ffd23f",
+    "redPen": "#e2412b",
+    "bluePen": "#2b59c3"
+  },
+  "fonts": {
+    "display": {
+      "family": "Archivo Black",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Kinetic headlines 190–250px, tracking -0.03em, two short lines max"
+    },
+    "body": {
+      "family": "Caveat",
+      "weights": [
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Marker notes, tags and CTA 64–80px, slightly rotated"
+    }
+  },
+  "easing": {
+    "slam": "expo.out",
+    "draw": "power2.inOut",
+    "stamp": "back.out(2.5)",
+    "highlight": "power3.out"
+  },
+  "transitions": [
+    "hard cut between paper and ink-black (no fade)",
+    "no transitions inside a scene; everything enters on beats"
+  ],
+  "textAnimations": [
+    "line slam: y 90 + scale 1.18 → rest, 0.45s, 0.16s stagger",
+    "highlighter bar scaleX 0→1 behind one word, text flips to ink",
+    "SVG marker strokes draw on with pathLength=1 dashoffset 1→0",
+    "tags stamp in with scale 1.5 and a slight rotation"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.6,
+    "notes": "A new idea every 1.5–2s. Alternate paper and black scenes; each scene gets one slam plus one or two marker marks."
+  },
+  "tags": [
+    "explainer",
+    "launch",
+    "hand-drawn",
+    "kinetic-type",
+    "paper"
+  ],
+  "guide": "- Paper #f4efe4 with a faint dot grain; ink scenes are #141210. Cut hard between them, never crossfade.\n- One sentence per scene, split into two lines of heavy type (Archivo Black 190–250px). Lines slam in with expo.out, 0.16s apart.\n- Marker marks are SVG paths with pathLength=\"1\" and stroke-dasharray 1; animate strokeDashoffset 1→0 with power2.inOut in 0.3–0.55s. Red pen for arrows and circles, yellow for highlighter and underlines.\n- Handwritten notes (Caveat 64–80px) name concrete numbers: \"3,204 this year\", \"Software · $1,180\".\n- Name what the product learns or does, never the abstraction. End on the wordmark with a highlighter underline and a blue-pen URL."
+}

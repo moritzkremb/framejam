@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Paper Marker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@700&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f4efe4; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f4efe4; color: #1c1a17; font-family: "Archivo Black", sans-serif; }
+      .grain { position: absolute; inset: 0; opacity: 0.35; pointer-events: none;
+        background-image: radial-gradient(rgba(28, 26, 23, 0.10) 1px, transparent 1.2px); background-size: 7px 7px; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .dark { background: #141210; color: #f4efe4; }
+      .paperbg { background: #f4efe4; }
+      .huge { position: absolute; left: 160px; font-size: 230px; line-height: 0.92; letter-spacing: -0.03em; }
+      .line { display: block; transform-origin: left bottom; }
+      .note { position: absolute; font-family: "Caveat", cursive; font-size: 72px; color: #e2412b; }
+      svg.draw { position: absolute; overflow: visible; }
+      svg.draw path, svg.draw ellipse { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+      .hl { position: relative; display: inline-block; isolation: isolate; }
+      .hlbar { position: absolute; left: -0.08em; right: -0.08em; top: 0.12em; bottom: 0.02em; background: #ffd23f; z-index: 0; transform-origin: left center; }
+      .hlt { position: relative; z-index: 1; }
+      .title { position: absolute; left: 160px; top: 120px; font-size: 96px; letter-spacing: -0.02em; }
+      .tag { position: absolute; font-family: "Caveat", cursive; font-size: 64px; border: 5px solid #1c1a17; border-radius: 22px; padding: 6px 30px 10px; background: #f4efe4; white-space: nowrap; }
+      .logo { position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-size: 250px; letter-spacing: -0.04em; }
+      .cta { position: absolute; left: 0; right: 0; top: 720px; text-align: center; font-family: "Caveat", cursive; font-size: 80px; color: #2b59c3; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="paper-marker" data-width="1920" data-height="1080" data-duration="8">
+      <div id="s1" class="scene paperbg">
+        <div class="huge" style="top: 250px">
+          <span class="line" id="s1a">Receipts</span>
+          <span class="line" id="s1b">pile up.</span>
+        </div>
+        <svg class="draw" style="left: 150px; top: 700px" width="900" height="80" viewBox="0 0 900 80">
+          <path id="s1under" pathLength="1" d="M10 50 C 180 20, 330 70, 500 38 S 780 30, 880 48" stroke="#e2412b" stroke-width="16" />
+        </svg>
+        <div class="note" id="s1note" style="left: 1260px; top: 300px; transform: rotate(-5deg)">3,204 this year</div>
+        <svg class="draw" style="left: 1150px; top: 380px" width="300" height="260" viewBox="0 0 300 260">
+          <path id="s1arrow" pathLength="1" d="M210 20 C 190 120, 120 190, 30 230 M30 230 L 90 236 M30 230 L 56 176" stroke="#e2412b" stroke-width="9" />
+        </svg>
+      </div>
+
+      <div id="s2" class="scene dark">
+        <div class="huge" style="top: 330px; font-size: 190px">
+          <span class="line" id="s2a">Ledgerly</span>
+          <span class="line" id="s2b"><span class="hl" id="s2hl"><span class="hlbar" id="s2bar"></span><span class="hlt">reads</span></span> them.</span>
+        </div>
+      </div>
+
+      <div id="s3" class="scene paperbg">
+        <div class="title" id="s3title">It learns your categories.</div>
+        <svg class="draw" style="left: 200px; top: 330px" width="360" height="520" viewBox="0 0 360 520">
+          <path id="s3receipt" pathLength="1" d="M40 20 L 320 20 L 320 470 L 290 500 L 260 470 L 230 500 L 200 470 L 170 500 L 140 470 L 110 500 L 80 470 L 40 500 Z" stroke="#1c1a17" stroke-width="7" />
+          <path id="s3lines" pathLength="1" d="M80 90 L 280 90 M80 150 L 240 150 M80 210 L 270 210 M80 270 L 210 270 M80 380 L 280 380" stroke="#1c1a17" stroke-width="7" />
+        </svg>
+        <svg class="draw" style="left: 600px; top: 520px" width="380" height="120" viewBox="0 0 380 120">
+          <path id="s3arrow" pathLength="1" d="M10 70 C 120 30, 250 100, 350 56 M350 56 L 300 30 M350 56 L 310 98" stroke="#1c1a17" stroke-width="8" />
+        </svg>
+        <div class="tag" id="tag1" style="left: 1060px; top: 330px; transform: rotate(-3deg)">Travel · $2,410</div>
+        <div class="tag" id="tag2" style="left: 1100px; top: 500px; transform: rotate(2deg)">Meals · $860</div>
+        <div class="tag" id="tag3" style="left: 1040px; top: 670px; transform: rotate(-1deg)">Software · $1,180</div>
+        <svg class="draw" style="left: 990px; top: 630px" width="600" height="200" viewBox="0 0 600 200">
+          <path id="s3circle" pathLength="1" d="M300 14 C 470 10, 590 50, 580 104 C 570 170, 420 190, 280 186 C 120 182, 14 150, 22 96 C 30 40, 160 16, 330 22" stroke="#e2412b" stroke-width="9" />
+        </svg>
+      </div>
+
+      <div id="s4" class="scene dark">
+        <div class="huge" style="top: 340px; font-size: 200px">
+          <span class="line" id="s4a">Taxes, sorted</span>
+          <span class="line" id="s4b">by March.</span>
+        </div>
+      </div>
+
+      <div id="s5" class="scene paperbg">
+        <div class="logo" id="logo">Ledgerly</div>
+        <svg class="draw" style="left: 560px; top: 610px" width="820" height="90" viewBox="0 0 820 90">
+          <path id="logoUnder" pathLength="1" d="M10 50 C 200 20, 420 76, 610 40 S 780 30, 810 44" stroke="#ffd23f" stroke-width="26" />
+        </svg>
+        <div class="cta" id="cta">try it free → ledgerly.app</div>
+      </div>
+
+      <div class="grain"></div>
+    </div>
+
+    <script>
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function draw(id, at, dur) {
+        tl.to(id, { strokeDashoffset: 0, duration: dur || 0.5, ease: "power2.inOut" }, at);
+      }
+      function slam(ids, at) {
+        tl.from(ids, { y: 90, scale: 1.18, opacity: 0, duration: 0.45, ease: "expo.out", stagger: 0.16 }, at);
+      }
+
+      show("#s1", 0, 2);
+      slam(["#s1a", "#s1b"], 0.1);
+      draw("#s1under", 0.75, 0.45);
+      tl.from("#s1note", { opacity: 0, x: 30, duration: 0.3, ease: "power2.out" }, 1.0);
+      draw("#s1arrow", 1.1, 0.4);
+
+      show("#s2", 2, 3.8);
+      slam(["#s2a", "#s2b"], 2.0);
+      gsap.set("#s2bar", { scaleX: 0, rotation: -1.5 });
+      tl.to("#s2bar", { scaleX: 1, duration: 0.35, ease: "power3.out" }, 2.55)
+        .set("#s2hl", { color: "#141210" }, 2.62);
+
+      show("#s3", 3.8, 6);
+      tl.from("#s3title", { x: -60, opacity: 0, duration: 0.4, ease: "expo.out" }, 3.8);
+      draw("#s3receipt", 3.9, 0.55);
+      draw("#s3lines", 4.25, 0.35);
+      draw("#s3arrow", 4.5, 0.3);
+      tl.from(["#tag1", "#tag2", "#tag3"], { scale: 1.5, opacity: 0, duration: 0.32, ease: "back.out(2.5)", stagger: 0.18 }, 4.75);
+      draw("#s3circle", 5.4, 0.45);
+
+      show("#s4", 6, 7);
+      slam(["#s4a", "#s4b"], 6.0);
+
+      show("#s5", 7);
+      tl.from("#logo", { scale: 1.25, opacity: 0, duration: 0.4, ease: "expo.out" }, 7.0);
+      draw("#logoUnder", 7.25, 0.35);
+      tl.from("#cta", { y: 24, opacity: 0, duration: 0.3, ease: "power2.out" }, 7.45);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["paper-marker"] = tl;
+    </script>
+  </body>
+</html>

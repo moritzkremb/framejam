@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Cream Serif Launch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,800;1,9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f3ede2; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #f8f3ea 0%, #f3ede2 55%, #ebe3d4 100%); color: #1d1b18; font-family: "Inter", sans-serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .serif { font-family: "Fraunces", serif; font-weight: 800; letter-spacing: -0.02em; }
+      em { font-family: "Fraunces", serif; font-style: italic; font-weight: 700; color: #ec5b3c; }
+      .center { position: absolute; left: 0; right: 0; text-align: center; }
+      .mark { display: inline-block; width: 46px; height: 46px; vertical-align: -6px; margin-right: 14px; }
+      .ver { display: inline-block; font-family: "Inter", sans-serif; font-weight: 500; font-size: 40px; color: #8f877b; border-left: 2px solid #cfc6b7; padding-left: 22px; margin-left: 22px; vertical-align: 6px; }
+      .card { position: absolute; left: 460px; top: 330px; width: 1000px; background: #fffaf2; border-radius: 26px; box-shadow: 0 2px 0 rgba(0,0,0,0.04), 0 30px 80px rgba(90, 60, 30, 0.14); padding: 34px 38px; }
+      .input { font-size: 34px; color: #1d1b18; height: 50px; white-space: nowrap; }
+      .input span { opacity: 0; }
+      .caret { display: inline-block; width: 3px; height: 38px; background: #ec5b3c; vertical-align: -6px; margin-left: 2px; }
+      .sendb { position: absolute; right: 30px; top: 28px; width: 56px; height: 56px; border-radius: 16px; background: #ec5b3c; }
+      .chips { margin-top: 26px; display: flex; gap: 14px; }
+      .chip { font-size: 24px; font-weight: 500; color: #5f574b; border: 1.5px solid #e2d9c9; border-radius: 999px; padding: 10px 22px; background: #fbf6ed; }
+      .hit { position: relative; margin-top: 18px; font-family: "JetBrains Mono", monospace; font-size: 26px; color: #3b362f; padding: 12px 16px; border-radius: 12px; overflow: hidden; }
+      .hit b { color: #ec5b3c; font-weight: 500; }
+      .hitbar { position: absolute; inset: 0; background: #fbe3d9; transform-origin: left center; }
+      .hit span { position: relative; }
+      .label { position: absolute; left: 380px; font-size: 32px; font-weight: 600; }
+      .bar { position: absolute; left: 700px; height: 96px; border-radius: 10px; transform-origin: left center; }
+      .price { position: absolute; font-size: 40px; font-weight: 600; }
+      .strike { position: absolute; height: 5px; background: #1d1b18; transform-origin: left center; }
+      .pill { display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 30px; color: #f3ede2; background: #1d1b18; border-radius: 14px; padding: 16px 30px; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="cream-serif-launch" data-width="1920" data-height="1080" data-duration="8">
+      <div id="s1" class="scene">
+        <div class="center serif" id="q" style="top: 370px; font-size: 150px; line-height: 1">What are we <em>shipping</em>?</div>
+        <div class="center" id="logo1" style="top: 610px">
+          <svg class="mark" viewBox="0 0 46 46"><path d="M23 2 L27 18 L44 23 L27 28 L23 44 L19 28 L2 23 L19 18 Z" fill="#ec5b3c" /></svg><span class="serif" style="font-size: 60px">Sift</span><span class="ver">1.0</span>
+        </div>
+      </div>
+
+      <div id="s2" class="scene">
+        <div class="center serif" id="q2" style="top: 150px; font-size: 76px">What are we <em>shipping</em>?</div>
+        <div class="card" id="card">
+          <div class="input" id="input"></div>
+          <div class="sendb" id="sendb"></div>
+          <div class="chips">
+            <div class="chip">Search repo</div><div class="chip">Explain</div><div class="chip">Write tests</div><div class="chip">Open PR</div>
+          </div>
+          <div class="hit" id="hit1"><div class="hitbar"></div><span><b>billing/retry.ts:42</b>  retryFailedCharge(attempt, backoff)</span></div>
+          <div class="hit" id="hit2"><div class="hitbar"></div><span><b>jobs/dunning.ts:118</b>  schedule("payment.retry", in3Days)</span></div>
+          <div class="hit" id="hit3"><div class="hitbar"></div><span><b>stripe/webhooks.ts:77</b>  on("invoice.payment_failed")</span></div>
+        </div>
+      </div>
+
+      <div id="s3" class="scene">
+        <div class="center serif" id="t3" style="top: 150px; font-size: 76px">Agents, prompted to use <em>Sift</em>.</div>
+        <div class="label" style="top: 452px">Agent alone</div>
+        <div class="bar" id="barA" style="top: 420px; width: 900px; background: #1d1b18"></div>
+        <div class="price" id="pA" style="left: 1630px; top: 442px">$7.80</div>
+        <div class="strike" id="strike" style="left: 1620px; top: 470px; width: 140px"></div>
+        <div class="label" style="top: 612px">Agent + Sift</div>
+        <div class="bar" id="barB" style="top: 580px; width: 522px; background: #ec5b3c"></div>
+        <div class="price" id="pB" style="left: 1250px; top: 602px; color: #ec5b3c">$4.52</div>
+        <div class="serif" id="pct" style="position: absolute; left: 1120px; top: 640px; font-size: 240px; line-height: 1; color: #ec5b3c">−42%</div>
+        <div id="note" style="position: absolute; left: 380px; top: 790px; font-size: 28px; color: #8f877b; width: 600px; line-height: 1.4">Median cost per resolved task, 312 real issues, same model and prompt.</div>
+      </div>
+
+      <div id="s4" class="scene">
+        <div class="center" id="logo2" style="top: 280px">
+          <svg class="mark" viewBox="0 0 46 46" style="width: 120px; height: 120px; vertical-align: -10px; margin-right: 30px"><path d="M23 2 L27 18 L44 23 L27 28 L23 44 L19 28 L2 23 L19 18 Z" fill="#ec5b3c" /></svg><span class="serif" style="font-size: 200px; line-height: 1">Sift</span>
+        </div>
+        <div class="center serif" id="tag" style="top: 560px; font-size: 64px">Find the context. <em>Start coding.</em></div>
+        <div class="center" id="cmd" style="top: 720px"><span class="pill">npm i -g sift-cli</span></div>
+      </div>
+    </div>
+
+    <script>
+      var Q = "where do we retry failed payments?";
+      var inp = document.getElementById("input");
+      Q.split("").forEach(function (ch) {
+        var s = document.createElement("span");
+        s.textContent = ch;
+        inp.appendChild(s);
+      });
+      var caret = document.createElement("i");
+      caret.className = "caret";
+      inp.appendChild(caret);
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+
+      show("#s1", 0, 1.9);
+      tl.from("#q", { opacity: 0, filter: "blur(26px)", scale: 1.08, duration: 0.95, ease: "power3.out" }, 0.05)
+        .from("#logo1", { opacity: 0, y: 20, filter: "blur(8px)", duration: 0.5, ease: "power3.out" }, 0.9);
+
+      show("#s2", 1.9, 4.0);
+      tl.from("#q2", { opacity: 0, y: 30, duration: 0.4, ease: "power3.out" }, 1.9)
+        .from("#card", { opacity: 0, y: 80, duration: 0.55, ease: "expo.out" }, 1.95);
+      gsap.utils.toArray("#input span").forEach(function (s, i) {
+        tl.set(s, { opacity: 1 }, 2.25 + i * 0.022);
+      });
+      tl.to("#sendb", { scale: 0.86, duration: 0.08, yoyo: true, repeat: 1, ease: "power1.inOut" }, 3.05)
+        .from(".chip", { opacity: 0, y: 16, duration: 0.3, ease: "power3.out", stagger: 0.05 }, 2.3)
+        .from(["#hit1", "#hit2", "#hit3"], { opacity: 0, y: 20, duration: 0.35, ease: "power3.out", stagger: 0.12 }, 3.15);
+      gsap.set(".hitbar", { scaleX: 0 });
+      tl.to("#hit1 .hitbar", { scaleX: 1, duration: 0.4, ease: "power2.inOut" }, 3.5);
+
+      show("#s3", 4.0, 6.2);
+      gsap.set(["#barA", "#barB", "#strike"], { scaleX: 0 });
+      gsap.set("#pct", { opacity: 0 });
+      tl.from("#t3", { opacity: 0, y: 30, duration: 0.4, ease: "power3.out" }, 4.0)
+        .to("#barA", { scaleX: 1, duration: 0.6, ease: "expo.out" }, 4.2)
+        .from("#pA", { opacity: 0, duration: 0.25 }, 4.6)
+        .to("#barB", { scaleX: 1, duration: 0.6, ease: "expo.out" }, 4.4)
+        .from("#pB", { opacity: 0, duration: 0.25 }, 4.8)
+        .fromTo("#pct", { scale: 1.7, rotation: -20, opacity: 0 }, { scale: 1, rotation: -8, opacity: 1, duration: 0.45, ease: "back.out(2.2)", immediateRender: false }, 5.0)
+        .to("#strike", { scaleX: 1, duration: 0.25, ease: "power2.out" }, 5.2)
+        .to("#pA", { color: "#8f877b", duration: 0.2 }, 5.2)
+        .from("#note", { opacity: 0, duration: 0.3 }, 5.4);
+
+      show("#s4", 6.2);
+      tl.from("#logo2", { opacity: 0, filter: "blur(16px)", scale: 1.06, duration: 0.6, ease: "power3.out" }, 6.2)
+        .from("#tag", { opacity: 0, y: 24, filter: "blur(8px)", duration: 0.5, ease: "power3.out" }, 6.55)
+        .from("#cmd", { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, 6.85);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["cream-serif-launch"] = tl;
+    </script>
+  </body>
+</html>

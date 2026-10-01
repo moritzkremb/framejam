@@ -1,0 +1,80 @@
+{
+  "id": "dot-field-showreel",
+  "name": "Dot Field Showreel",
+  "tagline": "Viewfinder HUD, one-second colour cuts, kinetic type and a dot field that ripples on cue.",
+  "description": "Motion-designer showreel style for portfolios, studio reels and 'what we can do' intros. A camera-viewfinder HUD (corner brackets, timecode, scene labels) frames rapid scenes: tumbling letters with a glitch slice, outline-stack type on electric blue, a frame counter on orange, a grid of dots rippling in orange and blue waves, and a lime end card.",
+  "mood": [
+    "energetic",
+    "crafted",
+    "showy"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7.5,
+  "palette": {
+    "background": "#0c0c0d",
+    "text": "#f4f4f0",
+    "orange": "#ff5a1f",
+    "blue": "#2b45ff",
+    "lime": "#d4ff3a",
+    "hud": "rgba(244,244,240,0.75)"
+  },
+  "fonts": {
+    "display": {
+      "family": "Archivo Black",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Uppercase words 200–300px; outline copies use -webkit-text-stroke 3px"
+    },
+    "accent": {
+      "family": "Instrument Serif",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Italic connecting words (\"with\", \"frame no.\") 90–130px"
+    },
+    "body": {
+      "family": "JetBrains Mono",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "HUD 18px uppercase tracking 0.1em; counter 300px"
+    }
+  },
+  "easing": {
+    "tumble": "back.out(1.8)",
+    "slide": "power3.out",
+    "punch": "expo.out",
+    "glitch": "steps(3)",
+    "ripple": "power2.out (yoyo)"
+  },
+  "transitions": [
+    "hard cut with full background colour switch every ~1–2s",
+    "glitch slice: two clipped colour copies jump sideways for 4 frames"
+  ],
+  "textAnimations": [
+    "letters tumble in from above with alternating ±28° rotation",
+    "outline rows slide in from opposite sides around one filled word",
+    "frame counter ticks 0240 → 0261 with a progress bar",
+    "dot field ripples via grid stagger from centre, then from a corner",
+    "end word expands from scaleY 0.1 with outline echoes"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.5,
+    "notes": "Five scenes in 7.5s. Short scenes ~1–1.2s, the dot field gets ~2.2s to show two waves."
+  },
+  "tags": [
+    "showreel",
+    "hud",
+    "kinetic-type",
+    "dots",
+    "portfolio"
+  ],
+  "guide": "- Keep the viewfinder HUD on top of every scene: four corner brackets, reel label, frame timecode, scene name, author. Flip it from light to dark on light backgrounds.\n- Cut hard between near-black, electric blue #2b45ff, orange #ff5a1f and lime #d4ff3a; never two adjacent scenes in the same colour.\n- Each scene shows one technique and names it in the HUD (Type, Intent, Timing, Systems, Move).\n- Type: Archivo Black for the hero word, Instrument Serif italic for small connecting words, outline copies for echoes.\n- Dot fields are a fixed grid animated only with grid staggers (from centre, from a corner) so the motion reads as a system.\n- Drive counters and HUD text from one clock tween's onUpdate so seeking stays deterministic."
+}

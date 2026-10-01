@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Red Band Title</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Oswald:wght@500;700&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #1b1b1d; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #1b1b1d; color: #f7f5f2; font-family: "Oswald", sans-serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+      .slides { position: absolute; left: 0; right: 0; top: 400px; text-align: center; font-weight: 700; font-size: 230px; line-height: 1; letter-spacing: 0.02em; text-transform: uppercase; }
+      .vignette { background: radial-gradient(ellipse at center, #f4f3ee 0%, #e4e2da 45%, #9e9c94 100%); }
+      .kanji { position: absolute; left: 0; right: 0; top: 230px; text-align: center; font-family: "Dela Gothic One", sans-serif; font-size: 560px; line-height: 1; color: #141414; }
+      .burst { position: absolute; left: 50%; top: 50%; width: 3200px; height: 3200px; margin: -1600px 0 0 -1600px; border-radius: 50%;
+        background: repeating-conic-gradient(rgba(229, 23, 63, 0.22) 0deg 4deg, rgba(0, 0, 0, 0) 4deg 12deg); }
+      .band { position: absolute; left: -100px; top: 400px; width: 2200px; height: 290px; background: #e5173f; }
+      .title { position: absolute; left: 0; right: 0; top: 440px; height: 220px; text-align: center; font-family: "Dela Gothic One", sans-serif; font-size: 180px; line-height: 1.1; white-space: nowrap; }
+      .layer { position: absolute; left: 0; right: 0; top: 0; }
+      .layer span { display: inline-block; }
+      .lr { color: #ff2a55; }
+      .lc { color: #27e3ff; }
+      .lw { color: #f7f5f2; }
+      .sub { position: absolute; left: 0; right: 0; top: 740px; text-align: center; font-weight: 500; font-size: 42px; letter-spacing: 0.34em; text-transform: uppercase; }
+      .rule { position: absolute; left: 560px; top: 812px; width: 800px; height: 3px; background: #f7f5f2; transform-origin: left center; }
+      .corner { position: absolute; font-weight: 500; font-size: 22px; letter-spacing: 0.24em; text-transform: uppercase; color: #bdbab3; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="red-band-title" data-width="1920" data-height="1080" data-duration="7">
+      <div id="s1" class="scene">
+        <div class="slides" id="slides">Slides</div>
+      </div>
+      <div id="s2" class="scene vignette">
+        <div class="kanji" id="kanji">新</div>
+      </div>
+      <div id="s3" class="scene">
+        <div class="burst" id="burst"></div>
+        <div class="band" id="band"></div>
+        <div class="title" id="title">
+          <div class="layer lr" id="lr"></div>
+          <div class="layer lc" id="lc"></div>
+          <div class="layer lw" id="lw"></div>
+        </div>
+        <div class="sub" id="sub">Slide Shokunin — decks from one prompt</div>
+        <div class="rule" id="rule"></div>
+        <div class="corner" id="c1" style="left: 80px; top: 70px">Prompt design system</div>
+        <div class="corner" id="c2" style="right: 80px; bottom: 70px">Report / 2026</div>
+      </div>
+    </div>
+
+    <script>
+      var TEXT = "スライド職人";
+      ["lr", "lc", "lw"].forEach(function (id) {
+        var el = document.getElementById(id);
+        TEXT.split("").forEach(function (ch, i) {
+          var s = document.createElement("span");
+          s.textContent = ch;
+          s.className = "c" + i;
+          el.appendChild(s);
+        });
+      });
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+
+      show("#s1", 0, 0.75);
+      tl.from("#slides", { scale: 1.35, opacity: 0, duration: 0.3, ease: "expo.out" }, 0.02)
+        .to("#slides", { scaleX: 1.12, duration: 0.45, ease: "power1.out" }, 0.3);
+
+      show("#s2", 0.75, 1.7);
+      tl.from("#kanji", { scale: 2.1, opacity: 0, duration: 0.22, ease: "power4.in" }, 0.75)
+        .to("#kanji", { x: 14, y: -8, duration: 0.04, yoyo: true, repeat: 5, ease: "none" }, 0.97)
+        .to("#kanji", { scale: 1.06, duration: 0.6, ease: "power1.out" }, 1.1);
+
+      show("#s3", 1.7);
+      tl.fromTo("#burst", { rotation: 0 }, { rotation: 40, duration: 5.3, ease: "none" }, 1.7)
+        .from("#burst", { opacity: 0, scale: 0.6, duration: 0.5, ease: "power3.out" }, 1.7);
+      for (var i = 0; i < TEXT.length; i++) {
+        tl.from(".c" + i, { y: -90, opacity: 0, duration: 0.28, ease: "back.out(2.5)" }, 1.8 + i * 0.08);
+      }
+      gsap.set("#lr", { x: -18, y: 4 });
+      gsap.set("#lc", { x: 18, y: -4 });
+      tl.to(["#lr", "#lc"], { x: 0, y: 0, duration: 0.6, ease: "power2.out" }, 2.4);
+
+      gsap.set("#band", { xPercent: -110, skewY: -4, rotation: -2 });
+      tl.to("#band", { xPercent: 0, duration: 0.55, ease: "power4.out" }, 3.2)
+        .to("#burst", { opacity: 0.35, duration: 0.5, ease: "power1.out" }, 3.2)
+        .from("#sub", { y: 30, opacity: 0, duration: 0.4, ease: "power3.out" }, 3.75);
+      gsap.set("#rule", { scaleX: 0 });
+      tl.to("#rule", { scaleX: 1, duration: 0.5, ease: "power3.inOut" }, 3.9)
+        .from(["#c1", "#c2"], { opacity: 0, duration: 0.3, stagger: 0.1 }, 4.1);
+
+      tl.to("#lr", { x: -14, duration: 0.05, ease: "none" }, 5.4)
+        .to("#lc", { x: 14, duration: 0.05, ease: "none" }, 5.4)
+        .to("#band", { x: 22, duration: 0.05, ease: "none" }, 5.4)
+        .to(["#lr", "#lc", "#band"], { x: 0, duration: 0.3, ease: "power2.out" }, 5.47);
+
+      tl.set({}, {}, 7);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["red-band-title"] = tl;
+    </script>
+  </body>
+</html>

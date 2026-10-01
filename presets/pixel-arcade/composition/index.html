@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1080" />
+    <title>Pixel Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1080px; overflow: hidden; background: #efe6d2; }
+      #stage { position: relative; width: 1080px; height: 1080px; overflow: hidden; background: linear-gradient(#f3ead8 0%, #efe2c8 60%, #e9d6b4 100%); color: #1a1410; font-family: "Press Start 2P", monospace; }
+      .layer { position: absolute; left: 0; width: 2400px; }
+      .col { position: absolute; bottom: 0; }
+      .sprite { position: absolute; }
+      #ground { position: absolute; left: 0; top: 770px; width: 1080px; height: 310px; background: #efe6d2; }
+      #groundTop { position: absolute; left: 0; top: 0; width: 2400px; height: 40px; }
+      #pebbles { position: absolute; left: 0; top: 80px; width: 2400px; height: 200px; }
+      .peb { position: absolute; width: 16px; height: 8px; background: #cbb48f; }
+      .hud { position: absolute; top: 48px; font-size: 30px; letter-spacing: 0.04em; }
+      #tag { position: absolute; left: 160px; top: 520px; background: #e23d3d; color: #fff8ec; font-size: 30px; padding: 14px 18px 12px; box-shadow: 6px 6px 0 #1a1410; }
+      #card { position: absolute; left: 120px; top: 230px; width: 840px; height: 560px; background: #fff8ec; border: 8px solid #1a1410; box-shadow: 16px 16px 0 #1a1410; text-align: center; }
+      #card h1 { font-weight: 400; font-size: 76px; line-height: 1.2; margin-top: 90px; color: #e23d3d; text-shadow: 6px 6px 0 #1a1410; }
+      #card p { font-size: 26px; line-height: 1.7; margin-top: 46px; }
+      #press { font-size: 30px; margin-top: 56px; color: #2f6fe0; }
+      #flash { position: absolute; inset: 0; background: #fff8ec; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="pixel-arcade" data-width="1080" data-height="1080" data-duration="7">
+      <div class="sprite" id="sun" style="left: 700px; top: 170px"></div>
+      <div class="layer" id="far" style="top: 470px; height: 300px"></div>
+      <div class="layer" id="near" style="top: 560px; height: 210px"></div>
+      <div id="ground">
+        <div id="groundTop"></div>
+        <div id="pebbles"></div>
+      </div>
+      <div class="sprite" id="cactus1" style="left: 0; top: 670px"></div>
+      <div class="sprite" id="cactus2" style="left: 0; top: 670px"></div>
+      <div class="sprite" id="runA" style="left: 220px; top: 674px"></div>
+      <div class="sprite" id="runB" style="left: 220px; top: 674px"></div>
+      <div class="hud" id="score" style="left: 48px">SCORE 000000</div>
+      <div class="hud" style="right: 48px">HI 009999</div>
+      <div id="tag">CLOSE CALL!</div>
+      <div id="flash"></div>
+      <div id="card">
+        <h1>DUNE<br />DASH</h1>
+        <p>Out now on itch.io<br />Free · Web · Steam Deck</p>
+        <div id="press">PRESS START</div>
+      </div>
+    </div>
+
+    <script>
+      function sprite(id, rows, pal, px) {
+        var el = document.getElementById(id), sh = [];
+        rows.forEach(function (row, y) {
+          row.split("").forEach(function (c, x) {
+            if (pal[c]) sh.push((x * px) + "px " + (y * px) + "px 0 0 " + pal[c]);
+          });
+        });
+        el.style.width = px + "px";
+        el.style.height = px + "px";
+        el.style.boxShadow = sh.join(",");
+      }
+      var pal = { k: "#1a1410", w: "#fff8ec", r: "#e23d3d", y: "#f6c76b", c: "#4a3b2a" };
+      var body = [
+        "...kkkk...", "..kkkkkk..", "..kwkkwk..", "..kkkkkk..", "rrrkkkk...",
+        "r.kkkkkk..", "..kkkkkkk.", "..kkkkk.k.", "...kkkk..."
+      ];
+      sprite("runA", body.concat(["...k..k...", "..kk..kk..", ".........."]), pal, 9);
+      sprite("runB", body.concat(["....kk....", "...k..k...", "..k....kk."]), pal, 9);
+      var cactus = ["..cc..", "..cc..", "c.cc..", "c.cc.c", "cccc.c", "..cccc", "..cc..", "..cc..", "..cc..", "..cc.."];
+      sprite("cactus1", cactus, pal, 10);
+      sprite("cactus2", cactus, pal, 10);
+      sprite("sun", ["...yyyy...", ".yyyyyyyy.", ".yyyyyyyy.", "yyyyyyyyyy", "yyyyyyyyyy", "yyyyyyyyyy", "yyyyyyyyyy", ".yyyyyyyy.", ".yyyyyyyy.", "...yyyy..."], pal, 14);
+
+      function ridge(id, color, amp, seed, w) {
+        var el = document.getElementById(id);
+        for (var i = 0; i < 2400 / w; i++) {
+          var h = amp * (0.55 + 0.3 * Math.sin(i * 0.22 + seed) + 0.15 * Math.sin(i * 0.67 + seed * 2));
+          var c = document.createElement("div");
+          c.className = "col";
+          c.style.left = i * w + "px";
+          c.style.width = w + "px";
+          c.style.height = Math.round(h / 12) * 12 + "px";
+          c.style.background = color;
+          el.appendChild(c);
+        }
+      }
+      ridge("far", "#d6c2a2", 280, 1.3, 24);
+      ridge("near", "#bba07c", 170, 4.1, 24);
+      var gt = document.getElementById("groundTop");
+      for (var g = 0; g < 2400 / 16; g++) {
+        var d = document.createElement("div");
+        d.className = "col";
+        d.style.left = g * 16 + "px";
+        d.style.width = "16px";
+        d.style.top = (g * 7) % 3 === 0 ? "0px" : (g * 5) % 4 === 0 ? "8px" : "16px";
+        d.style.bottom = "0";
+        d.style.background = "#1a1410";
+        gt.appendChild(d);
+      }
+      var pb = document.getElementById("pebbles");
+      for (var p = 0; p < 40; p++) {
+        var e = document.createElement("div");
+        e.className = "peb";
+        e.style.left = (p * 61) % 2400 + "px";
+        e.style.top = ((p * 37) % 180) + "px";
+        pb.appendChild(e);
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      var snap8 = function (v) { return Math.round(parseFloat(v) / 8) * 8 + "px"; };
+
+      tl.fromTo("#far", { x: 0 }, { x: -420, duration: 7, ease: "none", modifiers: { x: snap8 } }, 0)
+        .fromTo("#near", { x: 0 }, { x: -1000, duration: 7, ease: "none", modifiers: { x: snap8 } }, 0)
+        .fromTo(["#groundTop", "#pebbles"], { x: 0 }, { x: -1300, duration: 7, ease: "none", modifiers: { x: snap8 } }, 0);
+
+      for (var f = 0; f < 7 / 0.14; f++) {
+        var t = f * 0.14, a = f % 2 === 0;
+        tl.set("#runA", { visibility: a ? "visible" : "hidden" }, t).set("#runB", { visibility: a ? "hidden" : "visible" }, t);
+      }
+
+      gsap.set(["#cactus1", "#cactus2"], { x: 1150 });
+      tl.to("#cactus1", { x: -120, duration: 2.1, ease: "none", modifiers: { x: snap8 } }, 0.3)
+        .to("#cactus2", { x: -120, duration: 2.1, ease: "none", modifiers: { x: snap8 } }, 1.9);
+
+      function jump(at, h, d) {
+        tl.to(["#runA", "#runB"], { y: -h, duration: d / 2, ease: "power2.out", modifiers: { y: snap8 } }, at)
+          .to(["#runA", "#runB"], { y: 0, duration: d / 2, ease: "power2.in", modifiers: { y: snap8 } }, at + d / 2);
+      }
+      jump(1.45, 200, 0.64);
+      jump(3.12, 140, 0.56);
+
+      gsap.set("#tag", { scale: 0, rotation: -6 });
+      tl.to("#tag", { scale: 1, duration: 0.18, ease: "steps(3)" }, 3.4)
+        .to("#tag", { y: -40, duration: 0.6, ease: "steps(5)" }, 3.6)
+        .to("#tag", { scale: 0, duration: 0.15, ease: "steps(3)" }, 4.5);
+
+      var sc = { v: 0 };
+      tl.to(sc, {
+        v: 1, duration: 7, ease: "none",
+        onUpdate: function () {
+          var t = sc.v * 7, s = Math.round(Math.min(t, 5) * 820) + (t > 3.4 ? 500 : 0);
+          document.getElementById("score").textContent = "SCORE " + String(s).padStart(6, "0");
+        }
+      }, 0);
+
+      tl.to("#flash", { opacity: 0.85, duration: 0.06, ease: "none" }, 5.0)
+        .to("#flash", { opacity: 0, duration: 0.2, ease: "steps(3)" }, 5.06);
+      gsap.set("#card", { y: -900 });
+      tl.to("#card", { y: 0, duration: 0.5, ease: "steps(6)" }, 5.05)
+        .to("#press", { opacity: 0, duration: 0.25, ease: "steps(1)", yoyo: true, repeat: 3 }, 5.8);
+
+      tl.set({}, {}, 7);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["pixel-arcade"] = tl;
+    </script>
+  </body>
+</html>

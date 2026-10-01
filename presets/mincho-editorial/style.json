@@ -1,0 +1,81 @@
+{
+  "id": "mincho-editorial",
+  "name": "Mincho Editorial",
+  "tagline": "Vertical Mincho type cut on the beat between washi cream, vermilion and sumi black.",
+  "description": "Japanese editorial style for product films, chapters and process reels. Big vertical Mincho words fill in from outline, chapter cards slam in vermilion, a mono script types on, a waveform pulses on the beat, beat squares count up and a red hanko seal stamps the ending. Every cut lands on a 124 BPM beat.",
+  "mood": [
+    "refined",
+    "rhythmic",
+    "confident"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "background": "#efece6",
+    "ink": "#141414",
+    "vermilion": "#c8102e",
+    "white": "#ffffff",
+    "muted": "#8a8a85",
+    "code": "#3a3a38"
+  },
+  "fonts": {
+    "display": {
+      "family": "Shippori Mincho B1",
+      "weights": [
+        800
+      ],
+      "source": "Google Fonts",
+      "usage": "Vertical (writing-mode: vertical-rl) words 170–240px; single kanji 300–400px"
+    },
+    "kicker": {
+      "family": "Noto Sans JP",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Small grey kicker 34px top-left"
+    },
+    "body": {
+      "family": "IBM Plex Mono",
+      "weights": [
+        400,
+        600
+      ],
+      "source": "Google Fonts",
+      "usage": "English gloss 22px, script lines 28px, BPM 96px"
+    }
+  },
+  "easing": {
+    "slam": "power4.out",
+    "fill": "power2.inOut",
+    "type": "steps(18)",
+    "stamp": "power4.in",
+    "wave": "power3.out"
+  },
+  "transitions": [
+    "hard colour-block cut on the beat (cream → vermilion → cream → black → vermilion → cream)",
+    "no fades between scenes"
+  ],
+  "textAnimations": [
+    "outline word fills top-to-bottom with clip-path inset",
+    "single kanji slams from scale 1.3",
+    "mono script types on with a stepped width reveal",
+    "hanko seal stamps from scale 2.2 / -18° and shakes",
+    "waveform bars spike on each beat, beat squares fill one by one"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.3,
+    "notes": "Cut on beats of 60/124 s. Intro 5 beats, chapter card 1 beat, content scenes 2–3 beats, ending ~2.5 beats."
+  },
+  "tags": [
+    "japanese",
+    "editorial",
+    "vertical-type",
+    "music",
+    "chapters"
+  ],
+  "guide": "- Three colours only: washi #efece6, sumi #141414, vermilion #c8102e (white type on red). Grey mono for English glosses.\n- Set Japanese headlines vertically (writing-mode: vertical-rl) in Shippori Mincho B1 800; one word or phrase per scene.\n- Pick a BPM, define B = 60 / BPM, and place every cut and hit on multiples of B.\n- Chapter cards (其ノ壱, 其ノ弐 …) are one beat long on vermilion.\n- Pair each Japanese line with a small English mono gloss so it reads globally; keep copy real and short.\n- Finish with a hanko seal (完 or the brand initial) stamping in with power4.in and a tiny shake."
+}

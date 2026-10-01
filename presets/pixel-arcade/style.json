@@ -1,0 +1,73 @@
+{
+  "id": "pixel-arcade",
+  "name": "Pixel Arcade",
+  "tagline": "A pixel runner in a sun-bleached desert, a near miss, a CLOSE CALL! tag and an arcade end card.",
+  "description": "Square 8-bit gameplay style for indie games, playful launches and challenges. Box-shadow pixel sprites on a warm desert with stepped parallax ridges, a two-frame run cycle, motion snapped to an 8px grid, a red CLOSE CALL! tag on the near miss, a ticking score HUD, and a white flash into a chunky pixel end card with a blinking PRESS START.",
+  "mood": [
+    "playful",
+    "nostalgic",
+    "tense"
+  ],
+  "pacing": "medium",
+  "format": "1:1",
+  "width": 1080,
+  "height": 1080,
+  "durationSeconds": 7,
+  "palette": {
+    "sky": "#f3ead8",
+    "sand": "#efe6d2",
+    "farRidge": "#d6c2a2",
+    "nearRidge": "#bba07c",
+    "sun": "#f6c76b",
+    "ink": "#1a1410",
+    "red": "#e23d3d",
+    "blue": "#2f6fe0",
+    "paper": "#fff8ec"
+  },
+  "fonts": {
+    "display": {
+      "family": "Press Start 2P",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Title 76px with a hard 6px drop shadow; HUD and tags 26–30px"
+    },
+    "body": {
+      "family": "Press Start 2P",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "End-card details 26px, line-height 1.7"
+    }
+  },
+  "easing": {
+    "scroll": "none (snapped to 8px)",
+    "jump": "power2.out / power2.in (snapped to 8px)",
+    "pop": "steps(3)",
+    "card": "steps(6)",
+    "blink": "steps(1)"
+  },
+  "transitions": [
+    "white flash (0.06s) into the end card",
+    "end card drops in on 6 discrete steps"
+  ],
+  "textAnimations": [
+    "score counts up every frame and jumps +500 on the near miss",
+    "CLOSE CALL! tag pops on steps(3), floats up on steps(5)",
+    "PRESS START blinks with steps(1) yoyo"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 3.5,
+    "notes": "One continuous gameplay shot (~5s) with two obstacles, then the end card. The run cycle flips every 0.14s."
+  },
+  "tags": [
+    "pixel-art",
+    "game",
+    "8-bit",
+    "retro",
+    "square"
+  ],
+  "guide": "- Draw sprites with a single element and a box-shadow per pixel (9–14px pixels); no images.\n- Snap every moving x/y to an 8px grid with a GSAP modifiers function so motion feels like hardware.\n- Use stepped column ridges at two depths for parallax (far moves ~40% of the ground speed).\n- Two-frame run cycle toggled with visibility every 0.14s; jumps are power2 up/down, snapped.\n- Only stepped eases for UI (steps(1–6)); never smooth fades except the white flash.\n- HUD in Press Start 2P: SCORE left, HI right. End on a paper card with a hard 16px shadow, red title, real details (where to play, platforms) and a blinking PRESS START."
+}

@@ -1,0 +1,83 @@
+{
+  "id": "cream-serif-launch",
+  "name": "Cream Serif Launch",
+  "tagline": "Warm cream, a chunky serif with one coral italic word, and a product demo that proves a number.",
+  "description": "Friendly editorial launch style for developer tools and AI products. A big Fraunces question de-blurs onto warm cream with one coral italic word, a soft paper card types a real query and surfaces results with a highlighter sweep, two bars compare before and after while a tilted coral percentage slams in, and the logo lockup ends on an install command.",
+  "mood": [
+    "warm",
+    "friendly",
+    "credible"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "background": "#f3ede2",
+    "card": "#fffaf2",
+    "ink": "#1d1b18",
+    "coral": "#ec5b3c",
+    "coralTint": "#fbe3d9",
+    "muted": "#8f877b",
+    "border": "#e2d9c9"
+  },
+  "fonts": {
+    "display": {
+      "family": "Fraunces",
+      "weights": [
+        800,
+        "700 italic"
+      ],
+      "source": "Google Fonts",
+      "usage": "Headlines 76–150px tracking -0.02em; one coral italic word per line; stat 260px"
+    },
+    "body": {
+      "family": "Inter",
+      "weights": [
+        400,
+        500,
+        600
+      ],
+      "source": "Google Fonts",
+      "usage": "UI text 24–34px, labels 32px, notes 28px muted"
+    },
+    "mono": {
+      "family": "JetBrains Mono",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "File paths and the install pill, 26–30px"
+    }
+  },
+  "easing": {
+    "deblur": "power3.out",
+    "card": "expo.out",
+    "bars": "expo.out",
+    "stat": "back.out(2.2)",
+    "highlight": "power2.inOut"
+  },
+  "transitions": [
+    "hard cut between scenes; the next headline rises 30px",
+    "headlines and logos resolve from blur (8–26px) instead of fading"
+  ],
+  "textAnimations": [
+    "headline de-blurs from blur(26px) + scale 1.08",
+    "query types character by character with a coral caret",
+    "result rows rise in sequence, the first gets a coral-tint highlighter sweep",
+    "stat slams in tilted -8° from scale 1.7; the old price is struck through"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 2,
+    "notes": "Four beats of ~2s: question, demo, proof, lockup."
+  },
+  "tags": [
+    "launch",
+    "developer-tools",
+    "serif",
+    "warm",
+    "comparison"
+  ],
+  "guide": "- Cream #f3ede2 with a soft centre lightening; cards are #fffaf2 with a warm, low shadow. No pure white or black backgrounds.\n- Headlines in Fraunces 800; exactly one word per headline in coral italic (Fraunces 700 italic).\n- Show the product doing one real thing (typed query → concrete file paths), not abstract UI.\n- Prove it with a before/after bar pair and one big coral percentage; always add a small muted methodology note (n, what was measured).\n- Resolve titles and logos from blur; use expo.out for cards and bars.\n- End on mark + wordmark, a two-part tagline with the second half in coral italic, and a dark mono install pill."
+}

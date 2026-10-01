@@ -1,0 +1,75 @@
+{
+  "id": "midnight-launch",
+  "name": "Midnight Launch",
+  "tagline": "A glowing app icon, blur-in type and fanned media cards on near-black — the classic AI launch film.",
+  "description": "Dark product-launch style for AI tools, APIs and app releases. A gradient app icon focuses in from blur, short \"Generate …\" lines crossfade through blur while fans of media cards fly out from behind them, a prompt box types itself and a cursor clicks send with a spark, and the film resolves on a centred icon-and-wordmark lockup.",
+  "mood": [
+    "sleek",
+    "premium",
+    "calm"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "background": "#0a0a0b",
+    "glow": "#17131f",
+    "panel": "#151518",
+    "border": "#2a2a31",
+    "text": "#f2f2f3",
+    "muted": "#8b8b93",
+    "accent": "#ff5b3a",
+    "iconGradient": "linear-gradient(140deg, #ff7a45, #c04bff 55%, #4b6bff)"
+  },
+  "fonts": {
+    "display": {
+      "family": "Inter",
+      "weights": [
+        600
+      ],
+      "source": "Google Fonts",
+      "usage": "Centred lines 84–112px, tracking -0.03em"
+    },
+    "body": {
+      "family": "Inter",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Prompt text 32px, URL line 34px muted"
+    }
+  },
+  "easing": {
+    "focus": "expo.out",
+    "blurIn": "power3.out",
+    "blurOut": "power2.in",
+    "fan": "expo.out",
+    "cursor": "power3.inOut"
+  },
+  "transitions": [
+    "blur crossfade: out to blur(14px) 0.3s, next line in from blur(18px)",
+    "card fans collapse back to centre before the next set flies out",
+    "no hard cuts; everything resolves through blur and opacity"
+  ],
+  "textAnimations": [
+    "icon focuses from scale 0.6 + blur(24px)",
+    "lines rise 20px while de-blurring",
+    "prompt types character by character (16ms each)",
+    "send click: cursor and button squash, eight rays burst"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.6,
+    "notes": "Logo ~1.7s, then three capability beats of ~0.9s each, a ~2s prompt demo and a ~1.5s lockup."
+  },
+  "tags": [
+    "launch",
+    "ai",
+    "dark",
+    "product",
+    "app"
+  ],
+  "guide": "- Near-black #0a0a0b with a faint purple radial glow at centre; no grids or textures.\n- The hero is a rounded-square gradient app icon with a soft coloured shadow. Keep everything centred and symmetrical.\n- Capability lines are two words (\"Generate images\") in Inter 600, swapped with blur crossfades; behind each, a fan of six cards flies out from centre with expo.out and collapses before the next.\n- Demonstrate one real action: a prompt box that types a specific request, a cursor that clicks send, and results that de-blur in.\n- Use a single warm accent (#ff5b3a) for the send button and highlights only.\n- End on icon + wordmark and one muted line saying what it is and where to get it."
+}

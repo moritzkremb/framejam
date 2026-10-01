@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { builtinPresetsDir } from "../src/server/paths.ts";
 import { connectClient, makeFixture, parse, type ToolResult } from "./helpers.ts";
 
 let fx: ReturnType<typeof makeFixture>;
@@ -259,8 +260,9 @@ describe("resolve_comments and add_version", () => {
 describe("presets", () => {
   it("lists and filters the seeded presets", async () => {
     const all = parse(await mcp.call("list_presets"));
-    expect(all.count).toBeGreaterThanOrEqual(6);
-    expect(all.count).toBeLessThanOrEqual(10);
+    const seeded = fs.readdirSync(builtinPresetsDir).filter((d) => fs.existsSync(path.join(builtinPresetsDir, d, "style.json")));
+    expect(seeded.length).toBeGreaterThanOrEqual(6);
+    expect(all.count).toBe(seeded.length);
     const vertical = parse(await mcp.call("list_presets", { format: "9:16" }));
     expect(vertical.presets.map((p: { id: string }) => p.id)).toContain("kinetic-captions");
     expect(vertical.presets.every((p: { format: string }) => p.format === "9:16")).toBe(true);
