@@ -1,12 +1,11 @@
 import path from "node:path";
-import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-const apiPort = Number(process.env.FRAMECUT_PORT ?? 4517);
+const apiPort = Number(process.env.FRAMEJAM_PORT ?? process.env.FRAMECUT_PORT ?? 4517);
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src/web") },
   },

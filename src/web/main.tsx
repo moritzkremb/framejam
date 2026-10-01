@@ -1,33 +1,45 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { AppShell } from "@/components/app-shell";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Toaster } from "sonner";
 import { HomePage } from "@/pages/home-page";
-import { ReviewPage } from "@/pages/review-page";
-import { PresetsPage } from "@/pages/presets-page";
-import { PresetDetailPage } from "@/pages/preset-detail-page";
 import { NotFoundPage } from "@/pages/not-found-page";
+import { ReviewPage } from "@/pages/review-page";
+import { StyleDetailPage } from "@/pages/style-detail-page";
+import { StylesPage } from "@/pages/styles-page";
 import "./index.css";
 
-document.documentElement.classList.add("dark");
+/** Dark by default; follows the harness / OS when it asks for light. */
+function applyTheme() {
+  const light = window.matchMedia("(prefers-color-scheme: light)").matches;
+  document.documentElement.dataset.theme = light ? "light" : "dark";
+}
+applyTheme();
+window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", applyTheme);
+
+/** Old /presets links (from agents and bookmarks) keep working. */
+function PresetRedirect() {
+  const { id } = useParams();
+  return <Navigate to={id ? `/styles/${id}` : "/styles"} replace />;
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <TooltipProvider delayDuration={300}>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/review/:id" element={<ReviewPage />} />
-            <Route path="/presets" element={<PresetsPage />} />
-            <Route path="/presets/:id" element={<PresetDetailPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-      <Toaster position="bottom-right" />
-    </TooltipProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/review/:id" element={<ReviewPage />} />
+        <Route path="/styles" element={<StylesPage />} />
+        <Route path="/styles/:id" element={<StyleDetailPage />} />
+        <Route path="/presets" element={<PresetRedirect />} />
+        <Route path="/presets/:id" element={<PresetRedirect />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </BrowserRouter>
+    <Toaster
+      position="top-center"
+      offset={64}
+      toastOptions={{ unstyled: true, classNames: { toast: "fc-toast", title: "t", description: "d", actionButton: "fc-btn sm", icon: "ic" } }}
+    />
   </StrictMode>,
 );

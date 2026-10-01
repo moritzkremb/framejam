@@ -1,6 +1,6 @@
-import type { ElementInfo, PresetSummary, Review, ReviewComment } from "../../shared/types";
+import type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion } from "../../shared/types";
 
-export type { ElementInfo, PresetSummary, Review, ReviewComment };
+export type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion };
 
 export interface ReviewListItem {
   id: string;
@@ -8,9 +8,10 @@ export interface ReviewListItem {
   createdAt: string;
   updatedAt: string;
   versions: number;
-  openComments: number;
+  latestVersion: number;
+  latestSent: boolean;
+  delivered: boolean;
   draftComments: number;
-  resolvedComments: number;
   agentWaiting: boolean;
   hasVideo: boolean;
   hasComposition: boolean;
@@ -21,6 +22,7 @@ export interface Health {
   app: string;
   dataDir: string;
   baseUrl: string;
+  agent: AgentInfo | null;
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -50,7 +52,7 @@ export const api = {
     id: string,
     body: Partial<ReviewComment> & { text: string; time: number; thumbnailDataUrl?: string },
   ) => request<ReviewComment>(`/api/reviews/${id}/comments`, { method: "POST", body: JSON.stringify(body) }),
-  updateComment: (id: string, cid: string, body: { text?: string; status?: "draft" | "resolved" }) =>
+  updateComment: (id: string, cid: string, body: { text: string }) =>
     request<ReviewComment>(`/api/reviews/${id}/comments/${cid}`, { method: "PATCH", body: JSON.stringify(body) }),
   deleteComment: (id: string, cid: string) => request(`/api/reviews/${id}/comments/${cid}`, { method: "DELETE" }),
   submit: (id: string, message?: string) =>
@@ -58,7 +60,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ message }),
     }),
-  prompt: (id: string) => request<string>(`/api/reviews/${id}/prompt`),
+  prompt: (id: string, version?: number) => request<string>(`/api/reviews/${id}/prompt${version ? `?version=${version}` : ""}`),
   presets: () => request<{ selected: string | null; presets: PresetSummary[] }>("/api/presets"),
   preset: (id: string) =>
     request<{ preset: PresetSummary; selected: string | null; files: { path: string; content: string }[] }>(
@@ -79,21 +81,57 @@ export function compositionUrl(reviewId: string, version: number) {
   return `/api/reviews/${reviewId}/versions/${version}/composition/`;
 }
 
+export function posterUrl(reviewId: string, version: number) {
+  return `/api/reviews/${reviewId}/poster?v=${version}`;
+}
+
+/** Friendly name for the MCP client that connected ("claude-code" → "Claude Code"). */
+export function agentLabel(agent: AgentInfo | null | undefined): string | undefined {
+  if (!agent) return undefined;
+  const n = agent.name.toLowerCase();
+  if (n.includes("claude-code") || n === "claude code") return "Claude Code";
+  if (n.includes("claude")) return "Claude";
+  if (n.includes("cursor")) return "Cursor";
+  if (n.includes("openai") || n.includes("chatgpt")) return "ChatGPT";
+  if (n.includes("codex")) return "Codex";
+  if (n.includes("vscode") || n.includes("copilot")) return "VS Code";
+  return agent.name;
+}
+
+/** Copies text, with a fallback for embedded browsers that block the async clipboard API. */
+export async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    if (!ok) throw new Error("Clipboard is not available in this browser");
+  }
+}
+
 export function thumbUrl(reviewId: string, file: string) {
   return `/api/reviews/${reviewId}/thumbs/${file}`;
 }
 
+/** 0:04.1 (precise) or 0:04. */
 export function formatTime(seconds: number, precise = true) {
   const s = Math.max(0, seconds || 0);
   const m = Math.floor(s / 60);
   const rest = s - m * 60;
-  return precise ? `${m}:${rest.toFixed(2).padStart(5, "0")}` : `${m}:${Math.floor(rest).toString().padStart(2, "0")}`;
+  return precise ? `${m}:${rest.toFixed(1).padStart(4, "0")}` : `${m}:${Math.floor(rest).toString().padStart(2, "0")}`;
 }
 
 export function relativeTime(iso: string) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} h ago`;
+  if (diff < 172800) return "Yesterday";
   return new Date(iso).toLocaleDateString();
 }
