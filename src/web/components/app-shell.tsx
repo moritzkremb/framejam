@@ -57,10 +57,10 @@ export function AppShell() {
             {selected ? (
               <Link
                 to={`/presets/${selected.id}`}
-                className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 hover:text-foreground"
+                className="flex max-w-[45vw] items-center gap-1.5 rounded-full border px-2.5 py-1 hover:text-foreground"
               >
-                <span className="size-1.5 rounded-full bg-primary" />
-                Style: <span className="text-foreground">{selected.name}</span>
+                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+                <span className="hidden sm:inline">Style:</span> <span className="truncate text-foreground">{selected.name}</span>
               </Link>
             ) : (
               <Link to="/presets" className="hidden rounded-full border border-dashed px-2.5 py-1 hover:text-foreground sm:block">

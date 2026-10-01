@@ -344,6 +344,11 @@ export function CommentPanel({
           <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
             {filter === "resolved" ? (
               "Nothing resolved yet. The agent checks comments off as it fixes them."
+            ) : counts.all > 0 ? (
+              <>
+                <p className="font-medium text-foreground">All caught up</p>
+                <p className="mt-1">Every comment is resolved. Click the frame to add another one.</p>
+              </>
             ) : (
               <>
                 <p className="font-medium text-foreground">No comments yet</p>

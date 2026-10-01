@@ -59,14 +59,14 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
 
 export function ConnectCard() {
   return (
-    <div className="rounded-xl border bg-card p-4 sm:p-5">
+    <div className="min-w-0 overflow-hidden rounded-xl border bg-card p-4 sm:p-5">
       <h3 className="font-medium">Connect your agent</h3>
       <p className="mt-1 text-sm text-muted-foreground">
         Framecut speaks MCP. Once connected, ask your agent to build a Hyperframes video and call{" "}
         <code className="rounded bg-muted px-1 py-0.5 text-xs">open_review</code> — the review appears here.
       </p>
-      <Tabs defaultValue="cursor" className="mt-4">
-        <TabsList>
+      <Tabs defaultValue="cursor" className="mt-4 min-w-0">
+        <TabsList className="max-w-full overflow-x-auto">
           {SNIPPETS.map((s) => (
             <TabsTrigger key={s.id} value={s.id}>
               {s.label}
@@ -74,7 +74,7 @@ export function ConnectCard() {
           ))}
         </TabsList>
         {SNIPPETS.map((s) => (
-          <TabsContent key={s.id} value={s.id} className="mt-3">
+          <TabsContent key={s.id} value={s.id} className="mt-3 min-w-0">
             <p className="mb-2 text-xs text-muted-foreground">{s.hint}</p>
             <div className="relative rounded-lg border bg-background">
               <div className="absolute top-1.5 right-1.5">

@@ -354,7 +354,7 @@ export function ReviewPage() {
             <Button size="icon" variant="ghost" className="size-8" onClick={() => step(1)} aria-label="Next frame">
               <ChevronRight className="size-4" />
             </Button>
-            <span className="ml-2 font-mono text-xs text-muted-foreground tabular-nums">
+            <span className="ml-2 font-mono text-xs whitespace-nowrap text-muted-foreground tabular-nums">
               <span className="text-foreground">{formatTime(time)}</span> / {formatTime(duration)}
             </span>
             <span className="ml-2 hidden font-mono text-[11px] text-muted-foreground sm:inline">
@@ -368,7 +368,7 @@ export function ReviewPage() {
             <div className="ml-auto flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="ghost" className="size-8 text-muted-foreground" aria-label="Keyboard shortcuts">
+                  <Button size="icon" variant="ghost" className="hidden size-8 text-muted-foreground sm:inline-flex" aria-label="Keyboard shortcuts">
                     <Keyboard className="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -378,8 +378,8 @@ export function ReviewPage() {
                 </TooltipContent>
               </Tooltip>
               <Button size="sm" variant="secondary" className="h-8 gap-1.5 text-xs" onClick={() => startDraft({})} disabled={!ctrl}>
-                <MessageSquarePlus className="size-3.5" /> Comment
-                <kbd className="rounded bg-black/30 px-1 text-[10px]">C</kbd>
+                <MessageSquarePlus className="size-3.5" /> <span className="hidden sm:inline">Comment</span>
+                <kbd className="hidden rounded bg-black/30 px-1 text-[10px] sm:inline">C</kbd>
               </Button>
             </div>
           </div>

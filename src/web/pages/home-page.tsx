@@ -28,8 +28,8 @@ export function HomePage() {
   }, [load]);
 
   return (
-    <div className="mx-auto grid max-w-[1600px] gap-6 px-3 py-6 sm:px-5 lg:grid-cols-[1fr_420px]">
-      <section>
+    <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-6 px-3 py-6 sm:px-5 lg:grid-cols-[minmax(0,1fr)_420px]">
+      <section className="min-w-0">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Reviews</h1>
@@ -110,7 +110,7 @@ export function HomePage() {
         )}
       </section>
 
-      <aside className="grid content-start gap-4">
+      <aside className="grid min-w-0 content-start gap-4">
         <ConnectCard />
         <div className="rounded-xl border bg-card p-4 text-sm sm:p-5">
           <h3 className="font-medium">How the loop works</h3>
