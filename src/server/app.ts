@@ -77,7 +77,8 @@ export function createApp(ctx: McpContext) {
       const version = review.versions.find((v) => v.number === comment.version);
       const file = version && store.videoFileFor(id, version);
       if (file) {
-        const jpeg = await extractFrame(file, comment.time);
+        const at = comment.endTime !== undefined ? (comment.time + comment.endTime) / 2 : comment.time;
+        const jpeg = await extractFrame(file, at);
         if (jpeg) store.saveThumbnail(id, comment.id, jpeg);
       }
     }
