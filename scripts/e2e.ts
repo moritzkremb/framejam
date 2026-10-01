@@ -1,12 +1,12 @@
 /**
- * Plays the agent's side of the loop against a running framecut server over
+ * Plays the agent's side of the loop against a running framejam server over
  * streamable HTTP MCP: pick a preset, open a review, block on wait_for_feedback
- * until a human presses "Send to agent", then add v2 and resolve the comments.
+ * until a human presses "Send to agent", then ship v2 (which starts a fresh round).
  *
  *   npm start                       # in one terminal
  *   npm run e2e                     # in another; then comment + send in the browser
  *
- * Env: FRAMECUT_URL (default http://localhost:4517), E2E_MAX_WAITS (default 20 ≈ 16 min)
+ * Env: FRAMEJAM_URL (default http://localhost:4517), E2E_MAX_WAITS (default 20 ≈ 16 min)
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -15,7 +15,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { builtinPresetsDir } from "../src/server/paths.ts";
 
-const base = (process.env.FRAMECUT_URL ?? "http://localhost:4517").replace(/\/$/, "");
+const base = (process.env.FRAMEJAM_URL ?? "http://localhost:4517").replace(/\/$/, "");
 const maxWaits = Number(process.env.E2E_MAX_WAITS ?? 20);
 const presetId = process.env.E2E_PRESET ?? "swiss-editorial";
 
@@ -23,7 +23,7 @@ type ToolResult = { content: { type: string; text?: string }[]; isError?: boolea
 const firstJson = (r: ToolResult) => JSON.parse(r.content.find((c) => c.type === "text")!.text!);
 const log = (...a: unknown[]) => console.log("[agent]", ...a);
 
-const client = new Client({ name: "framecut-e2e", version: "0.1.0" });
+const client = new Client({ name: "framejam-e2e", version: "0.1.0" });
 await client.connect(new StreamableHTTPClientTransport(new URL(`${base}/mcp`)));
 const call = async (name: string, args: Record<string, unknown> = {}) => {
   const r = (await client.callTool({ name, arguments: args }, undefined, { timeout: 120_000 })) as ToolResult;
@@ -40,7 +40,7 @@ const preset = firstJson(await call("get_preset", { id: presetId }));
 log(`get_preset(${presetId}) → ${preset.style.name}, ${preset.templateFiles.length} template file(s)`);
 
 // Simulate the agent's own project: copy the preset template and its render.
-const project = fs.mkdtempSync(path.join(os.tmpdir(), "framecut-e2e-"));
+const project = fs.mkdtempSync(path.join(os.tmpdir(), "framejam-e2e-"));
 fs.cpSync(path.join(builtinPresetsDir, presetId, "composition"), path.join(project, "composition"), { recursive: true });
 fs.mkdirSync(path.join(project, "renders"));
 const v1 = path.join(project, "renders", "v1.mp4");
@@ -55,7 +55,7 @@ const opened = firstJson(
   }),
 );
 log(`open_review → ${opened.url} (v${opened.version})`);
-fs.writeFileSync(path.join(os.tmpdir(), "framecut-e2e-review.json"), JSON.stringify(opened));
+fs.writeFileSync(path.join(os.tmpdir(), "framejam-e2e-review.json"), JSON.stringify(opened));
 
 let feedback: ToolResult | undefined;
 for (let i = 1; i <= maxWaits; i++) {
@@ -80,19 +80,13 @@ for (const c of payload.comments) {
   log(`  [${c.at}] ${c.text}${c.element ? `  ← ${c.element.selector}` : ""}${c.position ? `  @ ${c.position.description}` : ""}`);
 }
 console.log("\n----- prompt markdown -----\n" + feedback.content[1].text + "\n---------------------------\n");
-fs.writeFileSync(path.join(os.tmpdir(), "framecut-e2e-feedback.json"), JSON.stringify(payload, null, 2));
+fs.writeFileSync(path.join(os.tmpdir(), "framejam-e2e-feedback.json"), JSON.stringify(payload, null, 2));
 
-// "Apply" the feedback: ship v2 and resolve what we fixed.
+// "Apply" the feedback: ship v2 with a note. v2 starts with an empty comment list.
 const v2 = path.join(project, "renders", "v2.mp4");
 fs.copyFileSync(v1, v2);
-const added = firstJson(await call("add_version", { reviewId: opened.reviewId, videoPath: v2, note: "Applied review feedback" }));
+const added = firstJson(await call("add_version", { reviewId: opened.reviewId, videoPath: v2, note: "Applied your comments" }));
 log(`add_version → v${added.version}`);
-const resolved = firstJson(
-  await call("resolve_comments", {
-    reviewId: opened.reviewId,
-    ids: payload.comments.map((c: { id: string }) => c.id),
-    note: "Applied in v2",
-  }),
-);
-log(`resolve_comments → resolved ${resolved.resolved.length}, still open ${resolved.stillOpen}`);
+const reviews = firstJson(await call("list_reviews"));
+log(`list_reviews → ${reviews.reviews.find((r: { reviewId: string }) => r.reviewId === opened.reviewId)?.state}`);
 await client.close();
