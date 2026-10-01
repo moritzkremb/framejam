@@ -92,7 +92,9 @@ export function Stage({ src, source, pins, draft, selectedId, onController, onFr
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const onControllerRef = useRef(onController);
-  onControllerRef.current = onController;
+  useLayoutEffect(() => {
+    onControllerRef.current = onController;
+  });
 
   useEffect(() => {
     setStatus("loading");

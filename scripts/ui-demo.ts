@@ -65,7 +65,7 @@ async function pinAndComment(fx: number, fy: number, text: string) {
 
 await page.goto(`${base}${reviewPath}`, { waitUntil: "networkidle2" });
 await page.waitForSelector("video");
-await page.waitForFunction(() => (document.querySelector("video") as HTMLVideoElement | null)?.readyState! >= 2);
+await page.waitForFunction(() => ((document.querySelector("video") as HTMLVideoElement | null)?.readyState ?? 0) >= 2);
 await sleep(600);
 await shot("01-review-empty");
 
