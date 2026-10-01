@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type {
+  AgentInfo,
   CommentKind,
   ElementInfo,
   FeedbackBatch,
@@ -66,10 +67,11 @@ export interface NewCommentInput {
 
 interface AppState {
   selectedPreset?: { id: string; selectedAt: string };
+  agent?: AgentInfo;
 }
 
 /**
- * JSON-file store. Every call re-reads from disk so several framecut processes
+ * JSON-file store. Every call re-reads from disk so several Frame Jam processes
  * (e.g. one stdio MCP server per harness plus the web server) stay consistent.
  */
 export class Store {
@@ -154,7 +156,7 @@ export class Store {
         latest &&
         latest.videoPath === media.videoPath &&
         latest.compositionDir === media.compositionDir &&
-        !existing.comments.some((c) => c.version === latest.number && c.status !== "draft");
+        !latest.sentAt;
       if (unchanged && latest) {
         // Re-opening with identical media is idempotent until feedback has been sent on it.
         return { review: existing, version: latest, created: false };
@@ -201,6 +203,11 @@ export class Store {
         createdAt: now(),
       };
       this.snapshotVideo(reviewId, version);
+      // Comments belong to the version they were written on. Unsent ones (the agent shipped a new
+      // version before the user pressed Send) move forward so they aren't stranded on an old version.
+      for (const c of review.comments) {
+        if (c.status === "draft" && prev && c.version === prev.number) c.version = version.number;
+      }
       review.versions.push(version);
     });
   }
@@ -228,9 +235,16 @@ export class Store {
     if (!text) throw new StoreError("Comment text is required");
     let comment!: ReviewComment;
     this.update(reviewId, (review) => {
-      const version = input.version ?? review.versions.at(-1)!.number;
+      const latest = review.versions.at(-1)!;
+      const version = input.version ?? latest.number;
       if (!review.versions.some((v) => v.number === version)) {
         throw new StoreError(`Unknown version ${version}`);
+      }
+      if (version !== latest.number) {
+        throw new StoreError(`Version ${version} is not the latest; comment on version ${latest.number}`);
+      }
+      if (latest.sentAt) {
+        throw new StoreError(`Version ${version} was already sent; comment on the next version`);
       }
       const hasRange = input.endTime !== undefined && input.endTime > input.time;
       comment = {
@@ -253,32 +267,17 @@ export class Store {
     return comment;
   }
 
-  updateComment(
-    reviewId: string,
-    commentId: string,
-    patch: { text?: string; status?: "draft" | "resolved"; thumbnail?: string },
-  ): ReviewComment {
+  updateComment(reviewId: string, commentId: string, patch: { text?: string; thumbnail?: string }): ReviewComment {
     let updated!: ReviewComment;
     this.update(reviewId, (review) => {
       const c = review.comments.find((x) => x.id === commentId);
       if (!c) throw new StoreError(`Comment not found: ${commentId}`, 404);
       if (patch.text !== undefined) {
+        if (c.status !== "draft") throw new StoreError("This comment was already sent and can't be edited");
         if (!patch.text.trim()) throw new StoreError("Comment text is required");
         c.text = patch.text.trim();
       }
       if (patch.thumbnail !== undefined) c.thumbnail = patch.thumbnail;
-      if (patch.status === "resolved" && c.status !== "resolved") {
-        c.status = "resolved";
-        c.resolvedAt = now();
-        c.resolution = { version: review.versions.at(-1)!.number, note: "Resolved in the review UI" };
-      } else if (patch.status === "draft" && c.status === "resolved") {
-        // Reopening: the comment goes back to the agent with the next send.
-        c.status = "draft";
-        delete c.resolvedAt;
-        delete c.resolution;
-        delete c.sentAt;
-        delete c.batchId;
-      }
       updated = c;
     });
     return updated;
@@ -286,9 +285,10 @@ export class Store {
 
   deleteComment(reviewId: string, commentId: string) {
     this.update(reviewId, (review) => {
-      const before = review.comments.length;
-      review.comments = review.comments.filter((c) => c.id !== commentId);
-      if (review.comments.length === before) throw new StoreError(`Comment not found: ${commentId}`, 404);
+      const c = review.comments.find((x) => x.id === commentId);
+      if (!c) throw new StoreError(`Comment not found: ${commentId}`, 404);
+      if (c.status !== "draft") throw new StoreError("This comment was already sent and can't be deleted");
+      review.comments = review.comments.filter((x) => x.id !== commentId);
     });
     fs.rmSync(path.join(this.thumbsDir(reviewId), `${commentId}.jpg`), { force: true });
   }
@@ -301,19 +301,25 @@ export class Store {
     return file;
   }
 
-  /** "Send to agent": every draft comment becomes part of a new batch the agent will receive. */
+  /**
+   * "Send to agent": the latest version's comments go to the agent as one batch, and the version
+   * is locked. The next round of comments happens on the agent's next version.
+   */
   submit(reviewId: string, message?: string): FeedbackBatch {
     let batch!: FeedbackBatch;
     this.update(reviewId, (review) => {
-      const drafts = review.comments.filter((c) => c.status === "draft");
-      const msg = message?.trim() || undefined;
-      if (!drafts.length && !msg) throw new StoreError("Nothing to send: add a comment first");
-      batch = { id: newId("b"), createdAt: now(), commentIds: drafts.map((c) => c.id), message: msg };
+      const latest = review.versions.at(-1)!;
+      if (latest.sentAt) throw new StoreError(`Version ${latest.number} was already sent`);
+      const drafts = review.comments.filter((c) => c.status === "draft" && c.version === latest.number);
+      if (!drafts.length) throw new StoreError("Nothing to send: add a comment first");
+      batch = { id: newId("b"), createdAt: now(), commentIds: drafts.map((c) => c.id), message: message?.trim() || undefined };
       for (const c of drafts) {
         c.status = "sent";
         c.sentAt = batch.createdAt;
         c.batchId = batch.id;
       }
+      latest.sentAt = batch.createdAt;
+      latest.batchId = batch.id;
       review.batches.push(batch);
     });
     return batch;
@@ -366,6 +372,14 @@ export class Store {
 
   getState(): AppState {
     return readJson<AppState>(this.stateFile) ?? {};
+  }
+
+  /** Remembers which harness connected last, for the "Connected to Claude Code" line in the UI. */
+  recordAgent(name: string | undefined, version?: string) {
+    if (!name) return;
+    const state = this.getState();
+    state.agent = { name, version, at: now() };
+    writeJsonAtomic(this.stateFile, state);
   }
 
   setSelectedPreset(id: string | null) {

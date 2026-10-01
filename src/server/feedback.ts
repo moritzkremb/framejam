@@ -103,14 +103,14 @@ export function feedbackPrompt(
     lines.push(`> ${opts.message.replace(/\n/g, "\n> ")}`, "");
   }
   if (!comments.length) {
-    lines.push("_No open comments._");
+    lines.push("_No comments._");
     return lines.join("\n");
   }
   lines.push(`Please make these ${comments.length} change${comments.length === 1 ? "" : "s"}:`, "");
   const sorted = [...comments].sort((a, b) => Number(!!b.wholeVideo) - Number(!!a.wholeVideo) || a.time - b.time);
   sorted.forEach((c, i) => {
     const a = toAgentComment(store, baseUrl, review, c);
-    const ver = c.version !== latest.number ? ` (left on v${c.version})` : "";
+    const ver = c.version !== latest.number ? ` (on v${c.version})` : "";
     lines.push(`${i + 1}. **[${a.at}]**${ver} ${c.text}`);
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
     if (c.element) lines.push(...describeElement(c.element));
@@ -119,11 +119,20 @@ export function feedbackPrompt(
   });
   lines.push("");
   lines.push(
-    "When done, re-render, call `add_version` (or `open_review` again) with the new render, and `resolve_comments` with the ids you addressed.",
+    "When done, re-render and call `add_version` (or `open_review` again) with the new render and a one-line `note` of what you changed. The new version starts with an empty comment list. Then call `wait_for_feedback` again.",
   );
   return lines.join("\n");
 }
 
-export function openComments(review: Review): ReviewComment[] {
-  return review.comments.filter((c) => c.status !== "resolved");
+export function versionComments(review: Review, version: number): ReviewComment[] {
+  return review.comments.filter((c) => c.version === version);
+}
+
+/** Comments of the newest version that has any (the open version's drafts, or the last sent round). */
+export function latestComments(review: Review): ReviewComment[] {
+  for (const v of [...review.versions].reverse()) {
+    const list = versionComments(review, v.number);
+    if (list.length) return list;
+  }
+  return [];
 }

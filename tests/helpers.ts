@@ -22,7 +22,7 @@ export function parse(result: ToolResult) {
 
 /** Fresh data dir plus an agent "project" with a composition and a render. */
 export function makeFixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "framecut-test-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "framejam-test-"));
   const store = new Store(path.join(root, "data"));
   const project = path.join(root, "project");
   fs.cpSync(path.join(fixturePreset, "composition"), path.join(project, "composition"), { recursive: true });

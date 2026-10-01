@@ -23,8 +23,12 @@ describe("tool registry", () => {
   it("exposes the review and preset tools", async () => {
     const { tools } = await mcp.client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(
-      ["add_version", "get_feedback", "get_preset", "get_selected_preset", "list_presets", "open_review", "resolve_comments", "wait_for_feedback"].sort(),
+      ["add_version", "get_feedback", "get_preset", "get_selected_preset", "list_presets", "list_reviews", "open_review", "resolve_comments", "wait_for_feedback"].sort(),
     );
+  });
+
+  it("remembers which harness connected", () => {
+    expect(fx.store.getState().agent?.name).toBe("test");
   });
 });
 
@@ -52,7 +56,8 @@ describe("open_review", () => {
     expect(v2.reviewId).toBe(first.reviewId);
     expect(v2.version).toBe(2);
     expect(v2.created).toBe(false);
-    expect(v2.openComments).toBe(1);
+    const review = fx.store.getReview(first.reviewId);
+    expect(review.comments.filter((c) => c.version === 2)).toHaveLength(0);
   });
 
   it("rejects missing media", async () => {
@@ -142,27 +147,76 @@ describe("wait_for_feedback", () => {
   });
 });
 
-describe("get_feedback", () => {
-  it("returns open comments including unsent drafts, and can include resolved ones", async () => {
+describe("versions are rounds", () => {
+  it("Send locks the version: no new, edited or deleted comments until the next version", async () => {
     const { reviewId } = await open();
-    const a = fx.store.addComment(reviewId, { time: 1, text: "Draft note" });
-    const b = fx.store.addComment(reviewId, { time: 2, text: "Sent note" });
+    const c = fx.store.addComment(reviewId, { time: 1, text: "First" });
     fx.store.submit(reviewId);
-    fx.store.addComment(reviewId, { time: 3, text: "Another draft" });
-    fx.store.resolveComments(reviewId, [a.id]);
+    expect(fx.store.getReview(reviewId).versions[0].sentAt).toBeDefined();
+    expect(() => fx.store.addComment(reviewId, { time: 2, text: "Late" })).toThrow(/already sent/);
+    expect(() => fx.store.updateComment(reviewId, c.id, { text: "Edited" })).toThrow(/already sent/);
+    expect(() => fx.store.deleteComment(reviewId, c.id)).toThrow(/already sent/);
+    expect(() => fx.store.submit(reviewId)).toThrow(/already sent/);
 
-    const open1 = parse(await mcp.call("get_feedback", { reviewId }));
-    expect(open1.comments.map((c: { text: string }) => c.text)).toEqual(["Sent note", "Another draft"]);
-    expect(open1.comments[0].status).toBe("sent");
+    await mcp.call("add_version", { reviewId, videoPath: fx.video, note: "Fixed" });
+    const next = fx.store.addComment(reviewId, { time: 1, text: "Round two" });
+    expect(next.version).toBe(2);
+    expect(() => fx.store.addComment(reviewId, { version: 1, time: 1, text: "Old" })).toThrow(/not the latest/);
+  });
+
+  it("moves unsent comments forward when the agent ships a version first", async () => {
+    const { reviewId } = await open();
+    fx.store.addComment(reviewId, { time: 1, text: "Not sent yet" });
+    await mcp.call("add_version", { reviewId, videoPath: fx.video });
+    const review = fx.store.getReview(reviewId);
+    expect(review.comments[0].version).toBe(2);
+  });
+});
+
+describe("get_feedback", () => {
+  it("delivers the sent round, and sends unsent comments when the user never pressed Send", async () => {
+    const { reviewId } = await open();
+    fx.store.addComment(reviewId, { time: 1, text: "Sent note" });
+    fx.store.submit(reviewId);
+    const sent = parse(await mcp.call("get_feedback", { reviewId }));
+    expect(sent.status).toBe("feedback");
+    expect(sent.comments.map((c: { text: string }) => c.text)).toEqual(["Sent note"]);
+    // Pulling feedback consumes pending batches so wait_for_feedback doesn't replay them.
+    expect(fx.store.undeliveredBatches(reviewId)).toHaveLength(0);
+    const again = parse(await mcp.call("get_feedback", { reviewId }));
+    expect(again.status).toBe("already_delivered");
+
+    await mcp.call("add_version", { reviewId, videoPath: fx.video });
+    fx.store.addComment(reviewId, { time: 2, text: "Typed but not sent" });
+    const auto = parse(await mcp.call("get_feedback", {}));
+    expect(auto.reviewId).toBe(reviewId);
+    expect(auto.comments.map((c: { text: string }) => c.text)).toEqual(["Typed but not sent"]);
+    expect(fx.store.getReview(reviewId).versions[1].sentAt).toBeDefined();
 
     const all = parse(await mcp.call("get_feedback", { reviewId, include: "all" }));
-    expect(all.comments).toHaveLength(3);
-    const resolved = parse(await mcp.call("get_feedback", { reviewId, include: "resolved" }));
-    expect(resolved.comments.map((c: { id: string }) => c.id)).toEqual([a.id]);
-    expect(b.id).toBeDefined();
+    expect(all.comments).toHaveLength(2);
+  });
 
-    // Pulling feedback also consumes pending batches so wait_for_feedback doesn't replay them.
-    expect(fx.store.undeliveredBatches(reviewId)).toHaveLength(0);
+  it("without a reviewId, picks the review whose feedback hasn't been delivered", async () => {
+    const a = await open();
+    const b = parse(await mcp.call("open_review", { title: "Other", videoPath: fx.video }));
+    fx.store.addComment(a.reviewId, { time: 1, text: "For A" });
+    fx.store.submit(a.reviewId);
+    expect(b.reviewId).not.toBe(a.reviewId);
+    const res = parse(await mcp.call("get_feedback", {}));
+    expect(res.reviewId).toBe(a.reviewId);
+  });
+});
+
+describe("list_reviews", () => {
+  it("lists reviews with where each round stands", async () => {
+    const { reviewId } = await open();
+    const empty = parse(await mcp.call("list_reviews"));
+    expect(empty.reviews[0]).toMatchObject({ reviewId, latestVersion: 1, state: "awaiting_user" });
+    fx.store.addComment(reviewId, { time: 1, text: "x" });
+    fx.store.submit(reviewId);
+    const sent = parse(await mcp.call("list_reviews"));
+    expect(sent.reviews[0].state).toBe("sent_not_delivered");
   });
 });
 
@@ -175,7 +229,6 @@ describe("resolve_comments and add_version", () => {
 
     const v2 = parse(await mcp.call("add_version", { reviewId, videoPath: fx.video, note: "Fixes" }));
     expect(v2.version).toBe(2);
-    expect(v2.openComments).toBe(2);
     expect(fx.store.getReview(reviewId).versions[1].compositionDir).toBe(fx.compositionDir);
 
     const r1 = parse(await mcp.call("resolve_comments", { reviewId, ids: [a.id, "c_missing"], note: "Bigger logo" }));

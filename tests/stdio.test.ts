@@ -7,9 +7,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { packageRoot } from "../src/server/paths.ts";
 import { fixturePreset, parse, type ToolResult } from "./helpers.ts";
 
-// Same launch path Cursor and Claude Code use: `framecut --stdio` as a child process.
-describe("stdio transport (how Cursor and Claude Code launch framecut)", () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), "framecut-stdio-"));
+// Same launch path Cursor and Claude Code use: `framejam --stdio` as a child process.
+describe("stdio transport (how Cursor and Claude Code launch framejam)", () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "framejam-stdio-"));
   const port = 4600 + Math.floor(Math.random() * 300);
   let client: Client;
 
@@ -20,7 +20,7 @@ describe("stdio transport (how Cursor and Claude Code launch framecut)", () => {
         command: process.execPath,
         args: ["--import", "tsx", path.join(packageRoot, "src/server/cli.ts"), "--stdio"],
         cwd: packageRoot,
-        env: { ...process.env, FRAMECUT_HOME: home, FRAMECUT_PORT: String(port) } as Record<string, string>,
+        env: { ...process.env, FRAMEJAM_HOME: home, FRAMEJAM_PORT: String(port) } as Record<string, string>,
         stderr: "pipe",
       }),
     );
@@ -33,7 +33,7 @@ describe("stdio transport (how Cursor and Claude Code launch framecut)", () => {
 
   it("serves MCP on stdio and hosts the review UI on the HTTP port", async () => {
     const { tools } = await client.listTools();
-    expect(tools).toHaveLength(8);
+    expect(tools).toHaveLength(9);
 
     const opened = parse(
       (await client.callTool({
@@ -44,11 +44,11 @@ describe("stdio transport (how Cursor and Claude Code launch framecut)", () => {
     expect(opened.url).toBe(`http://localhost:${port}/review/${opened.reviewId}`);
 
     let health: { app?: string } = {};
-    for (let i = 0; i < 40 && health.app !== "framecut"; i++) {
+    for (let i = 0; i < 40 && health.app !== "framejam"; i++) {
       health = await fetch(`http://127.0.0.1:${port}/api/health`).then((r) => r.json()).catch(() => ({}));
-      if (health.app !== "framecut") await new Promise((r) => setTimeout(r, 100));
+      if (health.app !== "framejam") await new Promise((r) => setTimeout(r, 100));
     }
-    expect(health.app).toBe("framecut");
+    expect(health.app).toBe("framejam");
     const review = await fetch(`http://127.0.0.1:${port}/api/reviews/${opened.reviewId}`).then((r) => r.json());
     expect(review.title).toBe("stdio teaser");
   });

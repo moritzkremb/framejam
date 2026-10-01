@@ -43,7 +43,7 @@ export class PresetLibrary {
           style.id ||= entry.name;
           byId.set(style.id, { style, dir: presetDir, builtin });
         } catch (err) {
-          console.error(`[framecut] Skipping preset ${presetDir}: ${(err as Error).message}`);
+          console.error(`[framejam] Skipping preset ${presetDir}: ${(err as Error).message}`);
         }
       }
     }

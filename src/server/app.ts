@@ -4,7 +4,7 @@ import path from "node:path";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import { feedbackPrompt, openComments } from "./feedback.ts";
+import { feedbackPrompt, latestComments, versionComments } from "./feedback.ts";
 import { sendCompositionFile, sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
 import { webDistDir } from "./paths.ts";
@@ -17,30 +17,53 @@ export function createApp(ctx: McpContext) {
 
   app.onError((err, c) => {
     if (err instanceof StoreError) return c.json({ error: err.message }, err.status);
-    console.error("[framecut]", err);
+    console.error("[framejam]", err);
     return c.json({ error: err.message || "Internal error" }, 500);
   });
 
-  app.get("/api/health", (c) => c.json({ ok: true, app: "framecut", dataDir: store.root, baseUrl: ctx.baseUrl }));
+  app.get("/api/health", (c) =>
+    c.json({ ok: true, app: "framejam", dataDir: store.root, baseUrl: ctx.baseUrl, agent: store.getState().agent ?? null }),
+  );
 
   // --- Reviews -------------------------------------------------------------
   app.get("/api/reviews", (c) =>
     c.json(
-      store.listReviews().map((r) => ({
-        id: r.id,
-        title: r.title,
-        createdAt: r.createdAt,
-        updatedAt: r.updatedAt,
-        versions: r.versions.length,
-        openComments: openComments(r).length,
-        draftComments: r.comments.filter((x) => x.status === "draft").length,
-        resolvedComments: r.comments.filter((x) => x.status === "resolved").length,
-        agentWaiting: Boolean(r.agentWaitingAt),
-        hasVideo: r.versions.some((v) => v.videoPath),
-        hasComposition: r.versions.some((v) => v.compositionDir),
-      })),
+      store.listReviews().map((r) => {
+        const latest = r.versions.at(-1)!;
+        const batch = latest.batchId ? r.batches.find((b) => b.id === latest.batchId) : undefined;
+        return {
+          id: r.id,
+          title: r.title,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          versions: r.versions.length,
+          latestVersion: latest.number,
+          latestSent: Boolean(latest.sentAt),
+          delivered: Boolean(batch?.deliveredAt),
+          draftComments: r.comments.filter((x) => x.version === latest.number && x.status === "draft").length,
+          agentWaiting: Boolean(r.agentWaitingAt),
+          hasVideo: r.versions.some((v) => v.videoPath),
+          hasComposition: r.versions.some((v) => v.compositionDir),
+        };
+      }),
     ),
   );
+
+  /** A frame of the latest render, for the review card. Cached per version; 404 without a render or ffmpeg. */
+  app.get("/api/reviews/:id/poster", async (c) => {
+    const id = c.req.param("id");
+    const review = store.getReview(id);
+    const version = [...review.versions].reverse().find((v) => store.videoFileFor(id, v));
+    if (!version) return c.text("No render", 404);
+    const cached = path.join(store.reviewsDir, id, `poster-v${version.number}.jpg`);
+    if (!fs.existsSync(cached)) {
+      const jpeg = await extractFrame(store.videoFileFor(id, version)!, 1);
+      if (!jpeg) return c.text("No frame", 404);
+      fs.mkdirSync(path.dirname(cached), { recursive: true });
+      fs.writeFileSync(cached, jpeg);
+    }
+    return sendFile(cached, c.req.raw);
+  });
 
   app.get("/api/reviews/:id", (c) => c.json(store.getReview(c.req.param("id"))));
 
@@ -86,8 +109,8 @@ export function createApp(ctx: McpContext) {
   });
 
   app.patch("/api/reviews/:id/comments/:cid", async (c) => {
-    const body = (await c.req.json()) as { text?: string; status?: "draft" | "resolved" };
-    return c.json(store.updateComment(c.req.param("id"), c.req.param("cid"), { text: body.text, status: body.status }));
+    const body = (await c.req.json()) as { text?: string };
+    return c.json(store.updateComment(c.req.param("id"), c.req.param("cid"), { text: body.text }));
   });
 
   app.delete("/api/reviews/:id/comments/:cid", (c) => {
@@ -105,8 +128,8 @@ export function createApp(ctx: McpContext) {
 
   app.get("/api/reviews/:id/prompt", (c) => {
     const review = store.getReview(c.req.param("id"));
-    const scope = c.req.query("scope");
-    const comments = scope === "drafts" ? review.comments.filter((x) => x.status === "draft") : openComments(review);
+    const version = Number(c.req.query("version"));
+    const comments = version ? versionComments(review, version) : latestComments(review);
     return c.text(feedbackPrompt(store, ctx.baseUrl, review, comments));
   });
 
@@ -188,7 +211,7 @@ export function createApp(ctx: McpContext) {
     const index = path.join(webDistDir, "index.html");
     if (fs.existsSync(index)) return sendFile(index, c.req.raw);
     return c.html(
-      "<p style='font-family:sans-serif'>The Framecut UI is not built yet. Run <code>npm run build</code>, or use <code>npm run dev</code> and open port 4518.</p>",
+      "<p style='font-family:sans-serif'>The Frame Jam UI is not built yet. Run <code>npm run build</code>, or use <code>npm run dev</code> and open port 4518.</p>",
     );
   });
 

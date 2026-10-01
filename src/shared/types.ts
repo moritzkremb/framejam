@@ -53,6 +53,10 @@ export interface ReviewVersion {
   compositionEntry?: string;
   note?: string;
   createdAt: string;
+  /** Set when the user pressed Send on this version. A sent version is locked: no new or edited comments. */
+  sentAt?: string;
+  /** The batch that carried this version's comments to the agent. */
+  batchId?: string;
 }
 
 export interface FeedbackBatch {
@@ -74,6 +78,13 @@ export interface Review {
   batches: FeedbackBatch[];
   /** Set when an agent is currently blocked in wait_for_feedback. */
   agentWaitingAt?: string;
+}
+
+/** The agent harness that last connected over MCP (from the MCP `initialize` client info). */
+export interface AgentInfo {
+  name: string;
+  version?: string;
+  at: string;
 }
 
 export interface PresetFont {

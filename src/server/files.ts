@@ -90,7 +90,7 @@ let runtimeScript: string | undefined;
 export function prepareCompositionHtml(html: string): string {
   runtimeScript ??= getHyperframeRuntimeScript().replace(/<\/script/gi, "<\\/script");
   const rewritten = html.replace(GSAP_CDN, (_m, file: string) => `/vendor/gsap/${file}`);
-  const inject = `<script data-framecut="hyperframes-runtime">${runtimeScript}</script>`;
+  const inject = `<script data-framejam="hyperframes-runtime">${runtimeScript}</script>`;
   return rewritten.includes("</body>") ? rewritten.replace(/<\/body>(?![\s\S]*<\/body>)/i, () => `${inject}</body>`) : rewritten + inject;
 }
 

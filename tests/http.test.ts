@@ -59,7 +59,7 @@ describe("REST API used by the review UI", () => {
   it("serves the composition with the Hyperframes runtime injected and GSAP served locally", async () => {
     const { review } = fx.store.openReview({ compositionDir: fx.compositionDir });
     const html = await (await app.request(`/api/reviews/${review.id}/versions/1/composition/`)).text();
-    expect(html).toContain('data-framecut="hyperframes-runtime"');
+    expect(html).toContain('data-framejam="hyperframes-runtime"');
     expect(html).toContain('src="/vendor/gsap/gsap.min.js"');
     expect(html).not.toContain("cdn.jsdelivr.net/npm/gsap");
     const gsap = await app.request("/vendor/gsap/gsap.min.js");
