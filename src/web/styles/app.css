@@ -62,6 +62,7 @@ a { color: inherit; }
 .fc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .fc-link { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 760px) {
+  .fc-feedback-trigger .lbl { display: none; }
   .fc-style-chip .lbl { display: none; }
   .fc-nav a.docs { display: none; }
 }
@@ -97,6 +98,18 @@ a { color: inherit; }
 .fc-menu-item .chk { margin-left: 6px; color: var(--text); }
 .fc-menu-item.danger, .fc-menu-item.danger .fc-i { color: var(--danger); }
 .fc-menu-sep { height: 1px; margin: 6px 4px; background: var(--border); }
+
+.fc-feedback-trigger { color: var(--text-2); }
+.fc-feedback { z-index: 50; width: 320px; padding: 14px; }
+.fc-feedback form { display: flex; flex-direction: column; gap: 8px; }
+.fc-feedback .t { font: 500 14px/20px var(--font-sans); color: var(--text); }
+.fc-feedback .fc-caption { margin: 0 0 4px; }
+.fc-feedback .fc-caption.err { margin: 0; color: var(--danger); }
+.fc-feedback textarea.fc-input { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; font: 400 14px/20px var(--font-sans); }
+.fc-feedback button[type="submit"] { align-self: flex-end; width: auto; height: 32px; padding: 0 12px; justify-content: center; }
+.fc-feedback-done { display: flex; gap: 10px; }
+.fc-feedback-done > .fc-i { flex: none; margin-top: 2px; color: var(--positive); }
+.fc-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 
 /* ---------- Toasts (sonner, unstyled) ---------- */
 [data-sonner-toast].fc-toast { width: min(380px, calc(100vw - 32px)); }

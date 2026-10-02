@@ -2,6 +2,7 @@ import { ArrowUpRight, ChevronLeft } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { COMMUNITY_URL } from "@/components/community";
+import { FeedbackButton } from "@/components/feedback";
 import { api, type PresetSummary } from "@/lib/api";
 
 export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
@@ -75,6 +76,7 @@ export function HomeHeader() {
         </a>
       </nav>
       <span className="fc-grow" />
+      <FeedbackButton />
       {style ? (
         <Link
           to={`/styles/${style.id}`}
