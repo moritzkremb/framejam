@@ -1,0 +1,24 @@
+{
+  "offset": -0.011,
+  "frames": 510,
+  "events": [
+    {
+      "t": -0.011,
+      "type": "start"
+    },
+    {
+      "t": 5.031,
+      "type": "click",
+      "data": "tab-agent"
+    },
+    {
+      "t": 10.654,
+      "type": "click",
+      "data": "use-style"
+    },
+    {
+      "t": 12.953,
+      "type": "end"
+    }
+  ]
+}

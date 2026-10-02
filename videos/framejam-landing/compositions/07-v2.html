@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        @font-face { font-family: "Geist Mono"; src: url("assets/fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #f4f4f5; }
+        #v2-bg { position: absolute; inset: 0; background: #0c0c0d; }
+        #v2-glow { position: absolute; left: 610px; top: 160px; width: 1300px; height: 1300px; border-radius: 50%; background: radial-gradient(circle, rgba(212, 255, 58, 0.12), rgba(212, 255, 58, 0) 62%); }
+        #v2-plane { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; border-radius: 14px; overflow: hidden; background: #0c0c0d; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.09), 0 50px 140px rgba(0, 0, 0, 0.65); }
+        #v2-plane video { display: block; width: 100%; height: 100%; }
+        .v2-cap { position: absolute; left: 96px; bottom: 92px; padding: 26px 40px 32px; border-radius: 28px; background: rgba(12, 12, 13, 0.94); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.55); font-weight: 700; font-size: 76px; line-height: 1.04; letter-spacing: -0.035em; white-space: nowrap; }
+        .v2-w { display: inline-block; }
+        .v2-dot { display: inline-block; width: 22px; height: 22px; margin-right: 22px; border-radius: 50%; background: #d4ff3a; vertical-align: 0.12em; }
+        .v2-lime { color: #d4ff3a; }
+        .v2-side { position: absolute; top: 300px; width: 840px; }
+        #v2-left { left: 80px; }
+        #v2-right { left: 1000px; }
+        .v2-label { display: flex; align-items: baseline; gap: 18px; margin-bottom: 22px; font-family: "Geist Mono", monospace; font-size: 30px; color: #86868f; }
+        .v2-label b { font-weight: 600; color: #a1a1aa; }
+        #v2-right .v2-label b { color: #d4ff3a; }
+        .v2-win { position: relative; width: 840px; height: 472.5px; border-radius: 20px; overflow: hidden; background: #151517; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 40px 110px rgba(0, 0, 0, 0.6); }
+        #v2-right .v2-win { box-shadow: 0 0 0 2px rgba(212, 255, 58, 0.55), 0 40px 110px rgba(0, 0, 0, 0.6); }
+        .v2-win video { display: block; width: 100%; height: 100%; }
+      </style>
+
+      <div data-hf-id="hf-pedv" id="root" data-composition-id="v2" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-olpr" id="v2-bg" class="clip" data-start="0" data-duration="5" data-track-index="0"></div>
+        <div data-hf-id="hf-tksm" id="v2-glow" class="clip" data-start="0" data-duration="5" data-track-index="1"></div>
+        <div data-hf-id="hf-00tw" id="v2-plane">
+          <video data-hf-id="hf-c1n4" id="v2-review" class="clip" src="assets/footage/review.mp4" data-start="0" data-duration="2.1" data-media-start="39.2" data-track-index="2" muted playsinline></video>
+        </div>
+        <div data-hf-id="hf-y2f4" id="v2-cap" class="v2-cap clip" data-start="0.15" data-duration="1.95" data-track-index="3"><span data-hf-id="hf-gp8j" class="v2-dot"></span><span data-hf-id="hf-juvd" class="v2-w v2-lime">Version</span> <span data-hf-id="hf-9e8p" class="v2-w v2-lime">2,</span> <span data-hf-id="hf-jv0z" class="v2-w">same</span> <span data-hf-id="hf-le28" class="v2-w">page.</span></div>
+
+        <div data-hf-id="hf-np64" id="v2-left" class="v2-side">
+          <div data-hf-id="hf-rkvx" class="v2-label"><b data-hf-id="hf-wtxk">v1</b><span data-hf-id="hf-r7s8">your first cut</span></div>
+          <div data-hf-id="hf-4qx1" class="v2-win"><video data-hf-id="hf-p5ng" id="v2-a" class="clip" src="assets/renders/v1.mp4" data-start="2.1" data-duration="2.9" data-media-start="2.3" data-track-index="4" muted playsinline></video></div>
+        </div>
+        <div data-hf-id="hf-lber" id="v2-right" class="v2-side">
+          <div data-hf-id="hf-5kep" class="v2-label"><b data-hf-id="hf-vn0h">v2</b><span data-hf-id="hf-tunp">marker lime · tags a beat apart</span></div>
+          <div data-hf-id="hf-ma3d" class="v2-win"><video data-hf-id="hf-1rxt" id="v2-b" class="clip" src="assets/renders/v2.mp4" data-start="2.1" data-duration="2.9" data-media-start="2.3" data-track-index="5" muted playsinline></video></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const cam = (px, py, z) => ({ x: 960 - px * z, y: 540 - py * z, scale: z });
+          const tl = gsap.timeline({ paused: true });
+
+          // The new version plays in the same player; the marker swipes lime at local 0.3 → 1.1.
+          tl.fromTo("#v2-plane", cam(330, 340, 2.25), { ...cam(310, 350, 1.95), duration: 0.6, ease: "expo.out" }, 0);
+          tl.to("#v2-plane", { ...cam(300, 354, 1.88), duration: 1.5, ease: "none" }, 0.6);
+          tl.to("#v2-plane", { ...cam(300, 354, 1.6), opacity: 0, duration: 0.3, ease: "power2.in" }, 1.85);
+
+          tl.fromTo("#v2-cap", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, 0.15);
+          tl.fromTo("#v2-cap .v2-w", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power3.out", stagger: 0.06 }, 0.22);
+          tl.to("#v2-cap", { opacity: 0, y: 16, duration: 0.15, ease: "power2.in" }, 1.85);
+
+          // Then the two real renders, side by side.
+          tl.fromTo("#v2-left", { y: 60, scale: 0.94, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "expo.out" }, 2.1);
+          tl.fromTo("#v2-right", { y: 60, scale: 0.94, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "expo.out" }, 2.2);
+          tl.fromTo("#v2-glow", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1.05, duration: 2.9, ease: "sine.inOut" }, 2.1);
+          tl.to(["#v2-left", "#v2-right"], { opacity: 0, y: -20, duration: 0.2, ease: "power2.in" }, 4.8);
+          window.__timelines["v2"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

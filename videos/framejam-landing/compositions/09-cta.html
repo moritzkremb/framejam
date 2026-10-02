@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #f4f4f5; }
+        #cta-bg { position: absolute; inset: 0; background: #0c0c0d; }
+        #cta-fade { position: absolute; inset: 0; }
+        #cta-plane { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; border-radius: 14px; overflow: hidden; filter: blur(7px); }
+        #cta-plane video { display: block; width: 100%; height: 100%; }
+        #cta-veil { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(12, 12, 13, 0.72), rgba(12, 12, 13, 0.94)); }
+        #cta-glow { position: absolute; left: 310px; top: -110px; width: 1300px; height: 1300px; border-radius: 50%; background: radial-gradient(circle, rgba(212, 255, 58, 0.13), rgba(212, 255, 58, 0) 60%); }
+        #cta-lock { position: absolute; left: 0; right: 0; top: 300px; text-align: center; }
+        #cta-mark { font-weight: 700; font-size: 220px; line-height: 1; letter-spacing: -0.055em; }
+        .cta-ch { display: inline-block; }
+        .cta-jam { color: #d4ff3a; }
+        #cta-sub { margin-top: 34px; font-size: 46px; font-weight: 500; letter-spacing: -0.02em; color: #a1a1aa; }
+        #cta-pill { display: inline-flex; align-items: center; gap: 18px; margin-top: 54px; padding: 24px 46px 26px; border-radius: 999px; background: #d4ff3a; color: #0c0c0d; font-size: 40px; font-weight: 650; letter-spacing: -0.02em; box-shadow: 0 0 60px rgba(212, 255, 58, 0.28); }
+        #cta-arrow { display: inline-block; }
+      </style>
+
+      <div data-hf-id="hf-8p5n" id="root" data-composition-id="cta" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-mamu" id="cta-bg" class="clip" data-start="0" data-duration="4" data-track-index="0"></div>
+        <div data-hf-id="hf-j9uk" id="cta-fade">
+          <div data-hf-id="hf-7hbo" id="cta-plane">
+            <video data-hf-id="hf-kd1r" id="cta-v" class="clip" src="assets/footage/home.mp4" data-start="0" data-duration="4" data-media-start="0.6" data-track-index="1" muted playsinline></video>
+          </div>
+        </div>
+        <div data-hf-id="hf-hest" id="cta-veil" class="clip" data-start="0" data-duration="4" data-track-index="2"></div>
+        <div data-hf-id="hf-5cnj" id="cta-glow" class="clip" data-start="0" data-duration="4" data-track-index="3"></div>
+        <div data-hf-id="hf-bymu" id="cta-lock" class="clip" data-start="0" data-duration="4" data-track-index="4">
+          <div data-hf-id="hf-yiy1" id="cta-mark"></div>
+          <div data-hf-id="hf-q4yd" id="cta-sub">Works with Cursor, Claude Code and Codex.</div>
+          <div data-hf-id="hf-y7q7" id="cta-pill"><span data-hf-id="hf-fp60">Set up in one paste</span><span data-hf-id="hf-nft2" id="cta-arrow">→</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const mark = document.getElementById("cta-mark");
+          [..."Frame Jam"].forEach((ch, i) => {
+            const s = document.createElement("span");
+            s.className = "cta-ch" + (i > 5 ? " cta-jam" : "");
+            s.textContent = ch === " " ? "\u00a0" : ch;
+            mark.appendChild(s);
+          });
+
+          const cam = (px, py, z) => ({ x: 960 - px * z, y: 540 - py * z, scale: z });
+          const tl = gsap.timeline({ paused: true });
+
+          // The real setup steps drift behind the lockup.
+          tl.fromTo("#cta-plane", cam(560, 400, 1.55), { ...cam(600, 430, 1.4), duration: 4, ease: "none" }, 0);
+          tl.fromTo("#cta-fade", { opacity: 0 }, { opacity: 0.55, duration: 0.6, ease: "power2.out" }, 0);
+          tl.fromTo("#cta-glow", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1.05, duration: 3.5, ease: "sine.out" }, 0.1);
+
+          tl.fromTo("#cta-mark .cta-ch", { y: 120, opacity: 0, rotate: 6 }, { y: 0, opacity: 1, rotate: 0, duration: 0.7, ease: "expo.out", stagger: 0.035 }, 0.05);
+          tl.fromTo("#cta-sub", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 0.6);
+          tl.fromTo("#cta-pill", { y: 30, scale: 0.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.6)" }, 0.95);
+          tl.fromTo("#cta-arrow", { x: 0 }, { x: 10, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 1.6);
+          window.__timelines["cta"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

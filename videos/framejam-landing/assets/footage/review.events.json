@@ -1,0 +1,110 @@
+{
+  "offset": -0.012,
+  "frames": 2233,
+  "events": [
+    {
+      "t": -0.012,
+      "type": "start"
+    },
+    {
+      "t": 1.819,
+      "type": "click",
+      "data": "play"
+    },
+    {
+      "t": 4.873,
+      "type": "pause"
+    },
+    {
+      "t": 7.823,
+      "type": "click",
+      "data": "pin-reads"
+    },
+    {
+      "t": 8.621,
+      "type": "type-start",
+      "data": "Make this marker lime."
+    },
+    {
+      "t": 10.007,
+      "type": "type-end",
+      "data": "Make this marker lime."
+    },
+    {
+      "t": 10.36,
+      "type": "add-1"
+    },
+    {
+      "t": 12.979,
+      "type": "drag-start"
+    },
+    {
+      "t": 14.318,
+      "type": "drag-end"
+    },
+    {
+      "t": 15.018,
+      "type": "type-start",
+      "data": "Tags land too fast. Hold each one a beat longer."
+    },
+    {
+      "t": 18.003,
+      "type": "type-end",
+      "data": "Tags land too fast. Hold each one a beat longer."
+    },
+    {
+      "t": 18.305,
+      "type": "add-2"
+    },
+    {
+      "t": 20.802,
+      "type": "click",
+      "data": "whole-video"
+    },
+    {
+      "t": 21.397,
+      "type": "type-start",
+      "data": "Love the paper texture. Keep it."
+    },
+    {
+      "t": 23.375,
+      "type": "type-end",
+      "data": "Love the paper texture. Keep it."
+    },
+    {
+      "t": 23.678,
+      "type": "add-3"
+    },
+    {
+      "t": 26.818,
+      "type": "click",
+      "data": "finish-review"
+    },
+    {
+      "t": 26.938,
+      "type": "handoff"
+    },
+    {
+      "t": 32.889,
+      "type": "v2"
+    },
+    {
+      "t": 37.019,
+      "type": "click",
+      "data": "seek-v2"
+    },
+    {
+      "t": 38.769,
+      "type": "click",
+      "data": "play-v2"
+    },
+    {
+      "t": 44.766,
+      "type": "pause-v2"
+    },
+    {
+      "t": 45.967,
+      "type": "end"
+    }
+  ]
+}
