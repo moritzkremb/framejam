@@ -1,4 +1,4 @@
-import { Loader2, MousePointerClick, Plus, TriangleAlert } from "lucide-react";
+import { Loader2, MessageSquarePlus, Plus, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import type { ElementInfo } from "@/lib/api";
 import { connectLive } from "@/lib/composition";
@@ -25,12 +25,23 @@ export interface Pin {
   x: number;
   y: number;
   sent: boolean;
+  text: string;
+}
+
+/** A comment at the current time that isn't tied to a spot (a range or a plain timestamp). */
+export interface FloatingNote {
+  id: string;
+  index: number;
+  sent: boolean;
+  text: string;
 }
 
 interface PlayerProps {
   src: string;
   source: "video" | "live";
+  /** Pins for the comments at the current time; the page decides which ones are in view. */
   pins: Pin[];
+  floating: FloatingNote[];
   /** The spot the comment box is attached to, if any. */
   newPin?: { x: number; y: number; element?: ElementInfo } | null;
   selectedId: string | null;
@@ -42,6 +53,8 @@ interface PlayerProps {
   onController(ctrl: MediaController | null): void;
   onFrameClick(x: number, y: number): void;
   onPinClick(id: string): void;
+  /** Width of the picture as laid out, so the controls under it can match. */
+  onFrameWidth?(width: number): void;
 }
 
 function videoController(video: HTMLVideoElement): MediaController {
@@ -97,6 +110,7 @@ export function Player({
   src,
   source,
   pins,
+  floating,
   newPin,
   selectedId,
   showHint,
@@ -106,6 +120,7 @@ export function Player({
   onController,
   onFrameClick,
   onPinClick,
+  onFrameWidth,
 }: PlayerProps) {
   const [native, setNative] = useState({ width: 1920, height: 1080 });
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -157,6 +172,10 @@ export function Player({
       setError((e as Error).message);
     }
   }, []);
+
+  useEffect(() => {
+    if (box.width) onFrameWidth?.(box.width);
+  }, [box.width, onFrameWidth]);
 
   const scale = box.width / native.width;
   const target = newPin?.element?.rect;
@@ -211,6 +230,8 @@ export function Player({
               <button
                 key={p.id}
                 type="button"
+                title={p.text}
+                aria-label={`Comment ${p.index}: ${p.text}`}
                 className={cn("fc-pin", p.sent ? "sent" : "draft", selectedId === p.id && "is-selected")}
                 style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
                 onClick={(e) => {
@@ -225,6 +246,24 @@ export function Player({
               <span className="fc-pin new" style={{ left: `${newPin.x * 100}%`, top: `${newPin.y * 100}%` }}>
                 <Plus className="fc-i" />
               </span>
+            )}
+            {floating.length > 0 && (
+              <div className="fc-floating">
+                {floating.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    className={cn("fc-note", n.sent ? "sent" : "draft", selectedId === n.id && "is-selected")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPinClick(n.id);
+                    }}
+                  >
+                    <span className="n">{n.index}</span>
+                    <span className="fc-truncate">{n.text}</span>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
@@ -243,7 +282,7 @@ export function Player({
       </div>
       {showHint && interactive && status === "ready" && (
         <span className="tip">
-          <MousePointerClick className="fc-i xs" /> Click anything to comment on it
+          <MessageSquarePlus className="fc-i xs" /> Click anything to comment on it
         </span>
       )}
     </div>

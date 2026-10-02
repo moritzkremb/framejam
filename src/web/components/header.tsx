@@ -7,7 +7,7 @@ export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
 
 export function Wordmark() {
   return (
-    <Link to="/" className="fc-logo" aria-label="Frame Jam home">
+    <Link to="/home" className="fc-logo" aria-label="Frame Jam home">
       Frame <b>Jam</b>
     </Link>
   );
@@ -43,19 +43,24 @@ export function Dots({ colors, size }: { colors: string[]; size?: number }) {
   );
 }
 
-/** Home header: wordmark, Reviews / Styles switch, and the style in use. */
+const NAV = [
+  { to: "/home", label: "Home" },
+  { to: "/styles", label: "Styles" },
+  { to: "/projects", label: "Projects" },
+];
+
+/** App header: wordmark, the main pages, and the style in use. */
 export function HomeHeader() {
   const style = useSelectedStyle();
   return (
     <header className="fc-header">
       <Wordmark />
-      <nav className="fc-seg sm" aria-label="Sections">
-        <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : "")}>
-          Reviews
-        </NavLink>
-        <NavLink to="/styles" className={({ isActive }) => (isActive ? "on" : "")}>
-          Styles
-        </NavLink>
+      <nav className="fc-nav" aria-label="Main">
+        {NAV.map(({ to, label }) => (
+          <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "on" : "")}>
+            {label}
+          </NavLink>
+        ))}
       </nav>
       <span className="fc-grow" />
       {style ? (

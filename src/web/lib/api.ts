@@ -1,6 +1,6 @@
-import type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion } from "../../shared/types";
+import type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel } from "../../shared/types";
 
-export type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion };
+export type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel };
 
 export interface ReviewListItem {
   id: string;
@@ -12,9 +12,11 @@ export interface ReviewListItem {
   latestSent: boolean;
   delivered: boolean;
   draftComments: number;
-  agentWaiting: boolean;
+  agentListening: boolean;
   hasVideo: boolean;
   hasComposition: boolean;
+  /** Panels in the latest version; 0 for videos. */
+  panels: number;
 }
 
 export interface Health {
@@ -23,6 +25,7 @@ export interface Health {
   dataDir: string;
   baseUrl: string;
   agent: AgentInfo | null;
+  setup?: { mcpCommand: string[]; skillPath: string };
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -56,10 +59,11 @@ export const api = {
     request<ReviewComment>(`/api/reviews/${id}/comments/${cid}`, { method: "PATCH", body: JSON.stringify(body) }),
   deleteComment: (id: string, cid: string) => request(`/api/reviews/${id}/comments/${cid}`, { method: "DELETE" }),
   submit: (id: string, message?: string) =>
-    request<{ batch: { id: string; commentIds: string[] }; agentWaiting: boolean }>(`/api/reviews/${id}/submit`, {
+    request<{ batch: { id: string; commentIds: string[] }; agentListening: boolean }>(`/api/reviews/${id}/submit`, {
       method: "POST",
       body: JSON.stringify({ message }),
     }),
+  reopen: (id: string) => request<{ wasDelivered: boolean; review: Review }>(`/api/reviews/${id}/reopen`, { method: "POST" }),
   prompt: (id: string, version?: number) => request<string>(`/api/reviews/${id}/prompt${version ? `?version=${version}` : ""}`),
   presets: () => request<{ selected: string | null; presets: PresetSummary[] }>("/api/presets"),
   preset: (id: string) =>
@@ -75,6 +79,10 @@ export const api = {
 
 export function videoUrl(reviewId: string, version: number) {
   return `/api/reviews/${reviewId}/versions/${version}/video`;
+}
+
+export function panelUrl(reviewId: string, version: number, panel: number) {
+  return `/api/reviews/${reviewId}/versions/${version}/panels/${panel}`;
 }
 
 export function compositionUrl(reviewId: string, version: number) {

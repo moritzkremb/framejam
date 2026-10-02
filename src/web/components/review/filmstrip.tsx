@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { formatTime } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -73,10 +73,19 @@ interface FilmstripProps {
 }
 
 const COUNT = 12;
+const MARKER_GAP = 21;
 
 /** A filmstrip you can click (jump), drag across (pick a range), or scrub by its playhead. */
 export function Filmstrip({ duration, time, markers, range, selectedId, frameSource, canSelectRange, onSeek, onScrubStart, onRange, onSelect }: FilmstripProps) {
   const stripRef = useRef<HTMLDivElement>(null);
+  const [stripWidth, setStripWidth] = useState(0);
+  useLayoutEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setStripWidth(el.clientWidth));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const [drag, setDrag] = useState<{ mode: "range" | "scrub"; start: number; end: number; moved: boolean } | null>(null);
   const [hover, setHover] = useState<number | null>(null);
   const frames = useFrames(frameSource, COUNT);
@@ -88,6 +97,16 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
   };
 
   const shownRange = drag?.mode === "range" && drag.moved ? { start: Math.min(drag.start, drag.end), end: Math.max(drag.start, drag.end) } : range;
+
+  // Markers closer than one marker's width are nudged right so each stays readable and clickable.
+  const nudge = new Map<string, number>();
+  let lastX = -Infinity;
+  for (const m of [...markers].sort((a, b) => a.time - b.time || a.index - b.index)) {
+    const x = (m.time / d) * stripWidth;
+    const placed = Math.max(x, lastX + MARKER_GAP);
+    nudge.set(m.id, placed - x);
+    lastX = placed;
+  }
 
   return (
     <div className="fc-timeline" style={{ userSelect: "none" }}>
@@ -148,7 +167,7 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
           type="button"
           title={`${formatTime(m.time)}${m.endTime !== undefined ? ` – ${formatTime(m.endTime)}` : ""}`}
           className={cn("fc-mark", m.sent ? "sent" : "draft", selectedId === m.id && "is-selected")}
-          style={{ left: pct(m.time) }}
+          style={{ left: `calc(${pct(m.time)} + ${nudge.get(m.id) ?? 0}px)` }}
           onClick={() => onSelect(m.id)}
         >
           {m.index}

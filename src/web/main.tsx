@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-
 import { Toaster } from "sonner";
 import { HomePage } from "@/pages/home-page";
 import { NotFoundPage } from "@/pages/not-found-page";
+import { ProjectsPage } from "@/pages/projects-page";
 import { ReviewPage } from "@/pages/review-page";
 import { StyleDetailPage } from "@/pages/style-detail-page";
 import { StylesPage } from "@/pages/styles-page";
@@ -27,10 +28,13 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/review/:id" element={<ReviewPage />} />
+        <Route path="/" element={<Navigate to="/styles" replace />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/styles" element={<StylesPage />} />
         <Route path="/styles/:id" element={<StyleDetailPage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/reviews" element={<Navigate to="/projects" replace />} />
+        <Route path="/review/:id" element={<ReviewPage />} />
         <Route path="/presets" element={<PresetRedirect />} />
         <Route path="/presets/:id" element={<PresetRedirect />} />
         <Route path="*" element={<NotFoundPage />} />

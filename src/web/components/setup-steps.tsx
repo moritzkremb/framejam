@@ -2,32 +2,28 @@ import { Check, Copy, Palette } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { copyText } from "@/lib/api";
+import { copyText, type Health } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:4517";
 
-const CONNECT = [
-  {
-    id: "claude",
-    label: "Claude Code",
-    code: "claude mcp add framejam -- npx -y framejam --stdio",
-    hint: "Run once in your terminal, then restart Claude Code.",
-  },
-  {
-    id: "cursor",
-    label: "Cursor",
-    code: `{\n  "mcpServers": {\n    "framejam": { "command": "npx", "args": ["-y", "framejam", "--stdio"] }\n  }\n}`,
-    hint: "Add to ~/.cursor/mcp.json (or .cursor/mcp.json in your project).",
-  },
-  {
-    id: "chatgpt",
-    label: "ChatGPT",
-    code: `${origin}/mcp`,
-    hint: "In ChatGPT settings, turn on developer mode for connectors and add a custom connector with this URL.",
-  },
-];
+const shellQuote = (s: string) => (/[\s"']/.test(s) ? `"${s.replace(/"/g, '\\"')}"` : s);
 
+/** One message that makes the agent install the MCP server and the skill itself. */
+export function setupPrompt(setup?: Health["setup"]) {
+  const cmd = (setup?.mcpCommand ?? ["npx", "-y", "framejam", "--stdio"]).map(shellQuote).join(" ");
+  const skill = setup?.skillPath ?? "skills/framejam/SKILL.md from the framejam package";
+  return [
+    "Set up Frame Jam for me. It's a local MCP server for picking video styles and reviewing Hyperframes videos.",
+    "",
+    `1. Add an MCP server named "framejam" (stdio) that runs: ${cmd}`,
+    `   Cursor: add it to ~/.cursor/mcp.json. Claude Code: claude mcp add framejam -- ${cmd}. Anything else: your usual MCP config.`,
+    `2. Install the Frame Jam skill: copy ${shellQuote(skill)} to ~/.cursor/skills/framejam/SKILL.md (Cursor) or ~/.claude/skills/framejam/SKILL.md (Claude Code).`,
+    `3. Tell me if I need to reload MCP servers. Then call list_presets to check it works, and open ${origin} in your built-in browser.`,
+  ].join("\n");
+}
+
+export const STYLE_PROMPT = "Open Frame Jam in your built-in browser so I can pick a style";
 export const FIRST_VIDEO_PROMPT = "Make a 10s launch teaser with Frame Jam and open it for review";
 
 export function CodeBlock({ code, block }: { code: string; block?: boolean }) {
@@ -55,28 +51,44 @@ export function CodeBlock({ code, block }: { code: string; block?: boolean }) {
   );
 }
 
-export function ConnectInstructions() {
-  const [tab, setTab] = useState(CONNECT[0].id);
-  const current = CONNECT.find((c) => c.id === tab)!;
+/** A message for the agent chat, with one obvious Copy button. */
+export function PromptBlock({ text, primary }: { text: string; primary?: boolean }) {
+  const [copied, setCopied] = useState(false);
   return (
-    <div className="fc-col" style={{ gap: 10 }}>
-      <div className="fc-seg sm" role="group" aria-label="Your agent app">
-        {CONNECT.map((c) => (
-          <button key={c.id} type="button" aria-pressed={c.id === tab} onClick={() => setTab(c.id)}>
-            {c.label}
-          </button>
-        ))}
-      </div>
-      <CodeBlock code={current.code} block={current.code.includes("\n")} />
-      <p className="fc-caption" style={{ margin: 0 }}>
-        {current.hint}
-      </p>
+    <div className="fc-prompt">
+      <p>{text}</p>
+      <button
+        type="button"
+        className={cn("fc-btn sm", primary && "primary")}
+        onClick={async () => {
+          try {
+            await copyText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1800);
+          } catch (e) {
+            toast.error((e as Error).message);
+          }
+        }}
+      >
+        {copied ? <Check className="fc-i xs" /> : <Copy className="fc-i xs" />}
+        {copied ? "Copied" : "Copy"}
+      </button>
     </div>
   );
 }
 
-/** First-run checklist. Steps tick themselves off as the server sees a connection, a style and a review. */
-export function SetupSteps({ agentName, styleName, hasReview }: { agentName?: string; styleName?: string; hasReview: boolean }) {
+/** Setup as three messages to paste into the agent chat. Steps tick off as the server sees a connection, a style and a review. */
+export function SetupSteps({
+  health,
+  agentName,
+  styleName,
+  hasReview,
+}: {
+  health?: Health | null;
+  agentName?: string;
+  styleName?: string;
+  hasReview: boolean;
+}) {
   const done = [Boolean(agentName), Boolean(styleName), hasReview];
   const current = done.indexOf(false);
   const state = (i: number) => (done[i] ? "done" : i === current ? "current" : "");
@@ -86,36 +98,31 @@ export function SetupSteps({ agentName, styleName, hasReview }: { agentName?: st
         <span className="n">{done[0] ? <Check className="fc-i xs" /> : 1}</span>
         <div>
           <div className="st">Connect your agent</div>
-          {done[0] ? (
-            <p className="sd">Connected to {agentName}.</p>
-          ) : (
-            <>
-              <p className="sd">Frame Jam talks to your agent over MCP. Pick your app and run this once:</p>
-              <ConnectInstructions />
-            </>
-          )}
+          <p className="sd">
+            {done[0]
+              ? `Connected to ${agentName}. To set up another agent app, paste this there too:`
+              : "Paste this into your agent chat (Cursor, Claude Code, Codex…). Your agent installs Frame Jam and its skill."}
+          </p>
+          <PromptBlock text={setupPrompt(health?.setup)} primary={current === 0} />
         </div>
       </li>
       <li className={cn("fc-step", state(1))}>
         <span className="n">{done[1] ? <Check className="fc-i xs" /> : 2}</span>
         <div>
           <div className="st">Pick a style</div>
-          <p className="sd">
-            {done[1] ? `Using ${styleName}.` : "Choose how your video should look. Your agent gets the colours, fonts and motion."}
-          </p>
-          {!done[1] && (
-            <Link to="/styles" className={cn("fc-btn", current === 1 ? "primary" : "", "sm")}>
-              <Palette className="fc-i sm" /> Browse styles
-            </Link>
-          )}
+          <p className="sd">{done[1] ? `Using ${styleName}. Change it any time.` : "Paste this, then press Use on the look you like."}</p>
+          {!done[1] && <PromptBlock text={STYLE_PROMPT} primary={current === 1} />}
+          <Link to="/styles" className="fc-btn ghost sm" style={{ marginTop: 6, marginLeft: -10 }}>
+            <Palette className="fc-i sm" /> Or browse styles here
+          </Link>
         </div>
       </li>
       <li className={cn("fc-step", state(2))}>
         <span className="n">{done[2] ? <Check className="fc-i xs" /> : 3}</span>
         <div>
           <div className="st">Ask for a video</div>
-          <p className="sd">Paste this into your agent chat:</p>
-          <CodeBlock code={FIRST_VIDEO_PROMPT} />
+          <p className="sd">Paste this. Your agent builds it and opens the review right here.</p>
+          <PromptBlock text={FIRST_VIDEO_PROMPT} primary={current === 2} />
         </div>
       </li>
     </ol>

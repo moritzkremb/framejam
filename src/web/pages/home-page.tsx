@@ -1,76 +1,71 @@
-import { ChevronRight, Film, Inbox } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { ArrowRight, MessageSquare, Palette, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { HomeHeader } from "@/components/header";
-import { ConnectInstructions, SetupSteps } from "@/components/setup-steps";
+import { SetupSteps } from "@/components/setup-steps";
 import { isOffline, Offline } from "@/components/states";
-import { agentLabel, api, posterUrl, relativeTime, type Health, type ReviewListItem } from "@/lib/api";
+import { agentLabel, api, type Health, type PresetSummary } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-/** Whose turn it is, in the review card's words. */
-function reviewState(r: ReviewListItem): { text: string; tone: "you" | "agent" | "done"; working?: boolean } {
-  if (r.latestSent && r.delivered) return { text: `Agent is working on v${r.latestVersion + 1}`, tone: "agent", working: true };
-  if (r.latestSent) return { text: "Sent · tell your agent to pick it up", tone: "you" };
-  if (r.draftComments) return { text: `${r.draftComments} comment${r.draftComments === 1 ? "" : "s"} not sent`, tone: "you" };
-  if (r.agentWaiting) return { text: "Waiting for your feedback", tone: "agent" };
-  return { text: `Version ${r.latestVersion} is ready to watch`, tone: "done" };
-}
+const STEPS = [
+  {
+    icon: Palette,
+    title: "Pick a style",
+    body: "Browse example videos and press Use. Your agent gets the palette, fonts, motion and a working template.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Point at what to change",
+    body: "Pause, click the frame, type. Your agent gets the timestamp, the element you clicked and the animation behind it.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Get the next version",
+    body: "Finish your review and your agent ships the next version into the same page. Repeat until it's right.",
+  },
+];
 
-function Poster({ review }: { review: ReviewListItem }) {
-  const [shape, setShape] = useState<"tall" | "wide">("wide");
-  const [failed, setFailed] = useState(!review.hasVideo);
+/** A still of a review: a style's poster with a comment pinned on it. */
+function HeroVisual({ preset }: { preset?: PresetSummary }) {
   return (
-    <div className={cn("poster", shape === "wide" && "wide")}>
-      {failed ? (
-        <span className="ph">
-          <Film className="fc-i sm" />
-        </span>
-      ) : (
-        <img
-          src={posterUrl(review.id, review.latestVersion)}
-          alt=""
-          loading="lazy"
-          onLoad={(e) => setShape(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth ? "tall" : "wide")}
-          onError={() => setFailed(true)}
-        />
-      )}
+    <div className="fc-hero-visual" aria-hidden>
+      <div className="win">
+        <div className="frame" style={{ background: preset?.palette.background ?? "var(--surface-2)" }}>
+          {preset?.posterUrl && <img src={preset.posterUrl} alt="" />}
+          <span className="fc-pin draft" style={{ left: "58%", top: "44%" }}>
+            1
+          </span>
+          <div className="bubble" style={{ left: "calc(58% + 22px)", top: "calc(44% - 52px)" }}>
+            <span className="when">0:02.4</span>
+            Make this line pop more
+          </div>
+        </div>
+        <div className="strip">
+          <span className="played" />
+          <span className="mark" style={{ left: "34%" }} />
+          <span className="head" style={{ left: "34%" }} />
+        </div>
+      </div>
     </div>
   );
 }
 
-function ReviewCard({ review }: { review: ReviewListItem }) {
-  const state = reviewState(review);
-  return (
-    <Link to={`/review/${review.id}`} className="fc-rcard" data-testid="review-card">
-      <Poster review={review} />
-      <div className="fc-grow">
-        <div className="name">{review.title}</div>
-        <div className={cn("state", state.tone)}>
-          {state.working ? <span className="fc-agent working" style={{ gap: 0 }}><span className="dot" /></span> : <span className="dot" />}
-          {state.text}
-        </div>
-        <div className="meta">
-          v{review.latestVersion} · {relativeTime(review.updatedAt)}
-        </div>
-      </div>
-      <ChevronRight className="fc-i sm fc-t3" />
-    </Link>
-  );
-}
-
 export function HomePage() {
-  const [reviews, setReviews] = useState<ReviewListItem[] | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [styleName, setStyleName] = useState<string | undefined>();
+  const [hero, setHero] = useState<PresetSummary | undefined>();
+  const [hasReview, setHasReview] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  const [showSetup, setShowSetup] = useState(false);
+  const setupRef = useRef<HTMLElement>(null);
+  const location = useLocation();
 
   const load = useCallback(() => {
-    Promise.all([api.reviews(), api.health(), api.presets()])
-      .then(([r, h, p]) => {
-        setReviews(r);
+    Promise.all([api.health(), api.presets(), api.reviews()])
+      .then(([h, p, r]) => {
         setHealth(h);
         setStyleName(p.presets.find((x) => x.id === p.selected)?.name);
+        setHero((cur) => cur ?? p.presets.find((x) => x.id === "midnight-launch" && x.posterUrl) ?? p.presets.find((x) => x.format === "16:9" && x.posterUrl));
+        setHasReview(r.length > 0);
         setError(null);
       })
       .catch(setError);
@@ -82,9 +77,13 @@ export function HomePage() {
     return () => clearInterval(t);
   }, [load]);
 
+  useEffect(() => {
+    if (location.hash === "#setup" && health) setupRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [location.hash, health]);
+
   const agent = agentLabel(health?.agent);
 
-  if (error && !reviews) {
+  if (error && !health) {
     return (
       <div className="fc-screen">
         <HomeHeader />
@@ -93,76 +92,65 @@ export function HomePage() {
     );
   }
 
-  if (reviews && reviews.length === 0) {
-    return (
-      <div className="fc-screen">
-        <HomeHeader />
-        <main className="fc-main fc-narrow" style={{ gap: 24 }}>
-          <div>
-            <h1 className="fc-h1">Make your first video</h1>
-            <p className="fc-lede">Frame Jam sits next to your agent. Your agent builds the video; you point at what to change.</p>
-          </div>
-          <SetupSteps agentName={agent} styleName={styleName} hasReview={false} />
-          <div className="fc-card fc-row" style={{ alignItems: "flex-start", gap: 12, flexWrap: "nowrap" }}>
-            <Inbox className="fc-i fc-t2" />
-            <div>
-              <div className="fc-h3">Your review will appear here</div>
-              <p className="fc-caption" style={{ margin: "2px 0 0", fontSize: 13, lineHeight: "19px" }}>
-                When your agent opens a review, this page shows it right away.
-              </p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  const needsYou = (reviews ?? []).filter((r) => !(r.latestSent && r.delivered));
-  const earlier = (reviews ?? []).filter((r) => r.latestSent && r.delivered);
-
   return (
     <div className="fc-screen">
       <HomeHeader />
-      <main className="fc-main fc-narrow">
-        <h1 className="fc-h1">Reviews</h1>
-        {!reviews ? (
-          <div className="fc-col" style={{ gap: 8 }}>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="fc-skel" style={{ height: 76 }} />
-            ))}
-          </div>
-        ) : (
-          <div className="fc-col" style={{ gap: 8 }}>
-            {needsYou.length > 0 && <div className="fc-caption">Needs you</div>}
-            {needsYou.map((r) => (
-              <ReviewCard key={r.id} review={r} />
-            ))}
-            {earlier.length > 0 && (
-              <div className="fc-caption" style={{ marginTop: needsYou.length ? 12 : 0 }}>
-                With your agent
-              </div>
-            )}
-            {earlier.map((r) => (
-              <ReviewCard key={r.id} review={r} />
-            ))}
-          </div>
-        )}
-        <div className="fc-home-foot">
-          <div className="fc-row" style={{ justifyContent: "space-between" }}>
-            <span className={cn("fc-agent", agent && "connected")}>
+      <main className="fc-home">
+        <section className="fc-hero">
+          <div className="copy">
+            <span className={cn("fc-eyebrow", agent && "on")}>
               <span className="dot" />
-              {agent ? `Connected to ${agent}` : "No agent connected yet"}
+              {agent ? `Connected to ${agent}` : "For Hyperframes and your coding agent"}
             </span>
-            <button type="button" className="fc-btn ghost sm" onClick={() => setShowSetup((s) => !s)}>
-              {showSetup ? "Hide setup" : "Setup help"}
-            </button>
-          </div>
-          {showSetup && (
-            <div style={{ marginTop: 12 }}>
-              <ConnectInstructions />
+            <h1>
+              Make videos with your agent.
+              <span> Point at what to change.</span>
+            </h1>
+            <p>
+              Frame Jam is a small app that runs next to your agent chat. Pick a look from a gallery of styles. When the video is ready, click
+              right on the frame and type what should change. Your agent gets the exact moment, the element you clicked, and the animation
+              behind it.
+            </p>
+            <div className="fc-row" style={{ gap: 8, marginTop: 4 }}>
+              {agent ? (
+                <Link to="/styles" className="fc-btn primary lg">
+                  Pick a style <ArrowRight className="fc-i sm" />
+                </Link>
+              ) : (
+                <button type="button" className="fc-btn primary lg" onClick={() => setupRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+                  Set up in one paste <ArrowRight className="fc-i sm" />
+                </button>
+              )}
+              <Link to={agent ? "/projects" : "/styles"} className="fc-btn outline lg">
+                {agent ? "Your projects" : "Browse styles"}
+              </Link>
             </div>
-          )}
-        </div>
+          </div>
+          <HeroVisual preset={hero} />
+        </section>
+
+        <section className="fc-how">
+          {STEPS.map(({ icon: Icon, title, body }, i) => (
+            <div key={title} className="item">
+              <span className="ic">
+                <Icon className="fc-i sm" />
+              </span>
+              <div className="t">
+                <span className="n">{i + 1}</span>
+                {title}
+              </div>
+              <p>{body}</p>
+            </div>
+          ))}
+        </section>
+
+        <section ref={setupRef} id="setup" className="fc-home-setup">
+          <div>
+            <h2 className="fc-h1">Set up</h2>
+            <p className="fc-lede">Three messages to paste into your agent chat. Each step ticks itself off.</p>
+          </div>
+          <SetupSteps health={health} agentName={agent} styleName={styleName} hasReview={hasReview} />
+        </section>
       </main>
     </div>
   );

@@ -1,6 +1,6 @@
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Search, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { HomeHeader } from "@/components/header";
 import { Menu, MenuItem } from "@/components/menu";
 import { isOffline, Offline } from "@/components/states";
@@ -29,7 +29,7 @@ function StyleCard({ preset, inUse, busy, onUse }: { preset: PresetSummary; inUs
         const v = videoRef.current;
         if (v) {
           v.pause();
-          v.currentTime = 0;
+          v.load();
         }
       }}
     >
@@ -123,6 +123,7 @@ export function StylesPage() {
   const [pace, setPace] = useState<string | null>(null);
   const [mood, setMood] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [connected, setConnected] = useState(true);
   const selection = useStyleSelection(null);
   const { setSelected } = selection;
 
@@ -134,6 +135,10 @@ export function StylesPage() {
         setSelected(d.selected);
       })
       .catch(setError);
+    api
+      .health()
+      .then((h) => setConnected(Boolean(h.agent)))
+      .catch(() => {});
   }, [setSelected]);
 
   const moods = useMemo(() => [...new Set(data?.presets.flatMap((p) => p.mood) ?? [])].sort(), [data]);
@@ -152,9 +157,20 @@ export function StylesPage() {
     <div className="fc-screen">
       <HomeHeader />
       <main className="fc-main">
+        {!connected && (
+          <Link to="/home#setup" className="fc-banner">
+            <Sparkles className="fc-i sm" />
+            <span className="fc-grow">
+              <b>New here?</b> Connect your agent with one message you paste into your chat.
+            </span>
+            <span className="go">
+              Set up <ArrowRight className="fc-i xs" />
+            </span>
+          </Link>
+        )}
         <div>
           <h1 className="fc-h1">Styles</h1>
-          <p className="fc-lede">Pick a look for your next video. Open one to see the details.</p>
+          <p className="fc-lede">Pick a look for your next video. Press Use, and your agent builds with it. Open one to see the details.</p>
         </div>
         {error && !data ? (
           isOffline(error) ? <Offline /> : <p className="fc-caption">{String((error as Error).message)}</p>

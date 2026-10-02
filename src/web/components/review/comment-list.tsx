@@ -25,6 +25,7 @@ function elementLine(c: ReviewComment) {
 function CommentItem({
   comment,
   index,
+  label,
   editable,
   selected,
   onSelect,
@@ -33,6 +34,7 @@ function CommentItem({
 }: {
   comment: ReviewComment;
   index: number;
+  label: string;
   editable: boolean;
   selected: boolean;
   onSelect(): void;
@@ -57,7 +59,7 @@ function CommentItem({
       <span className={cn("fc-num", editable ? "draft" : "sent")}>{index}</span>
       <div style={{ minWidth: 0 }}>
         <div className="top">
-          <span className="when">{whenLabel(comment)}</span>
+          <span className="when">{label}</span>
         </div>
         {editing ? (
           <div className="fc-edit" onClick={(e) => e.stopPropagation()}>
@@ -137,11 +139,12 @@ function CommentItem({
   );
 }
 
-/** The comments on the version you're watching. Editable while the version is open, greyed once sent. */
+/** The comments on the version you're watching, one card under another. Editable while the version is open, greyed once finished. */
 export function CommentList({
   comments,
   editable,
   selectedId,
+  label = whenLabel,
   onSelect,
   onSave,
   onDelete,
@@ -149,17 +152,20 @@ export function CommentList({
   comments: ReviewComment[];
   editable: boolean;
   selectedId: string | null;
+  /** Where the comment is, e.g. "0:04.2" or "Panel 3". */
+  label?(c: ReviewComment): string;
   onSelect(c: ReviewComment): void;
   onSave(c: ReviewComment, text: string): Promise<void>;
   onDelete(c: ReviewComment): Promise<void>;
 }) {
   return (
-    <ul className="fc-thread compact">
+    <ul className="fc-thread cards">
       {comments.map((c, i) => (
         <CommentItem
           key={c.id}
           comment={c}
           index={i + 1}
+          label={label(c)}
           editable={editable}
           selected={selectedId === c.id}
           onSelect={() => onSelect(c)}
