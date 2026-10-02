@@ -77,7 +77,8 @@ describe("wait_for_feedback", () => {
     const res = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
     expect(res.status).toBe("pending");
     expect(Date.now() - started).toBeGreaterThanOrEqual(950);
-    expect(fx.store.getReview(reviewId).agentWaitingAt).toBeUndefined();
+    // Still "listening" through the gap until the agent's next call.
+    expect(fx.store.agentListening(reviewId)).toBe(true);
   });
 
   it("unblocks as soon as the user presses Send, with comments, element info and frames", async () => {
@@ -99,7 +100,7 @@ describe("wait_for_feedback", () => {
 
     const waiting = mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 5 });
     await new Promise((r) => setTimeout(r, 150));
-    expect(fx.store.getReview(reviewId).agentWaitingAt).toBeDefined();
+    expect(fx.store.agentListening(reviewId)).toBe(true);
     fx.store.submit(reviewId, "Keep the grid");
 
     const result = await waiting;
@@ -163,6 +164,36 @@ describe("versions are rounds", () => {
     const next = fx.store.addComment(reviewId, { time: 1, text: "Round two" });
     expect(next.version).toBe(2);
     expect(() => fx.store.addComment(reviewId, { version: 1, time: 1, text: "Old" })).toThrow(/not the latest/);
+  });
+
+  it("reopening before the agent picks it up withdraws the round", async () => {
+    const { reviewId } = await open();
+    const c = fx.store.addComment(reviewId, { time: 1, text: "First" });
+    fx.store.submit(reviewId);
+    expect(fx.store.reopen(reviewId).wasDelivered).toBe(false);
+    const review = fx.store.getReview(reviewId);
+    expect(review.versions[0].sentAt).toBeUndefined();
+    expect(review.batches).toHaveLength(0);
+    fx.store.updateComment(reviewId, c.id, { text: "Edited" });
+    fx.store.submit(reviewId);
+    const payload = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
+    expect(payload.revised).toBeUndefined();
+    expect(payload.comments.map((x: { text: string }) => x.text)).toEqual(["Edited"]);
+  });
+
+  it("reopening after delivery sends a revised list that replaces the old one", async () => {
+    const { reviewId } = await open();
+    fx.store.addComment(reviewId, { time: 1, text: "First" });
+    fx.store.submit(reviewId);
+    await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 });
+    expect(fx.store.reopen(reviewId).wasDelivered).toBe(true);
+    fx.store.addComment(reviewId, { time: 2, text: "Second" });
+    fx.store.submit(reviewId);
+    const payload = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
+    expect(payload.revised).toBe(true);
+    expect(payload.message).toMatch(/replaces the earlier one/);
+    expect(payload.comments).toHaveLength(2);
+    expect(() => fx.store.reopen(reviewId) && fx.store.reopen(reviewId)).toThrow(/nothing to reopen/);
   });
 
   it("moves unsent comments forward when the agent ships a version first", async () => {
@@ -254,6 +285,69 @@ describe("resolve_comments and add_version", () => {
     const v1 = fx.store.videoFileFor(reviewId, review.versions[0])!;
     expect(fs.statSync(v1).size).toBeGreaterThan(1000);
     expect(fs.readFileSync(fx.store.videoFileFor(reviewId, review.versions[1])!, "utf8")).toBe("overwritten");
+  });
+});
+
+describe("storyboards", () => {
+  /** A folder of panel images; the bytes don't matter, only the files. */
+  const makeBoard = (names: string[]) => {
+    const dir = path.join(fx.project, "storyboard");
+    fs.mkdirSync(dir, { recursive: true });
+    for (const n of names) fs.writeFileSync(path.join(dir, n), `img:${n}`);
+    return dir;
+  };
+
+  it("opens a storyboard from a folder, sorted by file name", async () => {
+    const dir = makeBoard(["10.png", "2.png", "1.png", "notes.txt"]);
+    const res = parse(await mcp.call("open_review", { title: "Launch board", panelsDir: dir }));
+    const v1 = fx.store.getReview(res.reviewId).versions[0];
+    expect(v1.panels!.map((p) => path.basename(p.sourcePath))).toEqual(["1.png", "2.png", "10.png"]);
+    expect(v1.panels![0].image).toBe("v1-panels/01.png");
+    expect(fx.store.panelFileFor(res.reviewId, v1, 3)).toContain(path.join("versions", "v1-panels", "03.png"));
+  });
+
+  it("returns comments by panel, with captions, and keeps old panels when files are overwritten", async () => {
+    const dir = makeBoard(["a.png", "b.png"]);
+    const { reviewId } = parse(
+      await mcp.call("open_review", {
+        title: "Board",
+        panelsDir: dir,
+        panels: [{ path: "a.png", title: "Cold open", caption: "Slow push in on the laptop" }, "b.png"],
+      }),
+    );
+    fx.store.addComment(reviewId, { time: 0, panel: 1, x: 0.2, y: 0.8, text: "Make the laptop bigger" });
+    fx.store.addComment(reviewId, { time: 0, panel: 2, text: "Swap this shot for a close-up" });
+    fx.store.addComment(reviewId, { time: 0, wholeVideo: true, text: "Warmer colours overall" });
+    expect(() => fx.store.addComment(reviewId, { time: 0, panel: 3, text: "nope" })).toThrow(/between 1 and 2/);
+    fx.store.submit(reviewId);
+
+    const result = await mcp.call("wait_for_feedback", { reviewId });
+    const res = parse(result);
+    expect(res.panels).toHaveLength(2);
+    const byText = Object.fromEntries(res.comments.map((c: { text: string }) => [c.text, c]));
+    expect(byText["Make the laptop bigger"].at).toBe("panel 1 (Cold open)");
+    expect(byText["Make the laptop bigger"].kind).toBe("pin");
+    expect(byText["Make the laptop bigger"].panel.caption).toBe("Slow push in on the laptop");
+    expect(byText["Make the laptop bigger"].position.description).toMatch(/bottom left of panel/);
+    expect(byText["Swap this shot for a close-up"].kind).toBe("panel");
+    expect(byText["Warmer colours overall"].at).toBe("whole storyboard");
+    const prompt = result.content[1].text!;
+    expect(prompt).toContain("# Storyboard feedback");
+    expect(prompt).toContain("update the panel images");
+
+    fs.writeFileSync(path.join(dir, "a.png"), "img:new");
+    const v2 = parse(await mcp.call("add_version", { reviewId, note: "Bigger laptop" }));
+    expect(v2.version).toBe(2);
+    const review = fx.store.getReview(reviewId);
+    expect(review.versions[1].panels![0].title).toBe("Cold open");
+    expect(fs.readFileSync(fx.store.panelFileFor(reviewId, review.versions[0], 1)!, "utf8")).toBe("img:a.png");
+    expect(fs.readFileSync(fx.store.panelFileFor(reviewId, review.versions[1], 1)!, "utf8")).toBe("img:new");
+  });
+
+  it("rejects mixing panels with a video", async () => {
+    const dir = makeBoard(["1.png"]);
+    const res = await mcp.call("open_review", { panelsDir: dir, videoPath: fx.video });
+    expect(res.isError).toBe(true);
   });
 });
 

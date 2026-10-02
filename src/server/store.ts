@@ -10,6 +10,7 @@ import type {
   Review,
   ReviewComment,
   ReviewVersion,
+  StoryboardPanel,
 } from "../shared/types.ts";
 import { dataDir } from "./paths.ts";
 
@@ -28,6 +29,9 @@ export function newId(prefix: string): string {
 
 const now = () => new Date().toISOString();
 
+export const LISTEN_HEARTBEAT_MS = 4_000;
+const LISTEN_GRACE_MS = 15_000;
+
 function writeJsonAtomic(file: string, data: unknown) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.${randomBytes(3).toString("hex")}.tmp`;
@@ -44,13 +48,23 @@ function readJson<T>(file: string): T | undefined {
   }
 }
 
-export interface OpenReviewInput {
-  title?: string;
+/** A panel image path (absolute, or relative to panelsDir), optionally with a title and caption. */
+export type PanelInput = string | { path: string; title?: string; caption?: string };
+
+export interface MediaInput {
   videoPath?: string;
   compositionDir?: string;
+  panels?: PanelInput[];
+  panelsDir?: string;
+}
+
+export interface OpenReviewInput extends MediaInput {
+  title?: string;
   reviewId?: string;
   note?: string;
 }
+
+const PANEL_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]);
 
 export interface NewCommentInput {
   version?: number;
@@ -59,6 +73,7 @@ export interface NewCommentInput {
   endTime?: number;
   x?: number;
   y?: number;
+  panel?: number;
   wholeVideo?: boolean;
   text: string;
   source?: PlayerSource;
@@ -119,12 +134,16 @@ export class Store {
     return review;
   }
 
+  /** Changes whenever the review or its listening heartbeat changes. */
   reviewMtime(id: string): number {
-    try {
-      return fs.statSync(this.reviewFile(id)).mtimeMs;
-    } catch {
-      return 0;
-    }
+    const mtime = (file: string) => {
+      try {
+        return fs.statSync(file).mtimeMs;
+      } catch {
+        return 0;
+      }
+    };
+    return mtime(this.reviewFile(id)) + mtime(this.listeningFile(id));
   }
 
   private save(review: Review): Review {
@@ -145,9 +164,11 @@ export class Store {
    */
   openReview(input: OpenReviewInput): { review: Review; version: ReviewVersion; created: boolean } {
     const media = resolveMedia(input);
-    const projectKey = media.compositionDir ?? `title:${(input.title ?? "").trim().toLowerCase()}`;
+    const projectKey =
+      media.compositionDir ?? (media.panelsDir ? `panels:${media.panelsDir}` : `title:${(input.title ?? "").trim().toLowerCase()}`);
+    const keyed = Boolean(media.compositionDir || media.panelsDir || input.title);
     let existing = input.reviewId ? this.getReview(input.reviewId) : undefined;
-    if (!existing && (media.compositionDir || input.title)) {
+    if (!existing && keyed) {
       existing = this.listReviews().find((r) => r.projectKey === projectKey);
     }
     if (existing) {
@@ -156,12 +177,13 @@ export class Store {
         latest &&
         latest.videoPath === media.videoPath &&
         latest.compositionDir === media.compositionDir &&
+        panelsKey(latest.panels) === panelsKey(media.panels) &&
         !latest.sentAt;
       if (unchanged && latest) {
         // Re-opening with identical media is idempotent until feedback has been sent on it.
         return { review: existing, version: latest, created: false };
       }
-      const review = this.addVersion(existing.id, { ...media, note: input.note });
+      const review = this.addResolvedVersion(existing.id, media, input.note);
       if (input.title && input.title !== review.title) {
         review.title = input.title;
         this.save(review);
@@ -171,10 +193,11 @@ export class Store {
     const version: ReviewVersion = { number: 1, ...media, note: input.note, createdAt: now() };
     const id = newId("rev");
     this.snapshotVideo(id, version);
+    this.snapshotPanels(id, version);
     const review: Review = {
       id,
       title: input.title?.trim() || defaultTitle(media),
-      projectKey: media.compositionDir || input.title ? projectKey : newId("project"),
+      projectKey: keyed ? projectKey : newId("project"),
       createdAt: now(),
       updatedAt: now(),
       versions: [version],
@@ -185,24 +208,41 @@ export class Store {
     return { review, version, created: true };
   }
 
-  addVersion(
-    reviewId: string,
-    input: { videoPath?: string; compositionDir?: string; note?: string },
-  ): Review {
-    const current = this.getReview(reviewId);
-    const prev = current.versions.at(-1);
-    const media = resolveMedia({
-      videoPath: input.videoPath,
-      compositionDir: input.compositionDir ?? (input.videoPath ? prev?.compositionDir : undefined),
-    });
+  /**
+   * Adds the next version. With no media at all, a storyboard re-reads its panelsDir (keeping titles and
+   * captions for files that are still there) and a video falls back to the previous composition.
+   */
+  addVersion(reviewId: string, input: MediaInput & { note?: string }): Review {
+    const prev = this.getReview(reviewId).versions.at(-1);
+    const nothingNew = !input.videoPath && !input.compositionDir && !input.panels?.length && !input.panelsDir;
+    let media: ResolvedMedia;
+    if (nothingNew && prev?.panelsDir) {
+      media = resolveMedia({ panelsDir: prev.panelsDir });
+      const old = new Map((prev.panels ?? []).map((p) => [p.sourcePath, p]));
+      for (const p of media.panels ?? []) {
+        p.title ??= old.get(p.sourcePath)?.title;
+        p.caption ??= old.get(p.sourcePath)?.caption;
+      }
+    } else {
+      media = resolveMedia({
+        ...input,
+        compositionDir: input.compositionDir ?? (input.videoPath || nothingNew ? prev?.compositionDir : undefined),
+      });
+    }
+    return this.addResolvedVersion(reviewId, media, input.note);
+  }
+
+  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string): Review {
     return this.update(reviewId, (review) => {
+      const prev = review.versions.at(-1);
       const version: ReviewVersion = {
-        number: (review.versions.at(-1)?.number ?? 0) + 1,
+        number: (prev?.number ?? 0) + 1,
         ...media,
-        note: input.note,
+        note,
         createdAt: now(),
       };
       this.snapshotVideo(reviewId, version);
+      this.snapshotPanels(reviewId, version);
       // Comments belong to the version they were written on. Unsent ones (the agent shipped a new
       // version before the user pressed Send) move forward so they aren't stranded on an old version.
       for (const c of review.comments) {
@@ -220,6 +260,28 @@ export class Store {
     const file = `v${version.number}${path.extname(version.videoPath) || ".mp4"}`;
     fs.copyFileSync(version.videoPath, path.join(dir, file));
     version.videoSnapshot = file;
+  }
+
+  /** Copies each panel image so earlier storyboard versions keep their pictures when the agent overwrites files. */
+  private snapshotPanels(reviewId: string, version: ReviewVersion) {
+    if (!version.panels?.length) return;
+    const rel = `v${version.number}-panels`;
+    const dir = path.join(this.reviewsDir, reviewId, "versions", rel);
+    fs.mkdirSync(dir, { recursive: true });
+    const pad = String(version.panels.length).length;
+    version.panels.forEach((p, i) => {
+      const file = `${String(i + 1).padStart(Math.max(2, pad), "0")}${path.extname(p.sourcePath).toLowerCase()}`;
+      fs.copyFileSync(p.sourcePath, path.join(dir, file));
+      p.image = `${rel}/${file}`;
+    });
+  }
+
+  panelFileFor(reviewId: string, version: ReviewVersion, panel: number): string | undefined {
+    const p = version.panels?.[panel - 1];
+    if (!p) return undefined;
+    const snap = p.image ? path.join(this.reviewsDir, reviewId, "versions", p.image) : undefined;
+    if (snap && fs.existsSync(snap)) return snap;
+    return fs.existsSync(p.sourcePath) ? p.sourcePath : undefined;
   }
 
   videoFileFor(reviewId: string, version: ReviewVersion): string | undefined {
@@ -246,15 +308,24 @@ export class Store {
       if (latest.sentAt) {
         throw new StoreError(`Version ${version} was already sent; comment on the next version`);
       }
-      const hasRange = input.endTime !== undefined && input.endTime > input.time;
+      const panels = latest.panels?.length ?? 0;
+      if (panels && !input.wholeVideo) {
+        if (!Number.isInteger(input.panel) || input.panel! < 1 || input.panel! > panels) {
+          throw new StoreError(`Pick a panel between 1 and ${panels}, or comment on the whole storyboard`);
+        }
+      }
+      const panel = panels && !input.wholeVideo ? input.panel : undefined;
+      const hasPin = input.x !== undefined && input.y !== undefined;
+      const hasRange = !panels && input.endTime !== undefined && input.endTime > (input.time ?? 0);
       comment = {
         id: newId("c"),
         version,
-        kind: input.wholeVideo ? "general" : hasRange ? "range" : (input.kind ?? "pin"),
-        time: round(input.wholeVideo ? 0 : Math.max(0, input.time)),
+        kind: input.wholeVideo ? "general" : panels ? (hasPin ? "pin" : "panel") : hasRange ? "range" : (input.kind ?? "pin"),
+        time: round(input.wholeVideo || panels ? 0 : Math.max(0, input.time ?? 0)),
         endTime: hasRange && !input.wholeVideo ? round(input.endTime!) : undefined,
-        x: clamp01(input.x),
-        y: clamp01(input.y),
+        x: input.wholeVideo ? undefined : clamp01(input.x),
+        y: input.wholeVideo ? undefined : clamp01(input.y),
+        panel,
         wholeVideo: input.wholeVideo || undefined,
         text,
         source: input.source,
@@ -302,7 +373,7 @@ export class Store {
   }
 
   /**
-   * "Send to agent": the latest version's comments go to the agent as one batch, and the version
+   * "Finish review": the latest version's comments go to the agent as one batch, and the version
    * is locked. The next round of comments happens on the agent's next version.
    */
   submit(reviewId: string, message?: string): FeedbackBatch {
@@ -312,7 +383,13 @@ export class Store {
       if (latest.sentAt) throw new StoreError(`Version ${latest.number} was already sent`);
       const drafts = review.comments.filter((c) => c.status === "draft" && c.version === latest.number);
       if (!drafts.length) throw new StoreError("Nothing to send: add a comment first");
-      batch = { id: newId("b"), createdAt: now(), commentIds: drafts.map((c) => c.id), message: message?.trim() || undefined };
+      batch = {
+        id: newId("b"),
+        createdAt: now(),
+        commentIds: drafts.map((c) => c.id),
+        message: message?.trim() || undefined,
+        replaces: latest.reopenedFrom,
+      };
       for (const c of drafts) {
         c.status = "sent";
         c.sentAt = batch.createdAt;
@@ -320,9 +397,42 @@ export class Store {
       }
       latest.sentAt = batch.createdAt;
       latest.batchId = batch.id;
+      delete latest.reopenedFrom;
       review.batches.push(batch);
     });
     return batch;
+  }
+
+  /**
+   * Undoes "Finish review" on the latest version so its comments can be edited again. A batch the agent
+   * hasn't picked up yet is simply withdrawn; one it already has is marked retracted, and the next
+   * finish sends a batch that replaces it.
+   */
+  reopen(reviewId: string): { wasDelivered: boolean } {
+    let wasDelivered = false;
+    this.update(reviewId, (review) => {
+      const latest = review.versions.at(-1)!;
+      if (!latest.sentAt || !latest.batchId) throw new StoreError(`Version ${latest.number} isn't finished, so there's nothing to reopen`);
+      const batchId = latest.batchId;
+      const batch = review.batches.find((b) => b.id === batchId);
+      for (const c of review.comments) {
+        if (c.batchId !== batchId || c.status !== "sent") continue;
+        c.status = "draft";
+        delete c.sentAt;
+        delete c.batchId;
+      }
+      delete latest.sentAt;
+      delete latest.batchId;
+      if (batch?.deliveredAt) {
+        wasDelivered = true;
+        batch.retractedAt = now();
+        latest.reopenedFrom = batch.id;
+      } else {
+        review.batches = review.batches.filter((b) => b.id !== batchId);
+        if (batch?.replaces) latest.reopenedFrom = batch.replaces;
+      }
+    });
+    return { wasDelivered };
   }
 
   undeliveredBatches(reviewId: string): FeedbackBatch[] {
@@ -336,12 +446,28 @@ export class Store {
     });
   }
 
+  private listeningFile(reviewId: string) {
+    return path.join(this.reviewsDir, reviewId, "listening.json");
+  }
+
+  /**
+   * Heartbeat from wait_for_feedback, kept in its own file so it never races with comment writes.
+   * The agent counts as listening for LISTEN_GRACE_MS after the last beat, which covers the gap
+   * between one `pending` result and the agent's next call.
+   */
   setAgentWaiting(reviewId: string, waiting: boolean) {
-    const review = this.findReview(reviewId);
-    if (!review) return;
-    if (waiting) review.agentWaitingAt = now();
-    else delete review.agentWaitingAt;
-    writeJsonAtomic(this.reviewFile(reviewId), review);
+    if (!this.findReview(reviewId)) return;
+    if (waiting) writeJsonAtomic(this.listeningFile(reviewId), { at: now(), pid: process.pid });
+    else fs.rmSync(this.listeningFile(reviewId), { force: true });
+  }
+
+  agentListening(reviewId: string): boolean {
+    try {
+      const at = readJson<{ at: string }>(this.listeningFile(reviewId))?.at;
+      return Boolean(at) && Date.now() - Date.parse(at!) < LISTEN_GRACE_MS;
+    } catch {
+      return false;
+    }
   }
 
   resolveComments(reviewId: string, ids: string[], note?: string): { resolved: string[]; missing: string[] } {
@@ -391,8 +517,16 @@ export class Store {
   }
 }
 
-function resolveMedia(input: { videoPath?: string; compositionDir?: string }) {
-  const out: Pick<ReviewVersion, "videoPath" | "compositionDir" | "compositionEntry"> = {};
+type ResolvedMedia = Pick<ReviewVersion, "videoPath" | "compositionDir" | "compositionEntry" | "panels" | "panelsDir">;
+
+function resolveMedia(input: MediaInput): ResolvedMedia {
+  const out: ResolvedMedia = {};
+  if (input.panels?.length || input.panelsDir) {
+    if (input.videoPath || input.compositionDir) {
+      throw new StoreError("A storyboard version takes panels (or panelsDir), not a video or composition");
+    }
+    return resolvePanels(input.panels, input.panelsDir);
+  }
   if (input.videoPath) {
     const p = path.resolve(input.videoPath);
     if (!fs.existsSync(p) || !fs.statSync(p).isFile()) throw new StoreError(`videoPath does not exist: ${p}`);
@@ -412,13 +546,44 @@ function resolveMedia(input: { videoPath?: string; compositionDir?: string }) {
     out.compositionEntry = entry;
   }
   if (!out.videoPath && !out.compositionDir) {
-    throw new StoreError("Provide videoPath (rendered mp4), compositionDir (Hyperframes project), or both");
+    throw new StoreError("Provide videoPath (rendered mp4), compositionDir (Hyperframes project), or panels/panelsDir (storyboard)");
   }
   return out;
 }
 
-function defaultTitle(media: { videoPath?: string; compositionDir?: string }) {
-  return path.basename(media.compositionDir ?? media.videoPath ?? "Untitled video");
+/** Panels in the given order, or every image in panelsDir sorted by file name (01.png, 02.png, … 10.png). */
+function resolvePanels(panels: PanelInput[] | undefined, panelsDir: string | undefined): ResolvedMedia {
+  const dir = panelsDir ? path.resolve(panelsDir) : undefined;
+  if (dir && (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory())) throw new StoreError(`panelsDir is not a folder: ${dir}`);
+  const entries: { path: string; title?: string; caption?: string }[] = panels?.length
+    ? panels.map((p) => (typeof p === "string" ? { path: p } : p))
+    : fs
+        .readdirSync(dir!)
+        .filter((f) => PANEL_EXTENSIONS.has(path.extname(f).toLowerCase()) && !f.startsWith("."))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+        .map((f) => ({ path: f }));
+  if (!entries.length) throw new StoreError(`No panel images (png, jpg, webp, gif, svg) in ${dir}`);
+  const resolved: StoryboardPanel[] = entries.map((e) => {
+    const file = path.isAbsolute(e.path) ? e.path : path.resolve(dir ?? process.cwd(), e.path);
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new StoreError(`Panel image does not exist: ${file}`);
+    if (!PANEL_EXTENSIONS.has(path.extname(file).toLowerCase())) throw new StoreError(`Panel isn't an image (png, jpg, webp, gif, svg): ${file}`);
+    return {
+      image: "",
+      sourcePath: file,
+      sourceMtime: Math.round(fs.statSync(file).mtimeMs),
+      title: e.title?.trim() || undefined,
+      caption: e.caption?.trim() || undefined,
+    };
+  });
+  return { panels: resolved, panelsDir: dir };
+}
+
+function panelsKey(panels: StoryboardPanel[] | undefined) {
+  return JSON.stringify((panels ?? []).map((p) => [p.sourcePath, p.sourceMtime, p.title, p.caption]));
+}
+
+function defaultTitle(media: ResolvedMedia) {
+  return path.basename(media.compositionDir ?? media.panelsDir ?? media.videoPath ?? (media.panels ? "Untitled storyboard" : "Untitled video"));
 }
 
 function round(n: number) {

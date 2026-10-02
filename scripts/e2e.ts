@@ -1,7 +1,7 @@
 /**
  * Plays the agent's side of the loop against a running framejam server over
  * streamable HTTP MCP: pick a preset, open a review, block on wait_for_feedback
- * until a human presses "Send to agent", then ship v2 (which starts a fresh round).
+ * until a human presses "Finish review", then ship v2 (which starts a fresh round).
  *
  *   npm start                       # in one terminal
  *   npm run e2e                     # in another; then comment + send in the browser

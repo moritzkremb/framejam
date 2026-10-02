@@ -1,7 +1,7 @@
 /**
  * Drives the review UI like a human reviewer (headless Chrome via puppeteer-core), at
  * half-screen width: clicks an element in the video and comments on it, drags a range on
- * the filmstrip, adds a whole-video comment, presses "Send to agent", waits for v2, then
+ * the filmstrip, adds a whole-video comment, presses "Finish review", waits for v2, then
  * tours the styles gallery.
  * Saves screenshots (and a screencast when ffmpeg is available) to OUT_DIR.
  *
@@ -97,7 +97,7 @@ await page.click(".fc-chip-btn");
 await addComment("Otherwise looks great, keep the grid.");
 await shot("02-review-comments");
 
-// 4. Send to agent: the version locks and the box becomes the handoff card.
+// 4. Finish review: the version locks and the box becomes the handoff card.
 await page.click('[data-testid="send-to-agent"]');
 await page.waitForSelector('[data-testid="handoff"]', { timeout: 10000 });
 await sleep(900);
@@ -105,7 +105,7 @@ await shot("03-review-sent");
 
 // 5. Wait for the agent's v2: the page moves to it with an empty comment list.
 try {
-  await page.waitForFunction(() => document.body.innerText.includes("Version 2 is here"), { timeout: 60000 });
+  await page.waitForFunction(() => document.body.innerText.includes("Version 2 of 2"), { timeout: 60000 });
   await sleep(1500);
   await shot("04-review-v2");
 } catch {

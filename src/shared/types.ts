@@ -1,5 +1,6 @@
 export type CommentStatus = "draft" | "sent" | "resolved";
-export type CommentKind = "pin" | "range" | "general";
+/** `panel`: about one storyboard panel as a whole, without a pinned spot. */
+export type CommentKind = "pin" | "range" | "panel" | "general";
 export type PlayerSource = "video" | "live";
 
 export interface TweenInfo {
@@ -31,6 +32,9 @@ export interface ReviewComment {
   /** Normalized (0-1) pin position on the frame. */
   x?: number;
   y?: number;
+  /** Storyboards: the 1-based panel the comment is on. */
+  panel?: number;
+  /** The whole video, or the whole storyboard. */
   wholeVideo?: boolean;
   text: string;
   source?: PlayerSource;
@@ -44,6 +48,17 @@ export interface ReviewComment {
   resolution?: { note?: string; version: number };
 }
 
+/** One storyboard panel: a still image plus optional words about the shot. */
+export interface StoryboardPanel {
+  /** Copy of the image taken when the version was created (path inside the review folder). */
+  image: string;
+  sourcePath: string;
+  sourceMtime?: number;
+  title?: string;
+  /** Shot description, camera move, voiceover line, duration… */
+  caption?: string;
+}
+
 export interface ReviewVersion {
   number: number;
   videoPath?: string;
@@ -51,12 +66,18 @@ export interface ReviewVersion {
   videoSnapshot?: string;
   compositionDir?: string;
   compositionEntry?: string;
+  /** Storyboard versions have panels instead of a video. */
+  panels?: StoryboardPanel[];
+  /** Folder the panels came from; add_version re-reads it when given nothing new. */
+  panelsDir?: string;
   note?: string;
   createdAt: string;
   /** Set when the user pressed Send on this version. A sent version is locked: no new or edited comments. */
   sentAt?: string;
   /** The batch that carried this version's comments to the agent. */
   batchId?: string;
+  /** Set when the user reopened this version after the agent already received its comments. */
+  reopenedFrom?: string;
 }
 
 export interface FeedbackBatch {
@@ -65,6 +86,10 @@ export interface FeedbackBatch {
   commentIds: string[];
   message?: string;
   deliveredAt?: string;
+  /** The user reopened the version after this batch reached the agent; a later batch replaces it. */
+  retractedAt?: string;
+  /** The retracted batch this one replaces. */
+  replaces?: string;
 }
 
 export interface Review {
@@ -76,8 +101,8 @@ export interface Review {
   versions: ReviewVersion[];
   comments: ReviewComment[];
   batches: FeedbackBatch[];
-  /** Set when an agent is currently blocked in wait_for_feedback. */
-  agentWaitingAt?: string;
+  /** Computed by the API, not stored: an agent is in (or between) wait_for_feedback calls for this review. */
+  agentListening?: boolean;
 }
 
 /** The agent harness that last connected over MCP (from the MCP `initialize` client info). */

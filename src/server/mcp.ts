@@ -3,10 +3,10 @@ import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import type { Review, ReviewComment } from "../shared/types.ts";
+import type { FeedbackBatch, Review, ReviewComment } from "../shared/types.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
 import type { PresetLibrary } from "./presets.ts";
-import type { Store } from "./store.ts";
+import { LISTEN_HEARTBEAT_MS, type Store } from "./store.ts";
 
 export interface McpContext {
   store: Store;
@@ -20,10 +20,35 @@ export interface McpContext {
 
 const MAX_IMAGES = 6;
 
-const SERVER_INSTRUCTIONS = `Frame Jam lets the user review Hyperframes videos and pick style presets.
-Loop: (optional) get_selected_preset / list_presets -> build the composition -> render -> open_review -> share the URL -> wait_for_feedback (call again while it returns status "pending") -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
-Each version is one round: the user comments on it and presses Send, which locks it. The next version starts with no comments.
+const serverInstructions = (baseUrl: string) => `Frame Jam lets the user review Hyperframes videos (and storyboards: a sequence of still panels) and pick style presets.
+First, open the Frame Jam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool.
+Loop: (optional) get_selected_preset / list_presets -> build the composition -> render -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
+Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one.
+Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
 If the user says "apply my Frame Jam feedback" (with or without a review id), call get_feedback.`;
+
+const panelsSchema = z
+  .array(
+    z.union([
+      z.string(),
+      z.object({
+        path: z.string().describe("Image path, absolute or relative to panelsDir"),
+        title: z.string().optional().describe("Short shot name, e.g. 'Logo reveal'"),
+        caption: z.string().optional().describe("What happens: action, camera move, voiceover line, duration"),
+      }),
+    ]),
+  )
+  .optional()
+  .describe("Storyboard panels in order (png, jpg, webp, gif, svg). Use instead of videoPath/compositionDir.");
+const panelsDirSchema = z
+  .string()
+  .optional()
+  .describe("Storyboard: absolute path to a folder of panel images (sorted by file name), or the base folder for relative panel paths");
+
+const nextStep = (review: Review) =>
+  review.versions.at(-1)?.panels?.length
+    ? "Apply every comment to the panels, update the images, call add_version with the new panels (or the same panelsDir) and a note, then wait_for_feedback again."
+    : "Apply every comment to the composition, re-render, call add_version with the new render and a note, then wait_for_feedback again.";
 
 function json(data: unknown): CallToolResult["content"][number] {
   return { type: "text", text: JSON.stringify(data, null, 2) };
@@ -31,6 +56,20 @@ function json(data: unknown): CallToolResult["content"][number] {
 
 function errorResult(err: unknown): CallToolResult {
   return { isError: true, content: [{ type: "text", text: (err as Error).message ?? String(err) }] };
+}
+
+const REVISED_NOTE =
+  "The user reopened their review after you received it and edited the comments. This list replaces the earlier one: drop any change from the old list that isn't here.";
+
+function batchMessage(batches: FeedbackBatch[]) {
+  const notes = batches.map((b) => b.message).filter(Boolean);
+  if (batches.some((b) => b.replaces)) notes.unshift(REVISED_NOTE);
+  return notes.join("\n\n") || undefined;
+}
+
+function revisedInfo(batches: FeedbackBatch[]) {
+  const replaces = batches.map((b) => b.replaces).filter(Boolean);
+  return replaces.length ? { revised: true, replacesBatchIds: replaces } : {};
 }
 
 const sleep = (ms: number, signal?: AbortSignal) =>
@@ -46,7 +85,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
   const { store, presets } = ctx;
   const server = new McpServer(
     { name: "framejam", version: "0.1.0" },
-    { instructions: SERVER_INSTRUCTIONS, capabilities: { logging: {} } },
+    { instructions: serverInstructions(ctx.baseUrl), capabilities: { logging: {} } },
   );
   server.server.oninitialized = () => {
     const client = server.server.getClientVersion();
@@ -65,13 +104,15 @@ export function createMcpServer(ctx: McpContext): McpServer {
         currentVersion: latest.number,
         compositionDir: latest.compositionDir,
         videoPath: latest.videoPath,
+        panelsDir: latest.panelsDir,
+        panels: latest.panels?.map((p, i) => ({ number: i + 1, path: p.sourcePath, title: p.title, caption: p.caption })),
         message,
         comments: agentComments,
       }),
       { type: "text", text: feedbackPrompt(store, ctx.baseUrl, review, comments, { message }) },
     ];
     for (const c of agentComments.filter((c) => c.thumbnailPath).slice(0, MAX_IMAGES)) {
-      content.push({ type: "text", text: `Frame for comment ${c.id} at ${c.at}:` });
+      content.push({ type: "text", text: `${c.panel ? "Panel (pin marked)" : "Frame"} for comment ${c.id} at ${c.at}:` });
       content.push({ type: "image", mimeType: "image/jpeg", data: fs.readFileSync(c.thumbnailPath!).toString("base64") });
     }
     return content;
@@ -80,10 +121,10 @@ export function createMcpServer(ctx: McpContext): McpServer {
   server.registerTool(
     "open_review",
     {
-      title: "Open a video review",
+      title: "Open a video or storyboard review",
       description:
-        "Open a review page for a rendered video and/or a live Hyperframes composition. Returns { reviewId, url, version }. " +
-        "Calling it again for the same compositionDir (or title) adds a new version to the existing review; each version starts with no comments. " +
+        "Open a review page for a rendered video and/or a live Hyperframes composition, or for a storyboard (panels / panelsDir). Returns { reviewId, url, version }. " +
+        "Calling it again for the same compositionDir, panelsDir (or title) adds a new version to the existing review; each version starts with no comments. " +
         "Use absolute paths. Show the URL to the user, then call wait_for_feedback.",
       inputSchema: {
         title: z.string().optional().describe("Human-readable title, e.g. 'Launch video'"),
@@ -92,6 +133,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
           .string()
           .optional()
           .describe("Absolute path to the Hyperframes project folder (containing index.html), or to the composition HTML file"),
+        panels: panelsSchema,
+        panelsDir: panelsDirSchema,
         reviewId: z.string().optional().describe("Force adding a version to this existing review"),
         note: z.string().optional().describe("What changed in this version"),
       },
@@ -106,7 +149,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
               url: reviewUrl(ctx.baseUrl, review.id),
               version: version.number,
               created,
-              next: "Share the url with the user (open it in the harness browser if you can), then call wait_for_feedback with this reviewId.",
+              next: "Open the url in the harness's built-in browser (or share it), then call wait_for_feedback with this reviewId right away — don't end your turn first, or the user's feedback has nobody to go to.",
             }),
           ],
         };
@@ -121,7 +164,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Wait for the user to send feedback",
       description:
-        "Blocks until the user presses 'Send to agent' in the review UI, then returns the submitted comments (timestamp, pin position, " +
+        "Blocks until the user presses 'Finish review' in the review UI, then returns their comments (timestamp, pin position, " +
         "DOM element / GSAP tween when available, and frame thumbnails). Returns { status: 'pending' } after ~50s so clients don't time out: " +
         "when that happens, call wait_for_feedback again immediately with the same reviewId.",
       inputSchema: {
@@ -141,6 +184,9 @@ export function createMcpServer(ctx: McpContext): McpServer {
       const progressToken = extra._meta?.progressToken;
       const started = Date.now();
       let lastProgress = started;
+      let lastBeat = started;
+      // A `pending` result keeps the heartbeat so the UI still says "listening" until the agent calls again.
+      let timedOut = false;
       store.setAgentWaiting(reviewId, true);
       try {
         while (!extra.signal.aborted) {
@@ -150,34 +196,41 @@ export function createMcpServer(ctx: McpContext): McpServer {
             const review = store.getReview(reviewId);
             const ids = new Set(batches.flatMap((b) => b.commentIds));
             const comments = review.comments.filter((c) => ids.has(c.id));
-            const message = batches.map((b) => b.message).filter(Boolean).join("\n\n") || undefined;
             return {
               content: feedbackContent(
                 review,
                 comments,
                 {
                   status: "feedback",
-                  next: "Apply every comment to the composition, re-render, call add_version with the new render, resolve_comments with the ids you fixed, then wait_for_feedback again.",
+                  ...revisedInfo(batches),
+                  next: nextStep(review),
                 },
-                message,
+                batchMessage(batches),
               ),
             };
           }
           const elapsed = Date.now() - started;
-          if (elapsed >= timeoutMs) break;
+          if (elapsed >= timeoutMs) {
+            timedOut = true;
+            break;
+          }
+          if (Date.now() - lastBeat >= LISTEN_HEARTBEAT_MS) {
+            lastBeat = Date.now();
+            store.setAgentWaiting(reviewId, true);
+          }
           if (progressToken !== undefined && Date.now() - lastProgress >= progressEvery) {
             lastProgress = Date.now();
             await extra
               .sendNotification({
                 method: "notifications/progress",
-                params: { progressToken, progress: Math.round(elapsed / 1000), message: "Waiting for the user to press Send to agent" },
+                params: { progressToken, progress: Math.round(elapsed / 1000), message: "Waiting for the user to finish their review" },
               })
               .catch(() => {});
           }
           await sleep(Math.min(pollMs, timeoutMs - elapsed), extra.signal);
         }
       } finally {
-        store.setAgentWaiting(reviewId, false);
+        if (!timedOut) store.setAgentWaiting(reviewId, false);
       }
       return {
         content: [
@@ -211,8 +264,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
       title: "Get review feedback",
       description:
         "Return the user's comments without waiting. Use when the user says 'apply my Frame Jam feedback'. reviewId is optional: without it, " +
-        "the review whose feedback hasn't reached you yet is used. If the user wrote comments but never pressed Send, they are sent now " +
-        "(this locks that version, as Send would). include='all' returns every version's comments.",
+        "the review whose feedback hasn't reached you yet is used. If the user wrote comments but never pressed Finish review, they are sent now " +
+        "(this locks that version, as Finish review would). include='all' returns every version's comments.",
       inputSchema: {
         reviewId: z.string().optional(),
         include: z.enum(["latest", "all"]).optional().describe("latest (default): the newest round of comments; all: every version"),
@@ -238,17 +291,17 @@ export function createMcpServer(ctx: McpContext): McpServer {
         if (batches.length) {
           store.markDelivered(review.id, batches.map((b) => b.id));
           const ids = new Set(batches.flatMap((b) => b.commentIds));
-          const message = batches.map((b) => b.message).filter(Boolean).join("\n\n") || undefined;
           return {
             content: feedbackContent(
               review,
               review.comments.filter((c) => ids.has(c.id)),
               {
                 status: "feedback",
+                ...revisedInfo(batches),
                 versions,
-                next: "Apply every comment, re-render, call add_version with the new render and a note, then wait_for_feedback.",
+                next: nextStep(review),
               },
-              message,
+              batchMessage(batches),
             ),
           };
         }
@@ -272,7 +325,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     "list_reviews",
     {
       title: "List reviews",
-      description: "List the user's video reviews, newest first, with their review page URL and where each round stands.",
+      description: "List the user's video and storyboard reviews, newest first, with their review page URL and where each round stands.",
       inputSchema: {},
     },
     async () => {
@@ -286,6 +339,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
           url: reviewUrl(ctx.baseUrl, r.id),
           updatedAt: r.updatedAt,
           latestVersion: latest.number,
+          kind: latest.panels?.length ? "storyboard" : "video",
           state: !latest.sentAt
             ? drafts
               ? "user_commenting"
@@ -326,22 +380,20 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Add a new version to a review",
       description:
-        "Attach a new render (and/or composition) to an existing review as v2, v3, ... The new version starts with an empty comment list. Pass a one-line note of what you changed; the user sees it when the version arrives. Prefer a new file name per render so earlier versions stay comparable.",
+        "Attach a new render (and/or composition), or new storyboard panels, to an existing review as v2, v3, ... The new version starts with an empty comment list. Pass a one-line note of what you changed; the user sees it when the version arrives. Prefer a new file name per render so earlier versions stay comparable. " +
+        "For a storyboard, passing no media re-reads the previous panelsDir (earlier versions keep their own copies of the images).",
       inputSchema: {
         reviewId: z.string(),
         videoPath: z.string().optional(),
         compositionDir: z.string().optional().describe("Defaults to the previous version's composition"),
+        panels: panelsSchema,
+        panelsDir: panelsDirSchema,
         note: z.string().optional().describe("What changed"),
       },
     },
-    async ({ reviewId, videoPath, compositionDir, note }) => {
+    async ({ reviewId, videoPath, compositionDir, panels, panelsDir, note }) => {
       try {
-        const prev = store.getReview(reviewId).versions.at(-1);
-        const review = store.addVersion(reviewId, {
-          videoPath,
-          compositionDir: compositionDir ?? (videoPath ? undefined : prev?.compositionDir),
-          note,
-        });
+        const review = store.addVersion(reviewId, { videoPath, compositionDir, panels, panelsDir, note });
         const v = review.versions.at(-1)!;
         return {
           content: [json({ reviewId, version: v.number, url: reviewUrl(ctx.baseUrl, reviewId), next: "Tell the user the new version is ready, then call wait_for_feedback." })],

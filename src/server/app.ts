@@ -7,7 +7,7 @@ import { streamSSE } from "hono/streaming";
 import { feedbackPrompt, latestComments, versionComments } from "./feedback.ts";
 import { sendCompositionFile, sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
-import { webDistDir } from "./paths.ts";
+import { setupInfo, webDistDir } from "./paths.ts";
 import { StoreError, type NewCommentInput } from "./store.ts";
 import { extractFrame } from "./thumbs.ts";
 
@@ -22,7 +22,14 @@ export function createApp(ctx: McpContext) {
   });
 
   app.get("/api/health", (c) =>
-    c.json({ ok: true, app: "framejam", dataDir: store.root, baseUrl: ctx.baseUrl, agent: store.getState().agent ?? null }),
+    c.json({
+      ok: true,
+      app: "framejam",
+      dataDir: store.root,
+      baseUrl: ctx.baseUrl,
+      agent: store.getState().agent ?? null,
+      setup: setupInfo(),
+    }),
   );
 
   // --- Reviews -------------------------------------------------------------
@@ -41,18 +48,24 @@ export function createApp(ctx: McpContext) {
           latestSent: Boolean(latest.sentAt),
           delivered: Boolean(batch?.deliveredAt),
           draftComments: r.comments.filter((x) => x.version === latest.number && x.status === "draft").length,
-          agentWaiting: Boolean(r.agentWaitingAt),
+          agentListening: store.agentListening(r.id),
           hasVideo: r.versions.some((v) => v.videoPath),
           hasComposition: r.versions.some((v) => v.compositionDir),
+          panels: latest.panels?.length ?? 0,
         };
       }),
     ),
   );
 
-  /** A frame of the latest render, for the review card. Cached per version; 404 without a render or ffmpeg. */
+  /** A frame of the latest render (or a storyboard's first panel), for the review card. Cached per version; 404 without a render or ffmpeg. */
   app.get("/api/reviews/:id/poster", async (c) => {
     const id = c.req.param("id");
     const review = store.getReview(id);
+    const latest = review.versions.at(-1)!;
+    if (latest.panels?.length) {
+      const file = store.panelFileFor(id, latest, 1);
+      return file ? sendFile(file, c.req.raw) : c.text("No panel", 404);
+    }
     const version = [...review.versions].reverse().find((v) => store.videoFileFor(id, v));
     if (!version) return c.text("No render", 404);
     const cached = path.join(store.reviewsDir, id, `poster-v${version.number}.jpg`);
@@ -65,24 +78,28 @@ export function createApp(ctx: McpContext) {
     return sendFile(cached, c.req.raw);
   });
 
-  app.get("/api/reviews/:id", (c) => c.json(store.getReview(c.req.param("id"))));
+  const reviewJson = (id: string) => ({ ...store.getReview(id), agentListening: store.agentListening(id) });
+
+  app.get("/api/reviews/:id", (c) => c.json(reviewJson(c.req.param("id"))));
 
   app.get("/api/reviews/:id/events", (c) => {
     const id = c.req.param("id");
     store.getReview(id);
+    // The listening flag can expire without any file changing, so it's part of the fingerprint.
+    const fingerprint = () => `${store.reviewMtime(id)}:${store.agentListening(id)}`;
     return streamSSE(c, async (stream) => {
-      let last = store.reviewMtime(id);
+      let last = fingerprint();
       let alive = true;
       stream.onAbort(() => {
         alive = false;
       });
-      await stream.writeSSE({ event: "ready", data: String(last) });
+      await stream.writeSSE({ event: "ready", data: last });
       while (alive) {
         await stream.sleep(700);
-        const m = store.reviewMtime(id);
-        if (m !== last) {
-          last = m;
-          await stream.writeSSE({ event: "changed", data: String(m) });
+        const f = fingerprint();
+        if (f !== last) {
+          last = f;
+          await stream.writeSSE({ event: "changed", data: f });
         }
       }
     });
@@ -98,8 +115,12 @@ export function createApp(ctx: McpContext) {
     } else {
       const review = store.getReview(id);
       const version = review.versions.find((v) => v.number === comment.version);
-      const file = version && store.videoFileFor(id, version);
-      if (file) {
+      const panelFile = version && comment.panel !== undefined ? store.panelFileFor(id, version, comment.panel) : undefined;
+      const file = version && (panelFile ?? store.videoFileFor(id, version));
+      if (panelFile) {
+        const jpeg = await extractFrame(panelFile, 0);
+        if (jpeg) store.saveThumbnail(id, comment.id, jpeg);
+      } else if (file) {
         const at = comment.endTime !== undefined ? (comment.time + comment.endTime) / 2 : comment.time;
         const jpeg = await extractFrame(file, at);
         if (jpeg) store.saveThumbnail(id, comment.id, jpeg);
@@ -122,8 +143,13 @@ export function createApp(ctx: McpContext) {
     const body = (await c.req.json().catch(() => ({}))) as { message?: string };
     const id = c.req.param("id");
     const batch = store.submit(id, body.message);
-    const review = store.getReview(id);
-    return c.json({ batch, agentWaiting: Boolean(review.agentWaitingAt) });
+    return c.json({ batch, agentListening: store.agentListening(id) });
+  });
+
+  app.post("/api/reviews/:id/reopen", (c) => {
+    const id = c.req.param("id");
+    const { wasDelivered } = store.reopen(id);
+    return c.json({ wasDelivered, review: reviewJson(id) });
   });
 
   app.get("/api/reviews/:id/prompt", (c) => {
@@ -144,6 +170,15 @@ export function createApp(ctx: McpContext) {
     const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
     const file = version && store.videoFileFor(id, version);
     if (!file) return c.text("This version has no rendered video", 404);
+    return sendFile(file, c.req.raw);
+  });
+
+  app.get("/api/reviews/:id/versions/:n/panels/:panel", (c) => {
+    const id = c.req.param("id");
+    const review = store.getReview(id);
+    const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
+    const file = version && store.panelFileFor(id, version, Number(c.req.param("panel")));
+    if (!file) return c.text("No such panel", 404);
     return sendFile(file, c.req.raw);
   });
 

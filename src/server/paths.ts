@@ -27,6 +27,16 @@ export function dataDir(): string {
   return dir;
 }
 
+/** How an agent should launch this copy of Frame Jam, for the setup prompt in the UI. */
+export function setupInfo() {
+  const fromNpx = /[\\/]_npx[\\/]/.test(packageRoot);
+  const cliPath = path.join(packageRoot, "dist", "server", "cli.js");
+  return {
+    mcpCommand: fromNpx ? ["npx", "-y", "framejam", "--stdio"] : ["node", cliPath, "--stdio"],
+    skillPath: path.join(packageRoot, "skills", "framejam", "SKILL.md"),
+  };
+}
+
 export const builtinPresetsDir = path.join(packageRoot, "presets");
 export const webDistDir = path.join(packageRoot, "dist", "web");
 export const DEFAULT_PORT = 4517;
