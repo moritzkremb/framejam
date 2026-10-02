@@ -12,28 +12,31 @@ function Poster({ review }: { review: ReviewListItem }) {
   const [shape, setShape] = useState<"tall" | "wide">("wide");
   const [failed, setFailed] = useState(!review.hasVideo && !review.panels);
   return (
-    <div className={cn("poster", shape === "wide" && "wide")}>
+    <div className={cn("poster", shape === "tall" && "tall")}>
       {failed ? (
         <span className="ph">
           {review.panels ? <LayoutGrid className="fc-i sm" /> : <Film className="fc-i sm" />}
         </span>
       ) : (
-        <img
-          src={posterUrl(review.id, review.latestVersion)}
-          alt=""
-          loading="lazy"
-          onLoad={(e) => setShape(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth ? "tall" : "wide")}
-          onError={() => setFailed(true)}
-        />
+        <>
+          {shape === "tall" && <img className="backdrop" src={posterUrl(review.id, review.latestVersion)} alt="" aria-hidden />}
+          <img
+            src={posterUrl(review.id, review.latestVersion)}
+            alt=""
+            loading="lazy"
+            onLoad={(e) => setShape(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth ? "tall" : "wide")}
+            onError={() => setFailed(true)}
+          />
+        </>
       )}
     </div>
   );
 }
 
-function ReviewCard({ review }: { review: ReviewListItem }) {
+function ProjectCard({ review }: { review: ReviewListItem }) {
   const status = reviewStatus(review);
   return (
-    <Link to={`/review/${review.id}`} className="fc-rcard" data-testid="review-card" data-status={status.kind}>
+    <Link to={`/review/${review.id}`} className="fc-rcard" data-testid="project-card" data-status={status.kind}>
       <Poster review={review} />
       <div className="fc-grow">
         <div className="name">{review.title}</div>
@@ -57,8 +60,8 @@ function ReviewCard({ review }: { review: ReviewListItem }) {
   );
 }
 
-/** Home: every review, the ones waiting on you first. Setup shows here only until an agent has connected. */
-export function ReviewsPage() {
+/** Home: every project, the ones waiting on you first. Setup shows here only until an agent has connected. */
+export function ProjectsPage() {
   const [reviews, setReviews] = useState<ReviewListItem[] | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [styleName, setStyleName] = useState<string | undefined>();
@@ -89,7 +92,7 @@ export function ReviewsPage() {
     <div className="fc-screen">
       <HomeHeader />
       <main className="fc-main fc-narrow">
-        <h1 className="fc-h1">Reviews</h1>
+        <h1 className="fc-h1">Projects</h1>
         {error && !reviews ? (
           isOffline(error) ? (
             <Offline />
@@ -120,11 +123,11 @@ export function ReviewsPage() {
 
             {reviews.length === 0 ? (
               agent && (
-                <div className="fc-card fc-col" style={{ gap: 14 }} data-testid="reviews-empty">
+                <div className="fc-card fc-col" style={{ gap: 14 }} data-testid="projects-empty">
                   <div className="fc-row" style={{ gap: 12, flexWrap: "nowrap", alignItems: "flex-start" }}>
                     <Inbox className="fc-i fc-t2" />
                     <div>
-                      <div className="fc-h3">No reviews yet</div>
+                      <div className="fc-h3">No projects yet</div>
                       <p className="fc-caption" style={{ margin: "2px 0 0", fontSize: 13, lineHeight: "19px" }}>
                         Paste this into your agent chat. Its first version shows up here.
                       </p>
@@ -137,7 +140,7 @@ export function ReviewsPage() {
               <div className="fc-col" style={{ gap: 8 }}>
                 {needsYou.length > 0 && <div className="fc-caption">Needs you</div>}
                 {needsYou.map((r) => (
-                  <ReviewCard key={r.id} review={r} />
+                  <ProjectCard key={r.id} review={r} />
                 ))}
                 {withAgent.length > 0 && (
                   <div className="fc-caption" style={{ marginTop: needsYou.length ? 12 : 0 }}>
@@ -145,7 +148,7 @@ export function ReviewsPage() {
                   </div>
                 )}
                 {withAgent.map((r) => (
-                  <ReviewCard key={r.id} review={r} />
+                  <ProjectCard key={r.id} review={r} />
                 ))}
               </div>
             )}

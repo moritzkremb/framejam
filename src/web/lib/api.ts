@@ -107,6 +107,11 @@ export function agentLabel(agent: AgentInfo | null | undefined): string | undefi
 }
 
 /** Copies text, with a fallback for embedded browsers that block the async clipboard API. */
+/** What you paste into your agent chat when it wasn't listening for a finished review. */
+export function handoffMessage(reviewId: string) {
+  return `Apply my Frame Jam feedback for ${reviewId}`;
+}
+
 export async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);

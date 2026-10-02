@@ -10,7 +10,7 @@ import { Store } from "./store.ts";
 const HELP = `framejam — review Hyperframes videos and pick style presets, over MCP
 
 Usage:
-  framejam [serve]          Start the web UI + MCP over HTTP (http://localhost:4517, MCP at /mcp)
+  framejam [serve]          Start the web UI + MCP over HTTP (http://localhost:2400, MCP at /mcp)
   framejam --stdio          MCP over stdio for Cursor / Claude Code (also hosts the web UI if the port is free)
 
 Options:

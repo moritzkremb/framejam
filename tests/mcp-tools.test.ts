@@ -37,7 +37,7 @@ describe("open_review", () => {
   it("creates a review and returns its URL", async () => {
     const res = await open();
     expect(res.reviewId).toMatch(/^rev_/);
-    expect(res.url).toBe(`http://localhost:4517/review/${res.reviewId}`);
+    expect(res.url).toBe(`http://localhost:2400/review/${res.reviewId}`);
     expect(res.version).toBe(1);
     expect(res.created).toBe(true);
     const review = fx.store.getReview(res.reviewId);

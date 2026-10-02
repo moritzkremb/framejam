@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type {
@@ -12,7 +12,7 @@ import type {
   ReviewVersion,
   StoryboardPanel,
 } from "../shared/types.ts";
-import { dataDir } from "./paths.ts";
+import { dataDir, setupInfo } from "./paths.ts";
 
 export class StoreError extends Error {
   constructor(
@@ -31,6 +31,29 @@ const now = () => new Date().toISOString();
 
 export const LISTEN_HEARTBEAT_MS = 4_000;
 const LISTEN_GRACE_MS = 15_000;
+
+const hashCache = new Map<string, { mtimeMs: number; hash: string }>();
+
+/** Content hash of a file, cached until its mtime changes (rebuilds rewrite files even when nothing changed). */
+function fileHash(file: string): string {
+  const { mtimeMs } = fs.statSync(file);
+  const cached = hashCache.get(file);
+  if (cached?.mtimeMs === mtimeMs) return cached.hash;
+  const hash = createHash("sha1").update(fs.readFileSync(file)).digest("hex");
+  hashCache.set(file, { mtimeMs, hash });
+  return hash;
+}
+
+/** The script this process was started from, hashed at startup: the code it is actually running. */
+const LOADED_ENTRY = (() => {
+  if (!process.argv[1]) return undefined;
+  const file = path.resolve(process.argv[1]);
+  try {
+    return { file, hash: fileHash(file) };
+  } catch {
+    return undefined;
+  }
+})();
 
 function writeJsonAtomic(file: string, data: unknown) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -504,8 +527,25 @@ export class Store {
   recordAgent(name: string | undefined, version?: string) {
     if (!name) return;
     const state = this.getState();
-    state.agent = { name, version, at: now() };
+    state.agent = { name, version, at: now(), ...(LOADED_ENTRY && { entry: LOADED_ENTRY.file, build: LOADED_ENTRY.hash }) };
     writeJsonAtomic(this.stateFile, state);
+  }
+
+  /**
+   * True when the agent's MCP process runs different code than is now on disk. Harnesses keep that
+   * process alive across rebuilds, so it keeps running old code until the user restarts it.
+   */
+  agentOutdated(): boolean {
+    const agent = this.getState().agent;
+    if (!agent) return false;
+    const file = agent.entry ?? setupInfo().cliPath;
+    try {
+      if (agent.build) return fileHash(file) !== agent.build;
+      // Recorded before builds were hashed: fall back to "rebuilt after it connected".
+      return fs.statSync(file).mtimeMs > Date.parse(agent.at);
+    } catch {
+      return false;
+    }
   }
 
   setSelectedPreset(id: string | null) {

@@ -4,7 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "
 import { Toaster } from "sonner";
 import { NotFoundPage } from "@/pages/not-found-page";
 import { ReviewPage } from "@/pages/review-page";
-import { ReviewsPage } from "@/pages/reviews-page";
+import { ProjectsPage } from "@/pages/projects-page";
 import { SetupPage } from "@/pages/setup-page";
 import { StyleDetailPage } from "@/pages/style-detail-page";
 import { StylesPage } from "@/pages/styles-page";
@@ -34,7 +34,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ReviewsPage />} />
+        <Route path="/" element={<ProjectsPage />} />
         <Route path="/setup" element={<SetupPage />} />
         <Route path="/styles" element={<StylesPage />} />
         <Route path="/styles/:id" element={<StyleDetailPage />} />

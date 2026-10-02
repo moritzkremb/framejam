@@ -8,7 +8,7 @@ import { builtinPresetsDir } from "../src/server/paths.ts";
 import { PresetLibrary } from "../src/server/presets.ts";
 import { Store } from "../src/server/store.ts";
 
-export const BASE_URL = "http://localhost:4517";
+export const BASE_URL = "http://localhost:2400";
 export const fixturePreset = path.join(builtinPresetsDir, "swiss-editorial");
 
 export interface ToolResult {

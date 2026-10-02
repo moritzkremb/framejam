@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import { formatTime } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,8 @@ export interface Marker {
   index: number;
   time: number;
   endTime?: number;
+  /** About the whole video: listed beside the scale instead of at a time. */
+  whole?: boolean;
   sent: boolean;
 }
 
@@ -66,17 +68,49 @@ interface FilmstripProps {
   frameSource?: string;
   /** Dragging across the strip picks a range (only while the version is open). */
   canSelectRange: boolean;
+  /** The comment box is set to "Whole video". */
+  wholeActive: boolean;
   onSeek(t: number): void;
   onScrubStart(): void;
   onRange(start: number, end: number): void;
+  onClearRange(): void;
   onSelect(id: string): void;
 }
 
 const COUNT = 12;
 const MARKER_GAP = 21;
+/** How close (px) the pointer must be to a range edge or the playhead to grab it. */
+const GRAB = 8;
+/** Pointer travel (px) before a press counts as a drag rather than a click. */
+const DRAG_PX = 4;
+const MIN_RANGE = 0.1;
 
-/** A filmstrip you can click (jump), drag across (pick a range), or scrub by its playhead. */
-export function Filmstrip({ duration, time, markers, range, selectedId, frameSource, canSelectRange, onSeek, onScrubStart, onRange, onSelect }: FilmstripProps) {
+type Zone = "start" | "end" | "body" | "strip";
+
+type Span = { start: number; end: number };
+
+interface Drag {
+  /** "edge" covers both drawing a new range and resizing one: one end stays fixed, the pointer is the other. */
+  mode: "scrub" | "edge" | "move";
+  x0: number;
+  t0: number;
+  /** The end that stays put while drawing or resizing. */
+  fixed: number;
+  /** The range when a move began. */
+  from: Span | null;
+  live: Span | null;
+  moved: boolean;
+}
+
+const ZONE_CURSOR: Record<Zone, string> = { start: "ew-resize", end: "ew-resize", body: "grab", strip: "pointer" };
+
+/**
+ * A filmstrip timeline. Click to jump; drag the strip to pick a range; drag a range's edges to
+ * resize it or its middle to move it; drag the playhead's knob to scrub. The playhead follows whatever is dragged.
+ */
+export function Filmstrip({ duration, time, markers, range, selectedId, frameSource, canSelectRange, wholeActive, onSeek, onScrubStart, onRange, onClearRange, onSelect }: FilmstripProps) {
+  const timed = markers.filter((m) => !m.whole);
+  const whole = markers.filter((m) => m.whole);
   const stripRef = useRef<HTMLDivElement>(null);
   const [stripWidth, setStripWidth] = useState(0);
   useLayoutEffect(() => {
@@ -86,22 +120,78 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const [drag, setDrag] = useState<{ mode: "range" | "scrub"; start: number; end: number; moved: boolean } | null>(null);
-  const [hover, setHover] = useState<number | null>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const [hover, setHover] = useState<{ t: number; zone: Zone } | null>(null);
   const frames = useFrames(frameSource, COUNT);
   const d = duration || 1;
+  const clamp = (t: number) => Math.max(0, Math.min(d, t));
   const pct = (t: number) => `${Math.max(0, Math.min(1, t / d)) * 100}%`;
   const timeAt = (clientX: number) => {
     const r = stripRef.current!.getBoundingClientRect();
-    return Math.max(0, Math.min(d, ((clientX - r.left) / r.width) * d));
+    return clamp(((clientX - r.left) / r.width) * d);
+  };
+  const px = (t: number) => (t / d) * (stripRef.current?.clientWidth ?? stripWidth);
+
+  const zoneAt = (t: number): Zone => {
+    const x = px(t);
+    if (range && canSelectRange) {
+      const ds = Math.abs(x - px(range.start));
+      const de = Math.abs(x - px(range.end));
+      if (Math.min(ds, de) <= GRAB) return ds < de ? "start" : "end";
+      if (t > range.start && t < range.end) return "body";
+    }
+    return "strip";
   };
 
-  const shownRange = drag?.mode === "range" && drag.moved ? { start: Math.min(drag.start, drag.end), end: Math.max(drag.start, drag.end) } : range;
+  const shownRange = drag?.live ?? range;
+  const cursor = drag ? (drag.mode === "move" ? "grabbing" : "ew-resize") : ZONE_CURSOR[hover?.zone ?? "strip"];
+  const tip = drag?.moved ? time : !drag && hover ? hover.t : null;
+
+  const onDown = (e: PointerEvent<HTMLElement>) => {
+    if (e.button !== 0 || (e.target as HTMLElement).closest("[data-marker]")) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const onKnob = !!(e.target as HTMLElement).closest("[data-head]");
+    const t = onKnob ? time : timeAt(e.clientX);
+    const zone = zoneAt(t);
+    onScrubStart();
+    const base = { x0: e.clientX, t0: t, fixed: t, from: null, live: null, moved: false };
+    if (onKnob) return setDrag({ ...base, mode: "scrub" });
+    if (zone === "start" || zone === "end") {
+      onSeek(range![zone]);
+      return setDrag({ ...base, mode: "edge", fixed: zone === "start" ? range!.end : range!.start, live: range });
+    }
+    onSeek(t);
+    if (zone === "body") return setDrag({ ...base, mode: "move", from: range });
+    if (!canSelectRange) return setDrag({ ...base, mode: "scrub" });
+    if (range) onClearRange();
+    setDrag({ ...base, mode: "edge" });
+  };
+
+  const onMove = (e: PointerEvent<HTMLElement>) => {
+    const t = timeAt(e.clientX);
+    if (!drag) return e.currentTarget === stripRef.current ? setHover({ t, zone: zoneAt(t) }) : undefined;
+    if (!drag.moved && Math.abs(e.clientX - drag.x0) <= DRAG_PX) return;
+    if (drag.mode === "move") {
+      const { start, end } = drag.from!;
+      const shift = Math.max(-start, Math.min(d - end, t - drag.t0));
+      onSeek(start + shift);
+      return setDrag({ ...drag, moved: true, live: { start: start + shift, end: end + shift } });
+    }
+    onSeek(t);
+    setDrag({ ...drag, moved: true, live: drag.mode === "edge" ? { start: Math.min(drag.fixed, t), end: Math.max(drag.fixed, t) } : null });
+  };
+
+  const onUp = () => {
+    if (!drag) return;
+    setDrag(null);
+    const live = drag.live;
+    if (drag.moved && live && live.end - live.start >= MIN_RANGE) onRange(live.start, live.end);
+  };
 
   // Markers closer than one marker's width are nudged right so each stays readable and clickable.
   const nudge = new Map<string, number>();
   let lastX = -Infinity;
-  for (const m of [...markers].sort((a, b) => a.time - b.time || a.index - b.index)) {
+  for (const m of [...timed].sort((a, b) => a.time - b.time || a.index - b.index)) {
     const x = (m.time / d) * stripWidth;
     const placed = Math.max(x, lastX + MARKER_GAP);
     nudge.set(m.id, placed - x);
@@ -114,44 +204,26 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
         ref={stripRef}
         className="fc-strip"
         data-testid="timeline-scrub"
-        onPointerDown={(e) => {
-          if ((e.target as HTMLElement).closest("[data-marker]")) return;
-          e.currentTarget.setPointerCapture(e.pointerId);
-          const t = timeAt(e.clientX);
-          const onHead = Math.abs(t - time) / d < 0.02;
-          onScrubStart();
-          if (onHead || !canSelectRange) onSeek(t);
-          setDrag({ mode: onHead || !canSelectRange ? "scrub" : "range", start: t, end: t, moved: false });
-        }}
-        onPointerMove={(e) => {
-          const t = timeAt(e.clientX);
-          setHover(t);
-          if (!drag) return;
-          if (drag.mode === "scrub") return onSeek(t);
-          setDrag({ ...drag, end: t, moved: drag.moved || Math.abs(t - drag.start) / d > 0.01 });
-        }}
+        style={{ cursor }}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
         onPointerLeave={() => setHover(null)}
-        onPointerUp={() => {
-          if (!drag) return;
-          if (drag.mode === "range") {
-            if (drag.moved && Math.abs(drag.end - drag.start) > 0.05) onRange(Math.min(drag.start, drag.end), Math.max(drag.start, drag.end));
-            else onSeek(drag.start);
-          }
-          setDrag(null);
-        }}
+        onPointerUp={onUp}
+        onPointerCancel={() => setDrag(null)}
       >
         {Array.from({ length: COUNT }, (_, i) => (
           <div key={i} className="f" style={frames?.[i] ? { backgroundImage: `url(${frames[i]})` } : undefined} />
         ))}
         <div className="played" style={{ width: pct(time) }} />
-        {shownRange && <div className="fc-range in-strip" style={{ left: pct(shownRange.start), width: pct(shownRange.end - shownRange.start) }} />}
-        {hover !== null && !drag && (
-          <span className="fc-hover-time" style={{ left: pct(hover) }}>
-            {formatTime(hover)}
-          </span>
-        )}
+        {shownRange && <div className={cn("fc-range in-strip", drag?.live && "is-dragging")} style={{ left: pct(shownRange.start), width: pct(shownRange.end - shownRange.start) }} />}
+        {!shownRange && (wholeActive || whole.some((m) => m.id === selectedId)) && <div className="fc-whole-outline" />}
       </div>
-      {markers
+      {tip !== null && (
+        <span className="fc-hover-time" style={{ left: pct(tip) }}>
+          {formatTime(tip)}
+        </span>
+      )}
+      {timed
         .filter((m) => m.endTime !== undefined)
         .map((m) => (
           <span
@@ -160,7 +232,7 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
             style={{ left: pct(m.time), width: pct(m.endTime! - m.time) }}
           />
         ))}
-      {markers.map((m) => (
+      {timed.map((m) => (
         <button
           key={m.id}
           data-marker
@@ -173,10 +245,35 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
           {m.index}
         </button>
       ))}
-      <div className="fc-head" style={{ left: pct(time) }} />
+      <div className={cn("fc-head", drag?.mode === "scrub" && "is-dragging")} style={{ left: pct(time) }}>
+        <span className="grip" data-head title="Drag to scrub" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={() => setDrag(null)} />
+      </div>
       <div className="fc-scale">
         <span>{formatTime(0, false)}</span>
-        {!canSelectRange || markers.length ? null : <span className="fc-t3">Drag across to comment on a range</span>}
+        <span className="fc-scale-mid">
+          {whole.length > 0 && (
+            <span className="fc-whole-marks">
+              Whole video
+              {whole.map((m) => (
+                <button
+                  key={m.id}
+                  data-marker
+                  type="button"
+                  title="About the whole video"
+                  className={cn("fc-mark inline", m.sent ? "sent" : "draft", selectedId === m.id && "is-selected")}
+                  onClick={() => onSelect(m.id)}
+                >
+                  {m.index}
+                </button>
+              ))}
+            </span>
+          )}
+          {!canSelectRange || wholeActive ? null : range ? (
+            <span className="fc-t3">Drag the edges to resize · click outside to clear</span>
+          ) : markers.length ? null : (
+            <span className="fc-t3">Drag across to comment on a range</span>
+          )}
+        </span>
         <span>{formatTime(duration, false)}</span>
       </div>
     </div>

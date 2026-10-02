@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { api, type Review, type ReviewComment } from "@/lib/api";
+import { api, copyText, handoffMessage, type Review, type ReviewComment } from "@/lib/api";
 
 /** Width of whichever element the returned ref is attached to (the page swaps roots while loading). */
 export function useWidth<T extends HTMLElement>() {
@@ -25,6 +25,8 @@ export function useReview(id: string, onNewVersion?: () => void) {
   const [loadError, setLoadError] = useState<unknown>(null);
   const [activeVersion, setActiveVersion] = useState<number | null>(null);
   const [finishing, setFinishing] = useState(false);
+  /** The handoff line went to the clipboard when this round was finished. */
+  const [autoCopied, setAutoCopied] = useState(false);
   const knownLatest = useRef(0);
   const onNewVersionRef = useRef(onNewVersion);
   useLayoutEffect(() => {
@@ -72,7 +74,17 @@ export function useReview(id: string, onNewVersion?: () => void) {
     try {
       const res = await api.submit(review.id);
       const n = res.batch.commentIds.length;
-      if (res.agentListening) toast.success("Your agent has your comments", { description: `${n} comment${n === 1 ? "" : "s"}, handed over instantly.` });
+      if (res.agentListening) {
+        toast.success("Your agent has your comments", { description: `${n} comment${n === 1 ? "" : "s"}, handed over instantly.` });
+      } else {
+        // Copy right away, while the click or keypress that finished the review still allows clipboard access.
+        const ok = await copyText(handoffMessage(review.id)).then(
+          () => true,
+          () => false,
+        );
+        setAutoCopied(ok);
+        if (ok) toast.success("Copied. Paste it into your agent chat", { description: handoffMessage(review.id) });
+      }
       await load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -86,6 +98,7 @@ export function useReview(id: string, onNewVersion?: () => void) {
     try {
       const res = await api.reopen(review.id);
       setReview(res.review);
+      setAutoCopied(false);
       toast.success("Review reopened", {
         description: res.wasDelivered ? "Edit your comments, then finish again. Your agent gets the new list." : "Edit your comments, then finish again.",
       });
@@ -114,7 +127,7 @@ export function useReview(id: string, onNewVersion?: () => void) {
     }
   };
 
-  return { review, loadError, load, version, latest, isLatest, isOpen, setActiveVersion, finishing, finish, reopen, saveComment, deleteComment };
+  return { review, loadError, load, version, latest, isLatest, isOpen, setActiveVersion, finishing, finish, autoCopied, reopen, saveComment, deleteComment };
 }
 
 export type ReviewState = ReturnType<typeof useReview>;

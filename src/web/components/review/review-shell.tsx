@@ -122,6 +122,8 @@ export function ReviewBottom({ r, comments, dock, onLatest }: { r: ReviewState; 
       reviewId={review.id}
       delivered={Boolean(batch?.deliveredAt)}
       listening={Boolean(review.agentListening)}
+      outdated={Boolean(review.agentOutdated)}
+      autoCopied={r.autoCopied}
       count={comments.length}
       nextVersion={version.number + 1}
       onReopen={r.reopen}

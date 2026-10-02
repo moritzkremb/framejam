@@ -6,7 +6,7 @@
  *   npm start                       # in one terminal
  *   npm run e2e                     # in another; then comment + send in the browser
  *
- * Env: FRAMEJAM_URL (default http://localhost:4517), E2E_MAX_WAITS (default 20 ≈ 16 min)
+ * Env: FRAMEJAM_URL (default http://localhost:2400), E2E_MAX_WAITS (default 20 ≈ 16 min)
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -15,7 +15,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { builtinPresetsDir } from "../src/server/paths.ts";
 
-const base = (process.env.FRAMEJAM_URL ?? "http://localhost:4517").replace(/\/$/, "");
+const base = (process.env.FRAMEJAM_URL ?? "http://localhost:2400").replace(/\/$/, "");
 const maxWaits = Number(process.env.E2E_MAX_WAITS ?? 20);
 const presetId = process.env.E2E_PRESET ?? "swiss-editorial";
 

@@ -12,7 +12,7 @@ import os from "node:os";
 import path from "node:path";
 import puppeteer, { type Page } from "puppeteer-core";
 
-const base = (process.env.FRAMEJAM_URL ?? "http://localhost:4517").replace(/\/$/, "");
+const base = (process.env.FRAMEJAM_URL ?? "http://localhost:2400").replace(/\/$/, "");
 const outDir = path.resolve(process.env.OUT_DIR ?? "artifacts");
 const chrome = process.env.CHROME_PATH ?? ["/usr/local/bin/google-chrome", "/usr/bin/google-chrome", "/usr/bin/chromium"].find(fs.existsSync);
 fs.mkdirSync(outDir, { recursive: true });

@@ -1,8 +1,8 @@
 import { Check, CheckCheck, Clock, Copy, Loader2, MapPin, MoveHorizontal, Pencil, X } from "lucide-react";
-import { forwardRef, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { copyText, formatTime, type ElementInfo } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { copyText, formatTime, handoffMessage, type ElementInfo } from "@/lib/api";
+import { cn, COPY_KEYS, FINISH_KEYS } from "@/lib/utils";
 
 export type Anchor =
   | { kind: "time" }
@@ -15,7 +15,18 @@ function elementName(el?: ElementInfo) {
   return el.selector.split(/\s*>\s*/).pop() ?? el.selector;
 }
 
-export function AgentLine({ listening, className }: { listening: boolean; className?: string }) {
+const OUTDATED_HELP =
+  "Your agent is running Frame Jam from before the last update, so this page can't tell whether it's listening. Restart the framejam MCP server in your agent (Cursor: Settings → MCP) to fix it.";
+
+export function AgentLine({ listening, outdated, className }: { listening: boolean; outdated?: boolean; className?: string }) {
+  if (outdated && !listening) {
+    return (
+      <span className={cn("fc-agent fc-grow outdated", className)} title={OUTDATED_HELP}>
+        <span className="dot" />
+        <span className="fc-truncate">Agent needs a restart to show if it's listening</span>
+      </span>
+    );
+  }
   return (
     <span
       className={cn("fc-agent fc-grow", listening && "waiting", className)}
@@ -38,6 +49,7 @@ interface DockProps {
   text: string;
   draftCount: number;
   agentListening: boolean;
+  agentOutdated?: boolean;
   finishing: boolean;
   adding: boolean;
   onText(t: string): void;
@@ -61,6 +73,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     text,
     draftCount,
     agentListening,
+    agentOutdated,
     finishing,
     adding,
     onText,
@@ -103,6 +116,23 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     </span>
   );
 
+  const canFinish = !finishing && (draftCount > 0 || text.trim().length > 0);
+  const finishRef = useRef(() => {});
+  useLayoutEffect(() => {
+    finishRef.current = () => {
+      if (canFinish) onFinish();
+    };
+  });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter" || !(e.metaKey || e.ctrlKey) || e.repeat) return;
+      e.preventDefault();
+      finishRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const placeholder = whole
     ? `What should change in the ${wholeLabel.toLowerCase()}?`
     : customPlaceholder
@@ -129,7 +159,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
             rows={1}
             onChange={(e) => onText(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
                 e.preventDefault();
                 if (text.trim()) onAdd();
               }
@@ -142,17 +172,18 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
         </div>
       </div>
       <div className="send">
-        <AgentLine listening={agentListening} />
+        <AgentLine listening={agentListening} outdated={agentOutdated} />
         <button
           type="button"
           data-testid="send-to-agent"
           className="fc-btn primary"
           onClick={onFinish}
-          disabled={finishing || draftCount === 0}
-          title={draftCount ? "Lock this version's comments and hand them to your agent. You can still reopen them." : "Add a comment first"}
+          disabled={!canFinish}
+          title={canFinish ? `Lock this version's comments and hand them to your agent (${FINISH_KEYS}). You can still reopen them.` : "Add a comment first"}
         >
           {finishing ? <Loader2 className="fc-i sm fc-spin" /> : <CheckCheck className="fc-i sm" />}
           Finish review{draftCount ? ` · ${draftCount}` : ""}
+          <span className="fc-kbd">{FINISH_KEYS}</span>
         </button>
       </div>
     </div>
@@ -163,18 +194,57 @@ interface HandoffProps {
   reviewId: string;
   delivered: boolean;
   listening: boolean;
+  outdated?: boolean;
+  /** The line below was already put on the clipboard when the review was finished. */
+  autoCopied?: boolean;
   count: number;
   nextVersion: number;
   onReopen(): Promise<void>;
 }
 
 /** Replaces the comment box once a review is finished: says whether the agent has it, and lets you reopen it. */
-export function Handoff({ reviewId, delivered, listening, count, nextVersion, onReopen }: HandoffProps) {
-  const [copied, setCopied] = useState(false);
+export function Handoff({ reviewId, delivered, listening, outdated, autoCopied, count, nextVersion, onReopen }: HandoffProps) {
+  // `copies` counts copies (including the automatic one on finish) so each restarts the "Copied" flash.
+  const [copies, setCopies] = useState(autoCopied ? 1 : 0);
+  const [copied, setCopied] = useState(Boolean(autoCopied));
   const [confirming, setConfirming] = useState(false);
   const [reopening, setReopening] = useState(false);
-  const message = `Apply my Frame Jam feedback for ${reviewId}`;
+  const message = handoffMessage(reviewId);
   const comments = `${count} comment${count === 1 ? "" : "s"}`;
+  const needsPaste = !delivered && !listening && !confirming;
+
+  useEffect(() => {
+    if (!copies) return;
+    const t = setTimeout(() => setCopied(false), 3000);
+    return () => clearTimeout(t);
+  }, [copies]);
+
+  const copy = async () => {
+    try {
+      await copyText(message);
+      setCopied(true);
+      setCopies((n) => n + 1);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+  const copyRef = useRef(copy);
+  useLayoutEffect(() => {
+    copyRef.current = copy;
+  });
+  useEffect(() => {
+    if (!needsPaste) return;
+    // Cmd/Ctrl+C copies the line only when nothing else would be copied: no selected text, not in a field.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "c" || !(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return;
+      if (window.getSelection()?.toString()) return;
+      if ((document.activeElement as HTMLElement | null)?.closest("input, textarea, [contenteditable=true]")) return;
+      e.preventDefault();
+      void copyRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [needsPaste]);
 
   const reopen = async () => {
     setReopening(true);
@@ -260,27 +330,23 @@ export function Handoff({ reviewId, delivered, listening, count, nextVersion, on
               <CheckCheck className="fc-i sm" />
             </span>
             <div className="fc-grow">
-              <div className="t">Review finished. Now tell your agent.</div>
-              <div className="d">Your agent isn't listening right now. Paste this into your chat and it picks up your {comments}:</div>
+              <div className="t">{autoCopied ? "Copied. Paste it into your agent chat." : "Review finished. Now tell your agent."}</div>
+              <div className="d">
+                {outdated
+                  ? `If your agent was waiting, it picks these up on its own. Otherwise, paste this into your chat for your ${comments}:`
+                  : autoCopied
+                    ? `Your agent wasn't listening, so this line is on your clipboard. Pasting it hands over your ${comments}:`
+                    : `Your agent isn't listening right now. Paste this into your chat and it picks up your ${comments}:`}
+              </div>
+              {outdated && <div className="d fc-t3" title={OUTDATED_HELP}>Restart the framejam MCP server so this page can see when your agent is listening.</div>}
             </div>
             {editButton}
           </div>
           <div className="fc-code">
             <code>{message}</code>
-            <button
-              type="button"
-              className="fc-btn primary sm"
-              onClick={async () => {
-                try {
-                  await copyText(message);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                } catch (e) {
-                  toast.error((e as Error).message);
-                }
-              }}
-            >
-              {copied ? <Check className="fc-i xs" /> : <Copy className="fc-i xs" />} {copied ? "Copied" : "Copy"}
+            <button type="button" className="fc-btn primary sm" onClick={() => void copy()} title={`Copy (${COPY_KEYS})`}>
+              {copied ? <Check className="fc-i xs" /> : <Copy className="fc-i xs" />} {copied ? "Copied to clipboard" : "Copy"}
+              {!copied && <span className="fc-kbd">{COPY_KEYS}</span>}
             </button>
           </div>
         </div>

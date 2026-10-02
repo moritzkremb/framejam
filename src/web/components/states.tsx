@@ -2,7 +2,7 @@ import { Search, WifiOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CodeBlock } from "@/components/setup-steps";
 
-export function NotHere({ title, message, back = "/", backLabel = "Back to reviews" }: { title: string; message: string; back?: string; backLabel?: string }) {
+export function NotHere({ title, message, back = "/", backLabel = "Back to projects" }: { title: string; message: string; back?: string; backLabel?: string }) {
   return (
     <div className="fc-empty fc-center">
       <span className="ic">

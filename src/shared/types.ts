@@ -103,6 +103,8 @@ export interface Review {
   batches: FeedbackBatch[];
   /** Computed by the API, not stored: an agent is in (or between) wait_for_feedback calls for this review. */
   agentListening?: boolean;
+  /** The agent's Frame Jam process started before the current build, so it may lack newer features (like the listening heartbeat). */
+  agentOutdated?: boolean;
 }
 
 /** The agent harness that last connected over MCP (from the MCP `initialize` client info). */
@@ -110,6 +112,9 @@ export interface AgentInfo {
   name: string;
   version?: string;
   at: string;
+  /** The script that MCP process was started from, and its content hash at the time. */
+  entry?: string;
+  build?: string;
 }
 
 export interface PresetFont {

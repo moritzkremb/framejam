@@ -78,7 +78,7 @@ export function createApp(ctx: McpContext) {
     return sendFile(cached, c.req.raw);
   });
 
-  const reviewJson = (id: string) => ({ ...store.getReview(id), agentListening: store.agentListening(id) });
+  const reviewJson = (id: string) => ({ ...store.getReview(id), agentListening: store.agentListening(id), agentOutdated: store.agentOutdated() });
 
   app.get("/api/reviews/:id", (c) => c.json(reviewJson(c.req.param("id"))));
 
@@ -86,7 +86,7 @@ export function createApp(ctx: McpContext) {
     const id = c.req.param("id");
     store.getReview(id);
     // The listening flag can expire without any file changing, so it's part of the fingerprint.
-    const fingerprint = () => `${store.reviewMtime(id)}:${store.agentListening(id)}`;
+    const fingerprint = () => `${store.reviewMtime(id)}:${store.agentListening(id)}:${store.agentOutdated()}`;
     return streamSSE(c, async (stream) => {
       let last = fingerprint();
       let alive = true;
@@ -246,7 +246,7 @@ export function createApp(ctx: McpContext) {
     const index = path.join(webDistDir, "index.html");
     if (fs.existsSync(index)) return sendFile(index, c.req.raw);
     return c.html(
-      "<p style='font-family:sans-serif'>The Frame Jam UI is not built yet. Run <code>npm run build</code>, or use <code>npm run dev</code> and open port 4518.</p>",
+      "<p style='font-family:sans-serif'>The Frame Jam UI is not built yet. Run <code>npm run build</code>, or use <code>npm run dev</code> and open port 2401.</p>",
     );
   });
 

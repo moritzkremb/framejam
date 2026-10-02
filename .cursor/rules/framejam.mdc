@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Frame Jam: style presets + one-click video and storyboard review
 
-Frame Jam runs next to your chat at http://localhost:4517. It gives you two things the chat is bad at:
+Frame Jam runs next to your chat at http://localhost:2400. It gives you two things the chat is bad at:
 **choosing a style** (a structured `style.json` + working template) and **precise feedback**
 (timestamped, pinned comments with the clicked DOM element, its active GSAP tween, and a frame image).
 
@@ -15,7 +15,7 @@ Frame Jam runs next to your chat at http://localhost:4517. It gives you two thin
 As soon as this skill is used, open Frame Jam where the user can see it, without being asked:
 
 - **Cursor:** use the built-in browser tool (`cursor-ide-browser` → `browser_navigate`) with
-  `position: "side"` so it opens beside the chat. Open `http://localhost:4517/styles` when the user still needs a style,
+  `position: "side"` so it opens beside the chat. Open `http://localhost:2400/styles` when the user still needs a style,
   or the review `url` once you have one.
 - **Other harnesses:** use their browser/preview tool if there is one. Otherwise give the user the link.
 - If the page doesn't load, nothing is hosting the UI. The framejam MCP server hosts it while it's connected; otherwise

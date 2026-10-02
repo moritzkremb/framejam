@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
+import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -98,5 +100,39 @@ describe("MCP over streamable HTTP", () => {
     expect(payload.status).toBe("feedback");
     expect(payload.comments.map((c: { text: string }) => c.text)).toEqual(["Swap the outro color"]);
     await client.close();
+  });
+
+  it("flags an agent whose MCP process runs code that has since changed on disk", async () => {
+    const { review } = fx.store.openReview({ title: "Teaser", videoPath: fx.video });
+    const entry = path.join(fx.root, "cli.js");
+    fs.writeFileSync(entry, "v1");
+    const build = createHash("sha1").update("v1").digest("hex");
+    const stateFile = path.join(fx.store.root, "state.json");
+    fs.writeFileSync(stateFile, JSON.stringify({ agent: { name: "Cursor", at: new Date(Date.now() - 60_000).toISOString(), entry, build } }));
+    const outdated = async () => (await (await app.request(`/api/reviews/${review.id}`)).json()).agentOutdated;
+    expect(await outdated()).toBe(false);
+
+    // A rebuild that rewrites identical code is not a new version.
+    fs.writeFileSync(entry, "v1");
+    expect(await outdated()).toBe(false);
+
+    fs.writeFileSync(entry, "v2");
+    fs.utimesSync(entry, new Date(), new Date(Date.now() + 1000));
+    expect(await outdated()).toBe(true);
+  });
+
+  it("falls back to modification time for agents recorded without a build hash", async () => {
+    const { review } = fx.store.openReview({ title: "Teaser", videoPath: fx.video });
+    const entry = path.join(fx.root, "cli.js");
+    fs.writeFileSync(entry, "");
+    const connectedAt = new Date(Date.now() - 60_000);
+    fs.utimesSync(entry, new Date(connectedAt.getTime() - 60_000), new Date(connectedAt.getTime() - 60_000));
+    const stateFile = path.join(fx.store.root, "state.json");
+    fs.writeFileSync(stateFile, JSON.stringify({ agent: { name: "Cursor", at: connectedAt.toISOString(), entry } }));
+    const outdated = async () => (await (await app.request(`/api/reviews/${review.id}`)).json()).agentOutdated;
+    expect(await outdated()).toBe(false);
+
+    fs.utimesSync(entry, new Date(), new Date());
+    expect(await outdated()).toBe(true);
   });
 });

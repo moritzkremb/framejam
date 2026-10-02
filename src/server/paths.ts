@@ -29,14 +29,17 @@ export function dataDir(): string {
 
 /** How an agent should launch this copy of Frame Jam, for the setup prompt in the UI. */
 export function setupInfo() {
-  const fromNpx = /[\\/]_npx[\\/]/.test(packageRoot);
+  // Installed copies (npx cache, global or project install) get the portable npx command; only a source checkout,
+  // which isn't on npm under that name, needs its own absolute path.
+  const installed = /[\\/]node_modules[\\/]/.test(packageRoot);
   const cliPath = path.join(packageRoot, "dist", "server", "cli.js");
   return {
-    mcpCommand: fromNpx ? ["npx", "-y", "framejam", "--stdio"] : ["node", cliPath, "--stdio"],
+    cliPath,
+    mcpCommand: installed ? ["npx", "-y", "framejam", "--stdio"] : ["node", cliPath, "--stdio"],
     skillPath: path.join(packageRoot, "skills", "framejam", "SKILL.md"),
   };
 }
 
 export const builtinPresetsDir = path.join(packageRoot, "presets");
 export const webDistDir = path.join(packageRoot, "dist", "web");
-export const DEFAULT_PORT = 4517;
+export const DEFAULT_PORT = 2400;

@@ -11,10 +11,10 @@ import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
 import { api, compositionUrl, formatTime, videoUrl, type ReviewComment } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, FINISH_KEYS } from "@/lib/utils";
 
 const FPS = 30;
-const SHORTCUTS = "Space play/pause · ←/→ frame · Shift+←/→ 1s · C comment · Esc clear";
+const SHORTCUTS = `Space play/pause · ←/→ frame · Shift+←/→ 1s · C comment · ${FINISH_KEYS} finish review · Esc clear`;
 /** How long a comment without a range stays on screen after its timestamp. */
 const POINT_VISIBLE_FOR = 1.5;
 
@@ -46,12 +46,12 @@ export function ReviewPage() {
   if (r.loadError && !r.review) {
     return (
       <div className="fc-rshell" ref={rootRef}>
-        <BackHeader to="/" title="Review" />
+        <BackHeader to="/" title="Project" />
         <main className="fc-main">
           {isOffline(r.loadError) ? (
             <Offline />
           ) : (
-            <NotHere title="This review isn't here" message="It may have been deleted, or the link is from another computer." />
+            <NotHere title="This project isn't here" message="It may have been deleted, or the link is from another computer." />
           )}
         </main>
       </div>
@@ -61,7 +61,7 @@ export function ReviewPage() {
   if (!r.review || !r.version || !r.latest) {
     return (
       <div className="fc-rshell" ref={rootRef}>
-        <BackHeader to="/" title="Loading review" />
+        <BackHeader to="/" title="Loading project" />
         <main className="fc-main">
           <div className="fc-skel" style={{ aspectRatio: "16 / 9", borderRadius: 14 }} />
           <div className="fc-skel" style={{ height: 56 }} />
@@ -141,9 +141,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
     .filter((c) => c.x === undefined || c.y === undefined)
     .map((c) => ({ id: c.id, index: indexOf.get(c.id)!, sent: c.status !== "draft", text: c.text }));
 
-  const markers: Marker[] = comments
-    .filter((c) => !c.wholeVideo)
-    .map((c) => ({ id: c.id, index: indexOf.get(c.id)!, time: c.time, endTime: c.endTime, sent: c.status !== "draft" }));
+  const markers: Marker[] = comments.map((c) => ({ id: c.id, index: indexOf.get(c.id)!, time: c.time, endTime: c.endTime, whole: c.wholeVideo, sent: c.status !== "draft" }));
 
   const focusBox = () => requestAnimationFrame(() => boxRef.current?.focus());
 
@@ -216,6 +214,8 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       setAnchor({ kind: "time" });
       setWhole(false);
       setSelectedId(c.id);
+      // Hand the keyboard back to the player so Space resumes playback.
+      (document.activeElement as HTMLElement | null)?.blur();
       await load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -286,6 +286,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       text={text}
       draftCount={draftCount}
       agentListening={Boolean(review.agentListening)}
+      agentOutdated={Boolean(review.agentOutdated)}
       finishing={r.finishing}
       adding={adding}
       onText={setText}
@@ -364,15 +365,16 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
               selectedId={selectedId}
               frameSource={version.videoPath ? videoUrl(review.id, version.number) : undefined}
               canSelectRange={isOpen}
+              wholeActive={isOpen && whole}
               onSeek={seek}
               onScrubStart={() => ctrl?.pause()}
               onRange={(start, end) => {
-                seek(start);
                 setAnchor({ kind: "range", time: start, endTime: end });
                 setWhole(false);
                 setSelectedId(null);
                 focusBox();
               }}
+              onClearRange={() => setAnchor((a) => (a.kind === "range" ? { kind: "time" } : a))}
               onSelect={selectById}
             />
           </div>

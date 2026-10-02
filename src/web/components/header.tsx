@@ -8,7 +8,7 @@ export const DOCS_URL = "https://framejam.ai";
 
 export function Wordmark() {
   return (
-    <Link to="/" className="fc-logo" aria-label="Frame Jam reviews">
+    <Link to="/" className="fc-logo" aria-label="Frame Jam projects">
       Frame <b>Jam</b>
     </Link>
   );
@@ -45,9 +45,9 @@ export function Dots({ colors, size }: { colors: string[]; size?: number }) {
 }
 
 const NAV = [
-  { to: "/", label: "Reviews", end: true },
-  { to: "/styles", label: "Styles", end: false },
   { to: "/setup", label: "Setup", end: false },
+  { to: "/styles", label: "Styles", end: false },
+  { to: "/", label: "Projects", end: true },
 ];
 
 /** App header on every top-level page: wordmark, the main pages, Docs, and the style in use. */
@@ -70,8 +70,14 @@ export function HomeHeader() {
       </nav>
       <span className="fc-grow" />
       {style ? (
-        <Link to={`/styles/${style.id}`} className="fc-style-chip" title="The style your agent uses for the next video">
+        <Link
+          to={`/styles/${style.id}`}
+          className="fc-style-chip"
+          title="Your selected style. Your agent uses it for the next video."
+          aria-label={`Selected style: ${style.name}`}
+        >
           <Dots colors={Object.values(style.palette)} />
+          <span className="lbl">Selected style</span>
           <span className="fc-truncate">{style.name}</span>
         </Link>
       ) : style === null ? (

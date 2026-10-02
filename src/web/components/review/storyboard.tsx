@@ -5,9 +5,9 @@ import { FeedbackDock } from "@/components/review/dock";
 import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar } from "@/components/review/review-shell";
 import type { ReviewState } from "@/components/review/use-review";
 import { api, panelUrl, type ReviewComment, type StoryboardPanel } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, FINISH_KEYS } from "@/lib/utils";
 
-const SHORTCUTS = "←/→ previous/next panel · B board · C comment · Esc clear";
+const SHORTCUTS = `←/→ previous/next panel · B board · C comment · ${FINISH_KEYS} finish review · Esc clear`;
 
 type View = "board" | "panel";
 
@@ -266,6 +266,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
       text={text}
       draftCount={draftCount}
       agentListening={Boolean(review.agentListening)}
+      agentOutdated={Boolean(review.agentOutdated)}
       finishing={r.finishing}
       adding={adding}
       chip={chip}

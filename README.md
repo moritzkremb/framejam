@@ -12,7 +12,7 @@ that chat does badly:
   pin positions, frame thumbnails and, for live compositions, **the DOM element you clicked and the GSAP tween that
   was animating it**.
 
-Everything is local. One Node process serves the web UI on `http://localhost:4517`, runs MCP over stdio and streamable
+Everything is local. One Node process serves the web UI on `http://localhost:2400`, runs MCP over stdio and streamable
 HTTP, and keeps projects (each video or storyboard with its versions and comments) as JSON files in `~/.framejam`. It's built for a half-screen browser pane next to the chat.
 
 Upgrading from framecut: the first start moves `~/.framecut` to `~/.framejam`, and the old `FRAMECUT_*` environment
@@ -23,11 +23,11 @@ variables still work. Re-add the MCP server under its new name (`framejam`) in y
 ```bash
 npm install
 npm run build
-npm start                 # http://localhost:4517  (MCP at http://localhost:4517/mcp)
+npm start                 # http://localhost:2400  (MCP at http://localhost:2400/mcp)
 ```
 
 Then connect your agent (below), pick a style on the Styles page, and ask the agent to *"make a 7-second launch
-teaser with Frame Jam and open it for review"*. The start page (`/`) is your reviews: each one shows whose turn it is.
+teaser with Frame Jam and open it for review"*. The start page (`/`) is your projects: each one shows whose turn it is.
 Until an agent has connected it also shows the setup checklist, three messages you paste into your agent chat, which
 stays available at `/setup`.
 
@@ -62,7 +62,7 @@ The package isn't on npm yet. Until it is, replace `npx -y framejam` below with
 }
 ```
 
-Open `http://localhost:4517` in Cursor's built-in browser so the review sits beside the chat.
+Open `http://localhost:2400` in Cursor's built-in browser so the review sits beside the chat.
 
 ### Claude Code
 
@@ -78,11 +78,11 @@ ChatGPT connects to MCP servers over HTTP. Run `npm start`, turn on developer mo
 settings, and add a custom connector with this URL:
 
 ```
-http://localhost:4517/mcp
+http://localhost:2400/mcp
 ```
 
 If your ChatGPT build requires an https URL, expose the port with a tunnel (for example
-`cloudflared tunnel --url http://localhost:4517`) and set `FRAMEJAM_PUBLIC_URL` to the tunnel URL so the review links
+`cloudflared tunnel --url http://localhost:2400`) and set `FRAMEJAM_PUBLIC_URL` to the tunnel URL so the review links
 it hands out are reachable.
 
 ### Teach the agent the loop
@@ -170,7 +170,7 @@ presets/neon-terminal/
   poster.jpg
 ```
 
-Built-in presets (36):
+Built-in presets (42):
 
 - **Swiss Editorial**, **Neon Terminal**, **Soft Gradient SaaS**, **Kinetic Captions** (9:16), **Noir Quote**,
   **Data Story**, **Retro Pop** (1:1), and **Mono Changelog**.
@@ -181,7 +181,8 @@ Built-in presets (36):
   **Dot Field Showreel**, **Blueprint Explainer**, **Topo Credits**, **Parchment Epic**, **Case File**,
   **Ink Wash**, **Acid Chrome**, **Op Art** (1:1), **Inflated Type** (1:1), **Flash Sale** (9:16),
   **Recipe Steps**, **Split Flap**, **Window Seat** (1:1), **Label Collage**, **Cyanotype Mac**,
-  **Doodle Mascot**, **Synthwave Grid**, and **Pop Zine**.
+  **Doodle Mascot**, **Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**,
+  **Dither Serif**, **Life Timeline**, **Storybook Lantern**, and **Felt Feed** (9:16).
 
 Every one passes `hyperframes lint` with no errors. To re-render the previews:
 
@@ -192,7 +193,7 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 ## Development
 
 ```bash
-npm run dev        # API on :4517 (tsx watch) + Vite UI on :4518 with a proxy
+npm run dev        # API on :2400 (tsx watch) + Vite UI on :2401 with a proxy
 npm test           # vitest: MCP tools (in-memory, streamable HTTP, stdio) + REST API
 npm run typecheck
 npm run lint
@@ -207,7 +208,7 @@ npm run lint
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). `lib/composition.ts` handles live playback and element/tween resolution. |
 | `design/` | The Frame Jam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
 
-Configuration: `--port` / `FRAMEJAM_PORT` (default 4517), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
+Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), and `FRAMEJAM_PUBLIC_URL` (the base URL used in links).
 
 ## Limitations (v1)
