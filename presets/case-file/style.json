@@ -1,0 +1,88 @@
+{
+  "id": "case-file",
+  "name": "Case File",
+  "tagline": "A launch told as an investigation: typed case notes, redaction bars, red string on a corkboard and a stamp that closes the case.",
+  "description": "Detective-dossier style for product launches and problem/solution stories. Grey-green paper with grain and vignette, typewriter case notes whose key facts get wiped out by black redaction bars, index-card tickets pinned to a dark corkboard and joined by red string that draws on, one huge serif number, a rubber stamp with ink texture that slams onto the file, then a clean resolved product card. Captions type out in a small dark bar at the bottom.",
+  "mood": [
+    "suspenseful",
+    "wry",
+    "tactile"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "paper": "#b6b9a2",
+    "sheet": "#e2e0cd",
+    "card": "#e6e3d2",
+    "cork": "#2a2820",
+    "ink": "#161712",
+    "redaction": "#121310",
+    "string": "#c2241f",
+    "stampGreen": "#2f7d4a",
+    "captionBar": "#17180f",
+    "resolved": "#fbfbf7"
+  },
+  "fonts": {
+    "display": {
+      "family": "Playfair Display",
+      "weights": [
+        900
+      ],
+      "source": "Google Fonts",
+      "usage": "The huge evidence number (≈500px) and the final wordmark (170px)"
+    },
+    "body": {
+      "family": "Inter",
+      "weights": [
+        500,
+        700,
+        900
+      ],
+      "source": "Google Fonts",
+      "usage": "Ticket headings, the rubber stamp (900, 110px, 12px border) and the resolved product card"
+    },
+    "mono": {
+      "family": "Courier Prime",
+      "weights": [
+        400,
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Typed case notes 40px, card labels 15–22px tracked 0.24em, captions 32px bold in the dark bar"
+    }
+  },
+  "easing": {
+    "redact": "power3.inOut",
+    "pin": "back.out(1.6)",
+    "string": "power2.inOut",
+    "stamp": "power4.in",
+    "counter": "power2.out",
+    "resolve": "power3.out"
+  },
+  "transitions": [
+    "hard cuts between file, corkboard, evidence number, stamped file and product card",
+    "slow 2–6% push on every evidence shot",
+    "stamp impact shakes the sheet for 0.2s"
+  ],
+  "textAnimations": [
+    "captions type out character by character (≈0.025s per char) in a dark bar",
+    "black redaction bars wipe left→right over key facts, 0.24s each, 0.17s apart",
+    "evidence number counts 0→N with power2.out while scaling down from 1.12",
+    "stamp drops from scale 2.4 at -9° with power4.in in 0.2s"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.6,
+    "notes": "Five beats: the file, the board, the number, the stamp, the fix. One typed caption per beat; let the stamp land just after the caption starts."
+  },
+  "tags": [
+    "launch",
+    "investigation",
+    "dossier",
+    "typewriter",
+    "problem-solution"
+  ],
+  "guide": "- Ground is grey-green paper (#c4c7b0 → #8f937c radial) with a multiply feTurbulence grain; evidence boards are dark cork #2a2820. No pure white until the final product card (#fbfbf7).\n- Case notes are Courier Prime 40px on a #e2e0cd sheet with a tracked uppercase header and rule. Redact key facts with #121310 bars that wipe scaleX 0→1 (power3.inOut, 0.24s, 0.17s stagger) after the line is readable.\n- Corkboard: 4–6 index cards (#e6e3d2, slight -4° to 3° rotations, heavy drop shadow) drop in with back.out(1.6); glossy red pins pop, then #c2241f 3px strings with a slight sag draw from the hero card to each pin.\n- One huge Playfair Display 900 number per piece (≈500px) counting up, circled by a hand-drawn red loop.\n- Stamp: Inter 900 uppercase inside a 12px rounded border, green #2f7d4a (or red for 'unsolved'), rotated about -9°, with an feTurbulence alpha mask plus displacement for ink texture. Slam from scale 2.4 with power4.in in 0.2s and shake the sheet.\n- Every beat gets one typed Courier Prime 700 caption (32px) in a #17180f bar centred at y≈950. End on a clean resolved product card plus wordmark; never show a mascot or real brand."
+}

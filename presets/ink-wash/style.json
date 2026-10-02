@@ -1,0 +1,74 @@
+{
+  "id": "ink-wash",
+  "name": "Ink Wash",
+  "tagline": "A slow shan-shui landscape in graded ink on rice paper, with a rising moon, drifting mist and a vertical title with a red seal.",
+  "description": "Calm, contemplative style for festivals, poetry, tea and craft brands, travel and mood pieces. Layered mountain ridges in graded ink (near peaks almost black, far ridges pale blue-grey) built from SVG paths with feTurbulence stippling and displacement for ink bleed, mist bands and clouds drifting between them, a pale moon rising behind the far range, a plum branch that inks itself in, a few birds and a small boat, and a vertical serif title with a small red seal. Captions fade in softly, with Chinese above and English below. Nothing snaps.",
+  "mood": [
+    "serene",
+    "poetic",
+    "timeless"
+  ],
+  "pacing": "slow",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8.5,
+  "palette": {
+    "ricePaper": "#efe8d6",
+    "paperEdge": "#d9cfb6",
+    "inkNear": "#141614",
+    "inkMid": "#4f5d60",
+    "inkFar": "#8fa2aa",
+    "mist": "#f0eadc",
+    "moon": "#fbf8ef",
+    "seal": "#b23a2c",
+    "blossom": "#c44a3a",
+    "text": "#3a3934"
+  },
+  "fonts": {
+    "display": {
+      "family": "Noto Serif SC",
+      "weights": [
+        500,
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Vertical title (writing-mode: vertical-rl) 104px, letter-spacing 0.22em; seal characters 25px; Chinese captions 38px, tracking 0.32em"
+    },
+    "body": {
+      "family": "Cormorant Garamond",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Italic English subtitle line 30px under each Chinese caption"
+    }
+  },
+  "easing": {
+    "everything": "sine.inOut",
+    "reveal": "power2.out",
+    "drift": "none"
+  },
+  "transitions": [
+    "one continuous shot, no cuts",
+    "layers fade up from the paper with sine.inOut, far → near, 0.3s apart",
+    "captions dissolve through blur(6px), never slide more than 10px"
+  ],
+  "textAnimations": [
+    "title characters resolve one by one from blur(10px), 1.3s each, 0.25s stagger",
+    "seal fades in from scale 1.12 with power2.out over 1s",
+    "Chinese line then English line fade up 10px from blur(6px), 0.35s apart"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 8.5,
+    "notes": "A single long take. Something new appears roughly every second (ridges, branch, title, seal, caption, birds), and the parallax drift and moonrise never stop."
+  },
+  "tags": [
+    "ink-wash",
+    "chinese",
+    "landscape",
+    "calm",
+    "festival"
+  ],
+  "guide": "- Warm rice paper (#f3eddd → #d9cfb6 radial) with a multiply fiber noise (feTurbulence baseFrequency \"0.012 0.35\") and a faint vignette. Ink colours only, plus one red #b23a2c for the seal and blossoms.\n- Build 3 ridge layers from concave-sided peak paths filled with a vertical gradient (opaque at the tip → transparent at the base): far #8fa2aa with a heavy 3.5px blur, mid #4f5d60 and near #141614 with an feTurbulence alpha stipple plus displacement (scale ≈22) for ink bleed. Put blurred mist bands between layers.\n- Parallax is linear and small: far −40px, mid −90px, near −150px over the whole piece, plus a 5% sine.inOut camera push. Moon (pale disc with a warm glow) rises ~300px behind the far range.\n- Add 2–3 living details: a plum branch drawn with dashoffset strokes and red five-petal blossoms, a few V-shaped birds flapping (scaleY yoyo, finite repeat), a small boat drifting.\n- Title is 3–4 characters vertical (Noto Serif SC 700, ~104px) on the right third, revealed character by character from blur, with a 64px red seal underneath. Captions: Chinese 38px tracked 0.32em, English Cormorant Garamond italic 30px below.\n- Use only sine.inOut, power2.out or linear eases, with durations of 1s or more. No hard cuts, no bounce, no scale pops."
+}

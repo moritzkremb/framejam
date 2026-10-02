@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1080" />
+    <title>Inflated Type</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Space+Mono:wght@700&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1080px; overflow: hidden; background: #f3efe6; }
+      #stage { position: relative; width: 1080px; height: 1080px; overflow: hidden; background: #f3efe6; color: #1b1b1b; font-family: "Fredoka", sans-serif; }
+      #wall { position: absolute; left: -260px; top: -260px; }
+      #word { position: absolute; left: 0; right: 0; top: 240px; display: flex; justify-content: center; transform-origin: center center; }
+      .L { position: relative; display: block; margin: 0 -4px; }
+      .w, .s { display: block; transform-origin: 50% 90%; }
+      .g { display: block; font-weight: 700; font-size: 360px; line-height: 1; }
+      .ext { position: relative; }
+      .body, .hi { position: absolute; left: 0; top: 0; color: transparent; -webkit-background-clip: text; background-clip: text; }
+      .hi { filter: blur(1.5px); }
+      #ball { position: absolute; left: 0; top: 0; }
+      .strip { position: absolute; left: 0; right: 0; top: 790px; text-align: center; white-space: nowrap; }
+      .plate { display: inline-block; background: #f3efe6; padding: 8px 18px; border-radius: 10px; }
+      .strip span { display: inline-block; font-family: "Space Mono", monospace; font-weight: 700; font-size: 21px; letter-spacing: 0.08em; padding: 0 2px; }
+      .strip b { display: inline-block; font-family: "Space Mono", monospace; font-size: 21px; padding: 0 6px; color: #ff2e88; }
+      #tag { position: absolute; left: 0; right: 0; top: 590px; text-align: center; font-weight: 600; font-size: 60px; white-space: nowrap; }
+      #tag span { background: #f3efe6; padding: 0 18px; border-radius: 18px; }
+      #pill { position: absolute; left: 0; right: 0; top: 686px; text-align: center; }
+      #pill span { display: inline-block; background: #1b1b1b; color: #f3efe6; font-family: "Space Mono", monospace; font-weight: 700; font-size: 22px; letter-spacing: 0.08em; padding: 14px 28px; border-radius: 999px; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="inflated-type" data-width="1080" data-height="1080" data-duration="7">
+      <svg id="wall" width="1600" height="1600" viewBox="0 0 1600 1600">
+        <defs id="defs"></defs>
+        <rect width="1600" height="1600" fill="url(#doodles)" />
+      </svg>
+      <div id="word"></div>
+      <svg id="ball" width="200" height="200" viewBox="-100 -100 200 200">
+        <defs>
+          <radialGradient id="bg1" cx="0.36" cy="0.3" r="0.8">
+            <stop offset="0" stop-color="#ff8fc0" />
+            <stop offset="0.35" stop-color="#ff2e88" />
+            <stop offset="1" stop-color="#8a0042" />
+          </radialGradient>
+        </defs>
+        <ellipse cx="0" cy="96" rx="80" ry="10" fill="#1b1b1b" fill-opacity="0.18" />
+        <g id="ballSpin">
+          <circle r="92" fill="url(#bg1)" stroke="#1b1b1b" stroke-width="6" />
+          <path d="M-92 0 C -40 -26, 40 -26, 92 0 M-92 0 C -40 26, 40 26, 92 0" stroke="#1b1b1b" stroke-width="6" fill="none" />
+          <path d="M0 -92 C -26 -40, -26 40, 0 92" stroke="#1b1b1b" stroke-width="6" fill="none" />
+          <circle cx="34" cy="-44" r="11" fill="#ffd23f" stroke="#1b1b1b" stroke-width="4" />
+        </g>
+        <path d="M-58 -46 C -44 -66, -22 -76, 0 -76" stroke="#fff" stroke-opacity="0.8" stroke-width="9" stroke-linecap="round" fill="none" />
+      </svg>
+      <div id="tag"><span>type that bounces back.</span></div>
+      <div id="pill"><span>plonk.toys — v2 out now</span></div>
+      <div class="strip" id="strip"><div class="plate" id="plate"></div></div>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      function el(tag, attrs, parent) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(e);
+        return e;
+      }
+      var seed = 11;
+      function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+
+      // doodle wallpaper
+      var INK = "#1b1b1b", PAPER = "#f3efe6";
+      var ICONS = [
+        function (g) { el("path", { d: "M-22 0 Q0 -19 22 0 Q0 19 -22 0Z", fill: PAPER, stroke: INK, "stroke-width": 4 }, g); el("circle", { r: 7, fill: INK }, g); },
+        function (g) { for (var i = 0; i < 6; i++) { var a = (i / 6) * Math.PI * 2; el("circle", { cx: Math.cos(a) * 11, cy: Math.sin(a) * 11, r: 8, fill: INK }, g); } el("circle", { r: 5, fill: PAPER }, g); },
+        function (g) { el("path", { d: "M0 -20 Q3 -3 20 0 Q3 3 0 20 Q-3 3 -20 0 Q-3 -3 0 -20Z", fill: INK }, g); },
+        function (g) { el("circle", { r: 18, fill: INK }, g); el("circle", { cx: -6, cy: -5, r: 3, fill: PAPER }, g); el("circle", { cx: 6, cy: -5, r: 3, fill: PAPER }, g); el("path", { d: "M-9 5 Q0 13 9 5", stroke: PAPER, "stroke-width": 3.5, fill: "none", "stroke-linecap": "round" }, g); },
+        function (g) { el("path", { d: "M-4 -21 L12 -21 L3 -4 L13 -4 L-8 21 L-2 3 L-12 3Z", fill: INK }, g); },
+        function (g) { el("path", { d: "M0 0 C 0 -6, 8 -6, 8 0 C 8 9, -6 10, -9 0 C -12 -12, 6 -18, 14 -8 C 22 4, 8 20, -6 16", stroke: INK, "stroke-width": 4, fill: "none", "stroke-linecap": "round" }, g); },
+        function (g) { el("path", { d: "M0 16 C -26 -2, -14 -22, 0 -8 C 14 -22, 26 -2, 0 16Z", fill: INK }, g); },
+        function (g) { el("path", { d: "M-18 14 L-18 -6 Q-18 -20 0 -20 Q18 -20 18 -6 L18 14 L12 9 L6 14 L0 9 L-6 14 L-12 9Z", fill: INK }, g); el("circle", { cx: -6, cy: -6, r: 3.5, fill: PAPER }, g); el("circle", { cx: 6, cy: -6, r: 3.5, fill: PAPER }, g); }
+      ];
+      var DOTS = ["#ff2e88", "#ffb000", "#7ed321", "#12c9e8", "#9a3cff"];
+      var pat = el("pattern", { id: "doodles", width: 540, height: 540, patternUnits: "userSpaceOnUse" }, document.getElementById("defs"));
+      for (var cy = 0; cy < 6; cy++)
+        for (var cx = 0; cx < 6; cx++) {
+          var g = el("g", { transform: "translate(" + (45 + cx * 90 + (rnd() - 0.5) * 50).toFixed(1) + " " + (45 + cy * 90 + (rnd() - 0.5) * 50).toFixed(1) + ") rotate(" + ((rnd() - 0.5) * 70).toFixed(1) + ") scale(" + (0.62 + rnd() * 0.42).toFixed(2) + ")" }, pat);
+          ICONS[Math.floor(rnd() * ICONS.length)](g);
+          el("circle", { cx: (rnd() * 540).toFixed(1), cy: (rnd() * 540).toFixed(1), r: (3 + rnd() * 3).toFixed(1), fill: DOTS[Math.floor(rnd() * 5)] }, pat);
+        }
+
+      // inflated letters
+      var LETTERS = [["P", "#ff2e88", "#ffa6cc", "#b0005a"], ["l", "#ffb000", "#ffe39a", "#c06400"], ["o", "#7ed321", "#d2ff95", "#3c8a00"], ["n", "#12c9e8", "#b0f5ff", "#0072a6"], ["k", "#9a3cff", "#dcb8ff", "#5810b6"]];
+      var word = document.getElementById("word");
+      LETTERS.forEach(function (L, i) {
+        var D = L[3], sh = [];
+        for (var k = 1; k <= 7; k++) sh.push("0 " + k * 2 + "px 0 " + D);
+        sh.push("0 16px 4px " + D, "0 30px 34px rgba(40,20,60,0.32)", "0 0 50px " + L[1] + "aa");
+        var wrap = document.createElement("div");
+        wrap.className = "L";
+        wrap.id = "L" + i;
+        wrap.innerHTML =
+          '<div class="w"><div class="s">' +
+          '<span class="g ext" style="color:' + D + ";text-shadow:" + sh.join(",") + '">' + L[0] + "</span>" +
+          '<span class="g body" style="background-image:linear-gradient(172deg,' + L[2] + " 0%," + L[1] + " 34%," + L[1] + " 68%," + D + ' 104%)">' + L[0] + "</span>" +
+          '<span class="g hi" style="background-image:radial-gradient(ellipse 38% 22% at 36% 30%,rgba(255,255,255,0.95),rgba(255,255,255,0) 100%),radial-gradient(ellipse 30% 14% at 62% 78%,rgba(255,255,255,0.4),rgba(255,255,255,0) 100%)">' + L[0] + "</span>" +
+          "</div></div>";
+        word.appendChild(wrap);
+      });
+
+      var FEATS = ["Inflate", "Squish", "Bounce", "Kerning", "Variable", "WebGPU"];
+      var strip = document.getElementById("plate");
+      FEATS.forEach(function (f, i) {
+        if (i) strip.insertAdjacentHTML("beforeend", "<b>·</b>");
+        strip.insertAdjacentHTML("beforeend", '<span class="feat">' + f.toUpperCase() + "</span>");
+      });
+
+      var tl = gsap.timeline({ paused: true });
+      var Ls = gsap.utils.toArray(".L"), Ws = gsap.utils.toArray(".w"), Ss = gsap.utils.toArray(".s");
+
+      tl.fromTo("#wall", { x: 0, y: 0 }, { x: -270, y: -135, duration: 7, ease: "none" }, 0);
+
+      // drop in, squash on landing, spring back
+      Ls.forEach(function (L, i) {
+        var at = 0.1 + i * 0.12;
+        tl.fromTo(L, { y: -820, rotation: (i % 2 ? 14 : -14) }, { y: 0, rotation: 0, duration: 0.42, ease: "power2.in", immediateRender: true }, at);
+        tl.to(Ss[i], { scaleX: 1.24, scaleY: 0.7, duration: 0.06, ease: "power1.out" }, at + 0.42);
+        tl.to(Ss[i], { scaleX: 1, scaleY: 1, duration: 0.7, ease: "elastic.out(1.2, 0.3)" }, at + 0.49);
+      });
+
+      // idle jelly wobble
+      Ws.forEach(function (w, i) {
+        tl.fromTo(w, { rotation: 0 }, { rotation: i % 2 ? 5 : -5, y: -10, duration: 0.38, ease: "sine.inOut", yoyo: true, repeat: 13, immediateRender: false }, 1.15 + i * 0.07);
+      });
+      [1.85, 2.55].forEach(function (at) {
+        tl.to(Ss, { scaleY: 0.86, scaleX: 1.1, duration: 0.1, ease: "power2.out", stagger: 0.05 }, at)
+          .to(Ss, { scaleY: 1, scaleX: 1, duration: 0.55, ease: "elastic.out(1.1, 0.35)", stagger: 0.05 }, at + 0.1);
+      });
+
+      // features strip
+      tl.from(".strip span, .strip b", { y: 18, opacity: 0, duration: 0.25, ease: "back.out(2)", stagger: 0.07 }, 1.0);
+
+      // ball rolls through and knocks the letters
+      var B0 = 3.3, SPEED = 1500, BY = 458;
+      tl.fromTo("#ball", { x: -260, y: BY - 100 }, { x: 1360, y: BY - 100, duration: 1620 / SPEED, ease: "none" }, B0)
+        .fromTo("#ballSpin", { rotation: 0 }, { rotation: 900, svgOrigin: "0 0", duration: 1620 / SPEED, ease: "none" }, B0);
+      Ls.forEach(function (L, i) {
+        var cxL = [200, 372, 514, 674, 878][i], hit = B0 + (cxL - 140 + 260 - 100) / SPEED, dir = i % 2 ? 1 : -1;
+        tl.fromTo(L, { x: 0, y: 0, rotation: 0 }, { x: 70 + i * 12, y: -300 - (i % 3) * 60, rotation: dir * (40 + i * 8), duration: 0.42, ease: "power2.out", immediateRender: false }, hit)
+          .to(L, { x: 0, y: 0, rotation: 0, duration: 0.95, ease: "bounce.out" }, hit + 0.42)
+          .to(Ss[i], { scaleX: 0.8, scaleY: 1.2, duration: 0.12, ease: "power1.out" }, hit)
+          .to(Ss[i], { scaleX: 1, scaleY: 1, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, hit + 0.12);
+      });
+
+      // end card
+      tl.to("#word", { y: -110, scale: 0.8, duration: 0.6, ease: "back.out(1.6)" }, 5.65)
+        .to("#strip", { y: 60, duration: 0.6, ease: "power3.out" }, 5.65)
+        .from("#tag", { y: 40, opacity: 0, scale: 0.8, duration: 0.5, ease: "back.out(2)" }, 5.85)
+        .from("#pill", { y: 30, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 6.1);
+
+      tl.set({}, {}, 7);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["inflated-type"] = tl;
+    </script>
+  </body>
+</html>

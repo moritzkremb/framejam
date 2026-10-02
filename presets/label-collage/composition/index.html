@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Label Collage</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Caveat:wght@600&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #ece3cd; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #ece3cd; color: #e9e6dc; font-family: "Space Mono", monospace; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .cream { background: radial-gradient(ellipse at 40% 35%, #f1e9d5 0%, #e9dec4 75%, #ddcfb0 100%); }
+      #night { position: absolute; inset: 0; visibility: hidden; background: radial-gradient(ellipse at 30% 30%, #4a62a0 0%, #34497f 55%, #26386a 100%); }
+      #night svg { position: absolute; left: 0; top: 0; }
+      .half { position: absolute; inset: 0; background-image: radial-gradient(rgba(16, 26, 64, 0.55) 1.5px, transparent 2.2px); background-size: 8px 8px;
+        -webkit-mask-image: linear-gradient(180deg, transparent 35%, #000 100%); mask-image: linear-gradient(180deg, transparent 35%, #000 100%); }
+      .tape { position: absolute; white-space: nowrap; }
+      .tape::before { content: ""; position: absolute; left: 7px; top: 8px; right: -7px; bottom: -8px; background-image: radial-gradient(rgba(28, 28, 48, 0.6) 1.1px, transparent 1.7px); background-size: 5px 5px; }
+      .tape span { position: relative; display: block; background: #263a6c; color: #e8ebf1; font-weight: 700; font-size: 28px; letter-spacing: 0.05em; padding: 8px 22px 9px;
+        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.22); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1), inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+        clip-path: polygon(0 4%, 1.5% 0, 98% 3%, 100% 0, 99.4% 96%, 100% 100%, 2% 97%, 0 100%); }
+      .ast { position: absolute; overflow: visible; }
+      .ast line { stroke: #e5735b; stroke-linecap: round; }
+      .draw { fill: none; stroke-dasharray: 1; stroke-dashoffset: 1; stroke-linecap: round; stroke-linejoin: round; }
+      .ch { position: absolute; top: 0; font-size: 40px; color: #eef0f6; text-shadow: 0 2px 0 rgba(10, 20, 50, 0.4); }
+      .quote { position: absolute; left: 214px; top: 818px; font-size: 38px; color: #eef0f6; }
+      .lbl { position: absolute; font-size: 23px; color: #f3eee2; white-space: nowrap; letter-spacing: 0.02em; }
+      .hand { position: absolute; font-family: "Caveat", cursive; font-weight: 600; color: #e5735b; white-space: nowrap; }
+      .marks { position: absolute; inset: 0; pointer-events: none; z-index: 8; }
+      .marks i { position: absolute; width: 34px; height: 34px; border-color: rgba(40, 40, 50, 0.55); border-style: solid; border-width: 0; }
+      .sw { position: absolute; bottom: 48px; width: 16px; height: 16px; }
+      #grain { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: 0.7; z-index: 9; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="label-collage" data-width="1920" data-height="1080" data-duration="8">
+      <div id="s1" class="scene cream">
+        <svg class="ast" id="ast1" style="left: 770px; top: 250px" width="380" height="380" viewBox="-190 -190 380 380"></svg>
+        <div id="s1tapes"></div>
+      </div>
+
+      <div id="night">
+        <svg width="1920" height="1080">
+          <filter id="cloud"><feTurbulence type="fractalNoise" baseFrequency="0.0032 0.006" numOctaves="4" seed="19" /><feColorMatrix values="0 0 0 0 0.62  0 0 0 0 0.7  0 0 0 0 0.9  2.0 0 0 0 -0.9" /></filter>
+          <filter id="stars"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="4" /><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  10 0 0 0 -6.7" /></filter>
+          <rect id="clouds" x="-200" width="2400" height="1080" filter="url(#cloud)" />
+          <rect width="1920" height="1080" filter="url(#stars)" opacity="0.7" />
+          <path d="M310 140 h18 m-9 -9 v18 M1520 120 h14 m-7 -7 v14 M860 210 h12 m-6 -6 v12 M1730 520 h16 m-8 -8 v16 M120 470 h12 m-6 -6 v12" stroke="#f3eee2" stroke-width="2.4" />
+        </svg>
+        <div class="half"></div>
+      </div>
+
+      <div id="s2" class="scene">
+        <div id="wave" style="position: absolute; left: 150px; top: 300px"></div>
+        <svg style="position: absolute; left: 1380px; top: 380px" width="340" height="530" viewBox="0 0 340 530">
+          <path id="jarFill" d="M90 60 L250 60 Q260 60 260 80 L260 96 Q320 110 320 170 L320 470 Q320 512 280 512 L60 512 Q20 512 20 470 L20 170 Q20 110 80 96 L80 80 Q80 60 90 60 Z" fill="#efe3c8" />
+          <g id="jarTapes"></g>
+          <path id="jarLine" class="draw" pathLength="1" d="M90 60 L250 60 Q260 60 260 80 L260 96 Q320 110 320 170 L320 470 Q320 512 280 512 L60 512 Q20 512 20 470 L20 170 Q20 110 80 96 L80 80 Q80 60 90 60 Z" stroke="#2a3c6e" stroke-width="5" />
+          <path id="jarShine" class="draw" pathLength="1" d="M44 190 L44 440" stroke="#2a3c6e" stroke-width="4" />
+          <rect id="jarLabel" class="draw" pathLength="1" x="92" y="226" width="156" height="96" stroke="#e5735b" stroke-width="3.5" />
+          <text id="jarText" x="170" y="284" text-anchor="middle" font-family="Caveat" font-weight="600" font-size="40" fill="#e5735b">small things</text>
+          <g id="lid"><rect x="66" y="6" width="208" height="56" rx="8" fill="#e5735b" /><path d="M86 14 v40 M106 14 v40 M126 14 v40 M146 14 v40 M166 14 v40 M186 14 v40 M206 14 v40 M226 14 v40 M246 14 v40" stroke="#b9503d" stroke-width="5" /></g>
+        </svg>
+        <svg class="ast" id="ast2" style="left: 1520px; top: 190px" width="150" height="150" viewBox="-190 -190 380 380"></svg>
+        <div class="quote" id="quote">“she laughed at my pun.”</div>
+        <svg style="position: absolute; left: 150px; top: 770px" width="760" height="170" viewBox="0 0 760 170">
+          <path id="ring" class="draw" pathLength="1" d="M380 18 C 600 14, 740 46, 734 88 C 728 136, 560 156, 360 154 C 160 152, 22 128, 26 84 C 30 40, 190 18, 420 24 C 560 28, 690 44, 712 70" stroke="#e5735b" stroke-width="6" />
+        </svg>
+      </div>
+
+      <div id="s3" class="scene">
+        <svg style="position: absolute; left: 0; top: 0" width="1920" height="1080"><g id="spokes"></g>
+          <g id="con"><path id="conLine" class="draw" pathLength="1" d="M140 250 L210 170 L300 190 L360 120 M300 190 L330 270 L230 300 L140 250" stroke="#f3eee2" stroke-opacity="0.75" stroke-width="2" /></g>
+        </svg>
+        <div id="labels"></div>
+        <svg class="ast" id="ast3" style="left: 920px; top: 500px" width="80" height="80" viewBox="-190 -190 380 380"></svg>
+        <div class="hand" id="conCap" style="left: 150px; top: 320px; font-size: 44px">tuesday, 21:04</div>
+      </div>
+
+      <div id="s4" class="scene cream">
+        <svg class="ast" id="ast4" style="left: 330px; top: 300px" width="440" height="440" viewBox="-190 -190 380 380"></svg>
+        <div id="s4tapes"></div>
+        <div class="hand" id="url" style="left: 900px; top: 700px; font-size: 60px">jarful.app — keep the little things</div>
+      </div>
+
+      <div class="marks">
+        <i style="left: 40px; top: 40px; border-left-width: 2px; border-top-width: 2px"></i><i style="right: 40px; top: 40px; border-right-width: 2px; border-top-width: 2px"></i>
+        <i style="left: 40px; bottom: 40px; border-left-width: 2px; border-bottom-width: 2px"></i><i style="right: 40px; bottom: 40px; border-right-width: 2px; border-bottom-width: 2px"></i>
+        <div class="sw" style="right: 140px; background: #e5735b"></div><div class="sw" style="right: 120px; background: #4a62a0"></div><div class="sw" style="right: 100px; background: #263a6c"></div><div class="sw" style="right: 80px; background: #3a3a40"></div>
+      </div>
+      <svg id="grain" width="1920" height="1080">
+        <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="11" stitchTiles="stitch" /><feColorMatrix values="0 0 0 0 0.25  0 0 0 0 0.2  0 0 0 0 0.16  2.2 0 0 0 -0.78" /></filter>
+        <rect width="1920" height="1080" filter="url(#noise)" />
+      </svg>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      function el(p, tag, a) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; }
+      function star(id, rough) { var s = document.getElementById(id), f = el(s, "filter", { id: id + "f", x: "-20%", y: "-20%", width: "140%", height: "140%" });
+        el(f, "feTurbulence", { type: "fractalNoise", baseFrequency: 0.045, numOctaves: 2, seed: 5 }); el(f, "feDisplacementMap", { in: "SourceGraphic", scale: rough, xChannelSelector: "R", yChannelSelector: "G" });
+        var g = el(s, "g", { filter: "url(#" + id + "f)" }), lens = [170, 150, 176, 140, 168, 156, 178, 146, 164, 152, 172, 144];
+        lens.forEach(function (l, i) { var a = (i / 12) * Math.PI * 2 + 0.12 * Math.sin(i * 2.3); el(g, "line", { x1: 0, y1: 0, x2: (Math.cos(a) * l).toFixed(1), y2: (Math.sin(a) * l).toFixed(1), "stroke-width": 40 }); }); }
+      ["ast1", "ast2", "ast3", "ast4"].forEach(function (id) { star(id, 9); });
+      function tape(parent, text, x, y, rot, size, cls) { var t = document.createElement("div"); t.className = "tape " + (cls || ""); t.style.left = x + "px"; t.style.top = y + "px";
+        var s = document.createElement("span"); s.textContent = text; if (size) { s.style.fontSize = size + "px"; s.style.padding = Math.round(size * 0.24) + "px " + Math.round(size * 0.6) + "px"; }
+        t.appendChild(s); document.getElementById(parent).appendChild(t); gsap.set(t, { rotation: rot }); return t; }
+
+      var s1 = [["first coffee on the balcony", 170, 120, -4], ["sunset at 18:42", 760, 104, -2], ["bus driver waved back", 1180, 90, 3], ["rain on the tin roof", 1440, 250, -6],
+        ["new socks.", 330, 330, 5], ["found €5 in my coat", 1250, 430, 7], ["the dog sighed", 110, 560, -8], ["tomato from the garden", 1400, 640, -3],
+        ["mum's voicemail, 0:42", 170, 900, 4], ["late train. good book.", 1220, 900, -5]].map(function (d) { return tape("s1tapes", d[0], d[1], d[2], d[3], 0, "t1"); });
+      var big = tape("s1tapes", "the small stuff goes missing.", 520, 740, -1.5, 46, "t1");
+      var word = tape("s4tapes", "jarful", 840, 300, -3, 140);
+      var sub = tape("s4tapes", "a notes app for the small stuff.", 870, 560, 2, 38);
+
+      var wave = document.getElementById("wave"), chars = [], msg = "every small thing you'd have forgotten, kept.";
+      msg.split("").forEach(function (c, i) { var sp = document.createElement("span"); sp.className = "ch"; sp.textContent = c; sp.style.left = i * 24.5 + "px"; wave.appendChild(sp); chars.push(sp); });
+      var wv = { p: 0 };
+      function waveUpdate() { chars.forEach(function (c, i) { gsap.set(c, { y: Math.sin(i * 0.3 + wv.p) * 38, rotation: Math.cos(i * 0.3 + wv.p) * 12 }); }); }
+      waveUpdate();
+
+      var jt = document.getElementById("jarTapes"), jtapes = [];
+      [[60, 470, -8], [150, 478, 6], [70, 440, 4], [170, 446, -5], [110, 412, -12], [190, 410, 9]].forEach(function (d, i) {
+        var g = el(el(jt, "g", { transform: "translate(" + d[0] + " " + d[1] + ") rotate(" + d[2] + ")" }), "g", {}); el(g, "rect", { width: 110, height: 24, fill: "#263a6c" }); el(g, "rect", { x: 12, y: 10, width: 60 + (i % 3) * 10, height: 4, fill: "#d9dde8" }); jtapes.push(g); });
+
+      var moments = ["first coffee, balcony", "bus driver waved", "rain on the tin roof", "the dog sighed", "found €5 in my coat", "mum's voicemail", "late train, good book", "new socks.", "tomato from the garden", "sunset at 18:42", "she laughed at my pun", "pancakes, round two"];
+      var sp = document.getElementById("spokes"), lb = document.getElementById("labels"), lines = [], labels = [];
+      moments.forEach(function (m, i) { var a = ((-75 + i * 30) * Math.PI) / 180, len = i % 2 ? 300 : 350, c = Math.cos(a), s = Math.sin(a);
+        lines.push(el(sp, "path", { class: "draw", pathLength: 1, d: "M" + (960 + c * 60).toFixed(0) + " " + (540 + s * 60).toFixed(0) + " L" + (960 + c * len).toFixed(0) + " " + (540 + s * len).toFixed(0), stroke: "#f1d9c6", "stroke-width": 2 }));
+        var d = document.createElement("div"); d.className = "lbl"; d.textContent = m; d.style.left = (960 + c * (len + 22)).toFixed(0) + "px"; d.style.top = (540 + s * (len + 22)).toFixed(0) + "px"; lb.appendChild(d);
+        gsap.set(d, { xPercent: c > 0.2 ? 0 : c < -0.2 ? -100 : -50, yPercent: -50 }); labels.push(d); });
+      var con = document.getElementById("con"), dots = [];
+      [[140, 250], [210, 170], [300, 190], [360, 120], [330, 270], [230, 300]].forEach(function (p) { dots.push(el(con, "circle", { cx: p[0], cy: p[1], r: 7, fill: "#f3eee2" })); });
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) { tl.set(id, { visibility: "visible" }, from); if (to !== undefined) tl.set(id, { visibility: "hidden" }, to); }
+      function slap(t, at) { tl.fromTo(t, { scale: 1.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2.2)", immediateRender: false }, at); }
+      function draw(t, at, dur, ease) { tl.to(t, { strokeDashoffset: 0, duration: dur, ease: ease || "power2.inOut" }, at); }
+      function spin(id, from, dur, deg) { tl.fromTo(id, { rotation: 0 }, { rotation: deg, duration: dur, ease: "none", immediateRender: false }, from); }
+      gsap.set(s1.concat([big, word, sub], labels, dots, chars), { opacity: 0 });
+      gsap.set([".ast", "#lid"].concat(dots), { transformOrigin: "50% 50%" });
+
+      show("#s1", 0, 2.25);
+      tl.fromTo("#ast1", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.7)", immediateRender: false }, 0.05);
+      spin("#ast1", 0, 2.25, 70);
+      s1.forEach(function (t, i) { slap(t, 0.25 + i * 0.1); });
+      slap(big, 1.35);
+      s1.concat([big]).forEach(function (t, i) { var dx = parseFloat(t.style.left) + t.textContent.length * 9 - 960, dy = parseFloat(t.style.top) + 26 - 540;
+        tl.to(t, { x: dx * 0.7, y: dy * 0.7 + 80, rotation: "+=" + (i % 2 ? 24 : -24), opacity: 0, duration: 0.42, ease: "power2.in" }, 1.85 + (i % 4) * 0.02); });
+      tl.to("#ast1", { scale: 1.6, opacity: 0, duration: 0.4, ease: "power2.in" }, 1.88);
+
+      show("#night", 2.25, 6.35);
+      gsap.set("#night", { opacity: 0 });
+      tl.set("#night", { opacity: 1 }, 2.25).set("#night", { opacity: 0 }, 6.35);
+      tl.fromTo("#clouds", { x: 0 }, { x: -160, duration: 4.1, ease: "none", immediateRender: false }, 2.25);
+      show("#s2", 2.25, 4.6);
+      tl.fromTo(chars, { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)", stagger: 0.02, immediateRender: false }, 2.3)
+        .fromTo(wv, { p: 0 }, { p: 4.5, duration: 2.35, ease: "none", onUpdate: waveUpdate, immediateRender: false }, 2.25)
+        .fromTo("#jarFill", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out", immediateRender: false }, 2.65)
+        .fromTo("#lid", { y: -60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "back.out(2)", immediateRender: false }, 2.85)
+        .fromTo("#jarText", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 3.0)
+        .fromTo(jtapes, { y: -520, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "bounce.out", stagger: 0.12, immediateRender: false }, 2.95)
+        .fromTo("#quote", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, 2.45)
+        .fromTo("#ast2", { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.5, ease: "back.out(1.8)", immediateRender: false }, 2.5);
+      gsap.set(["#jarFill", "#lid", "#jarText", "#quote"].concat(jtapes), { opacity: 0 });
+      draw("#jarLine", 2.3, 0.65); draw("#jarShine", 2.75, 0.3); draw("#jarLabel", 2.8, 0.35); draw("#ring", 2.75, 0.55);
+      spin("#ast2", 3.0, 1.6, 50);
+      tl.to(chars, { opacity: 0, y: "-=30", duration: 0.25, ease: "power1.in", stagger: 0.008 }, 4.25);
+
+      show("#s3", 4.6, 6.35);
+      lines.forEach(function (l, i) { draw(l, 4.62 + i * 0.04, 0.35, "power2.out"); });
+      tl.fromTo(labels, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)", stagger: 0.05, immediateRender: false }, 4.85)
+        .fromTo("#ast3", { scale: 0 }, { scale: 1, duration: 0.4, ease: "back.out(2)", immediateRender: false }, 4.62)
+        .fromTo(dots, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(3)", stagger: 0.07, immediateRender: false }, 4.9)
+        .fromTo("#conCap", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, 5.45);
+      gsap.set("#conCap", { opacity: 0 });
+      draw("#conLine", 5.2, 0.6);
+      spin("#ast3", 4.6, 1.75, 120);
+      tl.to(labels, { opacity: 0, duration: 0.25, ease: "power1.in", stagger: 0.015 }, 6.05);
+
+      show("#s4", 6.35);
+      tl.fromTo("#ast4", { scale: 0, rotation: -140 }, { scale: 1, rotation: 0, duration: 0.7, ease: "back.out(1.6)", immediateRender: false }, 6.35);
+      spin("#ast4", 7.05, 0.95, 18);
+      slap(word, 6.6); slap(sub, 6.9);
+      tl.fromTo("#url", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", immediateRender: false }, 7.15);
+      gsap.set("#url", { opacity: 0 });
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["label-collage"] = tl;
+    </script>
+  </body>
+</html>

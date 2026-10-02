@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1080" />
+    <title>Op Art</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@900&family=IBM+Plex+Mono:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1080px; overflow: hidden; background: #0d0d0c; }
+      #stage { position: relative; width: 1080px; height: 1080px; overflow: hidden; background: #0d0d0c; font-family: "IBM Plex Mono", monospace; font-weight: 500; color: #efe8da; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .cream { background: #efe8da; }
+      svg.full { position: absolute; left: 0; top: 0; }
+      .disp { font-family: "Unbounded", sans-serif; font-weight: 900; }
+      .tag { position: absolute; font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; background: #0d0d0c; color: #efe8da; padding: 7px 12px; white-space: nowrap; }
+      .tag i { font-style: normal; color: #e8402a; }
+      .info { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="op-art" data-width="1080" data-height="1080" data-duration="7">
+      <div id="s1" class="scene">
+        <svg class="full" width="1080" height="1080" viewBox="0 0 1080 1080">
+          <defs>
+            <mask id="k1" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1080">
+              <rect width="1080" height="1080" fill="#fff" />
+              <text id="k1a" class="disp" x="540" y="632" text-anchor="middle" font-size="250" fill="#000">LOOK</text>
+              <text id="k1b" class="disp" x="540" y="618" text-anchor="middle" font-size="196" fill="#000" style="visibility: hidden">AGAIN</text>
+            </mask>
+          </defs>
+          <g id="maze1"></g>
+          <rect id="plate1" x="0" y="540" width="1080" height="0" fill="#efe8da" mask="url(#k1)" />
+        </svg>
+      </div>
+
+      <div id="s2" class="scene">
+        <svg class="full" width="1080" height="1080" viewBox="0 0 1080 1080">
+          <defs>
+            <mask id="k2" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1080">
+              <rect width="1080" height="1080" fill="#fff" />
+              <text class="disp" x="540" y="515" text-anchor="middle" font-size="176" fill="#000">AFTER</text>
+              <text class="disp" x="540" y="735" text-anchor="middle" font-size="176" fill="#000">IMAGE</text>
+            </mask>
+          </defs>
+          <rect width="1080" height="1080" fill="#0d0d0c" />
+          <g id="rings"></g>
+          <g id="spokes" style="mix-blend-mode: difference"></g>
+          <g mask="url(#k2)">
+            <rect id="band1" x="0" y="340" width="1080" height="220" fill="#e8402a" />
+            <rect id="band2" x="0" y="560" width="1080" height="220" fill="#efe8da" />
+          </g>
+        </svg>
+      </div>
+
+      <div id="s3" class="scene cream">
+        <svg class="full" width="1080" height="1080" viewBox="0 0 1080 1080"><g id="maze3"></g></svg>
+        <div class="info" id="i3" style="top: 410px">
+          <div class="disp" id="i3a" style="display: inline-block; background: #0d0d0c; color: #efe8da; font-size: 92px; padding: 18px 34px 22px; line-height: 1">12.03—30.06</div>
+        </div>
+        <div class="info" style="top: 572px">
+          <div class="tag" id="i3b" style="position: relative; display: inline-block; font-size: 22px; padding: 10px 20px">Hall 4 <i>●</i> Free entry <i>●</i> Lisbon</div>
+        </div>
+      </div>
+
+      <div id="s4" class="scene">
+        <svg class="full" width="1080" height="1080" viewBox="0 0 1080 1080">
+          <g id="moA" fill="none" stroke="#efe8da" stroke-width="5"></g>
+          <g id="moB" fill="none" stroke="#efe8da" stroke-width="5"></g>
+          <circle id="disc" cx="540" cy="540" r="330" fill="#0d0d0c" />
+          <circle id="ringR" cx="540" cy="540" r="330" fill="none" stroke="#e8402a" stroke-width="10" />
+        </svg>
+        <div class="info disp" id="e1" style="top: 400px; font-size: 92px; line-height: 1">AFTER</div>
+        <div class="info disp" id="e2" style="top: 500px; font-size: 92px; line-height: 1; color: #e8402a">IMAGE</div>
+        <div class="info" id="e3" style="top: 640px; font-size: 17px; letter-spacing: 0.18em">OPTICAL ART · 12.03 — 30.06</div>
+      </div>
+
+      <div id="hud">
+        <div class="tag" style="left: 36px; top: 34px">Afterimage <i>/</i> 2026</div>
+        <div class="tag" style="right: 36px; top: 34px">Seed 0x2A</div>
+        <div class="tag" id="hudL" style="left: 36px; bottom: 34px">Truchet × 144 · 2 waves</div>
+        <div class="tag" style="right: 36px; bottom: 34px"><span id="hudN">01</span> / 04</div>
+      </div>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      function el(tag, attrs, parent) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(e);
+        return e;
+      }
+      function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+      function smooth(x) { x = clamp(x); return x * x * (3 - 2 * x); }
+      function prng(seed) { return function () { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }; }
+
+      var RED = "#e8402a", PINK = "#f2a493", CREAM = "#efe8da", INK = "#0d0d0c";
+
+      function Maze(id, n, seed, ink) {
+        var g = document.getElementById(id), s = 1080 / n, h = s / 2, r = prng(seed);
+        this.ink = ink;
+        this.tiles = [];
+        var d = "M0 " + -h + " A" + h + " " + h + " 0 0 1 " + -h + " 0 M0 " + h + " A" + h + " " + h + " 0 0 1 " + h + " 0";
+        for (var y = 0; y < n; y++)
+          for (var x = 0; x < n; x++) {
+            var cx = h + x * s, cy = h + y * s;
+            var p = el("path", { d: d, fill: "none", stroke: ink, "stroke-width": (s * 0.3).toFixed(1) }, g);
+            this.tiles.push({ p: p, cx: cx, cy: cy, base: r() < 0.5 ? 0 : 90, col: "" });
+          }
+      }
+      Maze.prototype.update = function (t, waves, colorAt) {
+        var self = this;
+        this.tiles.forEach(function (tile) {
+          var rot = tile.base;
+          waves.forEach(function (w) {
+            var d = Math.hypot(tile.cx - w.x, tile.cy - w.y) / 1080;
+            rot += 90 * smooth((t - w.t0 - d * w.spread) / w.dur);
+          });
+          tile.p.setAttribute("transform", "translate(" + tile.cx + " " + tile.cy + ") rotate(" + rot.toFixed(2) + ")");
+          var c = colorAt(tile, t) || self.ink;
+          if (c !== tile.col) { tile.p.setAttribute("stroke", c); tile.col = c; }
+        });
+      };
+
+      var m1 = new Maze("maze1", 12, 42, CREAM);
+      var m3 = new Maze("maze3", 16, 7, INK);
+      var W1 = [{ x: 0, y: 0, t0: 0.1, spread: 0.9, dur: 0.45 }, { x: 1080, y: 1080, t0: 1.05, spread: 0.8, dur: 0.45 }];
+      var W3 = [{ x: 540, y: 540, t0: 4.45, spread: 0.7, dur: 0.4 }, { x: 0, y: 1080, t0: 5.0, spread: 0.6, dur: 0.4 }];
+      function ripple(ox, oy, t0, speed) {
+        return function (tile, t) {
+          var d = Math.hypot(tile.cx - ox, tile.cy - oy), R = (t - t0) * speed;
+          for (var k = 0; k < 2; k++) {
+            var e = Math.abs(d - (R - k * 520));
+            if (e < 70) return RED;
+            if (e < 150) return PINK;
+          }
+          return null;
+        };
+      }
+      var red1 = ripple(160, 920, 0.2, 760);
+      function flood3(tile, t) {
+        var d = Math.hypot(tile.cx - 1080, tile.cy - 0), R = (t - 4.6) * 1150;
+        if (d < R - 110) return RED;
+        if (d < R) return PINK;
+        return null;
+      }
+
+      // tunnel: concentric rings xor rotating spokes
+      var rings = document.getElementById("rings"), ringEls = [];
+      for (var i = 0; i < 24; i++) ringEls.push(el("circle", { cx: 540, cy: 540, fill: "none", stroke: CREAM }, rings));
+      var spokes = document.getElementById("spokes"), SP = 28;
+      for (var j = 0; j < SP; j++) {
+        var a0 = (j / SP) * Math.PI * 2, a1 = ((j + 0.5) / SP) * Math.PI * 2, R = 900;
+        el("path", { d: "M540 540 L" + (540 + Math.cos(a0) * R).toFixed(1) + " " + (540 + Math.sin(a0) * R).toFixed(1) + " L" + (540 + Math.cos(a1) * R).toFixed(1) + " " + (540 + Math.sin(a1) * R).toFixed(1) + " Z", fill: CREAM }, spokes);
+      }
+      function tunnel(t) {
+        var sp = 34 + 6 * Math.sin(t * 3.2), ph = (t * 1.7) % 1;
+        ringEls.forEach(function (c, i) {
+          c.setAttribute("r", ((i + ph) * sp).toFixed(1));
+          c.setAttribute("stroke-width", (sp * 0.5).toFixed(1));
+        });
+        spokes.setAttribute("transform", "rotate(" + (t * 14).toFixed(2) + " 540 540)");
+      }
+
+      // end card: two offset ring sets -> moire
+      var moA = document.getElementById("moA"), moB = document.getElementById("moB");
+      for (var q = 1; q < 70; q++) {
+        el("circle", { cx: 540, cy: 540, r: q * 12 }, moA);
+        el("circle", { cx: 540, cy: 540, r: q * 12 }, moB);
+      }
+
+      var hudL = document.getElementById("hudL"), hudN = document.getElementById("hudN");
+      function frame(t) {
+        if (t < 2.25) {
+          m1.update(t, W1, red1);
+          hudL.textContent = "Truchet × 144 · 2 waves";
+          hudN.textContent = "01";
+        } else if (t < 4.4) {
+          tunnel(t);
+          hudL.textContent = "Rings × 24 · spokes × 28";
+          hudN.textContent = "02";
+        } else if (t < 5.8) {
+          m3.update(t, W3, flood3);
+          hudL.textContent = "Truchet × 256 · flood";
+          hudN.textContent = "03";
+        } else {
+          var o = 26 * Math.sin((t - 5.8) * 2.4);
+          moA.setAttribute("transform", "translate(" + o.toFixed(2) + " 0)");
+          moB.setAttribute("transform", "translate(" + (-o).toFixed(2) + " " + (o * 0.5).toFixed(2) + ")");
+          hudL.textContent = "Moire · 2 × 69 rings";
+          hudN.textContent = "04";
+        }
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      var clock = { t: 0 };
+      tl.to(clock, { t: 7, duration: 7, ease: "none", onUpdate: function () { frame(clock.t); } }, 0);
+      frame(0);
+
+      show("#s1", 0, 2.25);
+      tl.to("#plate1", { attr: { y: 400, height: 280 }, duration: 0.5, ease: "expo.out" }, 0.55)
+        .set("#k1a", { visibility: "hidden" }, 1.4)
+        .set("#k1b", { visibility: "visible" }, 1.4)
+        .fromTo("#plate1", { attr: { y: 400, height: 280 } }, { attr: { y: 380, height: 320 }, duration: 0.35, ease: "back.out(3)", immediateRender: false }, 1.4);
+
+      show("#s2", 2.25, 4.4);
+      tl.from("#band1", { attr: { width: 0 }, duration: 0.45, ease: "expo.out" }, 2.3)
+        .from("#band2", { attr: { x: 1080 }, duration: 0.45, ease: "expo.out" }, 2.42)
+        .to("#band1", { attr: { y: 330 }, duration: 0.25, ease: "power2.out" }, 3.6)
+        .to("#band2", { attr: { y: 570 }, duration: 0.25, ease: "power2.out" }, 3.6);
+
+      show("#s3", 4.4, 5.8);
+      tl.from("#i3a", { scaleY: 0, duration: 0.4, ease: "expo.out" }, 4.65)
+        .from("#i3b", { y: 30, opacity: 0, duration: 0.35, ease: "power3.out" }, 4.85);
+
+      show("#s4", 5.8);
+      tl.from("#disc", { attr: { r: 0 }, duration: 0.55, ease: "expo.out" }, 5.8)
+        .from("#ringR", { attr: { r: 0 }, duration: 0.7, ease: "expo.out" }, 5.85)
+        .from(["#e1", "#e2"], { y: 40, opacity: 0, duration: 0.45, ease: "expo.out", stagger: 0.1 }, 6.0)
+        .from("#e3", { opacity: 0, duration: 0.35, ease: "power1.out" }, 6.35);
+
+      tl.set({}, {}, 7);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["op-art"] = tl;
+    </script>
+  </body>
+</html>

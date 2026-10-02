@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Parchment Epic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Cormorant+Garamond:ital,wght@1,500&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #e4d5b4; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #e4d5b4; color: #2a1d12; font-family: "Cinzel", serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .parch { background: radial-gradient(ellipse at 50% 45%, #eee3c8 0%, #e2d1ad 55%, #c9b28a 100%); }
+      .dark { background: radial-gradient(ellipse at 50% 50%, #2a1b0c 0%, #140d06 55%, #080503 100%); }
+      svg.full { position: absolute; left: 0; top: 0; overflow: visible; }
+      .ln { fill: none; stroke: #3b2a1a; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+      .h { position: absolute; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; line-height: 1.05; }
+      .red { color: #a3221b; }
+      .meta { position: absolute; font-family: "IBM Plex Mono", monospace; font-size: 17px; letter-spacing: 0.32em; text-transform: uppercase; color: #5b4630; white-space: nowrap; }
+      .cap { position: absolute; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500; font-size: 34px; color: #4a3622; white-space: nowrap; }
+      .glow { color: #f6d38a; text-shadow: 0 0 18px rgba(255, 190, 90, 0.85), 0 0 60px rgba(255, 140, 40, 0.55), 0 0 120px rgba(255, 120, 30, 0.35); }
+      #hud { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+      .br { position: absolute; width: 30px; height: 30px; border-color: #6b5236; border-style: solid; border-width: 0; }
+      .vig { position: absolute; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(70, 40, 12, 0.42) 100%); }
+      .grain { position: absolute; inset: 0; pointer-events: none; z-index: 6; opacity: 0.32; mix-blend-mode: multiply; }
+      .tick { position: absolute; top: 994px; font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.1em; color: #7a6246; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="parchment-epic" data-width="1920" data-height="1080" data-duration="8.5">
+      <div id="s1" class="scene dark">
+        <div id="s1glow" style="position: absolute; left: 460px; top: 180px; width: 1000px; height: 560px; border-radius: 50%; background: radial-gradient(ellipse, rgba(255, 170, 60, 0.32) 0%, rgba(255, 120, 30, 0.08) 50%, rgba(0, 0, 0, 0) 72%)"></div>
+        <div class="h glow" id="s1a" style="left: 0; right: 0; top: 300px; text-align: center; font-size: 46px; letter-spacing: 0.42em; padding-left: 0.42em">Before the clock</div>
+        <div class="h glow" id="s1b" style="left: 0; right: 0; top: 380px; text-align: center; font-size: 112px; font-weight: 900; letter-spacing: 0.06em; padding-left: 0.06em">We read the sun.</div>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080">
+          <g id="dial" stroke="#f0bf62" stroke-width="2" style="filter: drop-shadow(0 0 6px rgba(255, 170, 60, 0.9))"></g>
+        </svg>
+      </div>
+
+      <div id="s2" class="scene parch">
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="rays2"></g></svg>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="clock"></g></svg>
+        <div class="meta" id="s2m" style="left: 150px; top: 372px">Horologium · Valmere · 1283</div>
+        <div class="h" id="s2a" style="left: 146px; top: 420px; font-size: 76px">Then we built</div>
+        <div class="h red" id="s2b" style="left: 142px; top: 506px; font-size: 128px">Clocks.</div>
+        <div class="cap" id="s2c" style="left: 150px; top: 680px">One iron heart, beating for the whole town.</div>
+      </div>
+
+      <div id="s3" class="scene parch">
+        <div class="h" id="s3a" style="left: 0; right: 0; top: 130px; text-align: center; font-size: 74px; padding-left: 0.08em">The sea demanded <span class="red">seconds.</span></div>
+        <div class="h red" id="year" style="left: 0; right: 0; top: 300px; text-align: center; font-size: 400px; letter-spacing: 0.02em; opacity: 0.9">1283</div>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="chrono"></g></svg>
+        <div class="meta" id="s3m" style="left: 0; right: 0; top: 860px; text-align: center">Longitude · the chronometer of Anselm Dray</div>
+      </div>
+
+      <div id="s4" class="scene parch">
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="rays4"></g></svg>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="arcade"></g></svg>
+        <div class="meta" id="s4m" style="left: 0; right: 0; top: 300px; text-align: center; padding-left: 0.32em">A documentary in six parts</div>
+        <div class="h" id="s4a" style="left: 0; right: 0; top: 350px; text-align: center; font-size: 150px; font-weight: 900; letter-spacing: 0.12em; padding-left: 0.12em">The Long <span class="red">Hour</span></div>
+        <div class="cap" id="s4c" style="left: 0; right: 0; top: 540px; text-align: center; font-size: 40px">A history of keeping time</div>
+      </div>
+
+      <div id="hud">
+        <div class="br" style="left: 40px; top: 40px; border-left-width: 1px; border-top-width: 1px"></div>
+        <div class="br" style="right: 40px; top: 40px; border-right-width: 1px; border-top-width: 1px"></div>
+        <div class="br" style="left: 40px; bottom: 40px; border-left-width: 1px; border-bottom-width: 1px"></div>
+        <div class="br" style="right: 40px; bottom: 40px; border-right-width: 1px; border-bottom-width: 1px"></div>
+        <div class="meta" id="hudL" style="left: 64px; top: 58px; font-size: 14px">II · Horologium</div>
+        <div class="meta" style="right: 64px; top: 58px; font-size: 14px">The Long Hour · Ep. I</div>
+        <div class="meta" style="left: 64px; top: 966px; font-size: 11px; color: #8a7254">Era</div>
+        <div class="meta" id="hudY" style="left: 64px; top: 986px; font-size: 26px; letter-spacing: 0.12em; color: #2a1d12">AD 1283</div>
+        <div class="meta" style="right: 64px; top: 966px; font-size: 11px; color: #8a7254">Plate</div>
+        <div class="meta" id="hudP" style="right: 64px; top: 986px; font-size: 26px; letter-spacing: 0.12em; color: #2a1d12">04 / 12</div>
+        <div class="tick" style="left: 640px">1000</div>
+        <div class="tick" style="left: 790px">1200</div>
+        <div class="tick" style="left: 940px">1400</div>
+        <div class="tick" style="left: 1090px">1600</div>
+        <div class="tick" style="left: 1240px">1800</div>
+        <div style="position: absolute; left: 640px; top: 1016px; width: 640px; height: 1px; background: #8a7254"></div>
+        <div id="prog" style="position: absolute; left: 640px; top: 1015px; width: 640px; height: 3px; background: #a3221b; transform-origin: left center"></div>
+      </div>
+
+      <div class="vig"></div>
+      <svg class="grain" width="1920" height="1080" viewBox="0 0 1920 1080">
+        <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" /><feColorMatrix values="0 0 0 0 0.25  0 0 0 0 0.16  0 0 0 0 0.08  0 0 0 1.4 -0.35" /></filter>
+        <rect width="1920" height="1080" filter="url(#noise)" />
+      </svg>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      function el(g, tag, attrs) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        g.appendChild(e);
+        return e;
+      }
+      function P(cx, cy, r, deg) { var a = (deg - 90) * Math.PI / 180; return [(cx + Math.cos(a) * r).toFixed(1), (cy + Math.sin(a) * r).toFixed(1)]; }
+      function ring(g, cx, cy, r, w, cls) { return el(g, "circle", { cx: cx, cy: cy, r: r, pathLength: 1, "stroke-width": w, "class": "ln " + cls, transform: "rotate(-90 " + cx + " " + cy + ")" }); }
+      function rays(id, cx, cy, n) {
+        var g = document.getElementById(id), d = "";
+        for (var i = 0; i < n; i++) {
+          var a = i * 360 / n, w = i % 3 === 0 ? 0.55 : 0.25;
+          var p1 = P(cx, cy, 120, a - w), p2 = P(cx, cy, 1700, a - w * 0.4), p3 = P(cx, cy, 1700, a + w * 0.4);
+          d += "M" + p1 + " L" + p2 + " L" + p3 + " Z ";
+        }
+        el(g, "path", { d: d, fill: "#6b4a26", opacity: "0.13" });
+      }
+
+      (function () {
+        var g = document.getElementById("dial"), cx = 960, cy = 900;
+        el(g, "path", { d: "M700 900 A260 260 0 0 1 1220 900", pathLength: 1, "class": "ln s1l", fill: "none" });
+        var d = "";
+        for (var a = -90; a <= 90; a += 15) { var p = P(cx, cy, 60, a), q = P(cx, cy, a % 45 === 0 ? 250 : 220, a); d += "M" + p + " L" + q + " "; }
+        el(g, "path", { d: d, pathLength: 1, "class": "ln s1l" });
+        g.querySelectorAll("path").forEach(function (p) { p.style.stroke = "#f0bf62"; });
+      })();
+
+      rays("rays2", 1400, 540, 96);
+      (function () {
+        var g = document.getElementById("clock"), cx = 1400, cy = 540;
+        [[370, 2.4], [358, 1.2], [300, 2], [262, 1.4], [104, 1.6], [94, 1.2]].forEach(function (r) { ring(g, cx, cy, r[0], r[1], "ck"); });
+        var t = "";
+        for (var i = 0; i < 60; i++) { var big = i % 5 === 0, p = P(cx, cy, 300, i * 6), q = P(cx, cy, big ? 270 : 287, i * 6); t += "M" + p + " L" + q + " "; }
+        el(g, "path", { d: t, pathLength: 1, "class": "ln ck", "stroke-width": 1.6 });
+        var num = ["XII", "I", "II", "III", "IIII", "V", "VI", "VII", "VIII", "IX", "X", "XI"];
+        for (var k = 0; k < 12; k++) {
+          var a = k * 30, b1 = P(cx, cy, 112, a - 12), b2 = P(cx, cy, 112, a + 12), c1 = P(cx, cy, 200, a - 13), c2 = P(cx, cy, 200, a + 13), tip = P(cx, cy, 256, a);
+          var pd = "M" + b1 + " L" + c1 + " Q" + P(cx, cy, 236, a - 11) + " " + tip + " Q" + P(cx, cy, 236, a + 11) + " " + c2 + " L" + b2 + " Z";
+          el(g, "path", { d: pd, "class": "petal", fill: k % 2 ? "#2f4a76" : "#a3221b", opacity: 0 });
+          el(g, "path", { d: pd, pathLength: 1, "class": "ln ck2", "stroke-width": 1.6 });
+          el(g, "circle", { cx: P(cx, cy, 182, a + 15)[0], cy: P(cx, cy, 182, a + 15)[1], r: 9, pathLength: 1, "class": "ln ck2", "stroke-width": 1.4 });
+          var np = P(cx, cy, 330, a), tx = el(g, "text", { x: np[0], y: +np[1] + 11, "text-anchor": "middle", "class": "num", "font-family": "Cinzel", "font-weight": 700, "font-size": 30, fill: "#3b2a1a", opacity: 0 });
+          tx.textContent = num[k];
+        }
+        var star = "";
+        for (var s = 0; s < 16; s++) star += (s ? " L" : "M") + P(cx, cy, s % 2 ? 36 : 84, s * 22.5);
+        el(g, "path", { d: star + " Z", pathLength: 1, "class": "ln ck2", "stroke-width": 1.6 });
+        var hh = el(g, "g", { id: "hourH" }), mh = el(g, "g", { id: "minH" });
+        el(hh, "path", { d: "M1400 560 L1400 380 M1386 410 L1400 360 L1414 410 Z", pathLength: 1, "class": "ln ck3", "stroke-width": 4 });
+        el(mh, "path", { d: "M1400 570 L1400 290 M1392 320 L1400 278 L1408 320", pathLength: 1, "class": "ln ck3", "stroke-width": 2.6 });
+        el(g, "circle", { cx: cx, cy: cy, r: 10, fill: "#3b2a1a", "class": "hub", opacity: 0 });
+      })();
+
+      (function () {
+        var g = document.getElementById("chrono"), cx = 960, cy = 520;
+        el(g, "ellipse", { cx: cx, cy: cy, rx: 330, ry: 120, pathLength: 1, "class": "ln ch", "stroke-width": 2.6 });
+        el(g, "ellipse", { cx: cx, cy: cy, rx: 300, ry: 300, pathLength: 1, "class": "ln ch", "stroke-width": 2, transform: "rotate(-90 960 520)" });
+        ring(g, cx, cy, 170, 3.4, "ch");
+        ring(g, cx, cy, 156, 1.8, "ch");
+        var t = "";
+        for (var i = 0; i < 12; i++) { var p = P(cx, cy, 156, i * 30), q = P(cx, cy, 134, i * 30); t += "M" + p + " L" + q + " "; }
+        el(g, "path", { d: t, pathLength: 1, "class": "ln ch", "stroke-width": 2 });
+        el(g, "path", { d: "M630 520 L690 520 M1230 520 L1290 520 M960 180 L960 214 M960 826 L960 860", pathLength: 1, "class": "ln ch", "stroke-width": 2 });
+        var sh = el(g, "g", { id: "secH" });
+        el(sh, "path", { d: "M960 540 L960 384", pathLength: 1, "class": "ln ch", "stroke-width": 2, style: "stroke:#a3221b" });
+        var w = "";
+        for (var r = 0; r < 3; r++) {
+          var y = 930 + r * 26, d = "M60 " + y;
+          for (var x = 60; x < 1860; x += 120) d += " q30 -" + (10 - r * 2) + " 60 0 t60 0";
+          w += d + " ";
+        }
+        el(g, "path", { d: w, pathLength: 1, "class": "ln wave", "stroke-width": 1.4 });
+      })();
+
+      rays("rays4", 960, 420, 96);
+      (function () {
+        var g = document.getElementById("arcade"), d = "M0 760 L1920 760 M0 742 L1920 742 M0 1080 L0 1080";
+        for (var i = 0; i < 9; i++) {
+          var x = 30 + i * 210;
+          d += " M" + x + " 1080 L" + x + " 860 A75 75 0 0 1 " + (x + 150) + " 860 L" + (x + 150) + " 1080";
+          d += " M" + (x - 30) + " 760 L" + (x - 30) + " 1080";
+        }
+        el(g, "path", { d: d, pathLength: 1, "class": "ln arc", "stroke-width": 1.8 });
+      })();
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function draw(sel, at, dur, stagger) { tl.to(sel, { strokeDashoffset: 0, duration: dur, ease: "power2.inOut", stagger: stagger || 0 }, at); }
+      function rise(sel, at, stagger) { tl.fromTo(sel, { opacity: 0, y: 26, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power3.out", stagger: stagger || 0, immediateRender: false }, at); }
+      function fade(sel, at) { tl.fromTo(sel, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, at); }
+
+      gsap.set(["#s1a", "#s1b", "#s2m", "#s2a", "#s2b", "#s2c", "#s3a", "#year", "#s3m", "#s4m", "#s4a", "#s4c", "#hud"], { opacity: 0 });
+      gsap.set("#prog", { scaleX: 0 });
+      gsap.set(["#rays2", "#rays4"], { svgOrigin: "960 540" });
+      var yr = { v: 1283 };
+      function setYear() { var s = String(Math.round(yr.v)); document.getElementById("year").textContent = s; document.getElementById("hudY").textContent = "AD " + s; }
+
+      show("#s1", 0, 1.7);
+      tl.fromTo("#s1a", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.8, ease: "power2.out", immediateRender: false }, 0.1)
+        .fromTo("#s1b", { opacity: 0, scale: 1.08, filter: "blur(14px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 1, ease: "power2.out", immediateRender: false }, 0.35)
+        .fromTo("#s1glow", { opacity: 0.2, scale: 0.8 }, { opacity: 1, scale: 1.1, duration: 1.6, ease: "sine.inOut", immediateRender: false }, 0);
+      draw(".s1l", 0.5, 1.0, 0.15);
+
+      show("#s2", 1.7, 4.45);
+      tl.to("#hud", { opacity: 1, duration: 0.5, ease: "power1.out" }, 1.7)
+        .to("#prog", { scaleX: 1, duration: 6.8, ease: "none" }, 1.7)
+        .fromTo("#rays2", { opacity: 0.6, rotation: -4 }, { opacity: 1, rotation: 3, svgOrigin: "1400 540", duration: 2.75, ease: "none", immediateRender: false }, 1.7);
+      draw("#clock .ck", 1.7, 1.0, 0.08);
+      draw("#clock .ck2", 2.1, 0.9, 0.012);
+      tl.to("#clock .petal", { opacity: 0.82, duration: 0.6, ease: "power1.out", stagger: 0.03 }, 2.75)
+        .to("#clock .num", { opacity: 1, duration: 0.4, ease: "power1.out", stagger: 0.03 }, 2.9)
+        .to("#clock .hub", { opacity: 1, duration: 0.3 }, 3.0);
+      draw("#clock .ck3", 2.9, 0.5);
+      tl.fromTo("#hourH", { rotation: 300 }, { rotation: 318, svgOrigin: "1400 540", duration: 1.6, ease: "none", immediateRender: false }, 2.85)
+        .fromTo("#minH", { rotation: 40 }, { rotation: 150, svgOrigin: "1400 540", duration: 1.6, ease: "none", immediateRender: false }, 2.85);
+      gsap.set(["#hourH", "#minH"], { svgOrigin: "1400 540" });
+      fade("#s2m", 1.72);
+      rise(["#s2a", "#s2b"], 1.8, 0.2);
+      fade("#s2c", 2.8);
+
+      show("#s3", 4.45, 6.45);
+      tl.set("#hudL", { textContent: "III · Longitudo" }, 4.45).set("#hudP", { textContent: "07 / 12" }, 4.45);
+      rise("#s3a", 4.45);
+      tl.fromTo("#year", { opacity: 0.25, scale: 0.94 }, { opacity: 0.9, scale: 1, duration: 0.7, ease: "power2.out", immediateRender: false }, 4.45)
+        .to(yr, { v: 1761, duration: 1.4, ease: "power2.inOut", onUpdate: setYear }, 4.7);
+      draw("#chrono .ch", 4.5, 0.9, 0.07);
+      draw("#chrono .wave", 4.45, 1.6);
+      tl.fromTo("#secH", { rotation: 0 }, { rotation: 300, svgOrigin: "960 520", duration: 1.4, ease: "none", immediateRender: false }, 5.0);
+      gsap.set("#secH", { svgOrigin: "960 520" });
+      fade("#s3m", 5.4);
+
+      show("#s4", 6.45);
+      tl.set("#hudL", { textContent: "IV · Finis" }, 6.45).set("#hudP", { textContent: "12 / 12" }, 6.45)
+        .fromTo("#rays4", { opacity: 0.5, rotation: -3 }, { opacity: 1, rotation: 2, svgOrigin: "960 420", duration: 2.05, ease: "none", immediateRender: false }, 6.45);
+      draw("#arcade .arc", 6.45, 1.5);
+      fade("#s4m", 6.5);
+      tl.fromTo("#s4a", { opacity: 0, y: 24, scale: 1.05, filter: "blur(12px)" }, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.9, ease: "power3.out", immediateRender: false }, 6.5);
+      fade("#s4c", 7.0);
+
+      tl.set({}, {}, 8.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["parchment-epic"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Split Flap</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #15171a; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: #efece4; font-family: "Barlow Condensed", sans-serif;
+        background: radial-gradient(ellipse at 50% 0%, #2a2d31 0%, #15171a 60%, #0e0f11 100%); }
+      #housing { position: absolute; left: 90px; top: 110px; width: 1740px; height: 820px; background: #0a0a0a; border-radius: 18px;
+        border: 10px solid #26282b; box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 2px #000, inset 0 2px 30px rgba(0,0,0,0.9); }
+      .hdr { position: absolute; left: 50px; top: 34px; font-weight: 700; font-size: 64px; letter-spacing: 0.06em; line-height: 1; }
+      .hdr small { font-size: 34px; color: #ffb000; letter-spacing: 0.1em; margin-left: 18px; font-weight: 600; }
+      .stn { position: absolute; left: 52px; top: 110px; font-weight: 500; font-size: 24px; letter-spacing: 0.22em; color: #7c7a74; }
+      .ch { position: absolute; top: 170px; font-weight: 600; font-size: 26px; letter-spacing: 0.24em; color: #ffb000; }
+      .rule { position: absolute; left: 40px; right: 40px; height: 2px; background: #1f2023; }
+      #grid { position: absolute; left: 38px; top: 216px; }
+      .cell { position: absolute; width: 48px; height: 80px; perspective: 340px; }
+      .h { position: absolute; left: 0; width: 48px; height: 40px; overflow: hidden; background: linear-gradient(#202022, #19191b); backface-visibility: hidden; }
+      .h span { position: absolute; left: 0; width: 48px; height: 80px; line-height: 80px; text-align: center; font-weight: 600; font-size: 64px; }
+      .t, .ft { top: 0; border-radius: 5px 5px 0 0; transform-origin: 50% 100%; }
+      .b, .fb { top: 40px; border-radius: 0 0 5px 5px; transform-origin: 50% 0%; background: linear-gradient(#171719, #121214); }
+      .b span, .fb span { top: -40px; }
+      .ft { background: linear-gradient(#252527, #1c1c1e); }
+      .split { position: absolute; left: 0; right: 0; top: 39px; height: 2px; background: #000; }
+      .pin { position: absolute; top: 36px; width: 3px; height: 8px; background: #3a3b3e; border-radius: 1px; }
+      #ticker { position: absolute; left: 40px; right: 40px; top: 680px; height: 64px; background: #050505; border-radius: 8px; overflow: hidden; border: 2px solid #1d1e20; }
+      #tickTxt { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 60px; font-weight: 600; font-size: 32px; letter-spacing: 0.16em; color: #ffb000; }
+      #clock { position: absolute; left: 1470px; top: 14px; }
+      .lt { position: absolute; left: 1290px; top: 46px; text-align: right; width: 160px; font-weight: 600; font-size: 22px; letter-spacing: 0.2em; color: #7c7a74; line-height: 1.3; }
+      #yellow { position: absolute; left: 0; right: 0; top: 1010px; height: 26px; background: repeating-linear-gradient(90deg, #f2c200 0 46px, #d9ad00 46px 50px); }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="split-flap" data-width="1920" data-height="1080" data-duration="8">
+      <div id="housing">
+        <div class="hdr" id="hdr">DEPARTURES<small>出発 · SALIDAS</small></div>
+        <div class="stn">CONCOURSE B · RELEASE LINE</div>
+        <div class="lt" id="lt">LOCAL TIME</div>
+        <svg id="clock" width="150" height="150" viewBox="-75 -75 150 150">
+          <circle r="70" fill="#f4f1ea" stroke="#2c2d30" stroke-width="6" />
+          <g id="marks"></g>
+          <line id="hH" x1="0" y1="8" x2="0" y2="-36" stroke="#111" stroke-width="8" stroke-linecap="square" />
+          <line id="hM" x1="0" y1="10" x2="0" y2="-56" stroke="#111" stroke-width="6" stroke-linecap="square" />
+          <line id="hS" x1="0" y1="16" x2="0" y2="-58" stroke="#ffb000" stroke-width="2.5" />
+          <circle r="5" fill="#111" />
+        </svg>
+        <div id="colhead">
+          <div class="ch" style="left: 38px">TIME</div>
+          <div class="ch" style="left: 356px">DESTINATION</div>
+          <div class="ch" style="left: 1045px">PLAT</div>
+          <div class="ch" style="left: 1204px">STATUS</div>
+        </div>
+        <div class="rule" style="top: 156px"></div>
+        <div id="grid"></div>
+        <div id="ticker"><div id="tickTxt"></div></div>
+      </div>
+      <div id="yellow"></div>
+    </div>
+
+    <script>
+      var COLS = 31, ROWS = 4, PX = 53, PY = 112, F = 0.065;
+      var DRUM = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:.-·";
+      function pad(s, n) { s = s.slice(0, n); while (s.length < n) s += " "; return s; }
+      function row(t, d, p, s) { return pad(t, 5) + " " + pad(d, 12) + " " + (p.length < 2 ? " " + p : p) + " " + pad(s, 9); }
+      function center(s) { var l = Math.floor((COLS - s.length) / 2); return pad(new Array(l + 1).join(" ") + s, COLS); }
+      var BLANK = [center(""), center(""), center(""), center("")];
+      var PHASES = [
+        { at: 0.5, rows: [row("09:06", "SHIPPED", "3", "ON TIME"), row("09:12", "INBOX ZERO", "1", "BOARDING"), row("09:20", "CODE REVIEW", "4", "DELAYED"), row("09:31", "PROD HOTFIX", "6", "CANCELLED")],
+          stagger: function (r, c) { return c * 0.016 + r * 0.09; } },
+        { at: 3.7, rows: [row("09:12", "INBOX ZERO", "1", "BOARDING"), row("09:20", "CODE REVIEW", "4", "ON TIME"), row("09:31", "PROD HOTFIX", "6", "CANCELLED"), row("09:45", "WEEKEND", "2", "ON TIME")],
+          stagger: function (r, c) { return c * 0.014 + r * 0.1; } },
+        { at: 5.6, rows: [center(""), center("SWITCHYARD"), center("EVERY RELEASE LEAVES ON TIME"), center("NOW BOARDING · SWITCHYARD.DEV")],
+          stagger: function (r, c) { return Math.abs(c - 15) * 0.022 + r * 0.07; } }
+      ];
+      var AMBER = "#ffb000", WHITE = "#efece4", GREEN = "#3ddc84", DIM = "#8d8a83";
+      function colorFor(ph, r, c) {
+        if (ph < 0) return WHITE;
+        if (ph === 2) return r === 1 ? WHITE : r === 2 ? AMBER : GREEN;
+        if (c < 5) return AMBER;
+        if (c >= 22) {
+          var st = PHASES[ph].rows[r].slice(22).trim();
+          if (st === "ON TIME") return GREEN;
+          if (st === "BOARDING") return "blink";
+          if (st === "CANCELLED") return DIM;
+        }
+        return WHITE;
+      }
+
+      var grid = document.getElementById("grid"), cells = [];
+      for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+        var el = document.createElement("div");
+        el.className = "cell";
+        el.style.left = c * PX + "px"; el.style.top = r * PY + "px";
+        el.innerHTML = '<div class="h t"><span></span></div><div class="h b"><span></span></div><div class="h ft"><span></span></div><div class="h fb"><span></span></div><div class="split"></div><div class="pin" style="left:-1px"></div><div class="pin" style="right:-1px"></div>';
+        grid.appendChild(el);
+        var sp = el.querySelectorAll("span"), hs = el.querySelectorAll(".h");
+        var cell = { r: r, c: c, el: el, t: sp[0], b: sp[1], ft: sp[2], fb: sp[3], ftH: hs[2], fbH: hs[3], seqs: [] };
+        var prev = BLANK[r][c];
+        PHASES.forEach(function (P, k) {
+          var to = P.rows[r][c], seq = [prev];
+          if (to !== prev) {
+            var ib = Math.max(0, DRUM.indexOf(to)), m = 3 + ((r * COLS + c) * 7 + k * 3) % 6;
+            for (var j = m - 1; j >= 0; j--) seq.push(DRUM[(ib - j + DRUM.length) % DRUM.length]);
+            if (seq[1] === prev) seq.shift();
+          }
+          cell.seqs.push({ start: P.at + P.stagger(r, c), seq: seq });
+          prev = to;
+        });
+        cells.push(cell);
+      }
+      var marks = document.getElementById("marks");
+      for (var i = 0; i < 60; i++) {
+        var a = i * 6 * Math.PI / 180, big = i % 5 === 0, r1 = big ? 50 : 58;
+        marks.insertAdjacentHTML("beforeend", '<line x1="' + (Math.sin(a) * r1).toFixed(2) + '" y1="' + (-Math.cos(a) * r1).toFixed(2) + '" x2="' + (Math.sin(a) * 64).toFixed(2) + '" y2="' + (-Math.cos(a) * 64).toFixed(2) + '" stroke="#111" stroke-width="' + (big ? 5 : 1.6) + '"/>');
+      }
+      var tick = "PASSENGERS FOR WEEKEND PLEASE CHANGE AT CODE REVIEW   ·   MIND THE MERGE CONFLICTS   ·   PROD HOTFIX IS CANCELLED, ALL TESTS PASSED   ·   ";
+      document.getElementById("tickTxt").textContent = tick + tick + tick;
+
+      function put(span, ch) { var v = ch === " " ? "\u00a0" : ch; if (span.textContent !== v) span.textContent = v; }
+      function frame(t) {
+        cells.forEach(function (cl) {
+          var ph = -1;
+          for (var k = 0; k < cl.seqs.length; k++) if (t >= cl.seqs[k].start) ph = k;
+          var cur, nxt = null, p = 0;
+          if (ph < 0) cur = BLANK[cl.r][cl.c];
+          else {
+            var S = cl.seqs[ph], n = S.seq.length - 1, x = (t - S.start) / F, kk = Math.floor(x);
+            if (kk >= n) cur = S.seq[n];
+            else { cur = S.seq[kk]; nxt = S.seq[kk + 1]; p = x - kk; }
+          }
+          var col = colorFor(ph, cl.r, cl.c), op = 1;
+          if (col === "blink") { col = AMBER; if (nxt === null && Math.floor(t * 2.4) % 2 === 1) op = 0.18; }
+          cl.el.style.color = col;
+          if (nxt === null) {
+            put(cl.t, cur); put(cl.b, cur);
+            cl.ftH.style.visibility = "hidden"; cl.fbH.style.visibility = "hidden";
+          } else {
+            put(cl.t, nxt); put(cl.b, cur); put(cl.ft, cur); put(cl.fb, nxt);
+            if (p < 0.5) {
+              cl.ftH.style.visibility = "visible"; cl.fbH.style.visibility = "hidden";
+              cl.ftH.style.transform = "rotateX(" + (-180 * p).toFixed(1) + "deg)";
+            } else {
+              cl.ftH.style.visibility = "hidden"; cl.fbH.style.visibility = "visible";
+              cl.fbH.style.transform = "rotateX(" + (90 - 180 * (p - 0.5)).toFixed(1) + "deg)";
+            }
+          }
+          var sp = [cl.t, cl.b, cl.ft, cl.fb];
+          for (var q = 0; q < 4; q++) sp[q].style.opacity = op;
+        });
+        var sec = 57 + t, minA = 30;
+        if (t >= 3) { var d = t - 3; minA = 36 + 2.2 * Math.exp(-14 * d) * Math.sin(d * 40); }
+        document.getElementById("hS").setAttribute("transform", "rotate(" + (sec * 6).toFixed(2) + ")");
+        document.getElementById("hM").setAttribute("transform", "rotate(" + minA.toFixed(2) + ")");
+        document.getElementById("hH").setAttribute("transform", "rotate(" + (270 + minA / 12).toFixed(2) + ")");
+        document.getElementById("tickTxt").style.transform = "translateX(" + (-140 * t).toFixed(1) + "px)";
+      }
+
+      var clock = { t: 0 };
+      frame(0);
+      var tl = gsap.timeline({ paused: true });
+      tl.to(clock, { t: 8, duration: 8, ease: "none", onUpdate: function () { frame(clock.t); } }, 0)
+        .from("#housing", { opacity: 0, scale: 0.94, duration: 0.6, ease: "power3.out" }, 0)
+        .from("#hdr", { opacity: 0, x: -30, duration: 0.4, ease: "power2.out" }, 0.25)
+        .from("#colhead .ch", { opacity: 0, y: -10, duration: 0.3, ease: "power2.out", stagger: 0.06 }, 0.35)
+        .from("#ticker", { opacity: 0, duration: 0.4 }, 0.6)
+        .fromTo("#housing", { y: 0 }, { y: -10, duration: 7.4, ease: "sine.inOut", immediateRender: false }, 0.6)
+        .to("#colhead", { opacity: 0.2, duration: 0.4, ease: "power1.out" }, 5.5)
+        .to("#ticker", { opacity: 0.35, duration: 0.4 }, 5.5);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["split-flap"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Case File</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@500;700;900&family=Playfair+Display:wght@900&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #b6b9a2; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #b6b9a2; color: #1b1c17; font-family: "Courier Prime", monospace; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .paper { background: radial-gradient(ellipse at 50% 40%, #c4c7b0 0%, #b3b69e 60%, #8f937c 100%); }
+      .cork { background: radial-gradient(ellipse at 50% 45%, #3a362b 0%, #2a2820 60%, #171611 100%); }
+      .sheet { position: absolute; background: #e2e0cd; box-shadow: 0 30px 60px rgba(20, 22, 15, 0.35), 0 2px 0 rgba(0, 0, 0, 0.08); }
+      .hdr { font-size: 18px; letter-spacing: 0.3em; text-transform: uppercase; color: #4c4e42; border-bottom: 2px solid #4c4e42; padding-bottom: 14px; white-space: nowrap; }
+      .row { display: block; font-size: 44px; line-height: 1; margin-top: 44px; white-space: nowrap; }
+      .rd { position: relative; display: inline-block; }
+      .rd i { position: absolute; left: -6px; right: -6px; top: -4px; bottom: -6px; background: #121310; transform-origin: left center; }
+      .ok { background: #c9e3c3; color: #1f5c34; padding: 0 6px; }
+      .capbar { position: absolute; left: 0; right: 0; top: 948px; text-align: center; }
+      .capbar span.b { display: inline-block; background: #17180f; color: #ecead9; font-weight: 700; font-size: 32px; padding: 12px 26px 14px; white-space: nowrap; }
+      .capbar em { font-style: normal; opacity: 0; }
+      .card { position: absolute; background: #e6e3d2; box-shadow: 0 18px 30px rgba(0, 0, 0, 0.45); padding: 46px 28px 26px; }
+      .tk { font-size: 15px; letter-spacing: 0.24em; color: #6a6c5e; text-transform: uppercase; }
+      .q { font-size: 23px; font-weight: 700; margin-top: 14px; white-space: nowrap; }
+      .bar { height: 10px; background: #c3c1ae; margin-top: 14px; }
+      .pin { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #f06a5a 0%, #b4231c 60%, #6d140f 100%); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); z-index: 3; }
+      svg.full { position: absolute; left: 0; top: 0; overflow: visible; }
+      .str { fill: none; stroke: #c2241f; stroke-width: 3; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.5)); }
+      .inter { font-family: "Inter", sans-serif; }
+      #stamp { position: absolute; left: 600px; top: 390px; font-family: "Inter", sans-serif; font-weight: 900; font-size: 100px; letter-spacing: 0.04em; color: #2f7d4a; border: 12px solid #2f7d4a; border-radius: 18px; padding: 4px 36px 10px; white-space: nowrap; filter: url(#ink); }
+      .grain { position: absolute; inset: 0; pointer-events: none; z-index: 8; opacity: 0.45; mix-blend-mode: multiply; }
+      .vig { position: absolute; inset: 0; pointer-events: none; z-index: 7; background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 60%, rgba(10, 12, 6, 0.35) 100%); }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="case-file" data-width="1920" data-height="1080" data-duration="8">
+      <svg width="0" height="0" style="position: absolute">
+        <filter id="ink" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="3" result="n" />
+          <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -4.2 0 0 0 2.9" result="m" />
+          <feComposite in="SourceGraphic" in2="m" operator="in" result="c" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="9" result="w" />
+          <feDisplacementMap in="c" in2="w" scale="5" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
+
+      <div id="s1" class="scene paper">
+        <div class="sheet" id="doc1" style="left: 230px; top: 130px; width: 1460px; height: 700px; padding: 70px 90px">
+          <div class="hdr">Case file Nº 0412 — Halvern support desk</div>
+          <span class="row r1">Subject: help article “Export your data”.</span>
+          <span class="row r1">Last verified by <span class="rd">m.reyes<i></i></span> on <span class="rd">March 3<i></i></span>.</span>
+          <span class="row r1">Tells customers to click <span class="rd">“Export CSV”<i></i></span>.</span>
+          <span class="row r1">That button was renamed in release <span class="rd">4.2<i></i></span>.</span>
+          <span class="row r1" style="color: #8a2a22">Status: open. Tickets still arriving.</span>
+        </div>
+        <div class="capbar"><span class="b" id="c1">Eight months ago, someone renamed a button.</span></div>
+      </div>
+
+      <div id="s2" class="scene cork">
+        <div id="board" style="position: absolute; inset: 0">
+          <div class="card c2" style="left: 160px; top: 120px; width: 340px; height: 210px"><div class="tk">Ticket #2207</div><div class="q">“Where is Export?”</div><div class="bar" style="width: 90%"></div><div class="bar" style="width: 60%"></div></div>
+          <div class="card c2" style="left: 1420px; top: 110px; width: 340px; height: 210px"><div class="tk">Ticket #2231</div><div class="q">“Docs are wrong.”</div><div class="bar" style="width: 80%"></div><div class="bar" style="width: 70%"></div></div>
+          <div class="card c2" style="left: 800px; top: 34px; width: 320px; height: 190px"><div class="tk">Ticket #2240</div><div class="q">“No CSV button?”</div><div class="bar" style="width: 85%"></div></div>
+          <div class="card c2" style="left: 130px; top: 560px; width: 340px; height: 210px"><div class="tk">Ticket #2268</div><div class="q">“Step 3 is missing.”</div><div class="bar" style="width: 75%"></div><div class="bar" style="width: 55%"></div></div>
+          <div class="card c2" style="left: 1450px; top: 560px; width: 340px; height: 210px"><div class="tk">Ticket #2291</div><div class="q">“Cancel my plan.”</div><div class="bar" style="width: 88%"></div><div class="bar" style="width: 50%"></div></div>
+          <div class="card" id="hero" style="left: 680px; top: 300px; width: 560px; height: 360px; padding: 34px 40px">
+            <div class="tk">Halvern help center</div>
+            <div class="inter" style="font-weight: 900; font-size: 50px; margin-top: 18px; letter-spacing: -0.01em">EXPORT YOUR DATA</div>
+            <div class="inter" style="background: #17180f; color: #ecead9; font-weight: 700; font-size: 26px; letter-spacing: 0.08em; text-align: center; padding: 14px 0; margin-top: 26px">WANTED FOR 148 TICKETS</div>
+            <div class="tk" style="margin-top: 26px; color: #8a2a22">Last updated 8 months ago</div>
+          </div>
+          <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080" style="z-index: 2">
+            <path class="str" pathLength="1" d="M960 316 Q 640 300 330 136" />
+            <path class="str" pathLength="1" d="M960 316 Q 1320 290 1680 126" />
+            <path class="str" pathLength="1" d="M960 316 Q 1020 220 1066 50" />
+            <path class="str" pathLength="1" d="M712 640 Q 500 650 300 576" />
+            <path class="str" pathLength="1" d="M1208 640 Q 1420 650 1620 576" />
+          </svg>
+          <div class="pin" style="left: 960px; top: 316px"></div>
+          <div class="pin" style="left: 712px; top: 640px"></div>
+          <div class="pin" style="left: 1208px; top: 640px"></div>
+          <div class="pin" style="left: 330px; top: 136px"></div>
+          <div class="pin" style="left: 1680px; top: 126px"></div>
+          <div class="pin" style="left: 1066px; top: 50px"></div>
+          <div class="pin" style="left: 300px; top: 576px"></div>
+          <div class="pin" style="left: 1620px; top: 576px"></div>
+        </div>
+        <div class="capbar"><span class="b" id="c2">Nobody updated the docs.</span></div>
+      </div>
+
+      <div id="s3" class="scene paper">
+        <div class="tk" id="n1" style="position: absolute; left: 0; right: 0; top: 180px; text-align: center; font-size: 26px; color: #2c2e25">Tickets filed since the rename</div>
+        <div id="num" style="position: absolute; left: 0; right: 0; top: 200px; text-align: center; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 500px; line-height: 1.1; color: #161712">0</div>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080">
+          <path id="ring" pathLength="1" d="M960 280 C 1340 270, 1500 420, 1470 560 C 1440 720, 1180 800, 930 790 C 640 780, 430 690, 450 520 C 470 360, 700 270, 1010 276" fill="none" stroke="#c2241f" stroke-width="7" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="1" />
+        </svg>
+        <div class="capbar"><span class="b" id="c3">Every trail led back to one page.</span></div>
+      </div>
+
+      <div id="s4" class="scene paper">
+        <div class="sheet" id="doc2" style="left: 230px; top: 130px; width: 1460px; height: 700px; padding: 70px 90px">
+          <div class="hdr">Case file Nº 0412 — Halvern support desk</div>
+          <span class="row r4">Subject: help article “Export your data”.</span>
+          <span class="row r4">Last verified by Margin on every merge.</span>
+          <span class="row r4">Tells customers to click <span class="ok" id="okw">“Download”</span>.</span>
+          <span class="row r4">Matches release 4.2. No drift found.</span>
+          <span class="row r4" style="color: #1f5c34">Status: resolved. 0 new tickets.</span>
+          <div id="stamp">CASE CLOSED</div>
+        </div>
+        <div class="capbar"><span class="b" id="c4">Then Margin read the code.</span></div>
+      </div>
+
+      <div id="s5" class="scene" style="background: #d6d8c6">
+        <div class="inter" id="card" style="position: absolute; left: 140px; top: 220px; width: 860px; height: 620px; background: #fbfbf7; border-radius: 22px; box-shadow: 0 40px 80px rgba(30, 34, 20, 0.22); padding: 56px 64px">
+          <div style="font-size: 20px; color: #7b7e6e; font-weight: 500">Help center › Reports</div>
+          <div style="font-size: 64px; font-weight: 900; letter-spacing: -0.02em; margin-top: 18px">Export your data</div>
+          <div id="pill" style="display: inline-block; margin-top: 20px; background: #dcefd9; color: #1f5c34; font-size: 22px; font-weight: 700; padding: 8px 18px; border-radius: 999px">✓ Updated today · synced with v4.2</div>
+          <div style="font-size: 32px; font-weight: 500; margin-top: 46px; line-height: 1.9; color: #2a2c22">
+            <div class="st">1&nbsp;&nbsp;Open <b>Reports</b></div>
+            <div class="st">2&nbsp;&nbsp;Pick your records</div>
+            <div class="st">3&nbsp;&nbsp;Click <span style="position: relative; color: #9a9c8c">Export CSV<span id="strike" style="position: absolute; left: -4px; right: -4px; top: 52%; height: 4px; background: #c2241f; transform-origin: left center"></span></span> <b id="neww" style="color: #1f7a3e">Download</b></div>
+          </div>
+        </div>
+        <div id="wm" style="position: absolute; left: 1090px; top: 380px; font-family: 'Playfair Display', serif; font-weight: 900; font-size: 170px; letter-spacing: -0.02em; color: #161712">Margin</div>
+        <div id="wt" style="position: absolute; left: 1098px; top: 600px; font-size: 32px; font-weight: 700; color: #2a2c22; white-space: nowrap">Docs that keep up with your code.</div>
+        <div class="tk" id="wu" style="position: absolute; left: 1100px; top: 668px; font-size: 20px">margin.dev · case closed</div>
+      </div>
+
+      <div class="vig"></div>
+      <svg class="grain" width="1920" height="1080" viewBox="0 0 1920 1080">
+        <filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" /><feColorMatrix values="0 0 0 0 0.1  0 0 0 0 0.11  0 0 0 0 0.07  0 0 0 1.6 -0.45" /></filter>
+        <rect width="1920" height="1080" filter="url(#noise)" />
+      </svg>
+    </div>
+
+    <script>
+      function splitChars(id) {
+        var e = document.getElementById(id), t = e.textContent;
+        e.textContent = "";
+        for (var i = 0; i < t.length; i++) { var s = document.createElement("em"); s.textContent = t[i]; e.appendChild(s); }
+        return e.querySelectorAll("em");
+      }
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function type(id, at, speed) {
+        var ch = splitChars(id);
+        tl.fromTo("#" + id, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.2, ease: "power2.out", immediateRender: false }, at);
+        tl.to(ch, { opacity: 1, duration: 0.01, ease: "none", stagger: speed || 0.026 }, at + 0.05);
+      }
+      function redact(sel, at) { tl.to(sel, { scaleX: 1, duration: 0.24, ease: "power3.inOut", stagger: 0.17 }, at); }
+
+      gsap.set(".rd i", { scaleX: 0 });
+      gsap.set(["#c1", "#c2", "#c3", "#c4"], { opacity: 0 });
+      gsap.set("#strike", { scaleX: 0 });
+      gsap.set(".c2", { opacity: 0 });
+      gsap.set("#stamp", { rotation: -9, opacity: 0 });
+
+      show("#s1", 0, 1.75);
+      tl.fromTo("#doc1", { scale: 1.06, rotation: -1.2, y: 30 }, { scale: 1, rotation: -0.4, y: 0, duration: 1.75, ease: "power2.out", immediateRender: false }, 0)
+        .from(".r1", { opacity: 0, x: -18, duration: 0.3, ease: "power2.out", stagger: 0.08 }, 0.05);
+      redact("#doc1 .rd i", 0.55);
+      type("c1", 0.15, 0.024);
+
+      show("#s2", 1.75, 3.95);
+      tl.fromTo("#board", { scale: 1.08 }, { scale: 1, duration: 2.2, ease: "power2.out", transformOrigin: "960px 460px", immediateRender: false }, 1.75)
+        .from("#hero", { y: -40, rotation: 3, scale: 1.12, opacity: 0, duration: 0.4, ease: "back.out(1.6)" }, 1.75)
+        .fromTo(".c2", { y: -30, opacity: 0, rotation: function (i) { return [-9, 8, -5, 7, -8][i]; } }, { y: 0, opacity: 1, rotation: function (i) { return [-4, 3, 1.5, 2, -3][i]; }, duration: 0.38, ease: "back.out(1.6)", stagger: 0.07, immediateRender: false }, 1.9)
+        .from("#board .pin", { scale: 0, duration: 0.2, ease: "back.out(3)", stagger: 0.05 }, 2.2)
+        .to(".str", { strokeDashoffset: 0, duration: 0.45, ease: "power2.inOut", stagger: 0.1 }, 2.4);
+      type("c2", 1.85);
+
+      show("#s3", 3.95, 5.15);
+      var n = { v: 0 };
+      tl.from("#n1", { opacity: 0, y: 10, duration: 0.3, ease: "power2.out" }, 3.95)
+        .fromTo("#num", { scale: 1.12, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "expo.out", immediateRender: false }, 3.95)
+        .to(n, { v: 148, duration: 0.75, ease: "power2.out", onUpdate: function () { document.getElementById("num").textContent = Math.round(n.v); } }, 3.98)
+        .to("#ring", { strokeDashoffset: 0, duration: 0.45, ease: "power2.inOut" }, 4.55);
+      type("c3", 4.0);
+
+      show("#s5", 6.5);
+      show("#s4", 5.15, 6.5);
+      tl.fromTo("#doc2", { scale: 1, rotation: -0.4, y: 0 }, { scale: 1.03, rotation: -0.4, y: -6, duration: 1.35, ease: "power1.out", immediateRender: false }, 5.15)
+        .from(".r4", { opacity: 0, x: -18, duration: 0.3, ease: "power2.out", stagger: 0.07 }, 5.15)
+        .from("#okw", { backgroundColor: "rgba(201,227,195,0)", duration: 0.3, ease: "power1.out" }, 5.45)
+        .fromTo("#stamp", { scale: 2.4, opacity: 0 }, { scale: 1, opacity: 0.92, duration: 0.2, ease: "power4.in", immediateRender: false }, 5.7)
+        .fromTo("#doc2", { x: 0 }, { x: 8, duration: 0.05, ease: "none", yoyo: true, repeat: 3, immediateRender: false }, 5.9);
+      type("c4", 5.2);
+
+      tl.fromTo("#card", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out", immediateRender: false }, 6.5)
+        .from(".st", { opacity: 0, x: -14, duration: 0.3, ease: "power2.out", stagger: 0.08 }, 6.75)
+        .from("#pill", { scale: 0.6, opacity: 0, duration: 0.35, ease: "back.out(2)" }, 6.85)
+        .to("#strike", { scaleX: 1, duration: 0.25, ease: "power3.inOut" }, 7.15)
+        .from("#neww", { opacity: 0, x: -10, duration: 0.25, ease: "power2.out" }, 7.3)
+        .from("#wm", { y: 40, opacity: 0, duration: 0.5, ease: "expo.out" }, 6.7)
+        .from("#wt", { y: 20, opacity: 0, duration: 0.4, ease: "power2.out" }, 6.95)
+        .from("#wu", { opacity: 0, duration: 0.4, ease: "power1.out" }, 7.2);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["case-file"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,86 @@
+{
+  "id": "parchment-epic",
+  "name": "Parchment Epic",
+  "tagline": "Aged parchment, engraved line drawings that etch themselves, and wide-tracked serif headlines under sunburst rays.",
+  "description": "Documentary-explainer style for histories, origin stories and big-idea narratives. Warm parchment with a vignette and grain, thin dark-brown engravings (clock faces, rose windows, arcades, compass geometry) that draw themselves stroke by stroke, Cinzel all-caps headlines with one deep-red accent word, radiating sunburst rays behind the hero, HUD-style corner metadata with an era counter and a red progress rule, and a dark opening scene with a golden glowing title.",
+  "mood": [
+    "epic",
+    "scholarly",
+    "warm"
+  ],
+  "pacing": "slow",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8.5,
+  "palette": {
+    "parchment": "#e4d5b4",
+    "parchmentLight": "#eee3c8",
+    "parchmentEdge": "#c9b28a",
+    "ink": "#2a1d12",
+    "engraving": "#3b2a1a",
+    "hud": "#5b4630",
+    "red": "#a3221b",
+    "blue": "#2f4a76",
+    "dark": "#140d06",
+    "gold": "#f6d38a"
+  },
+  "fonts": {
+    "display": {
+      "family": "Cinzel",
+      "weights": [
+        700,
+        900
+      ],
+      "source": "Google Fonts",
+      "usage": "All-caps headlines 74–150px, tracking 0.08–0.12em; the huge red year counter at 400px"
+    },
+    "body": {
+      "family": "Cormorant Garamond",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Italic narration lines 34–40px under headlines"
+    },
+    "mono": {
+      "family": "IBM Plex Mono",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "HUD metadata and kicker lines 11–26px, uppercase, tracking 0.3em"
+    }
+  },
+  "easing": {
+    "engrave": "power2.inOut",
+    "headline": "power3.out",
+    "caption": "power2.out",
+    "rays": "none",
+    "counter": "power2.inOut"
+  },
+  "transitions": [
+    "hard cut between parchment plates; each plate redraws from blank",
+    "dark-to-parchment cut after the glowing cold open",
+    "HUD frame and red progress rule persist across every parchment plate"
+  ],
+  "textAnimations": [
+    "headline rises 26px while tracking tightens 0.16em → 0.08em, 0.9s power3.out, 0.22s line stagger",
+    "glow title resolves from blur(14px) and scale 1.08",
+    "big year counter ticks between dates with power2.inOut",
+    "kicker and italic captions fade up 10px"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 2.1,
+    "notes": "Four plates: cold open, hero engraving, date counter, title card. Each plate spends its first second drawing, then holds while hands, rays or counters keep moving slowly."
+  },
+  "tags": [
+    "documentary",
+    "history",
+    "engraving",
+    "explainer",
+    "parchment"
+  ],
+  "guide": "- Parchment is a radial gradient #eee3c8 → #e2d1ad → #c9b28a with a brown vignette and an feTurbulence grain layer (multiply, ~0.3 opacity). Cold opens are #140d06 with a gold #f6d38a title and stacked orange text-shadows.\n- Headlines: Cinzel 700 uppercase, 74–150px, tracking 0.08em, one short line in ink #2a1d12 plus one accent word in red #a3221b. Rise 26px while tracking tightens, 0.9s power3.out.\n- Illustrations are inline SVG engravings in #3b2a1a, 1.2–2.4px strokes with pathLength=1; draw rings first, then detail, with power2.inOut over 0.9–1.6s and small staggers. Fill colour (red/blue) only after the strokes finish, at ~0.8 opacity.\n- Put a 96-ray sunburst (#6b4a26 at 0.13 opacity) behind the hero and rotate it linearly a few degrees per plate; keep hands, counters or rays moving so nothing is static.\n- Keep a HUD frame on every parchment plate: 30px corner brackets 40px in, IBM Plex Mono labels (chapter top-left, series top-right, era bottom-left, plate bottom-right) and a 640px red progress rule that fills linearly across the piece.\n- Use one big red Cinzel year (≈400px) that ticks between dates while an engraving draws over it. Avoid modern sans type, pure white and saturated colour beyond the single red."
+}
