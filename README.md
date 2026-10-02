@@ -1,28 +1,56 @@
+<div align="center">
+
 # Frame Jam
 
-**Agent-native video review and style presets for [Hyperframes](https://github.com/heygen-com/hyperframes).**
-Frame Jam is a small local app that runs next to your coding agent (Cursor, Claude Code, ChatGPT desktop). It does two jobs
-that chat does badly:
+**Make videos with your coding agent, and tell it what to change by pointing at the screen.**
 
-- **Pick a style.** Browse a gallery of example videos and press *Use*. The agent gets back a structured
-  `style.json` (palette, fonts, easing, transitions, text animations, pacing, and a style guide) plus a working
-  Hyperframes template.
-- **Give feedback.** Pause anywhere and type what should change, click the video to point at something, or drag
-  across the filmstrip to pick a range. Then press **Finish review**. The agent's blocked `wait_for_feedback` tool call returns immediately with timestamps,
-  pin positions, frame thumbnails and, for live compositions, **the DOM element you clicked and the GSAP tween that
-  was animating it**.
+Pick a style, let the agent build the video, then click the frame that's wrong and say why.
+<br>
+Your agent gets the exact timestamp, the element you clicked and the animation behind it.
 
-Everything is local. One Node process serves the web UI on `http://localhost:2400`, runs MCP over stdio and streamable
-HTTP, and keeps projects (each video or storyboard with its versions and comments) as JSON files in `~/.framejam`. It's built for a half-screen browser pane next to the chat.
-The only thing that leaves your machine is a note you send with the **Feedback** button in the header.
+[Website](https://www.framejam.ai) · [Join the community](https://www.skool.com/promptwarrior) · [Get updates](https://www.framejam.ai/#updates) · [Report an issue](https://github.com/moritzkremb/framejam/issues)
 
-## Community and updates
+<br>
 
-Frame Jam is free, local and open source. To get great at making videos with it, join
-[Prompt Warrior](https://www.skool.com/promptwarrior), the community from the maker of Frame Jam: training for the Frame Jam
-workflow with Claude Code and Cursor, new styles before anyone else, early access to new features, and weekly calls.
-For release and new-style emails, sign up at [framejam.ai](https://www.framejam.ai/#updates). Bug reports and ideas are
-welcome through the **Feedback** button in the app or as [GitHub issues](https://github.com/moritzkremb/framejam/issues).
+<img src="docs/images/review.jpg" alt="The Frame Jam review page: a video with a timeline, a range selected on the filmstrip and a comment in the sidebar" width="860">
+
+</div>
+
+<br>
+
+## Why Frame Jam
+
+Coding agents are surprisingly good at making motion graphics with [Hyperframes](https://github.com/heygen-com/hyperframes).
+The hard part is everything around it. Describing a look in words is slow, and "the thing at around three seconds
+should be bigger" is a terrible way to give feedback. Frame Jam is a small app that sits next to your agent
+(Cursor, Claude Code, ChatGPT desktop) and handles both.
+
+**Pick a style instead of describing one.** Browse 42 example videos and press *Use*. Your agent gets the full
+recipe: palette, fonts, easing, transitions, text animations, pacing and a working template.
+
+**Give feedback like you would to a person.** Pause and type, click the thing that's off, or drag across the
+timeline to mark a range. Press **Finish review** and your agent gets every comment with its timestamp, a frame
+thumbnail and, for live compositions, the exact element and GSAP tween you pointed at.
+
+**Go round by round.** Each new version from the agent is a fresh round. Old versions keep their comments, so
+you can always see what changed and why.
+
+**Runs on your machine.** One local Node process, no account, no upload. Your projects are plain JSON files in
+`~/.framejam`. The only thing that ever leaves your machine is a note you send with the **Feedback** button.
+
+## How it works
+
+1. **Pick a look** on the Styles page.
+2. **Ask your agent** for a video, for example *"make a 7-second launch teaser with Frame Jam and open it for review"*.
+3. **Review it** in the browser pane next to your chat: click, type, drag, then press **Finish review**.
+4. **Get version 2.** The agent applies your notes and the page switches to the new version on its own. Repeat
+   until you love it.
+
+Not ready to animate yet? Ask for a **storyboard** first: one still per shot, which you review the same way.
+
+<div align="center">
+<img src="docs/images/styles.jpg" alt="The Styles page: a grid of example videos, each with a Use button" width="860">
+</div>
 
 ## Quick start
 
@@ -34,30 +62,45 @@ npm run build
 npm start                 # http://localhost:2400  (MCP at http://localhost:2400/mcp)
 ```
 
-Then connect your agent (below), pick a style on the Styles page, and ask the agent to *"make a 7-second launch
-teaser with Frame Jam and open it for review"*. The start page (`/`) is your projects: each one shows whose turn it is.
-Until an agent has connected it also shows the setup checklist, three messages you paste into your agent chat, which
-stays available at `/setup`.
+Open `http://localhost:2400`. Until an agent has connected, the start page shows a short setup checklist with three
+messages to paste into your agent chat (it stays available at `/setup`). After that, the start page lists your
+projects and shows whose turn it is on each one.
 
-### Try the whole loop without an agent
+## Join the community
 
-```bash
-npm start                 # terminal 1
-npm run e2e               # terminal 2 — plays the agent: picks a preset, opens a review, blocks on wait_for_feedback
-```
+<table>
+<tr>
+<td>
 
-Open the printed review URL, add a few comments and press **Finish review**. The script prints what the agent
-received, then posts v2, and you can watch the page move to it live.
-`npx tsx scripts/ui-demo.ts` does the browser side automatically (headless Chrome) and saves screenshots.
+### Get great at making videos with AI
+
+Frame Jam is free and open source. If you want to get really good with it, join
+**[Prompt Warrior](https://www.skool.com/promptwarrior)**, the community from the maker of Frame Jam:
+
+- **Learn the workflow.** Training for making videos with Frame Jam in Claude Code and Cursor.
+- **New styles first.** Get new presets before anyone else.
+- **Early access.** Try new Frame Jam features before they ship.
+- **Weekly calls.** Bring your videos, get feedback, and see what others are making.
+
+**[Join Prompt Warrior →](https://www.skool.com/promptwarrior)**
+
+Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for new styles and releases. No spam.
+
+</td>
+</tr>
+</table>
 
 ## Connect your agent
 
 The package isn't on npm yet. Until it is, replace `npx -y framejam` below with
 `node /absolute/path/to/framejam/dist/server/cli.js`.
 
-### Cursor
+<details open>
+<summary><b>Cursor</b></summary>
 
-`~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
+<br>
+
+Add this to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
 
 ```json
 {
@@ -72,7 +115,12 @@ The package isn't on npm yet. Until it is, replace `npx -y framejam` below with
 
 Open `http://localhost:2400` in Cursor's built-in browser so the review sits beside the chat.
 
-### Claude Code
+</details>
+
+<details>
+<summary><b>Claude Code</b></summary>
+
+<br>
 
 ```bash
 claude mcp add framejam -- npx -y framejam --stdio
@@ -80,7 +128,12 @@ claude mcp add framejam -- npx -y framejam --stdio
 mkdir -p ~/.claude/skills && cp -r skills/framejam ~/.claude/skills/
 ```
 
-### ChatGPT desktop (or any remote MCP client)
+</details>
+
+<details>
+<summary><b>ChatGPT desktop (or any remote MCP client)</b></summary>
+
+<br>
 
 ChatGPT connects to MCP servers over HTTP. Run `npm start`, turn on developer mode for connectors in ChatGPT's
 settings, and add a custom connector with this URL:
@@ -93,30 +146,90 @@ If your ChatGPT build requires an https URL, expose the port with a tunnel (for 
 `cloudflared tunnel --url http://localhost:2400`) and set `FRAMEJAM_PUBLIC_URL` to the tunnel URL so the review links
 it hands out are reachable.
 
-### Teach the agent the loop
+</details>
+
+<details>
+<summary><b>Teach the agent the loop</b></summary>
+
+<br>
 
 [`skills/framejam/SKILL.md`](skills/framejam/SKILL.md) is a skill/rules file. Drop it into Claude Code skills, a Cursor
 rule (`.cursor/rules/framejam.mdc`), or `AGENTS.md`. It walks the agent through: pick a preset → build → render →
 `open_review` → `wait_for_feedback` (and call it again while the result is `pending`) → edit → `add_version` with a note.
 
-## MCP tools
+</details>
 
-| Tool | What it does |
-| --- | --- |
-| `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
-| `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again. Sends progress notifications while waiting. |
-| `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my Frame Jam feedback". |
-| `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
-| `add_version({ reviewId, videoPath?, compositionDir?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
-| `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
-| `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
-| `get_preset({ id })` | Returns `style.json`, the guide, and the template source files. |
-| `get_selected_preset()` | Returns the preset the user picked with *Use this style*. |
+### Try the whole loop without an agent
 
-Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTime`, `position`, `element.selector`,
-`element.clip`, `element.tweens[]`, `thumbnailPath`), as a markdown prompt, and as inline JPEG frames.
+```bash
+npm start                 # terminal 1
+npm run e2e               # terminal 2 — plays the agent: picks a preset, opens a review, blocks on wait_for_feedback
+```
+
+Open the printed review URL, add a few comments and press **Finish review**. The script prints what the agent
+received, then posts v2, and you can watch the page move to it live. `npx tsx scripts/ui-demo.ts` does the browser
+side automatically (headless Chrome) and saves screenshots.
+
+## Styles
+
+<table>
+<tr>
+<td><img src="presets/acid-chrome/poster.jpg" alt="Acid Chrome" width="200"><br><sub><b>Acid Chrome</b></sub></td>
+<td><img src="presets/cyanotype-mac/poster.jpg" alt="Cyanotype Mac" width="200"><br><sub><b>Cyanotype Mac</b></sub></td>
+<td><img src="presets/doodle-mascot/poster.jpg" alt="Doodle Mascot" width="200"><br><sub><b>Doodle Mascot</b></sub></td>
+<td><img src="presets/case-file/poster.jpg" alt="Case File" width="200"><br><sub><b>Case File</b></sub></td>
+</tr>
+<tr>
+<td><img src="presets/dot-matrix/poster.jpg" alt="Dot Matrix" width="200"><br><sub><b>Dot Matrix</b></sub></td>
+<td><img src="presets/ink-wash/poster.jpg" alt="Ink Wash" width="200"><br><sub><b>Ink Wash</b></sub></td>
+<td><img src="presets/synthwave-grid/poster.jpg" alt="Synthwave Grid" width="200"><br><sub><b>Synthwave Grid</b></sub></td>
+<td><img src="presets/parchment-epic/poster.jpg" alt="Parchment Epic" width="200"><br><sub><b>Parchment Epic</b></sub></td>
+</tr>
+</table>
+
+Frame Jam ships with 42 styles, in 16:9, 9:16 and 1:1:
+
+**Swiss Editorial**, **Neon Terminal**, **Soft Gradient SaaS**, **Kinetic Captions** (9:16), **Noir Quote**,
+**Data Story**, **Retro Pop** (1:1), **Mono Changelog**, **Paper Marker**, **Bauhaus Grid** (1:1), **Dot Matrix**,
+**Verb Reel** (9:16), **Mincho Editorial**, **Red Band Title**, **Pixel Arcade** (1:1), **Midnight Launch**,
+**Cream Serif Launch**, **Agent UI Demo**, **Dot Field Showreel**, **Blueprint Explainer**, **Topo Credits**,
+**Parchment Epic**, **Case File**, **Ink Wash**, **Acid Chrome**, **Op Art** (1:1), **Inflated Type** (1:1),
+**Flash Sale** (9:16), **Recipe Steps**, **Split Flap**, **Window Seat** (1:1), **Label Collage**, **Cyanotype Mac**,
+**Doodle Mascot**, **Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**, **Dither Serif**,
+**Life Timeline**, **Storybook Lantern**, and **Felt Feed** (9:16).
+
+Many were studied from the Skillry Opus 5.5 gallery, What Ships launch films and Opus 5.5 videos shared on X, with
+original copy and no brand assets. Every one passes `hyperframes lint` with no errors.
+
+<details>
+<summary><b>How presets are stored, and making your own</b></summary>
+
+<br>
+
+Presets live in `presets/<id>/` (built-in) and `~/.framejam/presets/<id>/` (yours):
+
+```
+presets/neon-terminal/
+  style.json          # palette, fonts, easing, transitions, textAnimations, rhythm, guide, format, size
+  composition/        # Hyperframes source (index.html + assets)
+  preview.mp4         # rendered with `npx hyperframes render`
+  poster.jpg
+```
+
+To re-render the previews:
+
+```bash
+npm run render:presets            # or: npm run render:presets -- noir-quote
+```
+
+</details>
 
 ## The review page
+
+<details>
+<summary><b>Rounds, comments and what the agent sees</b></summary>
+
+<br>
 
 - **One round per version.** You add comments to the latest version, then press **Finish review**. That locks the
   version and hands its comments to the agent. The agent's next version starts with an empty list, and older versions
@@ -143,7 +256,12 @@ Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTim
   `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
 
-## Storyboards
+</details>
+
+<details>
+<summary><b>Storyboards</b></summary>
+
+<br>
 
 Before anything is animated, an agent can open a storyboard: a set of still panels, one per shot, each with an
 optional title and caption (action, camera move, voiceover line, duration).
@@ -166,37 +284,29 @@ the pin position, and an image of the panel with the pin drawn on it. Rounds, Fi
 work exactly as for videos. Each version keeps its own copy of the panel images, so the agent can overwrite the files
 for v2 and v1 still shows what it was.
 
-## Presets
+</details>
 
-Presets live in `presets/<id>/` (built-in) and `~/.framejam/presets/<id>/` (yours):
+<details>
+<summary><b>MCP tools</b></summary>
 
-```
-presets/neon-terminal/
-  style.json          # palette, fonts, easing, transitions, textAnimations, rhythm, guide, format, size
-  composition/        # Hyperframes source (index.html + assets)
-  preview.mp4         # rendered with `npx hyperframes render`
-  poster.jpg
-```
+<br>
 
-Built-in presets (42):
+| Tool | What it does |
+| --- | --- |
+| `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
+| `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again. Sends progress notifications while waiting. |
+| `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my Frame Jam feedback". |
+| `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
+| `add_version({ reviewId, videoPath?, compositionDir?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
+| `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
+| `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
+| `get_preset({ id })` | Returns `style.json`, the guide, and the template source files. |
+| `get_selected_preset()` | Returns the preset the user picked with *Use this style*. |
 
-- **Swiss Editorial**, **Neon Terminal**, **Soft Gradient SaaS**, **Kinetic Captions** (9:16), **Noir Quote**,
-  **Data Story**, **Retro Pop** (1:1), and **Mono Changelog**.
-- Studied from the Skillry Opus 5.5 gallery, What Ships launch films and Opus 5.5 videos shared on X, with original
-  copy and no brand assets:
-  **Paper Marker**, **Bauhaus Grid** (1:1), **Dot Matrix**, **Verb Reel** (9:16), **Mincho Editorial**,
-  **Red Band Title**, **Pixel Arcade** (1:1), **Midnight Launch**, **Cream Serif Launch**, **Agent UI Demo**,
-  **Dot Field Showreel**, **Blueprint Explainer**, **Topo Credits**, **Parchment Epic**, **Case File**,
-  **Ink Wash**, **Acid Chrome**, **Op Art** (1:1), **Inflated Type** (1:1), **Flash Sale** (9:16),
-  **Recipe Steps**, **Split Flap**, **Window Seat** (1:1), **Label Collage**, **Cyanotype Mac**,
-  **Doodle Mascot**, **Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**,
-  **Dither Serif**, **Life Timeline**, **Storybook Lantern**, and **Felt Feed** (9:16).
+Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTime`, `position`, `element.selector`,
+`element.clip`, `element.tweens[]`, `thumbnailPath`), as a markdown prompt, and as inline JPEG frames.
 
-Every one passes `hyperframes lint` with no errors. To re-render the previews:
-
-```bash
-npm run render:presets            # or: npm run render:presets -- noir-quote
-```
+</details>
 
 ## Development
 
@@ -206,6 +316,11 @@ npm test           # vitest: MCP tools (in-memory, streamable HTTP, stdio) + RES
 npm run typecheck
 npm run lint
 ```
+
+<details>
+<summary><b>Project layout and configuration</b></summary>
+
+<br>
 
 | Path | Contents |
 | --- | --- |
@@ -221,7 +336,12 @@ npm run lint
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), and `FRAMEJAM_PUBLIC_URL` (the base URL used in links).
 
-## Limitations (v1)
+</details>
+
+<details>
+<summary><b>Known limitations (v1)</b></summary>
+
+<br>
 
 - **One UI host per port.** If several harnesses each start `framejam --stdio`, the first one hosts the web UI and the
   others reuse it through the shared data directory. If the hosting process exits, restart one of them (or run
@@ -233,3 +353,14 @@ Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_H
 - **Frame thumbnails in live compositions come from the render.** A browser can't rasterise an iframe, so those
   comments get their thumbnail (and the filmstrip its frames) from the version's mp4 when one exists.
 - **No MCP Apps embedding yet.** The UI is a plain web page, ready to be embedded later.
+
+</details>
+
+<br>
+
+<div align="center">
+
+Built by the maker of [Prompt Warrior](https://www.skool.com/promptwarrior).
+Questions, ideas or bugs? Use the **Feedback** button in the app or [open an issue](https://github.com/moritzkremb/framejam/issues).
+
+</div>
