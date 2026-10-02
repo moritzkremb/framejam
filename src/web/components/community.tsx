@@ -1,11 +1,9 @@
-import { ArrowUpRight, Check, Loader2, X } from "lucide-react";
+import { ArrowUpRight, Check, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 export const COMMUNITY_URL = "https://www.skool.com/promptwarrior";
 const UPDATES_ENDPOINT = "https://www.framejam.ai/api/waitlist";
 const SUBSCRIBED_KEY = "framejam:updates-email";
-const DISMISSED_KEY = "framejam:community-dismissed";
-
 function readStorage(key: string) {
   try {
     return localStorage.getItem(key);
@@ -18,7 +16,7 @@ function writeStorage(key: string, value: string) {
   try {
     localStorage.setItem(key, value);
   } catch {
-    // Private windows can refuse storage; the card simply shows again next time.
+    // Private windows can refuse storage; the signup form simply shows again next time.
   }
 }
 
@@ -98,23 +96,10 @@ export function UpdatesForm({ source }: { source: string }) {
   );
 }
 
-/** The community pitch plus the email signup. Dismissible, so it stays out of the way once read. */
+/** The community pitch plus the email signup. */
 export function CommunityCard() {
-  const [dismissed, setDismissed] = useState(() => readStorage(DISMISSED_KEY) === "1");
-  if (dismissed) return null;
   return (
     <section className="fc-card fc-community" aria-labelledby="community-title" data-testid="community-card">
-      <button
-        type="button"
-        className="fc-btn ghost icon sm round close"
-        aria-label="Hide"
-        onClick={() => {
-          writeStorage(DISMISSED_KEY, "1");
-          setDismissed(true);
-        }}
-      >
-        <X className="fc-i sm" />
-      </button>
       <div>
         <h2 id="community-title" className="fc-h3">
           Get great at making videos with AI
