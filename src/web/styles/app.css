@@ -32,42 +32,21 @@ a { color: inherit; }
 .fc-prompt p { flex: 1; min-width: 0; margin: 0; font: 400 12.5px/19px var(--font-mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .fc-prompt .fc-btn { flex: none; }
 
-/* ---------- Home (landing) ---------- */
-.fc-home { width: 100%; max-width: 1080px; margin: 0 auto; padding: 56px 24px 72px; display: flex; flex-direction: column; gap: 64px; }
-.fc-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
-.fc-hero .copy { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
-.fc-hero h1 { margin: 0; font: 650 44px/1.06 var(--font-sans); letter-spacing: -0.035em; }
-.fc-hero h1 span { display: block; color: var(--text-2); }
-.fc-hero p { margin: 0; max-width: 520px; font: 400 16px/25px var(--font-sans); color: var(--text-2); }
-.fc-eyebrow { display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; border-radius: var(--radius-full); background: var(--surface-2); color: var(--text-2); font: 500 12px/1 var(--font-sans); }
-.fc-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-.fc-eyebrow.on .dot { background: var(--positive); }
-.fc-hero-visual .win { padding: 10px; border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow-pop); }
-.fc-hero-visual .frame { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; }
-.fc-hero-visual .frame img { width: 100%; height: 100%; object-fit: cover; }
-.fc-hero-visual .bubble { position: absolute; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 12px 12px 12px 4px; background: var(--surface); color: var(--text); box-shadow: var(--shadow-pop); font: 500 13px/18px var(--font-sans); white-space: nowrap; }
-.fc-hero-visual .bubble .when { font: 500 11px/14px var(--font-mono); color: var(--text-3); }
-.fc-hero-visual .strip { position: relative; height: 28px; margin-top: 10px; border-radius: 8px; background: var(--surface-2); overflow: hidden; }
-.fc-hero-visual .strip .played { position: absolute; inset: 0 66% 0 0; background: var(--surface-3); }
-.fc-hero-visual .strip .head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--accent); }
-.fc-hero-visual .strip .mark { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--surface-2); }
-.fc-how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.fc-how .item { display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
-.fc-how .ic { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-text); }
-.fc-how .t { display: flex; align-items: center; gap: 8px; margin-top: 6px; font: 600 15px/20px var(--font-sans); }
-.fc-how .t .n { font: 500 12px/1 var(--font-mono); color: var(--text-3); }
-.fc-how p { margin: 0; font: 400 13px/20px var(--font-sans); color: var(--text-2); }
-.fc-home-setup { display: flex; flex-direction: column; gap: 20px; max-width: 720px; scroll-margin-top: 72px; }
-@media (max-width: 860px) {
-  .fc-home { padding-top: 32px; gap: 44px; }
-  .fc-hero { grid-template-columns: 1fr; gap: 28px; }
-  .fc-how { grid-template-columns: 1fr; }
-}
+/* Header nav at half-screen widths: the style chip shrinks to its dots, then hides; the nav never wraps. */
+.fc-nav a.ext { gap: 3px; }
+.fc-nav a.ext .fc-i { color: var(--text-3); }
+.fc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.fc-link { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 560px) {
-  .fc-home { padding: 24px 16px 48px; }
-  .fc-hero h1 { font-size: 34px; }
   .fc-nav { margin-left: 0; }
   .fc-nav a { padding: 0 9px; }
+  .fc-style-chip:not(.empty) .fc-truncate { display: none; }
+  .fc-style-chip:not(.empty) { padding: 0 8px; }
+}
+@media (max-width: 440px) {
+  .fc-header .fc-style-chip { display: none; }
+  .fc-nav a { padding: 0 7px; }
+  .fc-nav a.ext .fc-i { display: none; }
 }
 
 /* Tabs are buttons in the app */

@@ -1,11 +1,11 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
-import { HomePage } from "@/pages/home-page";
 import { NotFoundPage } from "@/pages/not-found-page";
-import { ProjectsPage } from "@/pages/projects-page";
 import { ReviewPage } from "@/pages/review-page";
+import { ReviewsPage } from "@/pages/reviews-page";
+import { SetupPage } from "@/pages/setup-page";
 import { StyleDetailPage } from "@/pages/style-detail-page";
 import { StylesPage } from "@/pages/styles-page";
 import "./index.css";
@@ -24,17 +24,24 @@ function PresetRedirect() {
   return <Navigate to={id ? `/styles/${id}` : "/styles"} replace />;
 }
 
+/** The old landing page: /home#setup now lives at /setup, everything else at the dashboard. */
+function OldHomeRedirect() {
+  const { hash } = useLocation();
+  return <Navigate to={hash === "#setup" ? "/setup" : "/"} replace />;
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/styles" replace />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={<ReviewsPage />} />
+        <Route path="/setup" element={<SetupPage />} />
         <Route path="/styles" element={<StylesPage />} />
         <Route path="/styles/:id" element={<StyleDetailPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/reviews" element={<Navigate to="/projects" replace />} />
         <Route path="/review/:id" element={<ReviewPage />} />
+        <Route path="/reviews" element={<Navigate to="/" replace />} />
+        <Route path="/projects" element={<Navigate to="/" replace />} />
+        <Route path="/home" element={<OldHomeRedirect />} />
         <Route path="/presets" element={<PresetRedirect />} />
         <Route path="/presets/:id" element={<PresetRedirect />} />
         <Route path="*" element={<NotFoundPage />} />

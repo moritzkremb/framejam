@@ -26,9 +26,10 @@ npm run build
 npm start                 # http://localhost:4517  (MCP at http://localhost:4517/mcp)
 ```
 
-Then connect your agent (below), pick a style on the Styles page (the start page), and ask the agent to *"make a
-7-second launch teaser with Frame Jam and open it for review"*. The home page (`/home`, the wordmark) explains Frame Jam
-and walks you through setup as three messages you paste into your agent chat.
+Then connect your agent (below), pick a style on the Styles page, and ask the agent to *"make a 7-second launch
+teaser with Frame Jam and open it for review"*. The start page (`/`) is your reviews: each one shows whose turn it is.
+Until an agent has connected it also shows the setup checklist, three messages you paste into your agent chat, which
+stays available at `/setup`.
 
 ### Try the whole loop without an agent
 

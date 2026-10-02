@@ -54,7 +54,7 @@ export function ReviewHeader({
   const { review, version, latest } = r;
   if (!review || !version || !latest) return null;
   return (
-    <BackHeader to="/projects" title={review.title} sub={subline}>
+    <BackHeader to="/" title={review.title} sub={subline}>
       <Menu
         label="Versions and more"
         trigger={
