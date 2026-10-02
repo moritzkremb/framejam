@@ -8,6 +8,15 @@ h1, h2, h3, p, ol, ul, dl, figure { margin: 0; }
 a { color: inherit; }
 ::selection { background: var(--accent-soft); }
 
+/* Chromium ignores ::-webkit-scrollbar on any element with scrollbar-width/-color set, so those stay Firefox-only. */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: color-mix(in srgb, var(--text) 16%, transparent) padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--text) 30%, transparent); }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text) 22%, transparent) transparent; }
+}
+
 /* ---------- Page scaffolding ---------- */
 .fc-screen { min-height: 100dvh; }
 .fc-main { width: 100%; }
@@ -183,7 +192,7 @@ a { color: inherit; }
 .fc-count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; font: 600 11px/20px var(--font-mono); text-align: center; }
 .fc-count.draft { background: var(--accent); color: var(--on-accent); }
 .fc-count.sent { background: var(--surface-2); color: var(--text-3); }
-.fc-side-body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; scrollbar-width: thin; }
+.fc-side-body { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 12px; }
 .fc-side-empty { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; }
 .fc-side-empty p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--text-2); }
 .fc-side-empty .fc-ways { max-width: none; margin-top: 6px; }
@@ -258,7 +267,7 @@ a { color: inherit; }
 /* ---------- Storyboard review ---------- */
 .fc-sbar { display: flex; align-items: center; gap: 8px; min-height: 34px; }
 .fc-stage.is-board { justify-content: flex-start; }
-.fc-stage > .fc-board-wrap { flex: 1 1 auto; min-height: 0; overflow: auto; margin-left: auto; margin-right: auto; scrollbar-width: thin; }
+.fc-stage > .fc-board-wrap { flex: 1 1 auto; min-height: 0; overflow: auto; margin-left: auto; margin-right: auto; }
 .fc-board { list-style: none; margin: 0; padding: 2px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px 14px; }
 .fc-bcard { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
 .fc-bcard .img { position: relative; display: block; border-radius: var(--radius-lg); overflow: hidden; background: var(--video); box-shadow: 0 0 0 1px var(--border); transition: box-shadow .15s, transform .15s; }
@@ -279,7 +288,7 @@ a { color: inherit; }
 .fc-pcap { display: flex; flex-direction: column; gap: 2px; padding: 0 2px; }
 .fc-pcap .t { font: 500 14px/20px var(--font-sans); }
 .fc-pcap p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--text-2); }
-.fc-pstrip { display: flex; gap: 6px; overflow-x: auto; padding: 2px; scrollbar-width: thin; }
+.fc-pstrip { display: flex; gap: 6px; overflow-x: auto; padding: 2px; }
 .fc-pstrip .p { position: relative; flex: none; width: 84px; height: 52px; padding: 0; border: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--video); box-shadow: 0 0 0 1px var(--border); cursor: pointer; opacity: .7; transition: opacity .15s, box-shadow .15s; }
 .fc-pstrip .p:hover { opacity: 1; }
 .fc-pstrip .p.on { opacity: 1; box-shadow: 0 0 0 2px var(--text); }
