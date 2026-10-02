@@ -1,0 +1,77 @@
+{
+  "id": "storybook-lantern",
+  "name": "Storybook Lantern",
+  "tagline": "A small figure and a glowing teapot spirit drift through a hand-drawn night-to-sunset storybook.",
+  "description": "Soft illustrated storybook on grainy paper: flat shapes with slightly rough edges, a muted teal, brick red, dusk purple and lamp-yellow palette, and gentle glows from a tiny luminous companion. A slow narrative told in layered parallax scenes with soft crossfades, springy icon pops (rain cloud, lightbulb, hearts, stars) and one handwritten closing line. Made for warm brand stories, app origin tales and gentle explainers.",
+  "mood": [
+    "calm",
+    "warm",
+    "whimsical"
+  ],
+  "pacing": "slow",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 9,
+  "palette": {
+    "nightWall": "#2a2452",
+    "duskPurple": "#5b4690",
+    "teal": "#4a8f8e",
+    "tealDeep": "#2f6b6d",
+    "brickRed": "#b4483a",
+    "lampYellow": "#f6c75a",
+    "lampGlow": "#ffe7a1",
+    "dawnPeach": "#f6cfa4",
+    "sunsetPink": "#ee9d7c",
+    "heartPink": "#ee7f97",
+    "rainBlue": "#8fa8c8",
+    "paperCream": "#fff3d9"
+  },
+  "fonts": {
+    "display": {
+      "family": "Kalam",
+      "weights": [
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "One handwritten closing line, 84–96px, cream #fff3d9 with a soft plum shadow, revealed by a left-to-right wipe"
+    },
+    "body": {
+      "family": "Patrick Hand",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Tiny in-world lettering such as the kiosk sign, 30–36px, never a headline"
+    }
+  },
+  "easing": {
+    "pan": "sine.inOut",
+    "spring": "elastic.out(1,0.5)",
+    "settle": "back.out(2)",
+    "crossfade": "sine.inOut",
+    "bob": "sine.inOut"
+  },
+  "transitions": [
+    "0.7–0.8s opacity crossfade between scenes, the next scene fading in while the previous one keeps panning",
+    "no cuts, wipes or slams; every scene is already moving when it appears"
+  ],
+  "textAnimations": [
+    "single handwritten line revealed with clip-path inset(0 100% 0 0) → inset(0 0% 0 0), 1.5s, power1.inOut",
+    "no per-letter bounce; text arrives like ink being written"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.8,
+    "holdAfterTextSeconds": 0.3,
+    "notes": "Five beats of about 1.5–2.5s: desk, star, dawn walk, rooftop, sunset drift. Something small and new (an icon spring, a pointing spout, a bird, a rising heart) happens every ~1s while the camera never stops drifting."
+  },
+  "tags": [
+    "storybook",
+    "illustration",
+    "paper-texture",
+    "narrative",
+    "warm",
+    "parallax"
+  ],
+  "guide": "- Build every scene from flat SVG shapes (no outlines) in muted teal #4a8f8e, brick red #b4483a, dusk purple #5b4690 / #2a2452 and lamp-yellow #f6c75a. Apply one shared filter on each layer SVG: feTurbulence baseFrequency 0.026, numOctaves 2, feDisplacementMap scale 7 for the rough hand-cut edge.\n- Add a paper layer on top of everything: fractalNoise (baseFrequency 0.85) tinted warm brown at 0.5 opacity, a low-frequency mottling layer at 0.16, and a plum radial vignette. Never use plain gradients without that grain.\n- Give every scene 3–4 parallax layers (sky, far, mid, near) panning at different speeds with sine.inOut (e.g. -60 / -130 / -300 / -620px over 2.3s) plus a 4–7% camera scale push. Nothing ever stops moving.\n- One tiny glowing companion lights the scene: radial gradient glow (r 170, #ffd678 at 0.75 → 0), bobbing ±20px with sine.inOut, steam wisp looping. Characters are small (about 240px tall in a 1080px frame) and face right; legs and arms swing ±20° with sine.inOut yoyo for walking.\n- Pop icons (rain cloud, lightbulb, hearts, stars) in from scale 0 with elastic.out(1,0.5) over 0.8–1s, then let them rise 300–500px with a small sine sway and fade; stagger them 0.11s. A cloud shrinking away should hand over to a lightbulb.\n- Tell the story in 4–5 scenes with 0.7–0.8s opacity crossfades: night interior (glow from a screen), a close-up of one star, dawn peach street, dusk rooftop skyline with lit windows, then a warm sunset sky. Colour temperature warms scene by scene.\n- Finish on one handwritten line (Kalam 700, ~92px, cream with plum shadow) wiped in left to right over the purple top of the sunset sky. Avoid hard cuts, bouncy overshoot on big shapes, glossy gradients and more than one line of text."
+}

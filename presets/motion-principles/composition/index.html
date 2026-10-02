@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Motion Principles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@900&family=Caveat:wght@700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #ffffff; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #ffffff; color: #0a0a0a; font-family: "Inter Tight", sans-serif; font-weight: 900; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .white { background: #ffffff; color: #0a0a0a; } .black { background: #0a0a0a; color: #ffffff; }
+      svg.layer { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+      svg.layer path.ar, svg.layer path.wr { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+      .note { position: absolute; font-family: "Caveat", cursive; font-weight: 700; font-size: 66px; line-height: 1; white-space: nowrap; color: #2540ff; }
+      .black .note { color: #6b82ff; } .note.red { color: #ff3b30; }
+      .mono { position: absolute; font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 22px; letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; color: #0a0a0a; opacity: 0.55; }
+      .black .mono { color: #ffffff; opacity: 0.5; }
+      .ball { position: absolute; left: 0; top: 0; width: 112px; height: 112px; border-radius: 50%; background: #2540ff; }
+      .sq { position: absolute; left: 0; top: 0; width: 96px; height: 96px; background: #0a0a0a; }
+      #word { position: absolute; left: 0; width: 1920px; top: 285px; text-align: center; font-size: 370px; line-height: 1; letter-spacing: -0.03em; color: #2540ff; white-space: nowrap; }
+      .roll { display: inline-block; height: 200px; overflow: hidden; vertical-align: top; } .roll div { height: 200px; line-height: 200px; }
+      #big { position: absolute; left: 0; width: 1920px; top: 410px; text-align: center; font-size: 200px; line-height: 200px; letter-spacing: -0.04em; white-space: nowrap; }
+      .name { position: absolute; left: 150px; top: 170px; font-size: 290px; line-height: 0.9; letter-spacing: -0.035em; white-space: nowrap; }
+      .ln { display: block; clip-path: inset(-2000px -400px 0 -400px); } .ln span { display: inline-block; }
+      #dot { display: inline-block; width: 0.2em; height: 0.2em; border-radius: 50%; background: #2540ff; margin-left: 0.04em; }
+      .gh { position: absolute; left: 0; top: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="motion-principles" data-width="1920" data-height="1080" data-duration="8.5">
+      <!-- 1 / bounce -->
+      <div id="s1" class="scene white">
+        <svg class="layer" id="g1" viewBox="0 0 1920 1080">
+          <path id="floor" d="M100 820 L1820 820" stroke="#0a0a0a" stroke-width="4" fill="none" />
+          <path id="a1" class="ar" pathLength="1000" stroke="#2540ff" stroke-width="7" /> <path id="a2" class="ar" pathLength="1000" stroke="#ff3b30" stroke-width="7" /> <path id="a3" class="ar" pathLength="1000" stroke="#2540ff" stroke-width="7" />
+        </svg>
+        <div class="mono" style="left: 104px; top: 842px">floor · y = 0</div>
+        <div id="ball" class="ball"></div>
+        <div class="note" id="n1a" style="left: 1010px; top: 150px; transform: rotate(-3deg)">slow in, slow out</div>
+        <div class="note red" id="n1b" style="left: 640px; top: 880px; transform: rotate(-4deg)">squash!</div>
+        <div class="note" id="n1c" style="left: 800px; top: 428px; transform: rotate(2deg)">stretch</div>
+      </div>
+      <!-- 2 / giant stretched word -->
+      <div id="s2" class="scene black">
+        <div id="word">STRETCH</div>
+        <div class="note" id="n2a" style="left: 1040px; top: 810px; transform: rotate(-3deg)">elastic</div>
+        <div class="mono" id="m2" style="left: 540px; top: 836px">scale( 1 , 1.7 )</div>
+      </div>
+      <!-- 3 / graph + spacing -->
+      <div id="s3" class="scene white">
+        <svg class="layer" id="g3" viewBox="0 0 1920 1080">
+          <defs><clipPath id="cp3"><rect id="cr3" x="320" y="40" width="1280" height="560" /></clipPath></defs>
+          <path id="ax" d="M320 80 L320 540 L1640 540" stroke="#0a0a0a" stroke-width="4" fill="none" stroke-linejoin="round" />
+          <path id="lin" d="M320 540 L1600 140" stroke="#ff3b30" stroke-width="5" stroke-dasharray="14 12" fill="none" />
+          <path id="curve" stroke="#2540ff" stroke-width="9" fill="none" stroke-linecap="round" clip-path="url(#cp3)" />
+          <circle id="mk" r="15" cx="0" cy="0" fill="#2540ff" />
+          <path id="track" d="M320 840 L1600 840" stroke="#0a0a0a" stroke-width="3" fill="none" />
+          <path id="a4" class="ar" pathLength="1000" stroke="#ff3b30" stroke-width="7" /> <path id="a5" class="ar" pathLength="1000" stroke="#2540ff" stroke-width="7" /> <path id="a6" class="ar" pathLength="1000" stroke="#2540ff" stroke-width="7" />
+        </svg>
+        <div class="mono" style="left: 344px; top: 84px">position</div>
+        <div class="mono" style="left: 1500px; top: 560px">time</div>
+        <div class="mono" style="left: 320px; top: 884px">12 fps · onion skin</div>
+        <div id="sq" class="sq"></div>
+        <div class="note red" id="n3a" style="left: 400px; top: 170px; transform: rotate(-4deg)">linear = robotic</div>
+        <div class="note" id="n3b" style="left: 1160px; top: 360px; transform: rotate(3deg)">ease in-out ✓</div>
+        <div class="note" id="n3c" style="left: 1090px; top: 905px; transform: rotate(-3deg)">spacing!</div>
+      </div>
+      <!-- 4 / particle trail -->
+      <div id="s4" class="scene black">
+        <svg class="layer" id="g4" viewBox="0 0 1920 1080">
+          <defs>
+            <pattern id="dots" width="60" height="60" patternUnits="userSpaceOnUse"><circle cx="30" cy="30" r="3" fill="#2a2a2a" /></pattern>
+          </defs>
+          <rect id="dotbg" x="0" y="0" width="1920" height="1080" fill="url(#dots)" />
+          <path id="guide" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="4 14" stroke-linecap="round" opacity="0.28" />
+          <path id="a7" class="ar" pathLength="1000" stroke="#6b82ff" stroke-width="7" />
+        </svg>
+        <div class="note" id="n4a" style="left: 1280px; top: 590px; transform: rotate(-3deg)">follow-through</div>
+      </div>
+      <!-- 5 / progress ring -->
+      <div id="s5" class="scene white">
+        <svg class="layer" id="g5" viewBox="0 0 1920 1080">
+          <g id="ticks"></g>
+          <circle cx="960" cy="520" r="300" fill="none" stroke="#0a0a0a" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round" opacity="0.6" />
+          <path id="arc" class="wr" d="M960 220 A300 300 0 1 1 960 820 A300 300 0 1 1 960 220" pathLength="1000" fill="none" stroke="#2540ff" stroke-width="18" stroke-linecap="round" />
+          <circle id="rdot" cx="960" cy="220" r="26" fill="#2540ff" />
+          <path id="a8" class="ar" pathLength="1000" stroke="#2540ff" stroke-width="7" />
+        </svg>
+        <div id="big"><span class="roll"><div id="tens"></div></span><span class="roll"><div id="ones"></div></span>%</div>
+        <div class="mono" style="left: 862px; top: 640px">progress</div>
+        <div class="mono" style="left: 1400px; top: 600px">ease · back.out(1.6)</div>
+        <div class="note" id="n5a" style="left: 360px; top: 100px; transform: rotate(-4deg)">anticipation</div>
+      </div>
+      <!-- 6 / motion blur -->
+      <div id="s6" class="scene black">
+        <div id="blur"></div>
+        <svg class="layer" viewBox="0 0 1920 1080">
+          <path id="a9" class="ar" pathLength="1000" stroke="#6b82ff" stroke-width="7" /> <path id="a10" class="ar" pathLength="1000" stroke="#6b82ff" stroke-width="7" />
+        </svg>
+        <div class="note" id="n6a" style="left: 700px; top: 150px; transform: rotate(-3deg)">stagger: 45ms</div>
+        <div class="note" id="n6b" style="left: 1360px; top: 660px; transform: rotate(3deg)">overlap</div>
+        <div class="mono" style="left: 1260px; top: 956px">shutter 180°</div>
+      </div>
+      <!-- 7 / name card -->
+      <div id="s7" class="scene white">
+        <div class="name">
+          <div class="ln"><span id="n7a">JUNO</span></div>
+          <div class="ln"><span id="n7b">MARLOWE</span><i id="dot"></i></div>
+        </div>
+        <svg class="layer" viewBox="0 0 1920 1080">
+          <path id="a11" class="ar" pathLength="1000" stroke="#2540ff" stroke-width="8" />
+        </svg>
+        <div class="mono" id="m7" style="left: 158px; top: 830px; font-size: 26px">motion designer · 2D / 3D / type in motion</div>
+        <div class="note" id="n7c" style="left: 1230px; top: 770px; font-size: 84px; transform: rotate(-4deg)">open to new projects</div>
+      </div>
+    </div>
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      var BLUE = "#2540ff", BLUEL = "#6b82ff";
+      var tl = gsap.timeline({ paused: true });
+      function $(id) { return document.getElementById(id); }
+      function mk(tag, attrs, parent) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        parent.appendChild(e);
+        return e;
+      }
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function draw(id, at, dur) {
+        tl.to(id, { strokeDashoffset: 0, duration: dur || 0.3, ease: "power2.inOut" }, at);
+      }
+      var NW = { n1a: 360, n1b: 168, n1c: 167, n2a: 143, n3a: 349, n3b: 312, n3c: 184, n4a: 326, n5a: 276, n6a: 316, n6b: 156, n7c: 586 };
+      function write(id, at, dur) {
+        tl.fromTo(id, { clipPath: "inset(-30px " + (NW[id.slice(1)] + 14) + "px -30px -14px)" }, { clipPath: "inset(-30px -14px -30px -14px)", duration: dur || 0.3, ease: "none" }, at);
+      }
+      // hand-drawn arrow: path d plus a two-stroke head at (tx,ty) travelling in direction (dx,dy)
+      function arrow(id, d, tx, ty, dx, dy) {
+        var n = Math.sqrt(dx * dx + dy * dy); dx /= n; dy /= n;
+        function head(a) {
+          var x = -dx, y = -dy, c = Math.cos(a), s = Math.sin(a);
+          return " M" + tx + " " + ty + " L" + (tx + 30 * (x * c - y * s)).toFixed(1) + " " + (ty + 30 * (x * s + y * c)).toFixed(1);
+        }
+        $(id).setAttribute("d", d + head(0.5) + head(-0.5));
+      }
+      function pe(u) { return u < 0.5 ? 2 * u * u : 1 - 2 * (1 - u) * (1 - u); } // power2.inOut
+      function clamp(v) { return Math.max(0, Math.min(1, v)); }
+      /* ---------- scene 1: bounce 0 → 2.2 ---------- */
+      (function () {
+        var g = $("g1"), R = 56;
+        gsap.set("#ball", { x: 220 - R, y: 230 - 112, transformOrigin: "50% 100%" });
+        var segs = [          { t: 0.2, d: 0.5, x0: 220, y0: 230, x1: 560, y1: 820, k: "in" }, { t: 0.79, d: 0.55, x0: 560, y0: 820, x1: 880, y1: 380, k: "out" }, { t: 1.34, d: 0.46, x0: 880, y0: 380, x1: 1150, y1: 820, k: "in" }, { t: 1.88, d: 0.32, x0: 1150, y0: 820, x1: 1290, y1: 620, k: "out" }];
+        segs.forEach(function (s) {
+          tl.fromTo("#ball", { x: s.x0 - R }, { x: s.x1 - R, duration: s.d, ease: "none" }, s.t);
+          tl.fromTo("#ball", { y: s.y0 - 112 }, { y: s.y1 - 112, duration: s.d, ease: s.k === "in" ? "power2.in" : "power2.out" }, s.t);
+          for (var t = s.t + 0.06; t < s.t + s.d - 0.02; t += 0.06) {
+            var u = (t - s.t) / s.d;
+            var x = s.x0 + (s.x1 - s.x0) * u;
+            var y = s.k === "in" ? s.y0 + (s.y1 - s.y0) * u * u : s.y0 + (s.y1 - s.y0) * (1 - (1 - u) * (1 - u));
+            var c = mk("circle", { cx: x.toFixed(1), cy: (y - R).toFixed(1), r: R - 2, fill: "none", stroke: BLUE, "stroke-width": 3, opacity: 0 }, g);
+            tl.set(c, { opacity: 0.5 }, t);
+          }
+        });
+        function sc(a, b, t, d, e) { tl.fromTo("#ball", { scaleX: a[0], scaleY: a[1] }, { scaleX: b[0], scaleY: b[1], duration: d, ease: e }, t); }
+        sc([1, 1], [0.84, 1.28], 0.2, 0.5, "power2.in"); sc([0.84, 1.28], [1.6, 0.5], 0.7, 0.09, "power2.out");
+        sc([1.6, 0.5], [0.82, 1.3], 0.79, 0.08, "power2.out"); sc([0.82, 1.3], [1, 1], 0.87, 0.47, "sine.inOut");
+        sc([1, 1], [0.88, 1.22], 1.34, 0.46, "power2.in"); sc([0.88, 1.22], [1.42, 0.62], 1.8, 0.08, "power2.out");
+        sc([1.42, 0.62], [0.9, 1.18], 1.88, 0.08, "power2.out"); sc([0.9, 1.18], [1, 1], 1.96, 0.24, "sine.inOut");
+        show("#s1", 0, 2.2);
+        tl.fromTo("#floor", { attr: { d: "M100 820 L100 820" } }, { attr: { d: "M100 820 L1820 820" }, duration: 0.3, ease: "power3.out" }, 0);
+        arrow("a1", "M1005 238 C 992 262, 975 284, 960 302", 960, 302, -0.75, 0.66); arrow("a2", "M640 908 C 622 890, 604 868, 584 838", 584, 838, -0.5, -0.86);
+        arrow("a3", "M796 490 C 770 505, 745 514, 714 524", 714, 524, -1, 0.35);
+        write("#n1a", 0.95, 0.45); draw("#a1", 1.3, 0.25); write("#n1b", 0.78, 0.3); draw("#a2", 0.9, 0.2); write("#n1c", 1.1, 0.3); draw("#a3", 1.35, 0.2);
+      })();
+      /* ---------- scene 2: giant stretched word 2.2 → 2.9 ---------- */
+      show("#s2", 2.2, 2.9);
+      gsap.set("#word", { transformOrigin: "50% 50%" });
+      tl.fromTo("#word", { scaleX: 2.6, scaleY: 0.3 }, { scaleX: 1, scaleY: 1.7, duration: 0.55, ease: "elastic.out(1, 0.45)" }, 2.2);
+      write("#n2a", 2.45, 0.25);
+      tl.fromTo("#m2", { opacity: 0 }, { opacity: 0.5, duration: 0.1, ease: "none" }, 2.5);
+      /* ---------- scene 3: position / time graph 2.9 → 4.5 ---------- */
+      (function () {
+        var T0 = 3.0, D = 0.75, g = $("g3"), pts = "";
+        for (var i = 0; i <= 64; i++) {
+          var p = i / 64;
+          pts += (i ? " L" : "M") + (320 + 1280 * p).toFixed(1) + " " + (540 - 400 * pe(p)).toFixed(1);
+        }
+        $("curve").setAttribute("d", pts);
+        gsap.set("#sq", { x: 320, y: 744 });
+        gsap.set("#mk", { x: 320, y: 540 });
+        show("#s3", 2.9, 4.5);
+        tl.fromTo("#ax", { attr: { d: "M320 540 L320 540 L320 540" } }, { attr: { d: "M320 80 L320 540 L1640 540" }, duration: 0.2, ease: "power3.out" }, 2.9);
+        tl.fromTo("#lin", { attr: { d: "M320 540 L320 540" } }, { attr: { d: "M320 540 L1600 140" }, duration: 0.25, ease: "power2.out" }, 2.95);
+        tl.fromTo("#cr3", { attr: { width: 0 } }, { attr: { width: 1280 }, duration: D, ease: "none" }, T0);
+        tl.to("#mk", { x: 1600, duration: D, ease: "none" }, T0);
+        tl.to("#mk", { y: 140, duration: D, ease: "power2.inOut" }, T0);
+        tl.fromTo("#sq", { x: 320 }, { x: 1504, duration: D, ease: "power2.inOut" }, T0);
+        for (var k = 0; k <= 11; k++) {
+          var gx = 320 + 1184 * pe(k / 11);
+          var r = mk("rect", { x: gx.toFixed(1), y: 744, width: 96, height: 96, fill: "#2540ff", "fill-opacity": 0.12, stroke: "#2540ff", "stroke-width": 3, opacity: 0 }, g);
+          tl.set(r, { opacity: 1 }, T0 + (D * k) / 11);
+        }
+        arrow("a4", "M560 262 C 590 310, 604 370, 610 440", 610, 440, 0.1, 1);
+        arrow("a5", "M1290 352 C 1305 322, 1300 286, 1266 246", 1266, 246, -0.7, -0.7);
+        arrow("a6", "M1100 912 C 1060 902, 1020 884, 990 856", 990, 856, -0.8, -0.6);
+        write("#n3a", 2.95, 0.3); draw("#a4", 3.15, 0.2); write("#n3b", 3.1, 0.3); draw("#a5", 3.36, 0.2); write("#n3c", 3.28, 0.25); draw("#a6", 3.5, 0.2);
+      })();
+      /* ---------- scene 4: particle trail 4.5 → 5.5 ---------- */
+      (function () {
+        var T = 4.5, N = 30, g = $("g4");
+        function bez(a, b, c, d, u) {
+          var m = 1 - u;
+          return [m * m * m * a[0] + 3 * m * m * u * b[0] + 3 * m * u * u * c[0] + u * u * u * d[0],
+                  m * m * m * a[1] + 3 * m * m * u * b[1] + 3 * m * u * u * c[1] + u * u * u * d[1]];
+        }
+        var P0 = [140, 860], P1 = [640, 920], P2 = [480, 180], P3 = [960, 480], P4 = [1440, 780], P5 = [1380, 160], P6 = [1620, 300];
+        function pos(q) { return q < 0.5 ? bez(P0, P1, P2, P3, q * 2) : bez(P3, P4, P5, P6, (q - 0.5) * 2); }
+        $("guide").setAttribute("d", "M140 860 C 640 920, 480 180, 960 480 C 1440 780, 1380 160, 1620 300");
+        show("#s4", 4.5, 5.5);
+        tl.fromTo("#guide", { opacity: 0 }, { opacity: 0.28, duration: 0.2, ease: "none" }, T);
+        var DUR = 0.6, STEP = 1 / 60, LAG = 0.016;
+        for (var i = N - 1; i >= 0; i--) {
+          var f = i / (N - 1), r = 26 - 21 * Math.pow(f, 0.8);
+          var c = mk("circle", { cx: 0, cy: 0, r: r.toFixed(1), fill: i < 3 ? "#ffffff" : BLUEL, opacity: 0 }, g);
+          var start = pos(0);
+          gsap.set(c, { x: start[0], y: start[1] });
+          var frames = [];
+          for (var s = 1; s <= 62; s++) {
+            var tau = s * STEP - i * LAG;
+            var q = pe(clamp(tau / DUR)), p = pos(q);
+            frames.push({ x: +p[0].toFixed(1), y: +p[1].toFixed(1), duration: STEP, ease: "none" });
+          }
+          tl.to(c, { keyframes: frames }, T);
+          tl.set(c, { opacity: 1 - 0.7 * f }, T + LAG * i * 0.5);
+        }
+        var reds = [[70, 4, 9], [115, 22, 7], [150, 8, 6], [190, 30, 5], [230, 18, 4]];
+        reds.forEach(function (rd, j) {
+          var c = mk("circle", { cx: 0, cy: 0, r: rd[2], fill: "#ff3b30", opacity: 0 }, g);
+          gsap.set(c, { x: P6[0], y: P6[1] });
+          tl.set(c, { opacity: 1 }, T + 0.6 + j * 0.03);
+          tl.to(c, { x: P6[0] + rd[0], y: P6[1] + rd[1], duration: 0.4, ease: "power3.out" }, T + 0.6 + j * 0.03);
+        });
+        arrow("a7", "M1560 584 C 1650 570, 1730 500, 1752 392", 1752, 392, 0.2, -1);
+        write("#n4a", 4.65, 0.35); draw("#a7", 5.0, 0.25);
+      })();
+      /* ---------- scene 5: progress ring 5.5 → 6.35 ---------- */
+      (function () {
+        var tk = $("ticks");
+        for (var i = 0; i < 60; i++) {
+          var a = (i / 60) * Math.PI * 2, r0 = 330, r1 = i % 5 === 0 ? 362 : 346;
+          mk("line", { x1: 960 + r0 * Math.cos(a), y1: 520 + r0 * Math.sin(a), x2: 960 + r1 * Math.cos(a), y2: 520 + r1 * Math.sin(a), stroke: "#0a0a0a", "stroke-width": i % 5 === 0 ? 4 : 2.5, "stroke-linecap": "round", opacity: 0.4 }, tk);
+        }
+        var tens = $("tens"), ones = $("ones"), i2;
+        for (i2 = 0; i2 <= 4; i2++) { var d1 = document.createElement("div"); d1.textContent = i2; tens.appendChild(d1); }
+        for (i2 = 0; i2 <= 28; i2++) { var d2 = document.createElement("div"); d2.textContent = i2 % 10; ones.appendChild(d2); }
+        gsap.set("#rdot", { svgOrigin: "960 520" });
+        show("#s5", 5.5, 6.35);
+        tl.from("#ticks line", { opacity: 0, duration: 0.1, stagger: 0.004, ease: "none" }, 5.5);
+        tl.fromTo("#rdot", { rotation: 0 }, { rotation: -16, duration: 0.18, ease: "power2.out" }, 5.5); tl.fromTo("#rdot", { rotation: -16 }, { rotation: 172.8, duration: 0.5, ease: "back.out(1.6)", immediateRender: false }, 5.68);
+        tl.to("#arc", { strokeDashoffset: 520, duration: 0.5, ease: "power3.out" }, 5.72);
+        tl.fromTo("#tens", { y: 0 }, { y: -800, duration: 0.5, ease: "power3.out" }, 5.7);
+        tl.fromTo("#ones", { y: 0 }, { y: -5600, duration: 0.5, ease: "power3.out" }, 5.7);
+        arrow("a8", "M760 150 C 830 150, 890 172, 928 206", 928, 206, 0.8, 0.6);
+        write("#n5a", 5.52, 0.3); draw("#a8", 5.78, 0.2);
+      })();
+      /* ---------- scene 6: motion blur 6.35 → 7.1 ---------- */
+      (function () {
+        var host = $("blur"), GH = 14, LAGG = 0.005;
+        var items = [          { w: 360, h: 64, x: 280, y: 230, c: "#d8d8d8" }, { w: 240, h: 64, x: 560, y: 350, c: "#8c8c8c" }, { w: 150, h: 150, x: 1105, y: 470, c: BLUEL, ball: true }, { w: 440, h: 64, x: 240, y: 700, c: "#e6e6e6" }, { w: 280, h: 64, x: 640, y: 820, c: "#5c5c5c" }];
+        items.forEach(function (it, n) {
+          for (var k = GH; k >= 0; k--) {
+            var e = document.createElement("div");
+            e.className = "gh";
+            e.style.cssText = "width:" + it.w + "px;height:" + it.h + "px;background:" + it.c + ";left:" + it.x + "px;top:" + it.y + "px;" + (it.ball ? "border-radius:50%;" : "") + "opacity:" + (k === 0 ? 1 : (0.5 * (1 - k / (GH + 1))).toFixed(3));
+            host.appendChild(e);
+            gsap.set(e, { x: -900 });
+            tl.to(e, { x: 0, duration: 0.55, ease: "expo.out" }, 6.35 + n * 0.045 + k * LAGG);
+          }
+        });
+        show("#s6", 6.35, 7.1);
+        arrow("a9", "M716 262 C 692 290, 672 298, 650 296", 650, 296, -1, 0.1);
+        arrow("a10", "M1374 668 C 1330 650, 1290 625, 1262 596", 1262, 596, -0.8, -0.6);
+        write("#n6a", 6.45, 0.25); draw("#a9", 6.68, 0.15); write("#n6b", 6.6, 0.2); draw("#a10", 6.78, 0.15);
+      })();
+      /* ---------- scene 7: name card 7.1 → 8.5 ---------- */
+      (function () {
+        show("#s7", 7.1);
+        gsap.set("#dot", { transformOrigin: "50% 100%" });
+        tl.from("#n7a", { y: 300, duration: 0.45, ease: "expo.out" }, 7.1);
+        tl.from("#n7b", { y: 300, duration: 0.45, ease: "expo.out" }, 7.2);
+        tl.fromTo("#dot", { y: -1100 }, { y: 0, duration: 0.7, ease: "bounce.out" }, 7.35);
+        tl.to("#dot", { scaleX: 1.4, scaleY: 0.6, duration: 0.05, ease: "power2.out", yoyo: true, repeat: 1 }, 7.35 + 0.255);
+        arrow("a11", "M1440 746 C 1500 740, 1570 722, 1626 686", 1626, 686, 1, -0.6);
+        tl.fromTo("#m7", { opacity: 0 }, { opacity: 0.55, duration: 0.2, ease: "none" }, 7.55);
+        write("#n7c", 7.95, 0.4); draw("#a11", 7.85, 0.3);
+      })();
+      tl.set({}, {}, 8.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["motion-principles"] = tl;
+    </script>
+  </body>
+</html>

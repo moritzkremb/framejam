@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Dither Serif</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Covered+By+Your+Grace&family=Inter:wght@400;500;600&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fff; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #fff; color: #0b0d14; font-family: "Inter", sans-serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+      canvas { image-rendering: pixelated; display: block; }
+      .serif { font-family: "DM Serif Display", serif; font-weight: 400; letter-spacing: -0.01em; }
+      .script { font-family: "Covered By Your Grace", cursive; color: #0f4cff; font-weight: 400; letter-spacing: 0; }
+      .pot { position: absolute; transform-origin: 50% 100%; }
+      .pot canvas { position: absolute; left: 0; top: 0; }
+      .pbody, .pface { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+      .bgd { position: absolute; left: 0; top: 0; }
+      .h1 { position: absolute; font-size: 168px; line-height: 1.04; white-space: nowrap; }
+      .ln { display: block; transform-origin: left bottom; }
+      .sc { display: inline-block; position: relative; padding: 0 0.04em; }
+      .sc .script { font-size: 1.4em; line-height: 0.6; display: inline-block; }
+      .sc svg { position: absolute; left: 0; bottom: -0.08em; width: 100%; height: 0.24em; overflow: visible; }
+      .sc path, .ul { fill: none; stroke: #0f4cff; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+      .card { position: absolute; width: 400px; height: 540px; background: #fff; border-radius: 36px; padding: 24px; box-shadow: 0 40px 70px rgba(0, 20, 120, 0.35); }
+      .cicon { height: 290px; border-radius: 24px; background: #eef2fc; display: flex; align-items: center; justify-content: center; }
+      .ctitle { font-size: 56px; margin-top: 24px; line-height: 1; }
+      .csub { font-size: 24px; color: #6b7385; margin-top: 10px; }
+      .crow { position: absolute; left: 28px; right: 28px; bottom: 28px; display: flex; align-items: flex-end; justify-content: space-between; }
+      .price { font-size: 70px; color: #0f4cff; line-height: 0.9; }
+      .pill { font-size: 22px; font-weight: 600; color: #0f4cff; background: #e5ecff; border-radius: 999px; padding: 10px 20px; }
+      .phone { position: absolute; left: 1240px; top: 90px; width: 440px; height: 900px; background: #0b0d14; border-radius: 74px; padding: 14px; box-shadow: 0 50px 90px rgba(11, 13, 20, 0.28); }
+      .screen { position: relative; width: 100%; height: 100%; background: #fff; border-radius: 60px; overflow: hidden; }
+      .notch { position: absolute; left: 50%; margin-left: -60px; top: 18px; width: 120px; height: 32px; background: #0b0d14; border-radius: 20px; }
+      .shead { position: absolute; left: 28px; right: 28px; top: 78px; display: flex; align-items: center; gap: 18px; }
+      .avatar { width: 80px; height: 80px; border-radius: 50%; background: #0f4cff; color: #fff; font-size: 44px; display: flex; align-items: center; justify-content: center; }
+      .sname { font-size: 34px; line-height: 1; }
+      .shand { font-size: 18px; color: #6b7385; margin-top: 6px; }
+      .rows { position: absolute; left: 0; right: 0; top: 200px; }
+      .row { height: 118px; margin: 0 28px; border-bottom: 2px solid #eef0f6; display: flex; align-items: center; gap: 16px; }
+      .thumb { width: 80px; height: 80px; border-radius: 20px; background: #eef2fc; display: flex; align-items: center; justify-content: center; flex: none; }
+      .rname { font-size: 25px; font-weight: 600; line-height: 1.1; }
+      .rsub { font-size: 17px; color: #6b7385; margin-top: 4px; }
+      .rprice { margin-left: auto; font-size: 24px; font-weight: 600; color: #0f4cff; }
+      .bookbtn { position: absolute; left: 28px; right: 28px; bottom: 36px; height: 80px; border-radius: 24px; background: #0f4cff; color: #fff; font-size: 28px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+      .chip { position: absolute; left: 790px; top: 800px; display: flex; align-items: center; gap: 16px; background: #fff; border-radius: 26px; padding: 20px 30px 20px 22px; font-size: 26px; font-weight: 500; box-shadow: 0 24px 50px rgba(11, 13, 20, 0.2); white-space: nowrap; }
+      .chip i { width: 40px; height: 40px; border-radius: 50%; background: #0f4cff; display: block; position: relative; }
+      .chip i::after { content: ""; position: absolute; left: 13px; top: 8px; width: 11px; height: 19px; border: solid #fff; border-width: 0 4px 4px 0; transform: rotate(40deg); }
+      .chip b { color: #0f4cff; font-weight: 600; }
+      .panel { position: absolute; background: #fff; border: 2px solid #e1e6f1; border-radius: 34px; box-shadow: 0 30px 60px rgba(30, 50, 110, 0.12); }
+      .chkhead { position: absolute; left: 48px; top: 48px; display: flex; align-items: center; gap: 22px; }
+      .chkhead .ico { width: 92px; height: 92px; border-radius: 22px; background: #eef2fc; display: flex; align-items: center; justify-content: center; }
+      .chkhead .t { font-size: 50px; line-height: 1; }
+      .sub { font-size: 21px; color: #6b7385; margin-top: 6px; }
+      .ln2 { position: absolute; left: 48px; right: 48px; display: flex; justify-content: space-between; font-size: 24px; color: #4a5164; }
+      .ln2 b { color: #0b0d14; font-weight: 600; }
+      .wallet { position: absolute; left: 48px; right: 48px; top: 244px; height: 90px; border-radius: 20px; background: #0b0d14; color: #fff; font-size: 28px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 14px; }
+      .wallet i { width: 24px; height: 24px; border-radius: 50%; border: 5px solid #fff; display: block; }
+      .or { position: absolute; left: 48px; right: 48px; top: 362px; text-align: center; font-size: 20px; color: #8a91a3; }
+      .or::before, .or::after { content: ""; position: absolute; top: 14px; width: 150px; height: 2px; background: #e6e9f2; }
+      .or::before { left: 0; }
+      .or::after { right: 0; }
+      .field { position: absolute; height: 82px; border: 2px solid #dfe4f0; border-radius: 18px; padding: 0 26px; display: flex; align-items: center; font-size: 28px; color: #2a3042; letter-spacing: 0.04em; }
+      .pay { position: absolute; left: 48px; right: 48px; bottom: 48px; height: 96px; border-radius: 22px; background: #0f4cff; color: #fff; font-size: 36px; font-weight: 600; }
+      .pay span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      .ptitle { position: absolute; left: 48px; top: 36px; font-size: 44px; line-height: 1; }
+      .track { position: absolute; left: 48px; right: 48px; top: 190px; height: 14px; border-radius: 8px; background: #e5eaf6; }
+      .fill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border-radius: 8px; background: #0f4cff; transform-origin: left center; }
+      .knob { position: absolute; left: 26px; top: 175px; width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 7px solid #0f4cff; box-shadow: 0 8px 18px rgba(15, 76, 255, 0.3); }
+      .big { position: absolute; right: 48px; top: 34px; font-size: 96px; line-height: 1; text-align: right; }
+      .big small { font-family: "Inter", sans-serif; font-size: 26px; color: #6b7385; margin-left: 6px; }
+      .lbl { position: absolute; top: 236px; font-size: 20px; color: #6b7385; }
+      .total { position: absolute; left: 48px; right: 48px; top: 254px; display: flex; justify-content: space-between; align-items: baseline; font-size: 24px; color: #4a5164; }
+      .total .serif { font-size: 50px; color: #0b0d14; position: relative; display: block; width: 190px; height: 52px; text-align: right; }
+      .total .serif span { position: absolute; right: 0; top: 0; }
+      .kit { position: absolute; left: 48px; right: 48px; top: 322px; height: 68px; border: 2px dashed #b9c6ee; border-radius: 18px; display: flex; align-items: center; padding-left: 70px; font-size: 24px; font-weight: 500; }
+      .kit em { margin-left: auto; margin-right: 24px; font-style: normal; font-weight: 600; color: #0f4cff; }
+      .cb { position: absolute; left: 18px; top: 14px; width: 36px; height: 36px; border-radius: 10px; border: 3px solid #b9c6ee; background: #fff; }
+      .cbf { position: absolute; left: 18px; top: 14px; width: 36px; height: 36px; border-radius: 10px; background: #0f4cff; }
+      .cbf::after { content: ""; position: absolute; left: 12px; top: 5px; width: 10px; height: 18px; border: solid #fff; border-width: 0 4px 4px 0; transform: rotate(40deg); }
+      .taxpill { position: absolute; right: 44px; top: 40px; background: #e5ecff; color: #0f4cff; font-size: 19px; font-weight: 600; padding: 9px 18px; border-radius: 999px; }
+      #cursor { position: absolute; left: 0; top: 0; z-index: 8; }
+      #stamp { position: absolute; left: 270px; top: 330px; width: 1380px; height: 420px; background: #0f4cff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 330px; line-height: 1; box-shadow: inset 0 0 0 16px #0f4cff, inset 0 0 0 20px #fff, inset 0 0 0 32px #0f4cff, inset 0 0 0 35px #fff, 0 50px 90px rgba(0, 30, 160, 0.4); z-index: 9; letter-spacing: -0.02em; }
+      .dk { color: #fff; }
+      #s5 .script { color: #5b86ff; }
+      .wipe { position: absolute; left: 0; top: 0; z-index: 20; pointer-events: none; }
+      .wm { position: absolute; left: 0; right: 0; text-align: center; }
+      .btn { position: absolute; left: 600px; top: 830px; width: 430px; height: 104px; border-radius: 999px; background: #0f4cff; color: #fff; font-size: 38px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="dither-serif" data-width="1920" data-height="1080" data-duration="8.5">
+      <div id="s1" class="scene" style="background: #fff">
+        <div class="pot" id="s1pot" data-pot="170,190,3" data-face="open" style="left: 1230px; top: 330px"></div>
+        <div class="h1" style="left: 130px; top: 300px"><span class="ln" id="s1a">Got a class</span>
+          <span class="ln" id="s1b">to <span class="sc" id="s1sc"><span class="script">sell?</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path id="s1ul" pathLength="1" d="M2 12 C 22 4, 40 18, 62 9 S 90 6, 98 10" vector-effect="non-scaling-stroke" /></svg></span></span></div>
+      </div>
+
+      <div id="s2" class="scene" style="background: #0f4cff">
+        <canvas id="s2bg" class="bgd"></canvas>
+        <div class="serif" id="s2t" style="position: absolute; left: 500px; top: 70px; font-size: 76px; color: #fff; line-height: 1; white-space: nowrap">Workshops, clubs &amp; <span class="script" style="color: #fff; font-size: 1.3em">kits</span></div>
+        <div class="pot" id="s2pot" data-pot="110,123,3" data-face="happy" style="left: 80px; top: 590px"></div>
+        <div class="card" id="c1" style="left: 500px; top: 280px"><div class="cicon"><div data-icon="vase,76,4"></div></div><div class="ctitle serif">Wheel Night</div><div class="csub">Fridays · 8 seats</div><div class="crow"><div class="price serif">$65</div><div class="pill">3 left</div></div></div>
+        <div class="card" id="c2" style="left: 960px; top: 200px"><div class="cicon"><div data-icon="bowl,76,4"></div></div><div class="ctitle serif">Glaze Lab</div><div class="csub">Saturdays · 6 seats</div><div class="crow"><div class="price serif">$90</div><div class="pill">Sold 4</div></div></div>
+        <div class="card" id="c3" style="left: 1420px; top: 320px"><div class="cicon"><div data-icon="mug,76,4"></div></div><div class="ctitle serif">Mug Club</div><div class="csub">Open studio, monthly</div><div class="crow"><div class="price serif">$18<span style="font-size: 0.4em; font-family: Inter, sans-serif; color: #6b7385">/mo</span></div><div class="pill">Join</div></div></div>
+      </div>
+
+      <div id="s3" class="scene" style="background: #fff">
+        <div class="h1" id="s3h" style="left: 120px; top: 120px; font-size: 104px; line-height: 1.06"><span class="ln" id="s3a">Kilnly turns it into</span><span class="ln" id="s3b">a booking page in</span>
+          <span class="ln"><span class="sc" id="s3sc" style="margin-top: 22px"><span class="script" style="font-size: 2.1em; line-height: 0.8">minutes.</span><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path id="s3ul" pathLength="1" d="M2 12 C 22 4, 40 18, 62 9 S 90 6, 98 10" vector-effect="non-scaling-stroke" /></svg></span></span></div>
+        <div class="pot" id="s3pot" data-pot="110,123,3" data-face="open" style="left: 110px; top: 650px"></div>
+        <div class="phone" id="phone"><div class="screen"><div class="notch"></div>
+          <div class="shead" id="shead"><div class="avatar serif">M</div><div><div class="sname serif">Mara's Clay Studio</div><div class="shand">kilnly.com/mara</div></div></div>
+          <div class="rows">
+            <div class="row"><div class="thumb"><div data-icon="vase,44,2"></div></div><div><div class="rname">Wheel Night</div><div class="rsub">Fridays · 8 seats</div></div><div class="rprice">$65</div></div>
+            <div class="row"><div class="thumb"><div data-icon="bowl,44,2"></div></div><div><div class="rname">Glaze Lab</div><div class="rsub">Saturdays · 6 seats</div></div><div class="rprice">$90</div></div>
+            <div class="row"><div class="thumb"><div data-icon="mug,44,2"></div></div><div><div class="rname">Mug Club</div><div class="rsub">Open studio</div></div><div class="rprice">$18/mo</div></div>
+            <div class="row" style="border-bottom: 0"><div class="thumb"><div data-icon="vase,44,2"></div></div><div><div class="rname">Gift a class</div><div class="rsub">Send a seat</div></div><div class="rprice">$40</div></div>
+          </div>
+          <div class="bookbtn" id="bookbtn">Book a seat</div></div></div>
+        <div class="chip" id="chip"><i></i><span>Sam booked Wheel Night</span><b>+$65</b></div>
+      </div>
+
+      <div id="s4" class="scene" style="background: #f1f4fa">
+        <div id="s4ui" style="position: absolute; inset: 0">
+          <div class="panel" id="chk" style="left: 110px; top: 170px; width: 650px; height: 740px">
+            <div class="chkhead"><div class="ico"><div data-icon="mug,44,2"></div></div><div><div class="t serif">Wheel Night</div><div class="sub">Fri 7:00pm · Studio B</div></div></div>
+            <div class="ln2" style="top: 176px"><span>2 seats × $65.00</span><b>$130.00</b></div>
+            <div class="wallet"><i></i>Wallet Pay</div><div class="or">or pay by card</div>
+            <div class="field" style="left: 48px; right: 48px; top: 416px">4242 4242 4242 1881</div><div class="field" style="left: 48px; width: 270px; top: 516px">08 / 28</div><div class="field" style="left: 338px; right: 48px; top: 516px">•••</div>
+            <div class="pay" id="payBtn"><span id="pay1">Pay $153.36</span><span id="pay2" style="opacity: 0">Pay $177.36</span></div>
+          </div>
+          <div class="panel" id="sld" style="left: 1160px; top: 170px; width: 650px; height: 290px">
+            <div class="ptitle serif">Mug Club</div><div class="big serif"><span id="pval">$18</span><small>/mo</small></div>
+            <div class="track"><div class="fill" id="fill"></div></div><div class="knob" id="knob"></div>
+            <div class="lbl" style="left: 48px">4 studio hrs</div><div class="lbl" style="right: 48px">12 hrs</div>
+          </div>
+          <div class="panel" id="sum" style="left: 1160px; top: 490px; width: 650px; height: 420px">
+            <div class="ptitle serif" style="top: 30px">Order summary</div><div class="taxpill">Tax filed for you</div>
+            <div class="ln2" style="top: 98px"><span>Wheel Night × 2</span><b>$130.00</b></div><div class="ln2" style="top: 144px"><span>Clay &amp; firing</span><b>$12.00</b></div><div class="ln2" style="top: 190px"><span>Sales tax</span><b>$11.36</b></div>
+            <div style="position: absolute; left: 48px; right: 48px; top: 244px; height: 2px; background: #e6e9f2"></div>
+            <div class="total"><span>Total</span><span class="serif"><span id="tot1">$153.36</span><span id="tot2" style="opacity: 0">$177.36</span></span></div>
+            <div class="kit"><div class="cb"></div><div class="cbf" id="cbf"></div>Add the glaze kit<em>+$24.00</em></div>
+          </div>
+          <div class="pot" id="s4pot" data-pot="110,123,3" data-face="happy" style="left: 795px; top: 380px"></div>
+          <svg id="cursor" width="40" height="46" viewBox="0 0 28 38"><path d="M2 2 L2 28 L9 22 L14 34 L19 32 L14 21 L23 21 Z" fill="#0b0d14" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" /></svg>
+        </div>
+        <div id="stamp" class="serif">Handled.</div>
+      </div>
+
+      <div id="s5" class="scene" style="background: #07080c">
+        <canvas id="s5bg" class="bgd"></canvas>
+        <div class="pot" id="s5pot" data-pot="170,190,3" data-face="open" style="left: 1190px; top: 320px"></div>
+        <div class="h1 dk" style="left: 130px; top: 190px; font-size: 156px; line-height: 1.12">
+          <span class="ln" id="s5a">You <span class="script" style="font-size: 1.35em; line-height: 0.6">teach.</span></span><span class="ln" id="s5b" style="margin-top: 30px">We handle</span><span class="ln" id="s5c">the <span class="script" style="font-size: 1.35em; line-height: 0.6">rest.</span></span>
+        </div>
+      </div>
+
+      <div id="s6" class="scene" style="background: #fff">
+        <div class="pot" id="s6pot" data-pot="110,123,3" data-face="happy" style="left: 795px; top: 30px"></div>
+        <div class="wm serif" id="s6wm" style="top: 410px; font-size: 230px; line-height: 1">Kilnly</div>
+        <div class="wm serif" id="s6tag" style="top: 690px; font-size: 54px; line-height: 1.2">Bookings &amp; payouts for people who <span class="script" style="font-size: 1.35em; line-height: 0.6">make things.</span></div>
+        <div class="btn" id="s6btn">Start teaching</div>
+        <div class="serif" id="s6url" style="position: absolute; left: 1074px; top: 846px; font-size: 52px; line-height: 1; white-space: nowrap">kilnly.com</div>
+      </div>
+      <canvas id="wipeA" class="wipe"></canvas><canvas id="wipeB" class="wipe"></canvas>
+    </div>
+
+    <script>
+      function mulb(a) { return function () { a |= 0; a = (a + 0x6d2b79f5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+      function bay(x, y) { var v = 0; for (var i = 0; i < 3; i++) v = v * 4 + ((((x ^ y) >> i) & 1) << 1) + ((y >> i) & 1); return (v + 0.5) / 64; }
+      function paint(cv, W, H, fn) {
+        cv.width = W; cv.height = H;
+        var ctx = cv.getContext("2d"), img = ctx.createImageData(W, H), D = img.data;
+        for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) { var c = fn(x, y); if (c) { var i = (y * W + x) * 4; D[i] = c[0]; D[i + 1] = c[1]; D[i + 2] = c[2]; D[i + 3] = c[3] === undefined ? 255 : c[3]; } }
+        ctx.putImageData(img, 0, 0);
+      }
+      function prof(P) {
+        var n = P.length, m = P.map(function (q, i) { var a = P[Math.max(0, i - 1)], b = P[Math.min(n - 1, i + 1)]; return (b[1] - a[1]) / (b[0] - a[0] || 1); });
+        return function (v) {
+          if (v < P[0][0] || v >= P[n - 1][0]) return 0;
+          var i = 0; while (v > P[i + 1][0]) i++;
+          var h = P[i + 1][0] - P[i][0], t = (v - P[i][0]) / h, t2 = t * t, t3 = t2 * t;
+          return Math.max(0, (2 * t3 - 3 * t2 + 1) * P[i][1] + (t3 - 2 * t2 + t) * h * m[i] + (-2 * t3 + 3 * t2) * P[i + 1][1] + (t3 - t2) * h * m[i + 1]);
+        };
+      }
+      var OBJ = {
+        pot: { rs: 0.78, seed: 4, seam: [0.272, 0.34],
+          pts: [[0.03, 0], [0.045, 0.045], [0.08, 0.06], [0.115, 0.045], [0.135, 0.1], [0.17, 0.22], [0.215, 0.33], [0.25, 0.385], [0.272, 0.395], [0.285, 0.37], [0.33, 0.4], [0.42, 0.45], [0.55, 0.475], [0.68, 0.46], [0.8, 0.4], [0.89, 0.32], [0.935, 0.26], [0.96, 0.14], [0.975, 0]],
+          tubes: [{ cx: 0.165, cy: 0.5, R: 0.095, t: 0.027, side: -1 }, { cx: 0.835, cy: 0.5, R: 0.095, t: 0.027, side: 1 }] },
+        vase: { rs: 1, seed: 3, open: { v: 0.1, ry: 0.035 }, pts: [[0.1, 0.15], [0.14, 0.14], [0.22, 0.115], [0.3, 0.14], [0.42, 0.3], [0.55, 0.43], [0.7, 0.42], [0.82, 0.32], [0.9, 0.24], [0.93, 0.22], [0.945, 0]] },
+        bowl: { rs: 1, seed: 5, open: { v: 0.3, ry: 0.075 }, pts: [[0.3, 0.46], [0.34, 0.47], [0.45, 0.43], [0.6, 0.34], [0.72, 0.23], [0.8, 0.17], [0.84, 0.18], [0.88, 0.17], [0.895, 0]] },
+        mug: { rs: 1, seed: 6, open: { v: 0.22, ry: 0.07 }, pts: [[0.22, 0.34], [0.26, 0.35], [0.5, 0.35], [0.8, 0.345], [0.86, 0.33], [0.9, 0.3], [0.915, 0]], tubes: [{ cx: 0.79, cy: 0.56, R: 0.12, t: 0.04, side: 1 }] }
+      };
+      function nrm(v) { var l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; }
+      function renderObj(cv, W, H, o) {
+        var f = prof(o.pts), rs = o.rs || 1, rnd = mulb(o.seed || 7), L = nrm([-0.5, -0.58, 0.64]), hh = nrm([L[0], L[1], L[2] + 1]);
+        var op = o.open, tubes = o.tubes || [], opR = op ? f(op.v + 0.004) * rs * W : 0;
+        paint(cv, W, H, function (x, y) {
+          var px = x + 0.5, py = y + 0.5, v = py / H, I = -1, z = -1e9, dx = px - W / 2, r = f(v) * rs * W;
+          if (r > 0.5 && Math.abs(dx) < r) {
+            var nx = dx / r, nz = Math.sqrt(Math.max(0, 1 - nx * nx)), e = 0.004, sl = ((f(v + e) - f(v - e)) / (2 * e)) * rs * W / H, n = nrm([nx, -sl, nz]);
+            I = 0.1 + 0.9 * Math.max(0, n[0] * L[0] + n[1] * L[1] + n[2] * L[2]) + 0.35 * Math.pow(Math.max(0, n[0] * hh[0] + n[1] * hh[1] + n[2] * hh[2]), 28);
+            I *= 0.5 + 0.5 * Math.min(1, n[2] / 0.5);
+            if (o.seam && v > o.seam[0] && v < o.seam[1]) { var q = (v - o.seam[0]) / (o.seam[1] - o.seam[0]); I *= 0.3 + 0.7 * q * q * (3 - 2 * q); }
+            z = nz * r;
+          }
+          tubes.forEach(function (T) {
+            var tx = px - T.cx * W, ty = py - T.cy * H, rho = Math.hypot(tx, ty) || 1, t = T.t * W, d = rho - T.R * W;
+            if (tx * T.side < 0 || Math.abs(d) >= t) return;
+            var tz = Math.sqrt(t * t - d * d);
+            if (tz > z) { I = 0.12 + 0.88 * Math.max(0, (tx / rho) * (d / t) * L[0] + (ty / rho) * (d / t) * L[1] + (tz / t) * L[2]); z = tz; }
+          });
+          if (op) {
+            var oX = dx / opR, oY = (py - op.v * H) / (op.ry * H), oq = oX * oX + oY * oY;
+            if (oq <= 1) { I = 0.06 + 0.4 * Math.max(0, oX * 0.5 + 0.5) * (0.35 + 0.65 * (oY * 0.5 + 0.5)); z = 1e9; }
+            else if (oq < 1.22 && z < 1e8) { I = 0.95; z = 1e8; }
+          }
+          if (I < 0) return null;
+          var c = I > bay(x, y) * 0.82 + rnd() * 0.18 ? 255 : 0; return [c, c, c];
+        });
+      }
+      function renderFace(cv, W, H, st) {
+        var rx = 0.036 * W, ry = 0.05 * W, ey0 = H * 0.47;
+        paint(cv, W, H, function (x, y) {
+          var px = x + 0.5, py = y + 0.5, c = -1;
+          [-1, 1].forEach(function (s) {
+            var ex = px - W * (0.5 + s * 0.115), ey = py - ey0, q = (ex / rx) * (ex / rx) + (ey / ry) * (ey / ry);
+            if (st === "open") { if (q <= 1) c = (Math.abs(ex + 0.4 * rx) < 1.2 && Math.abs(ey + 0.4 * ry) < 1.2) ? 255 : 0; else if (q <= 1.6) c = 255; }
+            else if (st === "blink") { if (Math.abs(ey) < 1.1 && Math.abs(ex) < rx * 1.15) c = 0; else if (Math.abs(ey) < 2.4 && Math.abs(ex) < rx * 1.3) c = 255; }
+            else if (q <= 1 && q >= 0.4 && ey <= 0.2 * ry) c = 0;
+            else if (q <= 1.7 && q >= 0.15 && ey <= 0.5 * ry) c = 255;
+          });
+          var mx = px - W * 0.5, wM = 0.07 * W, my = py - H * 0.585;
+          if (st === "happy") {
+            var wD = 0.095 * W, hD = 0.075 * W, mq = (mx / wD) * (mx / wD) + (my / hD) * (my / hD);
+            if (my >= -1 && mq <= 1) c = (my > 0.5 * hD && Math.abs(mx) < 0.5 * wD) ? 255 : 0; else if (my >= -3 && mq <= 1.4) c = 255;
+          } else if (Math.abs(mx) < wM) {
+            var yl = 0.015 * W - 0.035 * W * (mx / wM) * (mx / wM);
+            if (Math.abs(my - yl) < 0.9) c = 0; else if (Math.abs(my - yl) < 2.3) c = 255;
+          }
+          [-1, 1].forEach(function (s) {
+            var cxx = (px - W * (0.5 + s * 0.19)) / (0.042 * W), cyy = (py - H * 0.545) / (0.028 * W);
+            if (c < 0 && cxx * cxx + cyy * cyy <= 1 && ((x + y) & 1) === 0) c = 255;
+          });
+          return c >= 0 ? [c, c, c] : null;
+        });
+      }
+      function renderShadow(cv, W, h) {
+        paint(cv, W, h, function (x, y) { var ex = (x + 0.5 - W / 2) / (0.36 * W), ey = (y + 0.5 - h / 2) / (h / 2), q = ex * ex + ey * ey; return q < 1 && (1 - q) * 1.1 > bay(x, y) ? [0, 0, 0, 235] : null; });
+      }
+      function bgDither(id, rgb, cx, cy, rad, power) {
+        var cv = document.getElementById(id);
+        paint(cv, 480, 270, function (x, y) { return Math.pow(Math.max(0, 1 - Math.hypot((x / 480 - cx) * 1.78, y / 270 - cy) / rad), power) > bay(x, y) ? rgb : null; });
+        cv.style.width = "1920px"; cv.style.height = "1080px";
+      }
+      function mk(tag, cls, parent) { var e = document.createElement(tag); if (cls) e.className = cls; parent.appendChild(e); return e; }
+      function sizeCv(cv, w, h, s) { cv.style.width = w * s + "px"; cv.style.height = h * s + "px"; }
+      function copyCv(src, parent, S, id) { var c = mk("canvas", "", parent); c.width = src.width; c.height = src.height; c.getContext("2d").drawImage(src, 0, 0); sizeCv(c, src.width, src.height, S); if (id) c.id = id; return c; }
+      var potCache = {}, FACES = ["open", "happy", "blink"];
+      Array.prototype.forEach.call(document.querySelectorAll("[data-pot]"), function (el) {
+        var p = el.getAttribute("data-pot").split(",").map(Number), W = p[0], H = p[1], S = p[2], id = el.id, def = el.getAttribute("data-face"), key = W + "x" + H;
+        el.style.width = W * S + "px"; el.style.height = H * S + "px";
+        if (!potCache[key]) {
+          var c = { body: document.createElement("canvas"), shadow: document.createElement("canvas") };
+          renderObj(c.body, W, H, OBJ.pot); renderShadow(c.shadow, W, Math.round(H * 0.09));
+          FACES.forEach(function (s) { c[s] = document.createElement("canvas"); renderFace(c[s], W, H, s); });
+          potCache[key] = c;
+        }
+        var C = potCache[key], sh = copyCv(C.shadow, el, S), pb = mk("div", "pbody", el), pf = mk("div", "pface", pb);
+        sh.style.top = "auto"; sh.style.bottom = Math.round(H * 0.005) * S + "px";
+        pb.id = id + "-b"; pf.id = id + "-f"; pb.insertBefore(copyCv(C.body, pb, S), pf);
+        FACES.forEach(function (s) { copyCv(C[s], pf, S, id + "-" + s).style.opacity = s === def ? 1 : 0; });
+      });
+      Array.prototype.forEach.call(document.querySelectorAll("[data-icon]"), function (el) {
+        var p = el.getAttribute("data-icon").split(","), N = +p[1], cv = mk("canvas", "", el);
+        renderObj(cv, N, N, OBJ[p[0]]); sizeCv(cv, N, N, +p[2]);
+      });
+      bgDither("s2bg", [0, 28, 150], 1.02, 1.05, 1.05, 1.3);
+      bgDither("s5bg", [15, 76, 255], 0.76, 0.58, 0.5, 1.6);
+
+      /* ---------- halftone wipe: dots grow to cover, then shrink away ---------- */
+      var CELL = 64, COLS = 30, ROWS = 17;
+      ["wipeA", "wipeB"].forEach(function (id) { var c = document.getElementById(id); c.width = 1920; c.height = 1080; c.style.width = "1920px"; c.style.height = "1080px"; });
+      function ease(t) { return t * t * (3 - 2 * t); }
+      function wipeDraw(id, t) {
+        var ctx = document.getElementById(id).getContext("2d");
+        ctx.clearRect(0, 0, 1920, 1080);
+        if (t <= 0 || t >= 1) return;
+        var grow = t < 0.5, p = grow ? ease(t * 2) : ease((1 - t) * 2), D = 0.9;
+        ctx.fillStyle = "#fff"; ctx.beginPath();
+        for (var j = 0; j < ROWS; j++) for (var i = 0; i < COLS; i++) {
+          var u = (i / (COLS - 1)) * 0.7 + (j / (ROWS - 1)) * 0.3, k = Math.max(0, Math.min(1, p * (1 + D) - (grow ? u : 1 - u) * D)), r = CELL * 0.74 * k;
+          if (k > 0.01) { ctx.moveTo(i * CELL + CELL / 2 + r, j * CELL + CELL / 2); ctx.arc(i * CELL + CELL / 2, j * CELL + CELL / 2, r, 0, Math.PI * 2); }
+        }
+        ctx.fill();
+      }
+
+      /* ---------- timeline ---------- */
+      var tl = gsap.timeline({ paused: true }), CLIP0 = "inset(-30% 100% -30% -5%)";
+      function show(id, from, to) { tl.set(id, { visibility: "visible" }, from); if (to !== undefined) tl.set(id, { visibility: "hidden" }, to); }
+      function face(id, st, at) { tl.set(["#" + id + "-open", "#" + id + "-happy", "#" + id + "-blink"], { opacity: 0 }, at).set("#" + id + "-" + st, { opacity: 1 }, at); }
+      function blink(id, base, at) { face(id, "blink", at); face(id, base, at + 0.12); }
+      function bob(id, at, amp) { tl.to("#" + id + "-b", { y: -amp, duration: 0.45, yoyo: true, repeat: 1, ease: "sine.inOut" }, at); }
+      function reveal(id, at, dur) { tl.fromTo(id, { clipPath: CLIP0 }, { clipPath: "inset(-30% -8% -30% -5%)", duration: dur, ease: "power2.out", immediateRender: false }, at); }
+      function drawU(id, at) { tl.to(id, { strokeDashoffset: 0, duration: 0.3, ease: "power2.inOut" }, at); }
+      function slam(id, at, y) { tl.from(id, { y: y || 90, opacity: 0, duration: 0.5, ease: "expo.out" }, at); }
+      function wipe(id, at, dur) { var o = { t: 0 }; tl.to(o, { t: 1, duration: dur, ease: "none", onUpdate: function () { wipeDraw(id, o.t); } }, at); }
+      function pop(id, at, from) { tl.from(id, Object.assign({ scale: 0.7, duration: 0.5, ease: "back.out(1.6)" }, from), at); }
+      gsap.set(["#s1sc .script", "#s3sc .script", "#s5a .script", "#s5c .script"], { clipPath: CLIP0 });
+      gsap.set("#stamp", { rotation: -5, skewX: -9, opacity: 0 });
+      gsap.set("#cursor", { x: 1560, y: 330, opacity: 0 });
+      gsap.set("#fill", { scaleX: 0.25 });
+      gsap.set("#knob", { x: 0.25 * 562 });
+
+      // S1 white: the pot pops in centre, slides right, headline slams, "sell?" is written
+      show("#s1", 0, 1.95);
+      tl.fromTo("#s1pot", { scale: 0.35, opacity: 0, x: -515 }, { scale: 1, opacity: 1, x: -515, duration: 0.5, ease: "back.out(1.8)" }, 0)
+        .to("#s1pot", { x: 0, duration: 0.6, ease: "power3.inOut" }, 0.6).to("#s1pot", { rotation: -5, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 0.6).to("#s1pot-f", { x: -12, duration: 0.3, ease: "power2.out" }, 1.0);
+      slam("#s1a", 0.78, 110); slam("#s1b", 0.9, 110); blink("s1pot", "open", 0.5); reveal("#s1sc .script", 1.08, 0.4); drawU("#s1ul", 1.4); bob("s1pot", 1.2, 8);
+
+      // S2 cobalt: iris opens from the pot, three product cards float up
+      show("#s2", 1.4, 2.95);
+      tl.fromTo("#s2", { clipPath: "circle(0px at 1480px 560px)" }, { clipPath: "circle(2200px at 1480px 560px)", duration: 0.55, ease: "power2.in" }, 1.4)
+        .fromTo("#c1", { y: 760, rotation: -14 }, { y: 0, rotation: -4, duration: 0.6, ease: "back.out(1.3)" }, 1.62)
+        .fromTo("#c2", { y: 860, rotation: 12 }, { y: 0, rotation: 2, duration: 0.6, ease: "back.out(1.3)" }, 1.74)
+        .fromTo("#c3", { y: 760, rotation: -12 }, { y: 0, rotation: -2, duration: 0.6, ease: "back.out(1.3)" }, 1.86)
+        .to("#c1", { y: -14, duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: 1 }, 2.4).to("#c2", { y: -18, duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: 1 }, 2.46).to("#c3", { y: -14, duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: 1 }, 2.52)
+        .from(["#c1 .price", "#c2 .price", "#c3 .price"], { scale: 0.4, opacity: 0, duration: 0.3, ease: "back.out(3)", stagger: 0.12 }, 2.25);
+      slam("#s2t", 1.75, 40); pop("#s2pot", 1.7, { x: -300 }); bob("s2pot", 2.2, 10);
+      wipe("wipeA", 2.6, 0.62);
+
+      // S3 white: headline + phone storefront, a booking chip pops
+      show("#s3", 2.91, 4.35);
+      slam("#s3a", 2.95, 80); slam("#s3b", 3.07, 80); pop("#s3pot", 3.0, { x: -300 }); reveal("#s3sc .script", 3.3, 0.45); drawU("#s3ul", 3.72); blink("s3pot", "open", 3.9);
+      tl.from("#phone", { y: 1000, rotation: 7, duration: 0.7, ease: "power3.out" }, 2.92).to("#phone", { y: -12, duration: 1.0, ease: "sine.inOut" }, 3.62)
+        .from("#shead", { opacity: 0, y: 20, duration: 0.3 }, 3.15).from(".row", { x: 50, opacity: 0, duration: 0.35, ease: "power2.out", stagger: 0.09 }, 3.25)
+        .from("#bookbtn", { scale: 0.8, opacity: 0, duration: 0.3, ease: "back.out(2.5)" }, 3.6).to("#s3pot-f", { x: 9, duration: 0.3 }, 3.5)
+        .from("#chip", { scale: 0.5, x: -40, opacity: 0, duration: 0.45, ease: "back.out(2.2)" }, 3.85)
+        .to("#s3h", { x: -90, opacity: 0, duration: 0.2, ease: "power2.in" }, 4.12).to(["#phone", "#chip"], { y: 140, opacity: 0, duration: 0.2, ease: "power2.in" }, 4.12).to("#s3pot", { y: 260, duration: 0.2, ease: "power2.in" }, 4.12);
+
+      // S4 checkout UI: slider, summary, a cursor ticks the glaze kit and pays, the stamp slams
+      show("#s4", 4.3, 6.02);
+      var pr = { t: 0.25 };
+      tl.from("#chk", { x: -140, opacity: 0, duration: 0.5, ease: "power3.out" }, 4.3).from("#sld", { x: 140, opacity: 0, duration: 0.5, ease: "power3.out" }, 4.4).from("#sum", { y: 90, opacity: 0, duration: 0.45, ease: "power3.out" }, 4.72)
+        .to("#fill", { scaleX: 0.72, duration: 0.55, ease: "power2.inOut" }, 4.62).to("#knob", { x: 0.72 * 562, duration: 0.55, ease: "power2.inOut" }, 4.62)
+        .to(pr, { t: 0.72, duration: 0.55, ease: "power2.inOut", onUpdate: function () { document.getElementById("pval").textContent = "$" + Math.round(18 + 16 * ((pr.t - 0.25) / 0.47)); } }, 4.62)
+        .set("#cursor", { opacity: 1 }, 4.8).to("#cursor", { x: 1224, y: 846, duration: 0.4, ease: "power2.inOut" }, 4.8)
+        .from("#cbf", { scale: 0, duration: 0.18, ease: "back.out(3)" }, 5.2)
+        .set("#tot1", { opacity: 0 }, 5.24).set("#tot2", { opacity: 1 }, 5.24).set("#pay1", { opacity: 0 }, 5.26).set("#pay2", { opacity: 1 }, 5.26)
+        .from("#tot2", { scale: 1.3, duration: 0.2, ease: "back.out(3)", transformOrigin: "right center" }, 5.24)
+        .to("#cursor", { x: 435, y: 800, duration: 0.3, ease: "power2.inOut" }, 5.32).to("#payBtn", { scale: 0.96, duration: 0.08, yoyo: true, repeat: 1 }, 5.56)
+        .to("#stamp", { opacity: 1, duration: 0.01 }, 5.66).fromTo("#stamp", { scale: 3.4 }, { scale: 1, duration: 0.16, ease: "power3.in", immediateRender: false }, 5.66)
+        .to("#stamp", { scale: 1.04, duration: 0.1, ease: "power2.out", yoyo: true, repeat: 1 }, 5.82)
+        .to("#s4ui", { x: -16, y: 10, duration: 0.04 }, 5.82).to("#s4ui", { x: 12, y: -8, duration: 0.05 }, 5.86).to("#s4ui", { x: -7, y: 4, duration: 0.05 }, 5.91).to("#s4ui", { x: 0, y: 0, duration: 0.07 }, 5.96);
+      pop("#s4pot", 4.45, { y: 360 }); face("s4pot", "open", 4.8); face("s4pot", "happy", 5.3);
+
+      // S5 black: hard cut, two beats of copy
+      show("#s5", 6.02, 7.3);
+      pop("#s5pot", 6.02, { x: 360, scale: 0.8 }); slam("#s5a", 6.06, 100); slam("#s5b", 6.5, 100); slam("#s5c", 6.62, 100);
+      tl.to("#s5pot", { rotation: 4, duration: 0.25, yoyo: true, repeat: 1, ease: "sine.inOut" }, 6.55).to("#s5pot-f", { x: -14, duration: 0.3 }, 6.1);
+      reveal("#s5a .script", 6.3, 0.35); reveal("#s5c .script", 6.82, 0.35); blink("s5pot", "open", 6.9);
+
+      // Halftone wipe to the white end card
+      wipe("wipeB", 6.95, 0.62);
+      show("#s6", 7.26);
+      pop("#s6pot", 7.3, { y: -300 });
+      tl.from("#s6wm", { y: 70, scale: 1.12, opacity: 0, duration: 0.5, ease: "expo.out" }, 7.38).from("#s6tag", { y: 30, opacity: 0, duration: 0.4, ease: "power2.out" }, 7.62)
+        .from("#s6btn", { scale: 0.6, opacity: 0, duration: 0.4, ease: "back.out(2.5)" }, 7.82).from("#s6url", { x: -30, opacity: 0, duration: 0.35, ease: "power2.out" }, 7.95)
+        .to("#s6btn", { scale: 1.05, duration: 0.18, yoyo: true, repeat: 1, ease: "sine.inOut" }, 8.26);
+      blink("s6pot", "happy", 8.0);
+
+      tl.set({}, {}, 8.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["dither-serif"] = tl;
+    </script>
+  </body>
+</html>

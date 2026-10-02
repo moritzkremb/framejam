@@ -1,0 +1,82 @@
+{
+  "id": "motion-principles",
+  "name": "Motion Principles",
+  "tagline": "A blue ball bounces, stretches and leaves ghost trails while handwritten notes name every animation principle.",
+  "description": "Motion-designer showreel that annotates its own craft. White and black scenes hard-cut against each other: a ball squashes and stretches over a thin floor line leaving onion-skin outlines, a giant word snaps on elastic, a position-vs-time curve draws above a square with ghosted frames showing spacing, a particle trail follows a curve, a progress ring winds up with anticipation, and a motion-blurred stagger resolves into a name card whose full stop is the ball.",
+  "mood": [
+    "precise",
+    "playful",
+    "craft-obsessed"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8.5,
+  "palette": {
+    "paper": "#ffffff",
+    "ink": "#0a0a0a",
+    "electricBlue": "#2540ff",
+    "blueOnBlack": "#6b82ff",
+    "emphasisRed": "#ff3b30",
+    "dimGrid": "#2a2a2a",
+    "greyLight": "#d8d8d8",
+    "greyMid": "#8c8c8c"
+  },
+  "fonts": {
+    "display": {
+      "family": "Inter Tight",
+      "weights": [
+        900
+      ],
+      "source": "Google Fonts",
+      "usage": "Statements and name 200–300px, tracking -0.03em, all caps; can be scaled non-uniformly to show stretch"
+    },
+    "body": {
+      "family": "Caveat",
+      "weights": [
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Handwritten annotations 64–84px in blue (red for corrections), slightly rotated, written on left to right"
+    },
+    "mono": {
+      "family": "JetBrains Mono",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Tiny uppercase labels 22–26px, tracking 0.16em, 50% opacity: axis names, easing values, frame rate"
+    }
+  },
+  "easing": {
+    "fall": "power2.in",
+    "rise": "power2.out",
+    "elastic": "elastic.out(1, 0.45)",
+    "graph": "power2.inOut",
+    "anticipation": "back.out(1.6)",
+    "blur": "expo.out"
+  },
+  "transitions": [
+    "hard cut between white and black scenes, no fades or wipes",
+    "the ball or its trail from one scene is never carried across a cut; each scene starts moving on its first frame"
+  ],
+  "textAnimations": [
+    "handwriting write-on: clip-path inset 100% → 0 on the right edge, linear, 0.3–0.45s",
+    "arrows: SVG path with pathLength=1000 and dasharray 1000, strokeDashoffset 1000 → 0 (GSAP rounds px values, so avoid pathLength=1), 0.15–0.3s, arrowhead drawn in the same path",
+    "giant word: scaleX 2.6 / scaleY 0.3 → 1 / 1.7 on elastic.out, 0.55s",
+    "name rises from a clipped baseline on expo.out; the full stop drops as the ball and squashes on first contact"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.2,
+    "notes": "Seven scenes of 0.7–2.2s. Every scene shows one principle moving plus one or two annotations that write on in the first half second. Last scene holds the longest."
+  },
+  "tags": [
+    "motion-design",
+    "showreel",
+    "portfolio",
+    "hand-annotated",
+    "white-black"
+  ],
+  "guide": "- Palette: white #ffffff and ink #0a0a0a backgrounds that hard-cut against each other; one electric blue #2540ff (#6b82ff on black), a small red #ff3b30 only for corrections and emphasis.\n- Show the principle, then name it: a blue ball (112px) on a 4px floor line, fall power2.in, rise power2.out, squash to scale 1.6×0.5 for 0.09s, stretch to 0.84×1.28 in the air, and thin blue outline circles stamped every 0.06s so the spacing shows.\n- Annotations are Caveat 700 at 64–84px, rotated -4° to 3°, written on with a linear clip-path reveal and followed by a hand-drawn SVG arrow (pathLength 1000, dashoffset 1000→0, 0.2s). Use real terms: 'squash!', 'stretch', 'slow in, slow out', 'stagger: 45ms', 'follow-through'.\n- Tiny mono labels (22px, uppercase, tracking 0.16em, 50% opacity) carry the data: axis names, 'ease · back.out(1.6)', 'shutter 180°'.\n- Graph scene: clip-reveal the eased curve linearly while the marker's y and the square's x use the same ease, and stamp ghost squares at equal time steps so spacing is tight at the ends and wide in the middle.\n- Fake motion blur by stacking 10–15 copies of an object delayed by 5ms each with falling opacity, tweened on expo.out so the copies converge into a sharp shape.\n- End on a name in Inter Tight 900 around 290px where the full stop is the ball dropping with bounce.out; add one blue handwritten arrow with the call to action. Avoid gradients, glow, drop shadows, frames and decorative corner labels."
+}

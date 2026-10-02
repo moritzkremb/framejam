@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Storybook Lantern</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Patrick+Hand&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #2b2552; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #2b2552; font-family: "Patrick Hand", cursive; }
+      .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; opacity: 0; }
+      .cam { position: absolute; inset: 0; }
+      .layer { position: absolute; left: 0; top: 0; }
+      .layer svg { display: block; }
+      .rough { filter: url(#rough); }
+      #paper { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+      #vig { position: absolute; inset: 0; pointer-events: none; z-index: 21;
+        background: radial-gradient(ellipse at 50% 50%, rgba(40, 20, 50, 0) 55%, rgba(40, 20, 50, 0.38) 100%); }
+      #cap { position: absolute; left: 0; right: 0; top: 118px; text-align: center; z-index: 10; font-family: "Kalam", cursive; font-weight: 700;
+        font-size: 92px; color: #fff3d9; text-shadow: 0 4px 0 rgba(74, 44, 100, 0.55); white-space: nowrap; clip-path: inset(0 100% 0 0); }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="storybook-lantern" data-width="1920" data-height="1080" data-duration="9">
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <filter id="rough" x="-2%" y="-2%" width="104%" height="104%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.026" numOctaves="2" seed="4" result="n" />
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <linearGradient id="gWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2452" /><stop offset="1" stop-color="#3d3170" /></linearGradient>
+          <linearGradient id="gWin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15143c" /><stop offset="1" stop-color="#3e3277" /></linearGradient>
+          <linearGradient id="gSkyC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a98fc4" /><stop offset=".45" stop-color="#e9a7a6" /><stop offset=".8" stop-color="#f6cfa4" /><stop offset="1" stop-color="#fbe2b8" /></linearGradient>
+          <linearGradient id="gSkyD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1546" /><stop offset=".5" stop-color="#43337c" /><stop offset=".8" stop-color="#9e5a90" /><stop offset="1" stop-color="#e59a86" /></linearGradient>
+          <linearGradient id="gSkyE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5f4388" /><stop offset=".38" stop-color="#b86890" /><stop offset=".7" stop-color="#ee9d7c" /><stop offset="1" stop-color="#f8cf90" /></linearGradient>
+          <radialGradient id="rgY"><stop offset="0" stop-color="#ffd678" stop-opacity=".75" /><stop offset=".4" stop-color="#ffd678" stop-opacity=".26" /><stop offset="1" stop-color="#ffd678" stop-opacity="0" /></radialGradient>
+          <radialGradient id="rgW"><stop offset="0" stop-color="#d6faee" stop-opacity=".6" /><stop offset=".45" stop-color="#d6faee" stop-opacity=".2" /><stop offset="1" stop-color="#d6faee" stop-opacity="0" /></radialGradient>
+          <radialGradient id="rgS"><stop offset="0" stop-color="#fff1c6" stop-opacity=".95" /><stop offset=".3" stop-color="#ffd9a0" stop-opacity=".4" /><stop offset="1" stop-color="#ffd9a0" stop-opacity="0" /></radialGradient>
+          <filter id="pn" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7" />
+            <feColorMatrix values="0 0 0 0 0.26  0 0 0 0 0.17  0 0 0 0 0.22  1.5 0 0 0 -0.62" />
+          </filter>
+          <filter id="pm" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.011 0.016" numOctaves="3" seed="11" />
+            <feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.25  1.1 0 0 0 -0.42" />
+          </filter>
+        </defs>
+      </svg>
+
+      <!-- Scene A: late night at the desk -->
+      <div id="sA" class="scene"><div class="cam" id="camA">
+        <div class="layer" id="aBg"><svg class="rough" width="2000" height="1080" viewBox="0 0 2000 1080"> <rect width="2000" height="1080" fill="url(#gWall)" /><rect y="885" width="2000" height="200" fill="#1c1738" /><rect y="880" width="2000" height="8" fill="#14102b" /> <path d="M1290 140 L1290 600 L1790 600 L1790 140 Z" fill="#c4b194" /><rect x="1306" y="156" width="468" height="428" fill="url(#gWin)" /> <path d="M1540 156 V584 M1306 370 H1774" stroke="#c4b194" stroke-width="12" /> <path d="M1306 584 L1306 500 Q1360 470 1420 500 L1440 584Z M1580 584 V470 L1620 470 V584Z M1660 584 V510 Q1700 490 1740 510 V584Z" fill="#241f4d" /> <rect x="1640" y="528" width="10" height="12" fill="#f6c75a" opacity=".6" /><rect x="1690" y="540" width="10" height="12" fill="#f6c75a" opacity=".5" /> <circle id="aStarG" cx="1590" cy="260" r="80" fill="url(#rgY)" opacity=".55" /><path id="aStar" d="M1590 236 L1598 254 L1618 256 L1603 269 L1608 289 L1590 278 L1572 289 L1577 269 L1562 256 L1582 254Z" fill="#ffe7a1" /> <path d="M1250 120 Q1290 300 1262 640 L1210 640 Q1190 340 1210 120Z M1830 120 Q1800 300 1830 640 L1890 640 Q1900 340 1870 120Z" fill="#5a3f7e" /> <rect x="1270" y="600" width="540" height="22" rx="4" fill="#6a557c" /> <rect x="130" y="330" width="380" height="14" rx="3" fill="#5b4474" /><rect x="130" y="520" width="380" height="14" rx="3" fill="#5b4474" /> <g id="aBooks"></g> <path d="M300 520 Q290 470 270 450 M300 520 Q320 460 345 440 M300 520 Q300 460 300 420" stroke="#4d8f7f" stroke-width="9" fill="none" stroke-linecap="round" /> <path d="M280 520 H325 L318 560 H287Z" fill="#b4483a" transform="translate(0,-40)" /> </svg></div>
+        <div class="layer" id="aFg"><svg class="rough" width="2000" height="1080" viewBox="0 0 2000 1080"> <circle cx="1200" cy="590" r="620" fill="url(#rgW)" /> <rect x="400" y="760" width="34" height="250" fill="#4a3246" /><rect x="1780" y="760" width="34" height="250" fill="#4a3246" /> <rect x="1500" y="760" width="280" height="190" rx="6" fill="#583b4f" /><rect x="1520" y="790" width="240" height="50" rx="4" fill="#6b4a5c" /><rect x="1520" y="860" width="240" height="50" rx="4" fill="#6b4a5c" /> <rect x="1620" y="810" width="40" height="8" rx="4" fill="#e3a23c" /><rect x="1620" y="880" width="40" height="8" rx="4" fill="#e3a23c" /> <rect x="646" y="700" width="22" height="150" rx="10" fill="#8f3a33" /><rect x="650" y="830" width="132" height="22" rx="10" fill="#a8453a" /><rect x="706" y="850" width="14" height="110" fill="#3a2f58" /><path d="M630 972 H800 M650 990 H780" stroke="#3a2f58" stroke-width="12" stroke-linecap="round" /> <g transform="translate(700,830)"><g id="aFig"></g></g> <rect x="360" y="726" width="1500" height="36" rx="6" fill="#6b4a5c" /><rect x="360" y="726" width="1500" height="9" rx="4" fill="#8a6676" /> <ellipse cx="1190" cy="734" rx="470" ry="22" fill="url(#rgW)" /> <rect x="1010" y="456" width="380" height="250" rx="16" fill="#1d1a33" /><rect x="1026" y="472" width="348" height="218" rx="8" fill="#eafcf6" /> <path d="M1060 510 H1230 M1060 546 H1310 M1060 582 H1190 M1060 618 H1280" stroke="#9cc7c0" stroke-width="12" stroke-linecap="round" /> <rect id="aCur" x="1236" y="572" width="12" height="22" fill="#4a8f8e" /> <rect x="1188" y="706" width="24" height="22" fill="#2c2748" /><rect x="1130" y="722" width="140" height="10" rx="5" fill="#2c2748" /> <rect x="790" y="716" width="190" height="12" rx="5" fill="#3c3358" /> <rect x="1440" y="684" width="46" height="44" rx="8" fill="#f4e8d0" /><path d="M1486 696 q18 4 0 24" stroke="#f4e8d0" stroke-width="7" fill="none" /><path d="M1452 670 q-8 -14 0 -26" stroke="#d6faee" stroke-width="5" fill="none" stroke-linecap="round" opacity=".6" /> <rect x="1560" y="700" width="120" height="26" rx="3" fill="#f4e8d0" /><rect x="1572" y="680" width="100" height="22" rx="3" fill="#cfe3d6" transform="rotate(-3 1620 690)" /> <g transform="translate(740,478)"><g id="aCloud"></g></g> <g transform="translate(120,150)"><g id="aTea"></g></g> </svg></div>
+      </div></div>
+
+      <!-- Scene B: the single star -->
+      <div id="sB" class="scene"><div class="cam" id="camB">
+        <div class="layer" id="bBg"><svg class="rough" width="2000" height="1080" viewBox="0 0 2000 1080"> <rect width="2000" height="1080" fill="url(#gWall)" /><rect y="900" width="2000" height="200" fill="#1c1738" /> <path d="M840 80 H1600 V780 H840Z" fill="#c4b194" /><rect x="862" y="102" width="716" height="656" fill="url(#gWin)" /> <path d="M1220 102 V758 M862 440 H1578" stroke="#c4b194" stroke-width="16" /> <circle id="bStarG" cx="1240" cy="290" r="300" fill="url(#rgY)" /> <path d="M1240 290 L1010 440 M1240 290 L1500 190 M1240 290 L1240 120" stroke="#ffe7a1" stroke-width="3" stroke-linecap="round" opacity=".25" /> <path id="bStar" d="M1240 236 L1255 273 L1295 276 L1264 301 L1274 340 L1240 318 L1206 340 L1216 301 L1185 276 L1225 273Z" fill="#ffeab0" /> <path d="M862 758 V620 Q920 580 990 620 L1040 560 Q1080 540 1110 570 L1150 520 Q1190 500 1230 540 V758Z M1260 758 V600 Q1310 560 1350 590 L1400 540 H1450 L1480 600 H1578 V758Z" fill="#241f4d" /> <rect x="1092" y="610" width="12" height="14" fill="#f6c75a" opacity=".6" /><rect x="1300" y="640" width="12" height="14" fill="#f6c75a" opacity=".5" /><rect x="1420" y="620" width="12" height="14" fill="#f6c75a" opacity=".6" /> <rect x="820" y="758" width="800" height="34" rx="6" fill="#6a557c" /> <path d="M790 60 Q840 300 800 760 L720 760 Q690 360 720 60Z M1650 60 Q1610 300 1650 760 L1740 760 Q1760 360 1730 60Z" fill="#5a3f7e" /> </svg></div>
+        <div class="layer" id="bFg"><svg class="rough" width="2000" height="1080" viewBox="0 0 2000 1080"> <circle cx="1300" cy="1000" r="560" fill="url(#rgW)" opacity=".35" /> <ellipse cx="590" cy="1030" rx="260" ry="30" fill="#14102b" opacity=".6" /> <g transform="translate(560,1030) scale(1.85)"><g id="bFig"></g></g> <g transform="translate(580,470)"><g id="bCloud"></g></g> <g transform="translate(580,455)"><g id="bBulb"></g></g> <g transform="translate(1000,560) scale(1.35)"><g id="bTea"></g></g> </svg></div>
+      </div></div>
+
+      <!-- Scene C: dawn street -->
+      <div id="sC" class="scene"><div class="cam" id="camC">
+        <div class="layer" id="cSky"><svg class="rough" width="2400" height="1080" viewBox="0 0 2400 1080"> <rect width="2400" height="1080" fill="url(#gSkyC)" /> <circle cx="1300" cy="640" r="520" fill="url(#rgS)" /><circle cx="1300" cy="660" r="70" fill="#fff1cf" /> <g id="cBirds" fill="none" stroke="#6b4f86" stroke-width="5" stroke-linecap="round"><path d="M360 220 q22 -22 44 0 q22 -22 44 0" /><path d="M520 160 q16 -16 32 0 q16 -16 32 0" /><path d="M1300 250 q18 -18 36 0 q18 -18 36 0" /></g> </svg></div>
+        <div class="layer" id="cFar"><svg class="rough" width="2400" height="1080" viewBox="0 0 2400 1080"><g id="cFarG"></g></svg></div>
+        <div class="layer" id="cMid"><svg class="rough" width="2400" height="1080" viewBox="0 0 2400 1080"><g id="cMidG"></g></svg></div>
+        <div class="layer" id="cNear"><svg class="rough" width="2400" height="1080" viewBox="0 0 2400 1080"> <rect y="826" width="2400" height="260" fill="#7c6a90" /><rect y="826" width="2400" height="12" fill="#9a88a8" /> <rect y="930" width="2400" height="160" fill="#5d4c74" /><path d="M0 1006 H2400" stroke="#f4e8d0" stroke-width="8" stroke-dasharray="90 80" opacity=".5" /> <g transform="translate(1500,0)"> <circle cx="150" cy="700" r="260" fill="url(#rgY)" opacity=".7" /> <rect x="20" y="624" width="260" height="214" fill="#e8d7b6" /><rect x="40" y="670" width="220" height="110" rx="6" fill="#f6c75a" /><rect x="40" y="748" width="220" height="40" fill="#8a4a3e" /> <path d="M70 700 q20 -16 30 6 q-6 24 -26 26 M180 700 h50 v34 h-50Z" fill="#fff0c0" opacity=".8" /> <path d="M0 624 H300 L282 560 H18Z" fill="#f4e8d0" /> <path d="M18 560 H70 L60 624 H0Z M120 560 H170 L180 624 H120Z M220 560 H272 L300 624 H240Z" fill="#b4483a" /> <rect x="60" y="506" width="180" height="44" rx="8" fill="#3b2f68" /><text x="150" y="540" text-anchor="middle" font-family="Patrick Hand" font-size="32" fill="#ffe7a1">tea &amp; news</text> <rect x="0" y="838" width="300" height="14" fill="#6b4a5c" /> </g> <g transform="translate(300,0)"><rect x="0" y="420" width="12" height="420" fill="#3b2f68" /><path d="M0 430 q40 -26 80 0" stroke="#3b2f68" stroke-width="10" fill="none" /><circle cx="80" cy="446" r="14" fill="#ffe7a1" /><circle cx="80" cy="446" r="70" fill="url(#rgY)" /></g> <g transform="translate(2000,0)"><rect x="0" y="420" width="12" height="420" fill="#3b2f68" /><path d="M0 430 q40 -26 80 0" stroke="#3b2f68" stroke-width="10" fill="none" /><circle cx="80" cy="446" r="14" fill="#ffe7a1" /><circle cx="80" cy="446" r="70" fill="url(#rgY)" /></g> </svg></div>
+        <div class="layer" id="cChars"><svg class="rough" width="1920" height="1080" viewBox="0 0 1920 1080"> <ellipse cx="640" cy="978" rx="130" ry="18" fill="#2c2142" opacity=".4" /> <g transform="translate(640,972) scale(1.6)"><g id="cFig"></g></g> <g transform="translate(900,640) scale(.95)"><g id="cTea"></g></g> </svg></div>
+      </div></div>
+
+      <!-- Scene D: rooftop at dusk -->
+      <div id="sD" class="scene"><div class="cam" id="camD">
+        <div class="layer" id="dSky"><svg class="rough" width="2400" height="1180" viewBox="0 0 2400 1180"> <rect width="2400" height="1180" fill="url(#gSkyD)" /><g id="dStars"></g> <circle cx="1500" cy="880" r="420" fill="url(#rgP)" /> </svg></div>
+        <div class="layer" id="dFar"><svg class="rough" width="2400" height="1180" viewBox="0 0 2400 1180"><g id="dFarG"></g></svg></div>
+        <div class="layer" id="dMid"><svg class="rough" width="2400" height="1180" viewBox="0 0 2400 1180"><g id="dMidG"></g><g id="dIcons"></g></svg></div>
+        <div class="layer" id="dFg"><svg class="rough" width="2400" height="1180" viewBox="0 0 2400 1180"> <rect x="0" y="900" width="1500" height="300" fill="#1a1538" /><rect x="0" y="880" width="1500" height="34" rx="6" fill="#2e2556" /> <rect x="1020" y="700" width="90" height="190" fill="#231c47" /><rect x="1006" y="688" width="118" height="22" rx="5" fill="#2e2556" /> <path d="M1300 880 V720 M1280 760 H1330 M1284 800 H1326" stroke="#2e2556" stroke-width="7" /> <circle cx="520" cy="740" r="360" fill="url(#rgY)" opacity=".5" /> <ellipse cx="520" cy="890" rx="190" ry="18" fill="#0f0b24" opacity=".6" /> <g transform="translate(520,884) scale(1.5)"><g id="dFig"></g></g> <g transform="translate(740,590) scale(1)"><g id="dTea"></g></g> </svg></div>
+      </div></div>
+
+      <!-- Scene E: sunset drift -->
+      <div id="sE" class="scene"><div class="cam" id="camE">
+        <div class="layer" id="eSky"><svg class="rough" width="2400" height="1080" viewBox="0 0 2400 1080"> <rect width="2400" height="1080" fill="url(#gSkyE)" /><circle cx="1620" cy="760" r="620" fill="url(#rgS)" /><circle cx="1620" cy="780" r="92" fill="#fff0c6" /> </svg></div>
+        <div class="layer" id="eC1"><svg class="rough" width="3000" height="1080" viewBox="0 0 3000 1080"><g id="eC1G"></g></svg></div>
+        <div class="layer" id="eMid"><svg class="rough" width="1920" height="1080" viewBox="0 0 1920 1080"> <g transform="translate(1010,610)"><g id="eFig"></g></g> <g transform="translate(700,470) scale(1.2)"><g id="eTea"></g></g> <g id="eSpark"></g> </svg></div>
+        <div class="layer" id="eC2"><svg class="rough" width="3000" height="1080" viewBox="0 0 3000 1080"><g id="eC2G"></g></svg></div>
+      </div></div>
+
+      <div id="cap">Small lights still find the way.</div>
+      <svg id="paper" width="1920" height="1080" viewBox="0 0 1920 1080">
+        <rect width="1920" height="1080" fill="#f6e6c8" opacity=".07" />
+        <rect width="1920" height="1080" filter="url(#pm)" opacity=".16" />
+        <rect width="1920" height="1080" filter="url(#pn)" opacity=".5" />
+      </svg>
+      <div id="vig"></div>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      function rng(s) { return function () { s |= 0; s = (s + 0x6d2b79f5) | 0; var t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+      function put(id, html) { document.getElementById(id).innerHTML = html; }
+
+      /* ---------- characters ---------- */
+      var COAT = "#4a8f8e", COATD = "#2f6b6d", PANT = "#2b2147", SKIN = "#e8b48f", RED = "#b4483a", PURP = "#5b4690";
+      function head(p, extra) {
+        return '<g id="' + p + '-head"><circle r="33" fill="' + SKIN + '"/><circle cx="32" cy="9" r="5.5" fill="#dca37f"/>' +
+          '<path d="M-33 -2 C-40 14 -34 30 -16 26 L-14 6Z" fill="#4a2f3a"/>' +
+          '<path d="M-35 -4 C-38 -32 -16 -44 0 -44 C16 -44 38 -32 35 -4 C20 -11 -20 -11 -35 -4Z" fill="' + PURP + '"/>' +
+          '<path d="M-35 -4 C-20 -11 20 -11 35 -4 L33 -15 C18 -21 -18 -21 -33 -15Z" fill="' + RED + '"/><circle cx="0" cy="-47" r="11" fill="' + RED + '"/>' +
+          '<circle cx="17" cy="4" r="3.8" fill="#4a2a3a"/><circle cx="8" cy="15" r="7" fill="#ee8f94" opacity=".55"/><path d="M19 19 q6 5 11 0" stroke="#4a2a3a" stroke-width="2.6" fill="none" stroke-linecap="round"/>' + (extra || "") + '</g>';
+      }
+      function walker(p) {
+        function leg(id, c) { return '<g transform="translate(-4,-74)"><g id="' + p + '-' + id + '"><rect x="-11" y="-4" width="22" height="76" rx="10" fill="' + c + '"/><path d="M-13 66 L8 66 Q26 70 26 80 L-13 80Z" fill="#7d3a3a"/></g></g>'; }
+        function arm(id, c) { return '<g transform="translate(0,-162)"><g id="' + p + '-' + id + '"><rect x="-9" y="-6" width="18" height="68" rx="9" fill="' + c + '"/><circle cy="66" r="10" fill="' + SKIN + '"/></g></g>'; }
+        return leg("legB", "#201838") + arm("armB", COATD) +
+          '<path d="M-32 -172 Q-48 -110 -50 -60 L50 -60 Q48 -110 32 -172 Q0 -184 -32 -172Z" fill="' + COAT + '"/>' +
+          '<path d="M-50 -60 H50 L48 -48 H-48Z" fill="' + COATD + '"/><path d="M0 -168 V-56" stroke="' + COATD + '" stroke-width="4"/>' +
+          '<circle cx="12" cy="-130" r="5" fill="#f6c75a"/><circle cx="12" cy="-104" r="5" fill="#f6c75a"/>' +
+          '<path d="M-26 -176 Q0 -160 26 -176 L22 -190 Q0 -198 -22 -190Z" fill="' + COATD + '"/>' +
+          leg("legF", PANT) + arm("armF", COAT) + '<g transform="translate(5,-208)">' + head(p) + '</g>';
+      }
+      function sitter(p) {
+        return '<path d="M-6 -10 L106 -10 L106 -34 L-6 -34Z" fill="' + PANT + '"/><rect x="82" y="-34" width="26" height="124" rx="12" fill="' + PANT + '"/><path d="M80 84 H122 Q132 88 132 98 H80Z" fill="#7d3a3a"/>' +
+          '<path d="M-34 -4 Q-40 -80 -18 -128 Q8 -154 38 -124 Q50 -70 44 -4Z" fill="' + COAT + '"/><path d="M-34 -4 H44 L42 -16 H-33Z" fill="' + COATD + '"/>' +
+          '<path d="M16 -112 Q54 -76 98 -104" stroke="' + COATD + '" stroke-width="26" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 -112 Q54 -76 98 -104" stroke="' + COAT + '" stroke-width="16" fill="none" stroke-linecap="round"/><circle cx="108" cy="-110" r="11" fill="' + SKIN + '"/>' +
+          '<g transform="translate(38,-122)"><g id="' + p + '-hd" transform="translate(0,-38)">' + head(p + "s") + '</g></g>';
+      }
+      function teapot(p, big) {
+        return '<g id="' + p + '-b"><circle id="' + p + '-gl" r="' + (big || 170) + '" fill="url(#rgY)"/>' +
+          '<path id="' + p + '-st" d="M-4 -50 q-12 -14 0 -28 q12 -14 0 -30" stroke="#fff3cf" stroke-width="6" fill="none" stroke-linecap="round" opacity=".7"/>' +
+          '<path d="M-38 -10 q-34 -4 -32 18 q2 20 30 14" stroke="#e3a23c" stroke-width="10" fill="none" stroke-linecap="round"/>' +
+          '<g id="' + p + '-sp"><path d="M30 8 Q58 10 60 -20 L72 -36 L82 -26 L70 -12 Q74 26 32 28Z" fill="#f2b94c"/></g>' +
+          '<ellipse rx="45" ry="37" fill="#f6c75a"/><ellipse cx="-6" cy="-4" rx="31" ry="23" fill="#ffe7a1" opacity=".9"/>' +
+          '<path d="M-26 -30 Q0 -48 26 -30Z" fill="' + RED + '"/><circle cy="-46" r="7" fill="' + RED + '"/>' +
+          '<ellipse cx="-22" cy="36" rx="12" ry="6" fill="#c9742f"/><ellipse cx="22" cy="36" rx="12" ry="6" fill="#c9742f"/>' +
+          '<circle cx="-13" cy="2" r="4.4" fill="#5a2f3c"/><circle cx="13" cy="2" r="4.4" fill="#5a2f3c"/><circle cx="-24" cy="13" r="6.5" fill="#ee8f94" opacity=".65"/><circle cx="24" cy="13" r="6.5" fill="#ee8f94" opacity=".65"/><path d="M-5 12 q5 6 10 0" stroke="#5a2f3c" stroke-width="2.8" fill="none" stroke-linecap="round"/></g>';
+      }
+      function starPts(r, ri) { var a = []; for (var i = 0; i < 10; i++) { var rr = i % 2 ? ri : r, t = -Math.PI / 2 + (i * Math.PI) / 5; a.push((Math.cos(t) * rr).toFixed(1) + "," + (Math.sin(t) * rr).toFixed(1)); } return a.join(" "); }
+      var HEART = '<path d="M0 16 C-30 -6 -22 -28 -9 -26 C-3 -25 0 -20 0 -17 C0 -20 3 -25 9 -26 C22 -28 30 -6 0 16Z" fill="#ee7f97"/>';
+      var BULB = '<circle r="46" fill="url(#rgY)"/><circle cy="-4" r="18" fill="#ffd96a"/><rect x="-9" y="12" width="18" height="12" rx="3" fill="#b88a4a"/><path d="M-5 -2 q5 8 10 0" stroke="#e39a3c" stroke-width="2.5" fill="none"/><path d="M0 -34 V-28 M-24 -22 l4 4 M24 -22 l-4 4 M-30 -4 h-6 M30 -4 h6" stroke="#ffd96a" stroke-width="4" stroke-linecap="round"/>';
+      var STAR = '<circle r="40" fill="url(#rgY)"/><polygon points="' + starPts(20, 9) + '" fill="#ffe7a1"/>';
+      var CLOUD = '<g fill="#8fa8c8"><circle cx="-30" cy="4" r="26"/><circle cx="2" cy="-12" r="34"/><circle cx="36" cy="2" r="26"/><rect x="-54" y="4" width="116" height="26" rx="13"/></g><path d="M-48 14 q40 8 100 0" stroke="#7690b4" stroke-width="5" fill="none" opacity=".7"/>' +
+        [-26, 0, 24, 46].map(function (x, i) { return '<path class="drop" d="M' + x + ' 38 l-4 16" stroke="#a9cdea" stroke-width="5" stroke-linecap="round"/>'; }).join("");
+
+      /* ---------- backgrounds ---------- */
+      function skyline(seed, x0, x1, base, hmin, hmax, wmin, wmax, fills, prob) {
+        var r = rng(seed), x = x0, s = "";
+        while (x < x1) {
+          var w = wmin + r() * (wmax - wmin), h = hmin + r() * (hmax - hmin), f = fills[Math.floor(r() * fills.length)], k = r();
+          s += '<rect x="' + x.toFixed(0) + '" y="' + (base - h).toFixed(0) + '" width="' + w.toFixed(0) + '" height="' + (h + 90).toFixed(0) + '" fill="' + f + '"/>';
+          if (k < 0.25) s += '<path d="M' + (x - 4).toFixed(0) + " " + (base - h) + " L" + (x + w / 2).toFixed(0) + " " + (base - h - 38) + " L" + (x + w + 4).toFixed(0) + " " + (base - h) + 'Z" fill="' + f + '"/>';
+          else if (k < 0.45) s += '<path d="M' + (x + w / 2).toFixed(0) + " " + (base - h) + " v-" + (40 + r() * 40).toFixed(0) + '" stroke="' + f + '" stroke-width="5"/>';
+          else if (k < 0.6) s += '<rect x="' + (x + w * 0.2).toFixed(0) + '" y="' + (base - h - 30) + '" width="' + (w * 0.4).toFixed(0) + '" height="30" fill="' + f + '"/>';
+          if (prob) for (var wy = base - h + 22; wy < base - 20; wy += 32) for (var wx = x + 14; wx < x + w - 20; wx += 26) if (r() < prob) s += '<rect x="' + wx.toFixed(0) + '" y="' + wy.toFixed(0) + '" width="11" height="16" fill="' + (r() < 0.7 ? "#f6c75a" : "#ffe7a1") + '" opacity=".85"/>';
+          x += w + r() * 10;
+        }
+        return s;
+      }
+      function awningRow(x, y, n, w) { var s = ""; for (var i = 0; i < n; i++) s += '<path d="M' + (x + i * w) + " " + y + " h" + w + " l-6 26 h-" + (w - 12) + 'Z" fill="' + (i % 2 ? "#f4e8d0" : "#b4483a") + '"/>'; return s; }
+      function cloud(cx, cy, s, fill) { return '<g transform="translate(' + cx + "," + cy + ") scale(" + s + ')" fill="' + fill + '"><circle cx="-90" cy="10" r="52"/><circle cx="-20" cy="-22" r="72"/><circle cx="70" cy="-4" r="58"/><circle cx="130" cy="18" r="40"/><rect x="-150" y="14" width="330" height="44" rx="22"/></g>'; }
+
+      put("aBooks", (function () { var c = ["#b4483a", "#4a8f8e", "#f6c75a", "#5b4690", "#c9742f", "#4a8f8e", "#b4483a"], s = "", x = 150, r = rng(5); for (var i = 0; i < 7; i++) { var h = 70 + r() * 40, w = 30 + r() * 14; s += '<rect x="' + x + '" y="' + (330 - h) + '" width="' + w.toFixed(0) + '" height="' + h.toFixed(0) + '" rx="3" fill="' + c[i] + '"/>'; x += w + 4; } for (var j = 0; j < 6; j++) { var h2 = 80 + r() * 50, w2 = 28 + r() * 14; s += '<rect x="' + (150 + j * 46) + '" y="' + (520 - h2) + '" width="' + w2.toFixed(0) + '" height="' + h2.toFixed(0) + '" rx="3" fill="' + c[(j + 3) % 7] + '" opacity=".8"/>'; } return s; })());
+      put("aFig", sitter("aF")); put("aCloud", '<g id="aCl">' + CLOUD + "</g>"); put("aTea", teapot("aT"));
+      put("bFig", walker("bF")); put("bCloud", '<g id="bCl">' + CLOUD + "</g>"); put("bBulb", '<g id="bBu">' + BULB + "</g>"); put("bTea", teapot("bT"));
+      put("cFig", walker("cF")); put("cTea", teapot("cT")); put("dFig", walker("dF")); put("dTea", teapot("dT")); put("eTea", teapot("eT"));
+      put("eFig", '<g id="eLy"><g transform="rotate(-90) scale(1.3)">' + walker("eF") + "</g></g>");
+
+      put("cFarG", skyline(21, 0, 2400, 820, 200, 420, 90, 170, ["#c597b4", "#bb8fb0", "#cfa3b8"], 0));
+      put("cMidG", skyline(8, 0, 2400, 830, 260, 470, 140, 230, ["#4a8f8e", "#a8453a", "#e8d7b6", "#6c5a98", "#d9915a"], 0.22) + awningRow(120, 700, 4, 70) + awningRow(980, 690, 5, 64) + awningRow(1700, 700, 4, 70));
+      put("dFarG", skyline(33, 0, 2400, 960, 160, 360, 70, 140, ["#4b3a86", "#55418f", "#473780"], 0.1));
+      put("dMidG", skyline(47, 0, 2400, 990, 200, 470, 90, 180, ["#2d2559", "#352c68", "#292150"], 0.34));
+      (function () { var r = rng(9), s = ""; for (var i = 0; i < 60; i++) s += '<circle class="tw" cx="' + (r() * 2400).toFixed(0) + '" cy="' + (r() * 640).toFixed(0) + '" r="' + (1.4 + r() * 2.6).toFixed(1) + '" fill="#ffeab8" opacity="' + (0.4 + r() * 0.6).toFixed(2) + '"/>'; put("dStars", s); })();
+      put("eC1G", cloud(300, 640, 1.5, "#c4789a") + cloud(1000, 560, 1.9, "#b96e94") + cloud(1800, 690, 1.6, "#c4789a") + cloud(2500, 600, 1.8, "#b96e94"));
+      put("eC2G", cloud(200, 1010, 2.4, "#f6bf98") + cloud(950, 1050, 2.8, "#f3b08e") + cloud(1750, 1020, 2.6, "#f6bf98") + cloud(2500, 1040, 2.6, "#f3b08e") + cloud(1400, 880, 1.0, "#f9d3a8") + cloud(2350, 800, 1.1, "#f9d3a8"));
+      put("eSpark", '<g transform="translate(330,330)"><g class="sp"><polygon points="' + starPts(14, 6) + '" fill="#fff0c0"/></g></g><g transform="translate(1420,360)"><g class="sp"><polygon points="' + starPts(11, 5) + '" fill="#fff0c0"/></g></g><g transform="translate(560,300)"><g class="sp"><g transform="scale(.7)">' + HEART + "</g></g></g>");
+
+      /* rooftop icons: pop from the city, rise and sway */
+      (function () {
+        var r = rng(77), kinds = [HEART, BULB, STAR, HEART, HEART, STAR, BULB, HEART, STAR, HEART], s = "";
+        for (var i = 0; i < kinds.length; i++) s += '<g transform="translate(' + (1010 + i * 118 + r() * 40).toFixed(0) + "," + (700 + r() * 90).toFixed(0) + ')"><g class="ic" data-i="' + i + '"><g transform="scale(' + (1 + r() * 0.5).toFixed(2) + ')">' + kinds[i] + "</g></g></g>";
+        put("dIcons", s);
+      })();
+      var rg = document.createElementNS(NS, "radialGradient"); rg.id = "rgP"; rg.innerHTML = '<stop offset="0" stop-color="#ff9fa8" stop-opacity=".55"/><stop offset="1" stop-color="#ff9fa8" stop-opacity="0"/>'; document.querySelector("defs").appendChild(rg);
+
+      /* ---------- timeline ---------- */
+      var tl = gsap.timeline({ paused: true });
+      var scenes = { sA: [0, 2.5], sB: [1.7, 3.7], sC: [3.0, 5.3], sD: [4.5, 7.4], sE: [6.6, 9] };
+      Object.keys(scenes).forEach(function (k) {
+        var a = scenes[k][0], b = scenes[k][1];
+        tl.set("#" + k, { visibility: "visible", opacity: a === 0 ? 1 : 0 }, a);
+        if (a > 0) tl.to("#" + k, { opacity: 1, duration: 0.8, ease: "sine.inOut" }, a);
+        if (b < 9) tl.set("#" + k, { visibility: "hidden", opacity: 0 }, b);
+      });
+      gsap.set("#sA", { visibility: "visible", opacity: 1 });
+      var ORG = "0 0";
+      ["aF-hd", "bF-legF", "bF-legB", "cF-legF", "cF-legB", "cF-armF", "cF-armB", "dF-armF", "dF-armB", "eF-legF", "eF-legB", "eF-armF", "eF-armB"].forEach(function (id) { gsap.set("#" + id, { svgOrigin: ORG }); });
+
+      /* A: desk */
+      tl.fromTo("#camA", { scale: 1.0, transformOrigin: "50% 62%" }, { scale: 1.07, duration: 2.6, ease: "sine.inOut" }, 0);
+      tl.fromTo("#aBg", { x: 0 }, { x: -50, duration: 2.6, ease: "sine.inOut" }, 0).fromTo("#aFg", { x: 0 }, { x: -120, duration: 2.6, ease: "sine.inOut" }, 0);
+      tl.fromTo("#aF-hd", { rotation: 4 }, { rotation: 15, duration: 1.2, ease: "sine.inOut" }, 0.2);
+      tl.fromTo("#aCur", { opacity: 1 }, { opacity: 0, duration: 0.3, repeat: 7, yoyo: true, ease: "none" }, 0);
+      tl.fromTo("#aCl", { scale: 0, opacity: 0, transformOrigin: "50% 100%" }, { scale: 1, opacity: 1, duration: 1.0, ease: "elastic.out(1,0.5)" }, 0.55);
+      tl.fromTo("#aCl", { y: 0 }, { y: -8, duration: 0.9, ease: "sine.inOut", repeat: 2, yoyo: true, immediateRender: false }, 1.5);
+      tl.fromTo("#aCl .drop", { y: -4, opacity: 0 }, { y: 24, opacity: 1, duration: 0.55, ease: "power1.in", stagger: 0.12, repeat: 3 }, 0.9);
+      tl.fromTo("#aT-b", { x: 0, y: 0, opacity: 0 }, { x: 560, y: 240, opacity: 1, duration: 1.6, ease: "sine.inOut" }, 1.1);
+      tl.fromTo("#aT-gl", { scale: 0.5 }, { scale: 1, duration: 1.2, ease: "sine.out" }, 1.1);
+      tl.fromTo("#aT-st", { y: 0, opacity: 0.8 }, { y: -10, opacity: 0.2, duration: 0.8, ease: "sine.inOut", repeat: 2, yoyo: true }, 1.1);
+
+      /* B: the single star */
+      tl.fromTo("#camB", { scale: 1.1, transformOrigin: "62% 50%" }, { scale: 1.0, duration: 2.0, ease: "sine.inOut" }, 1.7);
+      tl.fromTo("#bBg", { x: 0 }, { x: -40, duration: 2.0, ease: "sine.inOut" }, 1.7).fromTo("#bFg", { x: 0 }, { x: -80, duration: 2.0, ease: "sine.inOut" }, 1.7);
+      tl.fromTo("#bStarG", { scale: 0.7, opacity: 0.4, transformOrigin: "50% 50%" }, { scale: 1.1, opacity: 1, duration: 1.8, ease: "sine.inOut" }, 1.9);
+      tl.fromTo("#bStar", { scale: 0.85, transformOrigin: "50% 50%" }, { scale: 1.15, duration: 0.9, ease: "sine.inOut", repeat: 1, yoyo: true }, 2.0);
+      tl.fromTo("#bT-b", { x: -80, y: 80, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.7, ease: "sine.out" }, 1.8);
+      tl.fromTo("#bT-sp", { rotation: 14, svgOrigin: "30 8" }, { rotation: -4, svgOrigin: "30 8", duration: 0.9, ease: "back.out(2)" }, 2.3);
+      tl.fromTo("#bT-b", { y: 0 }, { y: -14, duration: 1.0, ease: "sine.inOut", repeat: 1, yoyo: true, immediateRender: false }, 2.5);
+      tl.fromTo("#bCl", { scale: 0, opacity: 0, transformOrigin: "50% 100%" }, { scale: 1, opacity: 1, duration: 0.7, ease: "elastic.out(1,0.5)" }, 1.8);
+      tl.to("#bCl", { scale: 0.2, opacity: 0, y: -40, duration: 0.7, ease: "power2.in" }, 2.6);
+      tl.fromTo("#bCl .drop", { y: -4, opacity: 0 }, { y: 24, opacity: 1, duration: 0.5, ease: "power1.in", stagger: 0.1, repeat: 2 }, 1.9);
+      tl.fromTo("#bBu", { scale: 0, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1.1, opacity: 1, duration: 0.9, ease: "elastic.out(1,0.45)" }, 3.0);
+      tl.fromTo("#bF-head", { rotation: 4 }, { rotation: -8, duration: 1.2, ease: "sine.inOut" }, 2.0);
+
+      /* C: dawn street */
+      var W1 = 3.0;
+      tl.fromTo("#camC", { scale: 1.04, transformOrigin: "40% 70%" }, { scale: 1.0, duration: 2.3, ease: "sine.inOut" }, W1);
+      tl.fromTo("#cSky", { x: 0 }, { x: -60, duration: 2.3, ease: "sine.inOut" }, W1);
+      tl.fromTo("#cFar", { x: 0 }, { x: -130, duration: 2.3, ease: "sine.inOut" }, W1);
+      tl.fromTo("#cMid", { x: 0 }, { x: -300, duration: 2.3, ease: "sine.inOut" }, W1);
+      tl.fromTo("#cNear", { x: 0 }, { x: -620, duration: 2.3, ease: "sine.inOut" }, W1);
+      tl.fromTo("#cBirds", { x: 0, y: 0 }, { x: 260, y: -40, duration: 2.3, ease: "sine.inOut" }, W1);
+      tl.fromTo("#cF-legF", { rotation: -20 }, { rotation: 20, duration: 0.5, ease: "sine.inOut", repeat: 4, yoyo: true }, W1);
+      tl.fromTo("#cF-legB", { rotation: 20 }, { rotation: -20, duration: 0.5, ease: "sine.inOut", repeat: 4, yoyo: true }, W1);
+      tl.fromTo("#cF-armF", { rotation: 18 }, { rotation: -18, duration: 0.5, ease: "sine.inOut", repeat: 4, yoyo: true }, W1);
+      tl.fromTo("#cF-armB", { rotation: -18 }, { rotation: 18, duration: 0.5, ease: "sine.inOut", repeat: 4, yoyo: true }, W1);
+      tl.fromTo("#cF-head", { y: 0 }, { y: -4, duration: 0.25, ease: "sine.inOut", repeat: 8, yoyo: true }, W1);
+      tl.fromTo("#cT-b", { y: 0, x: 0 }, { y: -26, x: 16, duration: 0.9, ease: "sine.inOut", repeat: 2, yoyo: true }, W1);
+      tl.fromTo("#cT-st", { y: 0, opacity: 0.8 }, { y: -10, opacity: 0.2, duration: 0.7, ease: "sine.inOut", repeat: 3, yoyo: true }, W1);
+
+      /* D: rooftop */
+      tl.fromTo("#camD", { scale: 1.0, transformOrigin: "30% 60%" }, { scale: 1.06, duration: 2.9, ease: "sine.inOut" }, 4.5);
+      tl.fromTo(["#dSky"], { x: 0, y: -50 }, { x: -50, y: 0, duration: 2.9, ease: "sine.inOut" }, 4.5);
+      tl.fromTo("#dFar", { x: 0, y: -90 }, { x: -90, y: 0, duration: 2.9, ease: "sine.inOut" }, 4.5);
+      tl.fromTo("#dMid", { x: 0, y: -60 }, { x: -170, y: 0, duration: 2.9, ease: "sine.inOut" }, 4.5);
+      tl.fromTo("#dFg", { x: 0, y: -20 }, { x: -60, y: -30, duration: 2.9, ease: "sine.inOut" }, 4.5);
+      tl.fromTo("#dF-head", { rotation: 5 }, { rotation: -5, duration: 2.4, ease: "sine.inOut" }, 4.7);
+      tl.fromTo("#dF-armF", { rotation: 4 }, { rotation: -10, duration: 1.2, ease: "sine.inOut", repeat: 1, yoyo: true }, 4.7);
+      tl.fromTo("#dT-b", { y: 0 }, { y: -22, duration: 1.0, ease: "sine.inOut", repeat: 2, yoyo: true }, 4.6);
+      tl.fromTo("#dT-st", { y: 0, opacity: 0.8 }, { y: -10, opacity: 0.2, duration: 0.8, ease: "sine.inOut", repeat: 3, yoyo: true }, 4.6);
+      document.querySelectorAll("#dStars .tw").forEach(function (el, i) { if (i % 4 === 0) tl.fromTo(el, { opacity: 0.25 }, { opacity: 1, duration: 0.8, ease: "sine.inOut", repeat: 3, yoyo: true }, 4.5 + (i % 7) * 0.2); });
+      document.querySelectorAll("#dIcons .ic").forEach(function (el, i) {
+        var t0 = 5.1 + i * 0.11, dx = (i % 2 ? 26 : -26);
+        tl.fromTo(el, { scale: 0, opacity: 1 }, { scale: 1, duration: 0.8, ease: "elastic.out(1,0.5)" }, t0);
+        tl.fromTo(el, { y: 0 }, { y: -(300 + (i % 4) * 70), duration: 1.9, ease: "sine.out", immediateRender: false }, t0);
+        tl.fromTo(el, { x: 0 }, { x: dx, duration: 0.95, ease: "sine.inOut", repeat: 1, yoyo: true, immediateRender: false }, t0);
+        tl.to(el, { opacity: 0, duration: 0.5, ease: "sine.in" }, t0 + 1.4);
+      });
+
+      /* E: sunset drift */
+      tl.fromTo("#camE", { scale: 1.05, transformOrigin: "50% 50%" }, { scale: 1.0, duration: 2.4, ease: "sine.inOut" }, 6.6);
+      tl.fromTo("#eSky", { x: 0 }, { x: -60, duration: 2.4, ease: "sine.inOut" }, 6.6);
+      tl.fromTo("#eC1", { x: 0 }, { x: -240, duration: 2.4, ease: "sine.inOut" }, 6.6);
+      tl.fromTo("#eC2", { x: 0 }, { x: -520, duration: 2.4, ease: "sine.inOut" }, 6.6);
+      tl.fromTo("#eLy", { y: 0, x: -30, rotation: -2 }, { y: -26, x: 30, rotation: 3, duration: 2.4, ease: "sine.inOut" }, 6.6);
+      tl.fromTo("#eT-b", { y: 0, x: -30 }, { y: 20, x: 40, duration: 2.4, ease: "sine.inOut" }, 6.6);
+      tl.fromTo("#eT-st", { y: 0, opacity: 0.8 }, { y: -10, opacity: 0.2, duration: 0.8, ease: "sine.inOut", repeat: 2, yoyo: true }, 6.8);
+      tl.fromTo("#eF-legF", { rotation: -6 }, { rotation: 10, duration: 1.2, ease: "sine.inOut", repeat: 1, yoyo: true }, 6.6);
+      tl.fromTo("#eF-armB", { rotation: 8 }, { rotation: -14, duration: 1.2, ease: "sine.inOut", repeat: 1, yoyo: true }, 6.6);
+      document.querySelectorAll("#eSpark .sp").forEach(function (el, i) { tl.fromTo(el, { scale: 0, transformOrigin: "50% 50%", svgOrigin: "0 0" }, { scale: 1, duration: 0.8, ease: "elastic.out(1,0.5)", repeat: 1, yoyo: true }, 7.3 + i * 0.35); });
+      tl.fromTo("#cap", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.5, ease: "power1.inOut" }, 7.2);
+
+      tl.set({}, {}, 9);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["storybook-lantern"] = tl;
+    </script>
+  </body>
+</html>

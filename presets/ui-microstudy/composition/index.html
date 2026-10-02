@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>UI Microstudy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #ff5c93; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #ff5c93; font-family: "Inter", sans-serif; font-weight: 600; color: #111; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+      .bg { position: absolute; inset: 0; overflow: hidden; }
+      .shp { position: absolute; inset: 0; }
+      .shape { position: absolute; display: block; }
+      #hold { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      #card { position: relative; flex: none; width: 340px; height: 96px; border-radius: 48px; background: #17171d; overflow: hidden; box-shadow: 0 34px 70px -14px rgba(20, 10, 40, 0.36), 0 10px 22px rgba(20, 10, 40, 0.16); }
+      .pane { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; }
+      .pane.on { opacity: 1; }
+      .in { position: relative; flex: none; display: block; }
+      .abs { position: absolute; display: block; }
+      .white { color: #fff; }
+      .muted { color: #8d8d9a; }
+      .mono { font-family: "JetBrains Mono", monospace; font-weight: 500; }
+      svg { display: block; }
+      #cur { position: absolute; left: -3px; top: -2px; z-index: 20; transform-origin: 3px 2px; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.28)); }
+      .toast { position: absolute; left: 660px; top: 492px; width: 600px; height: 96px; border-radius: 28px; background: #fff; box-shadow: 0 26px 50px -14px rgba(20, 10, 40, 0.32), 0 8px 18px rgba(20, 10, 40, 0.14); opacity: 0; }
+      .ico { position: absolute; left: 24px; top: 24px; width: 48px; height: 48px; border-radius: 16px; display: block; }
+      .tt { position: absolute; left: 92px; top: 20px; font-size: 25px; font-weight: 700; color: #111; white-space: nowrap; }
+      .ts { position: absolute; left: 92px; top: 54px; font-size: 19px; font-weight: 500; color: #7a7a86; white-space: nowrap; }
+      .em { position: absolute; top: 0; width: 124px; height: 104px; display: flex; align-items: center; justify-content: center; }
+      .st { position: absolute; top: 24px; width: 56px; height: 56px; }
+      .row { position: absolute; left: 16px; right: 16px; height: 76px; border-radius: 20px; }
+      .rt { position: absolute; left: 76px; top: 24px; font-size: 26px; font-weight: 600; color: #111; white-space: nowrap; }
+      .ri { position: absolute; left: 16px; top: 16px; width: 44px; height: 44px; border-radius: 13px; background: #ececf1; display: block; }
+      .rr { position: absolute; right: 22px; top: 25px; font-size: 20px; color: #8d8d9a; }
+      .ch { position: relative; display: inline-block; }
+      .cr { position: absolute; right: -4px; top: 3px; width: 3px; height: 34px; background: #ff7a1a; border-radius: 2px; opacity: 0; }
+      .seg { position: absolute; top: 10px; width: 180px; height: 68px; line-height: 68px; text-align: center; font-size: 27px; font-weight: 600; color: #6b6b76; }
+      .ml { display: inline-block; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="ui-microstudy" data-width="1920" data-height="1080" data-duration="8">
+      <div id="bgs"></div>
+
+      
+      <div id="tA" class="toast"><span class="ico" style="background: #e4ecff"><svg width="48" height="48" viewBox="0 0 48 48"><path d="M15 25 L22 32 L34 17" fill="none" stroke="#2f5bff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" /></svg></span><div class="tt">Theme saved</div><div class="ts">Applied to 6 scenes</div></div>
+      <div id="tB" class="toast"><span class="ico" style="background: #ffe3ee"><svg width="48" height="48" viewBox="0 0 48 48"><path d="M24 33 C 12 26, 13 16, 19 15 C 22 14.6, 24 17, 24 18.5 C 24 17, 26 14.6, 29 15 C 35 16, 36 26, 24 33 Z" fill="#ff4f8b" /></svg></span><div class="tt">Invite sent</div><div class="ts">Waiting on 1 reply</div></div>
+
+      <div id="hold">
+        <div id="card">
+          <div id="p0" class="pane on"><div class="in" style="width: 340px; height: 96px; display: flex; align-items: center; justify-content: center; gap: 12px"><svg width="30" height="30" viewBox="0 0 30 30"><path d="M15 3 C16 11, 19 14, 27 15 C19 16, 16 19, 15 27 C14 19, 11 16, 3 15 C11 14, 14 11, 15 3 Z" fill="#ffd24a" /></svg><span class="white" style="font-size: 31px; font-weight: 700">Make it move</span></div></div>
+          <div id="p1" class="pane">
+            <div class="in" style="width: 620px; height: 300px">
+              <div class="abs" style="left: 32px; top: 32px; width: 96px; height: 96px; border-radius: 24px; background: linear-gradient(135deg, #ff9a3c, #ff4f8b); overflow: hidden">
+                <svg width="96" height="96" viewBox="0 0 96 96"><circle cx="70" cy="26" r="26" fill="#fff" fill-opacity="0.22" /><rect x="26" y="52" width="8" height="22" rx="4" fill="#fff" /><rect x="42" y="40" width="8" height="34" rx="4" fill="#fff" /><rect x="58" y="48" width="8" height="26" rx="4" fill="#fff" /></svg>
+              </div>
+              <div class="abs white" style="left: 150px; top: 40px; font-size: 29px; font-weight: 700">motion study 02</div>
+              <div class="abs muted" style="left: 150px; top: 82px; font-size: 22px; font-weight: 500">made in code</div>
+              <div class="abs" style="left: 32px; top: 170px; width: 556px; height: 8px; border-radius: 4px; background: #3b3b46; overflow: hidden"><div id="pfill" class="abs" style="left: 0; top: 0; height: 8px; width: 111px; background: #fff; border-radius: 4px"></div></div>
+              <div id="pknob" class="abs" style="left: 20px; top: 162px; width: 24px; height: 24px; border-radius: 12px; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.4)"></div>
+              <div id="pel" class="abs muted" style="left: 32px; top: 194px; font-size: 18px; font-weight: 500">0:41</div>
+              <div id="per" class="abs muted" style="right: 32px; top: 194px; font-size: 18px; font-weight: 500">-2:46</div>
+              <div class="abs" style="left: 0; top: 232px; width: 620px; height: 56px">
+                <svg class="abs" style="left: 216px; top: 12px" width="32" height="32" viewBox="0 0 32 32"><path d="M16 8 L7 16 L16 24 Z M27 8 L18 16 L27 24 Z" fill="#fff" /></svg>
+                <div class="abs" style="left: 282px; top: 0; width: 56px; height: 56px; border-radius: 28px; background: #fff"><svg width="56" height="56" viewBox="0 0 56 56"><rect x="19" y="17" width="6.5" height="22" rx="3" fill="#17171d" /><rect x="30.5" y="17" width="6.5" height="22" rx="3" fill="#17171d" /></svg></div>
+                <svg class="abs" style="left: 372px; top: 12px" width="32" height="32" viewBox="0 0 32 32"><path d="M5 8 L14 16 L5 24 Z M16 8 L25 16 L16 24 Z" fill="#fff" /></svg>
+              </div>
+            </div>
+          </div>
+          <div id="p2" class="pane"><div class="in" style="width: 560px; height: 88px"><svg class="abs" style="left: 28px; top: 22px" width="44" height="44" viewBox="0 0 44 44"><path d="M6 17 H13 L22 9 V35 L13 27 H6 Z" fill="#fff" /><path d="M28 15 C32 19, 32 25, 28 29 M33 10 C40 17, 40 27, 33 34" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" /></svg><div class="abs" style="left: 84px; top: 26px; width: 436px; height: 36px; border-radius: 18px; background: rgba(255,255,255,0.16); overflow: hidden"><div id="vfill" class="abs" style="left: 0; top: 0; height: 36px; width: 131px; background: #fff; border-radius: 18px"></div></div></div></div>
+          <div id="p3" class="pane"><div class="in" style="width: 560px; height: 88px"><div id="shl" class="abs" style="left: 10px; top: 10px; width: 180px; height: 68px; border-radius: 34px; background: #17171d"></div><div id="sg0" class="seg" style="left: 10px; color: #fff">Day</div><div id="sg1" class="seg" style="left: 190px">Week</div><div id="sg2" class="seg" style="left: 370px">Month</div></div></div>
+          <div id="p4" class="pane">
+            <div class="in" style="width: 700px; height: 420px">
+              <div class="abs" style="left: 40px; top: 44px; font-size: 24px; font-weight: 500; color: #6b6b76">Plays this week</div>
+              <div class="abs" style="left: 470px; top: 30px; width: 190px; height: 46px; border-radius: 23px; background: #f0f0f4"></div>
+              <div class="abs" style="left: 535px; top: 33px; width: 64px; height: 40px; border-radius: 20px; background: #17171d"></div>
+              <div class="abs" style="left: 470px; top: 30px; width: 65px; line-height: 46px; text-align: center; font-size: 19px; color: #6b6b76">1d</div>
+              <div class="abs" style="left: 535px; top: 30px; width: 64px; line-height: 46px; text-align: center; font-size: 19px; color: #fff">7d</div>
+              <div class="abs" style="left: 600px; top: 30px; width: 60px; line-height: 46px; text-align: center; font-size: 19px; color: #6b6b76">30d</div>
+              <div id="num" class="abs" style="left: 36px; top: 84px; font-size: 108px; font-weight: 800; letter-spacing: -0.045em; line-height: 112px; white-space: nowrap">66,963</div>
+              <div class="abs" style="left: 40px; top: 206px; height: 36px; padding: 0 16px; border-radius: 18px; background: #dcf8e6; color: #12a150; font-size: 20px; font-weight: 700; line-height: 36px; white-space: nowrap">+12.4% vs last week</div>
+              <svg class="abs" style="left: 40px; top: 264px; overflow: visible" width="620" height="130" viewBox="0 0 620 130">
+                <defs><linearGradient id="afill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a1a" stop-opacity="0.28" /><stop offset="1" stop-color="#ff7a1a" stop-opacity="0" /></linearGradient></defs>
+                <path id="area" d="" fill="url(#afill)" />
+                <path id="line" pathLength="1" d="" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1" stroke-dashoffset="1" />
+              </svg>
+              <div id="dot" class="abs" style="left: 521px; top: 289px; width: 18px; height: 18px; border-radius: 9px; background: #fff; border: 4px solid #111"></div>
+              <div id="tip" class="abs" style="left: 468px; top: 214px; width: 124px; height: 46px; border-radius: 14px; background: #111; color: #fff; text-align: center; line-height: 46px; font-size: 24px; font-weight: 700">80,383</div>
+            </div>
+          </div>
+          <div id="p5" class="pane">
+            <div class="in" style="width: 700px; height: 300px">
+              <svg class="abs" style="left: 32px; top: 26px" width="32" height="32" viewBox="0 0 32 32"><circle cx="14" cy="14" r="8.5" fill="none" stroke="#6b6b76" stroke-width="3" /><path d="M21 21 L27 27" stroke="#6b6b76" stroke-width="3.2" stroke-linecap="round" /></svg>
+              <div class="abs" style="left: 80px; top: 22px; height: 40px; font-size: 32px; font-weight: 500; line-height: 40px; white-space: nowrap; display: flex">
+                <span class="ch" id="k0" style="opacity: 0">f<i class="cr"></i></span><span class="ch" id="k1" style="opacity: 0">r<i class="cr"></i></span><span class="ch" id="k2" style="opacity: 0">a<i class="cr"></i></span><span class="ch" id="k3" style="opacity: 0">m<i class="cr"></i></span><span class="ch" id="k4" style="opacity: 0">e<i class="cr"></i></span>
+              </div>
+              <div class="abs" style="left: 0; right: 0; top: 84px; height: 1px; background: #ececf0"></div>
+              <div id="r1" class="row" style="top: 100px">
+                <span class="ri"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="9" fill="none" stroke="#6b6b76" stroke-width="3" /><path d="M22 22 L27 17" stroke="#6b6b76" stroke-width="3" stroke-linecap="round" /></svg></span>
+                <div class="rt">Frame rate</div>
+                <div class="rr mono">60 fps</div>
+              </div>
+              <div id="r2" class="row" style="top: 184px; background: #f1f1f6">
+                <span class="ri" style="background: #17171d"><svg width="44" height="44" viewBox="0 0 44 44"><path d="M24 9 L13 25 H21 L19 35 L31 18 H23 Z" fill="#ffd24a" /></svg></span>
+                <div class="rt">Every frame is code</div>
+                <div class="rr" style="top: 20px"><span style="display: block; width: 38px; height: 36px; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.16); text-align: center; line-height: 36px; font-size: 20px; color: #6b6b76">↵</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="p6" class="pane"><div class="in" id="emw" style="width: 620px; height: 104px"></div></div>
+          <div id="p7" class="pane"><div class="in" id="stw" style="width: 560px; height: 104px"></div></div>
+          <div id="p8" class="pane"><div class="in" style="width: 600px; height: 96px"><span class="ico" style="background: #dcf8e6"><svg width="48" height="48" viewBox="0 0 48 48"><path d="M15 25 L22 32 L34 17" fill="none" stroke="#12a150" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" /></svg></span><div class="tt">Export ready</div><div class="ts">4 clips · 1080p · 8.0s</div></div></div>
+          <div id="p9" class="pane"><div class="in" style="width: 440px; height: 84px; display: flex; align-items: center; justify-content: center; gap: 14px"><svg width="42" height="42" viewBox="0 0 42 42"><circle cx="21" cy="21" r="21" fill="#fff" /><path id="ck" pathLength="1" d="M12 22 L18.5 28.5 L30 14.5" fill="none" stroke="#17171d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1" stroke-dashoffset="1" /></svg><span class="white" style="font-size: 27px; font-weight: 700; white-space: nowrap">every frame is code</span></div></div>
+          <div id="p10" class="pane"><div class="in" style="width: 760px; height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center"><div style="display: flex; align-items: center; gap: 22px"><svg id="mark" width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="42" fill="#ff7a1a" /><path d="M16 46 C 24 20, 34 20, 40 42 S 56 64, 68 34" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" /></svg><div id="wm" class="white" style="font-size: 100px; font-weight: 800; letter-spacing: -0.055em; line-height: 110px; white-space: nowrap"></div></div><div id="wsub" class="mono muted" style="font-size: 22px; margin-top: 14px; letter-spacing: 0.02em">motion studies, made in code</div></div></div></div></div>
+
+      <div id="fl" class="abs" style="left: 0; top: 0; width: 60px; height: 60px; opacity: 0; z-index: 15">
+        <svg width="60" height="60" viewBox="0 0 60 60"><path d="M31 4 C 33 14, 46 20, 46 36 C 46 47, 39 55, 30 55 C 20 55, 13 48, 13 38 C 13 31, 17 26, 21 23 C 21 29, 24 31, 26 31 C 24 20, 27 10, 31 4 Z" fill="#ff7a1a" /><path d="M30 28 C 31 34, 38 37, 38 44 C 38 49, 34 52, 30 52 C 25 52, 22 49, 22 44 C 22 39, 28 36, 30 28 Z" fill="#ffd24a" /></svg>
+      </div>
+
+      <svg id="cur" width="34" height="40" viewBox="0 0 34 40"><path d="M3 2 L3 29 L10 23 L15 35 L21 32.5 L16 21 L26 21 Z" fill="#111" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" /></svg>
+    </div>
+
+    <script>
+      function rng(seed) { var a = seed >>> 0; return function () { a = (a + 0x6d2b79f5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+      function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+      function clock(s) { s = Math.round(s); return Math.floor(s / 60) + ":" + (s % 60 < 10 ? "0" : "") + (s % 60); }
+      var COLORS = ["#ff5c93", "#7c4dff", "#0fb5a6", "#2f5bff", "#ff7a1a", "#1fc76a", "#ffc82e", "#ff4a2b", "#18bdf0", "#4b36e8", "#ff4f8b"];
+      var bgs = document.getElementById("bgs");
+      COLORS.forEach(function (c, i) {
+        var r = rng(i * 97 + 13);
+        var left = r() < 0.5;
+        var h = "";
+        var cx = left ? 40 + r() * 300 : 1580 + r() * 300, cy = 140 + r() * 800, cs = 560 + r() * 300;
+        h += '<div class="shape" style="left:' + (cx - cs / 2) + "px;top:" + (cy - cs / 2) + "px;width:" + cs + "px;height:" + cs + 'px;border-radius:50%;background:rgba(255,255,255,0.10)"></div>';
+        var rx = left ? 1500 + r() * 300 : 120 + r() * 300, ry = 120 + r() * 840, rs = 240 + r() * 200;
+        h += '<div class="shape" style="left:' + (rx - rs / 2) + "px;top:" + (ry - rs / 2) + "px;width:" + rs + "px;height:" + rs + 'px;border-radius:50%;border:3px solid rgba(255,255,255,0.24)"></div>';
+        h += '<div class="shape band" style="left:-300px;top:' + (260 + r() * 500) + 'px;width:2520px;height:' + (150 + r() * 120) + 'px;background:rgba(0,0,0,0.055)"></div>';
+        var d = document.createElement("div");
+        d.className = "bg"; d.id = "bg" + i; d.style.background = c;
+        d.innerHTML = '<div class="shp" id="shp' + i + '">' + h + "</div>";
+        bgs.appendChild(d);
+        gsap.set(d.querySelector(".band"), { rotation: -26 + r() * 52 });
+        if (i > 0) gsap.set(d, { clipPath: "circle(0px at 960px 540px)" });
+      });
+      var pts = [[0, 112], [70, 98], [140, 106], [210, 74], [280, 84], [350, 54], [420, 66], [490, 36], [560, 44], [620, 14]];
+      var dl = "M" + pts[0][0] + " " + pts[0][1];
+      for (var i = 0; i < pts.length - 1; i++) {
+        var p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+        dl += " C" + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(1) + " " + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(1) + " " + (p2[0] - (p3[0] - p1[0]) / 6).toFixed(1) + " " + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(1) + " " + p2[0] + " " + p2[1];
+      }
+      document.getElementById("line").setAttribute("d", dl);
+      document.getElementById("area").setAttribute("d", dl + " L620 130 L0 130 Z");
+      var wm = document.getElementById("wm");
+      "springform".split("").forEach(function (ch, i) { var s = document.createElement("span"); s.className = "ml"; s.textContent = ch; wm.appendChild(s); });
+      var EM = ['<svg id="e0" width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="#ffc83d" /><circle cx="21" cy="25" r="3.6" fill="#3a2a10" /><circle cx="39" cy="25" r="3.6" fill="#3a2a10" /><path d="M18 36 C 24 45, 36 45, 42 36" fill="none" stroke="#3a2a10" stroke-width="3.6" stroke-linecap="round" /></svg>',
+        '<svg id="e1" width="60" height="60" viewBox="0 0 60 60"><path d="M30 52 C 6 36, 8 14, 21 11 C 26 10, 30 14, 30 18 C 30 14, 34 10, 39 11 C 52 14, 54 36, 30 52 Z" fill="#ff3b5c" /><path d="M16 19 C 18 16, 21 15.5, 23 16" fill="none" stroke="#fff" stroke-opacity="0.6" stroke-width="3" stroke-linecap="round" /></svg>',
+        '<svg id="e2" width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="#ffc83d" /><path d="M14 24 C 17 19, 23 19, 26 24 M34 24 C 37 19, 43 19, 46 24" fill="none" stroke="#3a2a10" stroke-width="3.6" stroke-linecap="round" /><path d="M16 33 H44 C 44 45, 37 50, 30 50 C 23 50, 16 45, 16 33 Z" fill="#3a2a10" /><path d="M23 46 C 26 41, 34 41, 37 46 C 34 49, 26 49, 23 46 Z" fill="#ff6b81" /><path d="M10 30 C 7 34, 7 38, 10 38 C 13 38, 13 34, 10 30 Z" fill="#4cc2ff" /></svg>',
+        '<svg id="e3" width="60" height="60" viewBox="0 0 60 60"><path d="M31 4 C 33 14, 46 20, 46 36 C 46 47, 39 55, 30 55 C 20 55, 13 48, 13 38 C 13 31, 17 26, 21 23 C 21 29, 24 31, 26 31 C 24 20, 27 10, 31 4 Z" fill="#ff7a1a" /><path d="M30 28 C 31 34, 38 37, 38 44 C 38 49, 34 52, 30 52 C 25 52, 22 49, 22 44 C 22 39, 28 36, 30 28 Z" fill="#ffd24a" /></svg>',
+        '<svg id="e4" width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="#ffc83d" /><circle cx="20" cy="25" r="3.6" fill="#3a2a10" /><circle cx="40" cy="25" r="3.6" fill="#3a2a10" /><path d="M13 16 C 16 12, 22 12, 25 15 M35 15 C 38 12, 44 12, 47 16" fill="none" stroke="#3a2a10" stroke-width="3" stroke-linecap="round" /><ellipse cx="30" cy="42" rx="6" ry="7.5" fill="#3a2a10" /></svg>'];
+      EM.forEach(function (m, i) { var d = document.createElement("div"); d.className = "em"; d.id = "w" + i; d.style.left = i * 124 + "px"; d.innerHTML = m; document.getElementById("emw").appendChild(d); });
+      for (var q = 0; q < 5; q++) { var sd = document.createElement("div"); sd.className = "st"; sd.style.left = 76 + q * 88 + "px"; sd.innerHTML = '<svg id="s' + q + '" width="56" height="56" viewBox="0 0 100 100"><polygon points="50,6 63,36 95,38 70,58 79,90 50,72 21,90 30,58 5,38 37,36" fill="#4a4a55" stroke="#4a4a55" stroke-width="6" stroke-linejoin="round" /></svg>'; document.getElementById("stw").appendChild(sd); }
+      var tl = gsap.timeline({ paused: true });
+      var CARD = "#card";
+      gsap.set(["#p1", "#p2", "#p3", "#p4", "#p5", "#p6", "#p7", "#p8", "#p9", "#p10"], { opacity: 0 });
+      gsap.set("#cur", { x: 1400, y: 860 });
+      gsap.set("#fl", { x: 1054, y: 510 });
+      gsap.set(["#dot", "#tip"], { opacity: 0 });
+      gsap.set("#area", { opacity: 0 });
+
+      function morph(t, from, to, spec) {
+        tl.to(CARD, { width: spec.w, duration: 0.62, ease: "back.out(1.5)" }, t);
+        tl.to(CARD, { height: spec.h, duration: 0.62, ease: "back.out(1.25)" }, t);
+        tl.to(CARD, { borderRadius: spec.r, duration: 0.5, ease: "power2.out" }, t);
+        tl.to(CARD, { backgroundColor: spec.c, duration: 0.28, ease: "power1.out" }, t);
+        tl.to("#p" + from, { opacity: 0, scale: 0.94, duration: 0.14, ease: "power1.in" }, t);
+        tl.fromTo("#p" + to, { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }, t + 0.16);
+        tl.to("#bg" + to, { clipPath: "circle(1180px at 960px 540px)", duration: 0.7, ease: "power3.out" }, t);
+        tl.fromTo("#shp" + to, { y: 50 }, { y: -30, duration: 1.8, ease: "power1.out" }, t);
+      }
+      function press(t) {
+        tl.to("#cur", { scale: 0.8, duration: 0.07, ease: "power2.out" }, t);
+        tl.to("#cur", { scale: 1, duration: 0.28, ease: "back.out(3)" }, t + 0.08);
+      }
+      function go(t, x, y, d, ease) {
+        tl.to("#cur", { x: x, y: y, duration: d, ease: ease || "power3.out" }, t);
+      }
+      go(0, 988, 576, 0.5, "power3.out");
+      tl.to(CARD, { scale: 1.06, duration: 0.2, ease: "back.out(2)" }, 0.34);
+      tl.to(CARD, { scale: 0.94, duration: 0.08, ease: "power2.out" }, 0.5);
+      tl.to(CARD, { scale: 1, duration: 0.3, ease: "back.out(3)" }, 0.58);
+      press(0.5);
+      morph(0.62, 0, 1, { w: 620, h: 300, r: 36, c: "#1b1b22" });
+      go(0.7, 793, 568, 0.34, "power3.out");
+      var pl = { p: 0.2 };
+      tl.to(pl, { p: 0.64, duration: 0.46, ease: "power2.inOut", onUpdate: function () {
+        var px = 556 * pl.p;
+        gsap.set("#pfill", { width: px });
+        gsap.set("#pknob", { x: px });
+        document.getElementById("pel").textContent = clock(pl.p * 207);
+        document.getElementById("per").textContent = "-" + clock(207 - pl.p * 207);
+      } }, 1.04);
+      tl.to("#cur", { x: 1038, duration: 0.46, ease: "power2.inOut" }, 1.04);
+      tl.to("#pknob", { scale: 1.25, duration: 0.2, ease: "back.out(3)" }, 1.0);
+      tl.to("#pknob", { scale: 1, duration: 0.2, ease: "power2.out" }, 1.5);
+      press(1.0);
+      morph(1.55, 1, 2, { w: 560, h: 88, r: 44, c: "#15151b" });
+      go(1.62, 895, 542, 0.26, "power3.out");
+      var vl = { p: 0.3 };
+      tl.to(vl, { p: 0.86, duration: 0.42, ease: "power2.inOut", onUpdate: function () { gsap.set("#vfill", { width: 436 * vl.p }); } }, 1.9);
+      tl.to("#cur", { x: 764 + 436 * 0.86, duration: 0.42, ease: "power2.inOut" }, 1.9);
+      press(1.88);
+      morph(2.3, 2, 3, { w: 560, h: 88, r: 44, c: "#ffffff" });
+      go(2.42, 960, 548, 0.22, "power3.out");
+      press(2.58);
+      tl.to("#shl", { x: 180, duration: 0.3, ease: "back.out(1.8)" }, 2.6);
+      tl.to("#sg0", { color: "#6b6b76", duration: 0.15 }, 2.62);
+      tl.to("#sg1", { color: "#ffffff", duration: 0.15 }, 2.62);
+      morph(2.8, 3, 4, { w: 700, h: 420, r: 44, c: "#ffffff" });
+      var nm = { n: 66963 };
+      tl.to(nm, { n: 84320, duration: 0.9, ease: "power3.out", onUpdate: function () { document.getElementById("num").textContent = fmt(nm.n); } }, 2.98);
+      tl.to("#line", { strokeDashoffset: 0, duration: 0.5, ease: "power2.inOut" }, 3.02);
+      tl.to("#area", { opacity: 1, duration: 0.3, ease: "power1.out" }, 3.3);
+      go(2.9, 1146, 626, 0.42, "power3.out");
+      tl.fromTo("#dot", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)" }, 3.28);
+      tl.fromTo("#tip", { opacity: 0, y: 12, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(2.4)" }, 3.32);
+      tl.to("#cur", { x: 1156, y: 630, duration: 0.5, ease: "sine.inOut" }, 3.5);
+      morph(3.95, 4, 5, { w: 700, h: 300, r: 34, c: "#ffffff" });
+      for (var k = 0; k < 5; k++) {
+        var tk = 4.1 + k * 0.06;
+        tl.set("#k" + k, { opacity: 1 }, tk);
+        tl.set("#k" + k + " .cr", { opacity: 1 }, tk);
+        tl.set("#k" + k + " .cr", { opacity: 0 }, k < 4 ? tk + 0.06 : tk + 0.22);
+      }
+      tl.from(["#r1", "#r2"], { y: 16, opacity: 0, duration: 0.3, ease: "back.out(2)", stagger: 0.08 }, 4.3);
+      go(4.05, 934, 618, 0.42, "power3.out");
+      tl.to("#r2", { backgroundColor: "#e6e6ee", duration: 0.08 }, 4.46);
+      tl.to("#r2", { scale: 0.98, duration: 0.08, ease: "power2.out" }, 4.46);
+      tl.to("#r2", { scale: 1, duration: 0.22, ease: "back.out(3)" }, 4.54);
+      press(4.46);
+      morph(4.65, 5, 6, { w: 620, h: 104, r: 52, c: "#ffffff" });
+      tl.from(["#e0", "#e1", "#e2", "#e3", "#e4"], { scale: 0, duration: 0.34, ease: "back.out(2.6)", stagger: 0.04 }, 4.82);
+      go(4.74, 1086, 548, 0.5, "power2.inOut");
+      tl.to("#w2", { scale: 1.3, y: -8, duration: 0.1, ease: "power2.out" }, 4.98);
+      tl.to("#w2", { scale: 1, y: 0, duration: 0.2, ease: "power2.out" }, 5.08);
+      tl.to("#w3", { scale: 1.45, y: -10, duration: 0.2, ease: "back.out(3)" }, 5.06);
+      press(5.16);
+      tl.set("#fl", { opacity: 1 }, 5.17);
+      tl.fromTo("#fl", { y: 505, scale: 0.8 }, { y: 410, scale: 1.7, duration: 0.45, ease: "power2.out" }, 5.17);
+      tl.to("#fl", { opacity: 0, duration: 0.18, ease: "power1.in" }, 5.4);
+      morph(5.3, 6, 7, { w: 560, h: 104, r: 52, c: "#17171d" });
+      go(5.36, 784, 546, 0.23, "power3.out");
+      tl.to("#cur", { x: 1048, duration: 0.22, ease: "none" }, 5.6);
+      var starPop = function (id, t) {
+        tl.to(id + " polygon", { fill: "#ffc83d", stroke: "#ffc83d", duration: 0.12 }, t);
+        tl.fromTo(id, { scale: 1 }, { scale: 1.3, rotation: -8, duration: 0.14, ease: "power2.out" }, t);
+        tl.to(id, { scale: 1, rotation: 0, duration: 0.28, ease: "back.out(3)" }, t + 0.14);
+      };
+      starPop("#s0", 5.6);
+      starPop("#s1", 5.66);
+      starPop("#s2", 5.72);
+      starPop("#s3", 5.78);
+      go(5.82, 1136, 546, 0.1, "power2.out");
+      press(5.9);
+      starPop("#s4", 5.93);
+      morph(5.95, 7, 8, { w: 600, h: 96, r: 28, c: "#ffffff" });
+      tl.set(["#tA", "#tB"], { opacity: 1 }, 6.1);
+      tl.fromTo("#tA", { y: 0, scale: 0.94 }, { y: -116, scale: 1, duration: 0.38, ease: "back.out(1.8)" }, 6.1);
+      tl.fromTo("#tB", { y: 0, scale: 0.94 }, { y: 116, scale: 1, duration: 0.38, ease: "back.out(1.8)" }, 6.18);
+      go(6.05, 1010, 566, 0.45, "power3.out");
+      tl.to(CARD, { scale: 1.035, duration: 0.2, ease: "back.out(2)" }, 6.32);
+      tl.to(CARD, { scale: 1, duration: 0.18, ease: "power2.out" }, 6.52);
+      tl.to(["#tA", "#tB"], { y: 0, scale: 0.9, opacity: 0, duration: 0.16, ease: "power2.in" }, 6.57);
+      morph(6.6, 8, 9, { w: 440, h: 84, r: 42, c: "#17171d" });
+      tl.to("#ck", { strokeDashoffset: 0, duration: 0.3, ease: "power2.out" }, 6.9);
+      tl.to("#cur", { x: 1320, y: 760, duration: 0.5, ease: "power2.in" }, 6.7);
+      tl.to("#cur", { opacity: 0, duration: 0.15 }, 7.1);
+      morph(7.3, 9, 10, { w: 760, h: 260, r: 56, c: "#17171d" });
+      tl.from("#mark", { scale: 0, rotation: -140, duration: 0.45, ease: "back.out(1.8)" }, 7.38);
+      tl.from(".ml", { y: 60, opacity: 0, duration: 0.32, ease: "back.out(2)", stagger: 0.02 }, 7.4);
+      tl.from("#wsub", { y: 12, opacity: 0, duration: 0.3, ease: "power2.out" }, 7.62);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["ui-microstudy"] = tl;
+    </script>
+  </body>
+</html>
