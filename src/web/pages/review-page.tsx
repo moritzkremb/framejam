@@ -46,12 +46,12 @@ export function ReviewPage() {
   if (r.loadError && !r.review) {
     return (
       <div className="fc-rshell" ref={rootRef}>
-        <BackHeader to="/projects" title="Project" />
+        <BackHeader to="/" title="Review" />
         <main className="fc-main">
           {isOffline(r.loadError) ? (
             <Offline />
           ) : (
-            <NotHere title="This project isn't here" message="It may have been deleted, or the link is from another computer." />
+            <NotHere title="This review isn't here" message="It may have been deleted, or the link is from another computer." />
           )}
         </main>
       </div>
@@ -61,7 +61,7 @@ export function ReviewPage() {
   if (!r.review || !r.version || !r.latest) {
     return (
       <div className="fc-rshell" ref={rootRef}>
-        <BackHeader to="/projects" title="Loading project" />
+        <BackHeader to="/" title="Loading review" />
         <main className="fc-main">
           <div className="fc-skel" style={{ aspectRatio: "16 / 9", borderRadius: 14 }} />
           <div className="fc-skel" style={{ height: 56 }} />

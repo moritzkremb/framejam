@@ -158,7 +158,7 @@ export function StylesPage() {
       <HomeHeader />
       <main className="fc-main">
         {!connected && (
-          <Link to="/home#setup" className="fc-banner">
+          <Link to="/setup" className="fc-banner">
             <Sparkles className="fc-i sm" />
             <span className="fc-grow">
               <b>New here?</b> Connect your agent with one message you paste into your chat.

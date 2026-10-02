@@ -1,13 +1,14 @@
-import { ChevronLeft } from "lucide-react";
+import { ArrowUpRight, ChevronLeft } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { api, type PresetSummary } from "@/lib/api";
 
 export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
+export const DOCS_URL = "https://framejam.ai";
 
 export function Wordmark() {
   return (
-    <Link to="/home" className="fc-logo" aria-label="Frame Jam home">
+    <Link to="/" className="fc-logo" aria-label="Frame Jam reviews">
       Frame <b>Jam</b>
     </Link>
   );
@@ -44,23 +45,28 @@ export function Dots({ colors, size }: { colors: string[]; size?: number }) {
 }
 
 const NAV = [
-  { to: "/home", label: "Home" },
-  { to: "/styles", label: "Styles" },
-  { to: "/projects", label: "Projects" },
+  { to: "/", label: "Reviews", end: true },
+  { to: "/styles", label: "Styles", end: false },
+  { to: "/setup", label: "Setup", end: false },
 ];
 
-/** App header: wordmark, the main pages, and the style in use. */
+/** App header on every top-level page: wordmark, the main pages, Docs, and the style in use. */
 export function HomeHeader() {
   const style = useSelectedStyle();
   return (
     <header className="fc-header">
       <Wordmark />
       <nav className="fc-nav" aria-label="Main">
-        {NAV.map(({ to, label }) => (
-          <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "on" : "")}>
+        {NAV.map(({ to, label, end }) => (
+          <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? "on" : "")}>
             {label}
           </NavLink>
         ))}
+        <a href={DOCS_URL} target="_blank" rel="noreferrer" className="ext">
+          Docs
+          <ArrowUpRight className="fc-i xs" aria-hidden />
+          <span className="fc-sr">(opens in a new tab)</span>
+        </a>
       </nav>
       <span className="fc-grow" />
       {style ? (
