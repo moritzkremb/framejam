@@ -38,7 +38,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 400 14px/21px
 .fc-btn.round { border-radius: var(--radius-full); }
 .fc-btn.block { width: 100%; }
 .fc-btn[disabled] { opacity: .4; cursor: not-allowed; filter: none; transform: none; }
-.fc-kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; background: var(--surface-3); color: var(--text-2); font: 500 11px/1 var(--font-mono); }
+.fc-kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; background: var(--surface-3); color: var(--text-2); font: 500 12px/1 -apple-system, BlinkMacSystemFont, var(--font-sans); letter-spacing: .08em; }
 .fc-btn.primary .fc-kbd { background: rgba(0, 0, 0, .12); color: inherit; }
 
 /* ---------- Segmented (toggles) and Tabs (sections) ---------- */

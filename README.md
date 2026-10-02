@@ -18,6 +18,13 @@ HTTP, and keeps projects (each video or storyboard with its versions and comment
 Upgrading from framecut: the first start moves `~/.framecut` to `~/.framejam`, and the old `FRAMECUT_*` environment
 variables still work. Re-add the MCP server under its new name (`framejam`) in your agent app.
 
+## Community and updates
+
+Frame Jam is free, local and open source. To get great at making videos with it, join
+[Prompt Warrior](https://www.skool.com/promptwarrior), the community from the maker of Frame Jam: training for the Frame Jam
+workflow with Claude Code and Cursor, new styles before anyone else, early access to new features, and weekly calls.
+For release and new-style emails, sign up at [framejam.ai](https://www.framejam.ai/#updates).
+
 ## Quick start
 
 ```bash

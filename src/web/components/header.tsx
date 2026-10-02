@@ -1,6 +1,7 @@
 import { ArrowUpRight, ChevronLeft } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { COMMUNITY_URL } from "@/components/community";
 import { api, type PresetSummary } from "@/lib/api";
 
 export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
@@ -62,8 +63,13 @@ export function HomeHeader() {
             {label}
           </NavLink>
         ))}
-        <a href={DOCS_URL} target="_blank" rel="noreferrer" className="ext">
+        <a href={DOCS_URL} target="_blank" rel="noreferrer" className="ext docs">
           Docs
+          <ArrowUpRight className="fc-i xs" aria-hidden />
+          <span className="fc-sr">(opens in a new tab)</span>
+        </a>
+        <a href={COMMUNITY_URL} target="_blank" rel="noreferrer" className="ext community">
+          Community
           <ArrowUpRight className="fc-i xs" aria-hidden />
           <span className="fc-sr">(opens in a new tab)</span>
         </a>

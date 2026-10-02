@@ -1,6 +1,7 @@
 import { ArrowRight, Check, ChevronDown, Search, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { COMMUNITY_URL, UpdatesForm } from "@/components/community";
 import { HomeHeader } from "@/components/header";
 import { Menu, MenuItem } from "@/components/menu";
 import { isOffline, Offline } from "@/components/states";
@@ -233,6 +234,21 @@ export function StylesPage() {
                   />
                 ))}
               </div>
+            )}
+            {data && (
+              <footer className="fc-styles-foot" data-testid="styles-foot">
+                <div>
+                  <div className="fc-h3">Want more styles?</div>
+                  <p className="fc-caption" style={{ margin: "2px 0 0" }}>
+                    New styles land in the{" "}
+                    <a href={COMMUNITY_URL} target="_blank" rel="noreferrer" className="fc-link">
+                      Prompt Warrior community
+                    </a>{" "}
+                    first. Or get an email when they ship.
+                  </p>
+                </div>
+                <UpdatesForm source="app-styles" />
+              </footer>
             )}
           </>
         )}

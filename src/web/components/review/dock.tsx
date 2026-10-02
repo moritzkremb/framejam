@@ -167,7 +167,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
             }}
           />
           <button type="button" className="fc-btn sm" onClick={onAdd} disabled={adding || !text.trim()} title="Add comment (Enter)">
-            Add <span className="fc-kbd">↵</span>
+            Add <span className="fc-kbd">↩</span>
           </button>
         </div>
       </div>
