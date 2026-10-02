@@ -1,0 +1,29 @@
+{
+  "offset": -0.424,
+  "frames": 364,
+  "events": [
+    {
+      "t": -0.424,
+      "type": "start"
+    },
+    {
+      "t": 1.017,
+      "type": "hover",
+      "data": "bauhaus"
+    },
+    {
+      "t": 4.114,
+      "type": "hover",
+      "data": "doodle"
+    },
+    {
+      "t": 6.322,
+      "type": "click",
+      "data": "use-doodle"
+    },
+    {
+      "t": 9.021,
+      "type": "end"
+    }
+  ]
+}

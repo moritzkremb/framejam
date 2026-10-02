@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        @font-face { font-family: "Geist Mono"; src: url("assets/fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #f4f4f5; }
+        #send-bg { position: absolute; inset: 0; background: #0c0c0d; }
+        #send-plane { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; border-radius: 14px; overflow: hidden; background: #0c0c0d; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.09), 0 50px 140px rgba(0, 0, 0, 0.65); }
+        #send-plane video, #send-plane img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+
+        #send-glow { position: absolute; left: 260px; top: 180px; width: 1400px; height: 1100px; border-radius: 50%; background: radial-gradient(closest-side, rgba(124, 196, 255, 0.14), rgba(124, 196, 255, 0) 70%); }
+        #send-win { position: absolute; left: 100px; top: 290px; width: 1720px; height: 710px; border-radius: 18px; overflow: hidden; background: #141416; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.1), 0 50px 140px rgba(0, 0, 0, 0.7); transform-origin: 50% 60%; }
+        #send-bar { position: absolute; left: 0; top: 0; right: 0; height: 44px; display: flex; align-items: center; gap: 9px; padding-left: 18px; background: #1a1a1d; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+        .send-dot { width: 13px; height: 13px; border-radius: 50%; background: #3a3a40; }
+        #send-title { position: absolute; left: 0; right: 0; text-align: center; font-size: 17px; color: #8a8a93; letter-spacing: -0.01em; }
+        #send-thread { position: absolute; left: 300px; right: 300px; top: 78px; display: flex; flex-direction: column; gap: 18px; }
+        #send-ask { align-self: flex-end; padding: 14px 20px; border-radius: 16px; background: #26262b; font-size: 22px; color: #8a8a93; }
+        .send-cmd { color: #7cc4ff; }
+        #send-card { padding: 20px 24px 22px; border-radius: 16px; background: #1c1c20; box-shadow: 0 0 0 1.5px rgba(212, 255, 58, 0.45); }
+        #send-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 23px; font-weight: 600; letter-spacing: -0.01em; }
+        #send-card-mark { width: 12px; height: 12px; border-radius: 50%; background: #d4ff3a; }
+        .send-note { display: flex; gap: 18px; padding: 7px 0; font-size: 22px; color: #d4d4d8; }
+        .send-at { width: 190px; flex: none; font-family: "Geist Mono", monospace; font-size: 19px; color: #d4ff3a; padding-top: 2px; }
+        .send-row { display: flex; align-items: center; gap: 14px; font-family: "Geist Mono", monospace; font-size: 21px; color: #a1a1aa; }
+        .send-tick { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(124, 196, 255, 0.14); color: #7cc4ff; font-size: 16px; }
+        #send-row3 { color: #f4f4f5; }
+
+        .send-cap { position: absolute; left: 50%; top: 100px; padding: 28px 46px 36px; border-radius: 30px; background: rgba(12, 12, 13, 0.94); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.55); font-weight: 700; font-size: 96px; line-height: 1.02; letter-spacing: -0.04em; white-space: nowrap; transform-origin: 50% 0; }
+        .send-lime { color: #d4ff3a; }
+        .send-blue { color: #7cc4ff; }
+      </style>
+
+      <div id="root" data-composition-id="send" data-width="1920" data-height="1080">
+        <div id="send-bg" class="clip" data-start="0" data-duration="4.8" data-track-index="0"></div>
+        <div id="send-plane">
+          <video id="send-a" class="clip" src="assets/footage/review.mp4" data-start="0" data-duration="0.85" data-media-start="24.9" data-track-index="1" muted playsinline></video>
+          <img id="send-a-still" class="clip" src="assets/stills/review-24.9.jpg" data-start="0" data-duration="0.2" data-track-index="4" alt="" />
+          <video id="send-b" class="clip" src="assets/footage/review.mp4" data-start="3.25" data-duration="1.55" data-media-start="30.85" data-track-index="2" muted playsinline></video>
+          <img id="send-b-still" class="clip" src="assets/stills/review-30.85.jpg" data-start="3.25" data-duration="0.2" data-track-index="4" alt="" />
+        </div>
+
+        <div id="send-glow" class="clip" data-start="0.85" data-duration="2.4" data-track-index="5"></div>
+        <div id="send-win" class="clip" data-start="0.85" data-duration="2.4" data-track-index="6">
+          <div id="send-bar"><span class="send-dot"></span><span class="send-dot"></span><span class="send-dot"></span><span id="send-title">launch-teaser</span></div>
+          <div id="send-thread">
+            <div id="send-ask"><span class="send-cmd">/framejam</span> make a launch teaser for our app</div>
+            <div id="send-card">
+              <div id="send-card-head"><span id="send-card-mark"></span>Frame Jam · 3 comments on v1</div>
+              <div class="send-note"><span class="send-at">0:01.0</span>Make this orb lime.</div>
+              <div class="send-note"><span class="send-at">0:03.8–0:05.9</span>Bars rise all at once. Stagger them.</div>
+              <div class="send-note"><span class="send-at">Whole video</span>Love the colours. Keep them.</div>
+            </div>
+            <div id="send-row1" class="send-row"><span class="send-tick">✓</span>Made the orb lime</div>
+            <div id="send-row2" class="send-row"><span class="send-tick">✓</span>Staggered the bars</div>
+            <div id="send-row3" class="send-row"><span class="send-tick">✓</span>Rendered v2</div>
+          </div>
+        </div>
+
+        <div id="send-cap" class="send-cap clip" data-start="0.1" data-duration="3.05" data-track-index="7"><span class="send-lime">Send</span> feedback to your <span class="send-blue">agent.</span></div>
+      </div>
+
+      <script>
+        (function () {
+          const cam = (px, py, z) => ({ x: 960 - px * z, y: 540 - py * z, scale: z });
+          const tl = gsap.timeline({ paused: true });
+
+          // Finish review (local 0.72), cut away before the handoff banner appears.
+          tl.set("#send-plane", cam(720, 470, 1.25), 0);
+          // In the agent: the comments arrive, then it applies them.
+          tl.fromTo("#send-win", { y: 40, scale: 0.96, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.35, ease: "expo.out" }, 0.85);
+          tl.fromTo("#send-glow", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "sine.out" }, 0.85);
+          tl.fromTo("#send-card", { y: 40, scale: 0.96, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.5)" }, 1.1);
+          tl.fromTo(".send-note", { x: -16, opacity: 0 }, { x: 0, opacity: 1, duration: 0.25, ease: "power3.out", stagger: 0.1 }, 1.3);
+          tl.fromTo(["#send-row1", "#send-row2", "#send-row3"], { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "power3.out", stagger: 0.28 }, 1.95);
+          // Back in Frame Jam, already framed on the toast: "Version 2 is ready" arrives at local 3.47.
+          tl.set("#send-plane", cam(732, 100, 3.0), 3.25);
+
+          tl.fromTo("#send-cap", { xPercent: -50, scale: 1.3, opacity: 0 }, { xPercent: -50, scale: 1, opacity: 1, duration: 0.3, ease: "expo.out" }, 0.1);
+          tl.to("#send-cap", { opacity: 0, y: -20, duration: 0.2, ease: "power2.in" }, 2.95);
+          window.__timelines["send"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

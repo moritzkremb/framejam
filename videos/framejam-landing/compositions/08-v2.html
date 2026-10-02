@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        @font-face { font-family: "Geist Mono"; src: url("assets/fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #f4f4f5; }
+        #v2-bg { position: absolute; inset: 0; background: #0c0c0d; }
+        #v2-glow { position: absolute; left: 610px; top: 160px; width: 1300px; height: 1300px; border-radius: 50%; background: radial-gradient(circle, rgba(212, 255, 58, 0.12), rgba(212, 255, 58, 0) 62%); }
+        #v2-plane { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; border-radius: 14px; overflow: hidden; background: #0c0c0d; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.09), 0 50px 140px rgba(0, 0, 0, 0.65); }
+        #v2-plane video, #v2-plane img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+        #v2-cap { position: absolute; left: 96px; bottom: 92px; padding: 28px 46px 36px; border-radius: 30px; background: rgba(12, 12, 13, 0.94); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.55); font-weight: 700; font-size: 96px; line-height: 1.02; letter-spacing: -0.04em; white-space: nowrap; transform-origin: 0 100%; }
+        .v2-lime { color: #d4ff3a; }
+        .v2-side { position: absolute; top: 290px; width: 840px; }
+        #v2-left { left: 80px; }
+        #v2-right { left: 1000px; }
+        .v2-label { display: flex; align-items: baseline; gap: 18px; margin-bottom: 22px; font-family: "Geist Mono", monospace; font-size: 30px; color: #86868f; }
+        .v2-label b { font-weight: 600; color: #a1a1aa; }
+        #v2-right .v2-label b { color: #d4ff3a; }
+        .v2-win { position: relative; width: 840px; height: 472.5px; border-radius: 20px; overflow: hidden; background: #151517; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 40px 110px rgba(0, 0, 0, 0.6); }
+        #v2-right .v2-win { box-shadow: 0 0 0 2px rgba(212, 255, 58, 0.55), 0 40px 110px rgba(0, 0, 0, 0.6); }
+        .v2-win video, .v2-win img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+      </style>
+
+      <div id="root" data-composition-id="v2" data-width="1920" data-height="1080">
+        <div id="v2-bg" class="clip" data-start="0" data-duration="3.7" data-track-index="0"></div>
+        <div id="v2-glow" class="clip" data-start="0" data-duration="3.7" data-track-index="1"></div>
+        <div id="v2-plane">
+          <video id="v2-review" class="clip" src="assets/footage/review.mp4" data-start="0" data-duration="1.7" data-media-start="37.1" data-track-index="2" muted playsinline></video>
+          <img id="v2-review-still" class="clip" src="assets/stills/review-37.1.jpg" data-start="0" data-duration="0.2" data-track-index="6" alt="" />
+        </div>
+        <div id="v2-cap" class="clip" data-start="0.1" data-duration="1.5" data-track-index="3">Every note, <span class="v2-lime">applied.</span></div>
+
+        <div id="v2-left" class="v2-side">
+          <div class="v2-label"><b>v1</b><span>first cut</span></div>
+          <div class="v2-win"><video id="v2-a" class="clip" src="assets/renders/orbit-v1.mp4" data-start="1.7" data-duration="2.0" data-media-start="2.05" data-playback-rate="0.85" data-track-index="4" muted playsinline></video>
+            <img id="v2-a-still" class="clip" src="assets/stills/orbit-v1-2.05.jpg" data-start="1.7" data-duration="0.2" data-track-index="7" alt="" /></div>
+        </div>
+        <div id="v2-right" class="v2-side">
+          <div class="v2-label"><b>v2</b><span>lime orb</span></div>
+          <div class="v2-win"><video id="v2-b" class="clip" src="assets/renders/orbit-v2.mp4" data-start="1.7" data-duration="2.0" data-media-start="2.05" data-playback-rate="0.85" data-track-index="5" muted playsinline></video>
+            <img id="v2-b-still" class="clip" src="assets/stills/orbit-v2-2.05.jpg" data-start="1.7" data-duration="0.2" data-track-index="8" alt="" /></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const cam = (px, py, z) => ({ x: 960 - px * z, y: 540 - py * z, scale: z });
+          const tl = gsap.timeline({ paused: true });
+
+          // The new version plays in the same player: the orb lands lime. One calm push-in, then out.
+          tl.set("#v2-plane", cam(530, 325, 1.8), 0);
+          tl.to("#v2-plane", { opacity: 0, duration: 0.25, ease: "power2.in" }, 1.45);
+          tl.fromTo("#v2-cap", { scale: 1.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "expo.out" }, 0.1);
+          tl.to("#v2-cap", { opacity: 0, y: 20, duration: 0.15, ease: "power2.in" }, 1.45);
+
+          // Then the two real renders side by side, held on the orbs: coral before, lime after.
+          tl.fromTo("#v2-left", { y: 60, scale: 0.94, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "power3.out" }, 1.7);
+          tl.fromTo("#v2-right", { y: 60, scale: 0.94, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "power3.out" }, 1.82);
+          tl.fromTo("#v2-glow", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1.05, duration: 2.0, ease: "sine.inOut" }, 1.7);
+          tl.to(["#v2-left", "#v2-right"], { opacity: 0, duration: 0.2, ease: "power2.in" }, 3.5);
+          window.__timelines["v2"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

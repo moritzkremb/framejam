@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #f4f4f5; background: #0c0c0d; }
+        #looks-bg { position: absolute; inset: 0; background: #0c0c0d; }
+        #looks-reel { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        .looks-v { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        #looks-type { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        #looks-pill { display: inline-block; padding: 34px 70px 46px; border-radius: 40px; background: rgba(12, 12, 13, 0.92); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 40px 120px rgba(0, 0, 0, 0.6); font-weight: 700; font-size: 190px; line-height: 1; letter-spacing: -0.05em; white-space: nowrap; }
+        .looks-w { display: inline-block; }
+        .looks-lime { color: #d4ff3a; }
+      </style>
+
+      <div id="root" data-composition-id="looks" data-width="1920" data-height="1080">
+        <div id="looks-bg" class="clip" data-start="0" data-duration="3.8" data-track-index="0"></div>
+        <div id="looks-reel">
+          <video id="looks-1" class="looks-v clip" src="assets/presets/cyanotype-mac.mp4" data-start="0" data-duration="0.45" data-media-start="1.0" data-track-index="1" muted playsinline></video>
+          <video id="looks-2" class="looks-v clip" src="assets/presets/bauhaus-grid.mp4" data-start="0.45" data-duration="0.42" data-media-start="1.5" data-track-index="1" muted playsinline></video>
+          <video id="looks-3" class="looks-v clip" src="assets/presets/window-seat.mp4" data-start="0.87" data-duration="0.42" data-media-start="0.8" data-track-index="1" muted playsinline></video>
+          <video id="looks-4" class="looks-v clip" src="assets/presets/op-art.mp4" data-start="1.29" data-duration="0.4" data-media-start="0.2" data-track-index="1" muted playsinline></video>
+          <video id="looks-5" class="looks-v clip" src="assets/presets/doodle-mascot.mp4" data-start="1.69" data-duration="0.4" data-media-start="0.3" data-track-index="1" muted playsinline></video>
+          <video id="looks-6" class="looks-v clip" src="assets/presets/topo-credits.mp4" data-start="2.09" data-duration="0.38" data-media-start="3.4" data-track-index="1" muted playsinline></video>
+          <video id="looks-7" class="looks-v clip" src="assets/presets/label-collage.mp4" data-start="2.47" data-duration="0.38" data-media-start="3.6" data-track-index="1" muted playsinline></video>
+          <video id="looks-8" class="looks-v clip" src="assets/presets/storybook-lantern.mp4" data-start="2.85" data-duration="0.95" data-media-start="0.3" data-track-index="1" muted playsinline></video>
+        </div>
+        <div id="looks-type" class="clip" data-start="0.1" data-duration="3.7" data-track-index="2">
+          <div id="looks-pill"><span class="looks-w">Pick</span> <span class="looks-w">a</span> <span class="looks-w looks-lime">look.</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          // Each cut lands with a small punch-out, so the reel never sits still.
+          const cuts = [[1, 0, 0.45], [2, 0.45, 0.42], [3, 0.87, 0.42], [4, 1.29, 0.4], [5, 1.69, 0.4], [6, 2.09, 0.38], [7, 2.47, 0.38], [8, 2.85, 0.95]];
+          cuts.forEach(([n, at, d]) => {
+            tl.fromTo("#looks-" + n, { scale: 1.14 }, { scale: 1.0, duration: d, ease: "power2.out" }, at);
+          });
+          tl.fromTo("#looks-pill", { scale: 1.35, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "expo.out" }, 0.1);
+          tl.fromTo("#looks-pill .looks-w", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "expo.out", stagger: 0.09 }, 0.14);
+          tl.to("#looks-pill", { scale: 1.06, duration: 2.6, ease: "none" }, 0.5);
+          // Whip out toward the grid.
+          tl.to("#looks-reel", { scale: 0.42, opacity: 0, duration: 0.45, ease: "power3.in" }, 3.35);
+          tl.to("#looks-type", { y: -60, opacity: 0, duration: 0.3, ease: "power3.in" }, 3.45);
+          window.__timelines["looks"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

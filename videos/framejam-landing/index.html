@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=1920, height=1080">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
     <script src="assets/vendor/gsap.min.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,17 +12,17 @@
     </style>
   </head>
   <body>
-    <div data-hf-id="hf-cbta" id="root" data-composition-id="main" data-start="0" data-duration="44" data-width="1920" data-height="1080">
-      <div data-hf-id="hf-ywma" id="hook" data-composition-id="hook" data-composition-src="compositions/01-hook.html" data-start="0" data-duration="4.5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-ps2m" id="claim" data-composition-id="claim" data-composition-src="compositions/02-claim.html" data-start="4.5" data-duration="3.5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-6mkb" id="point" data-composition-id="point" data-composition-src="compositions/03-point.html" data-start="8" data-duration="7" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-rnct" id="range" data-composition-id="range" data-composition-src="compositions/04-range.html" data-start="15" data-duration="4.5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-mrix" id="exact" data-composition-id="exact" data-composition-src="compositions/05-exact.html" data-start="19.5" data-duration="4.5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-t3ge" id="send" data-composition-id="send" data-composition-src="compositions/06-send.html" data-start="24" data-duration="5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-1i7u" id="v2" data-composition-id="v2" data-composition-src="compositions/07-v2.html" data-start="29" data-duration="5" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-dw0a" id="styles" data-composition-id="styles" data-composition-src="compositions/08-styles.html" data-start="34" data-duration="6" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <div data-hf-id="hf-kdl4" id="cta" data-composition-id="cta" data-composition-src="compositions/09-cta.html" data-start="40" data-duration="4" data-track-index="1" data-width="1920" data-height="1080"></div>
-      <audio data-hf-id="hf-t0so" id="sfx" class="clip" src="assets/audio/sfx.wav" data-start="0" data-duration="44" data-track-index="10" data-volume="0.8"></audio>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="33.35" data-width="1920" data-height="1080">
+      <div id="looks" data-composition-id="looks" data-composition-src="compositions/01-looks.html" data-start="0" data-duration="3.8" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="grid" data-composition-id="grid" data-composition-src="compositions/02-grid.html" data-start="3.8" data-duration="4.3" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="build" data-composition-id="build" data-composition-src="compositions/03-build.html" data-start="8.1" data-duration="5.2" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="point" data-composition-id="point" data-composition-src="compositions/04-point.html" data-start="13.3" data-duration="3.6" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="range" data-composition-id="range" data-composition-src="compositions/05-range.html" data-start="16.9" data-duration="3.45" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="send" data-composition-id="send" data-composition-src="compositions/07-send.html" data-start="20.35" data-duration="4.8" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="v2" data-composition-id="v2" data-composition-src="compositions/08-v2.html" data-start="25.15" data-duration="3.7" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="claim" data-composition-id="claim" data-composition-src="compositions/09-claim.html" data-start="28.85" data-duration="4.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <audio id="music" class="clip" src="assets/audio/music.wav" data-start="0" data-duration="33.35" data-track-index="11" data-volume="1"></audio>
+      <audio id="sfx" class="clip" src="assets/audio/sfx.wav" data-start="0" data-duration="33.35" data-track-index="10" data-volume="0.8"></audio>
     </div>
     <script>
       window.__timelines["main"] = gsap.timeline({ paused: true });

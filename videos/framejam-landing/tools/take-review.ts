@@ -32,19 +32,19 @@ await page.$eval(".fc-play", (b) => (b as HTMLButtonElement).click());
 take.mark("pause");
 await sleep(500);
 
-// 2. Point at the marker word and say what should change.
-const reads = at(440, 600);
+// 2. Point at the orb and say what should change.
+const reads = at(960, 540);
 await take.move(reads.x - 90, reads.y + 60, 700);
 await sleep(250);
-await take.click(reads.x, reads.y, "pin-reads", 450);
+await take.click(reads.x, reads.y, "pin-orb", 450);
 await sleep(700);
-await take.type("Make this marker lime.");
+await take.type("Make this orb lime.");
 await sleep(350);
 await page.keyboard.press("Enter");
 take.mark("add-1");
 await sleep(1300);
 
-// 3. Drag across the filmstrip for a range (the tags scene, 3.8s – 6s).
+// 3. Drag across the filmstrip for a range (the bars scene, 4s – 6s).
 const y = scrub.y + scrub.height / 2;
 const x0 = scrub.x + scrub.width * 0.48;
 const x1 = scrub.x + scrub.width * 0.74;
@@ -63,7 +63,7 @@ for (let i = 1; i <= 40; i++) {
 await page.mouse.up();
 take.mark("drag-end");
 await sleep(700);
-await take.type("Tags land too fast. Hold each one a beat longer.");
+await take.type("Bars rise all at once. Stagger them.");
 await sleep(300);
 await page.keyboard.press("Enter");
 take.mark("add-2");
@@ -73,7 +73,7 @@ await sleep(1200);
 const whole = await take.box(".fc-chip-btn");
 await take.click(whole.x + whole.width / 2, whole.y + whole.height / 2, "whole-video", 650);
 await sleep(500);
-await take.type("Love the paper texture. Keep it.");
+await take.type("Love the colours. Keep them.");
 await sleep(300);
 await page.keyboard.press("Enter");
 take.mark("add-3");
@@ -89,7 +89,7 @@ await page.waitForFunction(() => document.body.innerText.includes("Version 2"), 
 take.mark("v2");
 await sleep(2200);
 
-// 6. Watch the fix: seek to just before the marker swipe and play.
+// 6. Watch the fix: seek to just before the orb and play.
 const ov2 = await take.box('[data-testid="frame-overlay"]');
 const sc2 = await take.box('[data-testid="timeline-scrub"]');
 await take.click(sc2.x + sc2.width * 0.245, sc2.y + sc2.height - 6, "seek-v2", 900);

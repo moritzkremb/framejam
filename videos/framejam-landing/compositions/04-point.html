@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #f4f4f5; }
+        #point-bg { position: absolute; inset: 0; background: #0c0c0d; }
+        #point-plane { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; border-radius: 14px; overflow: hidden; background: #0c0c0d; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.09), 0 50px 140px rgba(0, 0, 0, 0.65); }
+        #point-plane video, #point-plane img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+        .point-cap { position: absolute; left: 96px; bottom: 92px; padding: 28px 46px 36px; border-radius: 30px; background: rgba(12, 12, 13, 0.94); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.55); font-weight: 700; font-size: 96px; line-height: 1.02; letter-spacing: -0.04em; white-space: nowrap; transform-origin: 0 100%; }
+        .point-lime { color: #d4ff3a; }
+      </style>
+
+      <div id="root" data-composition-id="point" data-width="1920" data-height="1080">
+        <div id="point-bg" class="clip" data-start="0" data-duration="3.6" data-track-index="0"></div>
+        <div id="point-plane">
+          <video id="point-v" class="clip" src="assets/footage/review.mp4" data-start="0" data-duration="3.6" data-media-start="6.6" data-playback-rate="1.3" data-track-index="1" muted playsinline></video>
+          <img id="point-v-still" class="clip" src="assets/stills/review-6.6.jpg" data-start="0" data-duration="0.2" data-track-index="3" alt="" />
+        </div>
+        <div id="point-cap1" class="point-cap clip" data-start="0.1" data-duration="1.3" data-track-index="2"><span class="point-lime">Point</span> at it.</div>
+        <div id="point-cap2" class="point-cap clip" data-start="1.4" data-duration="2.2" data-track-index="2">Say what to <span class="point-lime">change.</span></div>
+      </div>
+
+      <script>
+        (function () {
+          const cam = (px, py, z) => ({ x: 960 - px * z, y: 540 - py * z, scale: z });
+          const tl = gsap.timeline({ paused: true });
+
+          // Into the player; the comment cursor lands on the orb at local 0.94.
+          tl.fromTo("#point-plane", cam(530, 360, 1.3), { ...cam(530, 330, 1.75), duration: 0.45, ease: "expo.out" }, 0);
+          tl.to("#point-plane", { ...cam(530, 325, 2.0), duration: 0.45, ease: "power2.out" }, 0.45);
+          tl.to("#point-plane", { ...cam(530, 325, 2.12), duration: 0.08, ease: "power2.out" }, 0.94);
+          tl.to("#point-plane", { ...cam(530, 325, 2.0), duration: 0.3, ease: "power2.out" }, 1.02);
+          // Down to the comment box while it types (1.55 → 2.47), then out to the sidebar as it lands (2.75).
+          tl.to("#point-plane", { ...cam(460, 790, 1.85), duration: 0.5, ease: "power2.inOut" }, 1.35);
+          tl.to("#point-plane", { ...cam(900, 360, 1.3), duration: 0.6, ease: "power2.inOut" }, 2.8);
+
+          tl.fromTo("#point-cap1", { scale: 1.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "expo.out" }, 0.1);
+          tl.to("#point-cap1", { opacity: 0, duration: 0.08 }, 1.32);
+          tl.fromTo("#point-cap2", { scale: 1.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "expo.out" }, 1.4);
+          tl.to("#point-cap2", { opacity: 0, y: 20, duration: 0.15, ease: "power2.in" }, 3.42);
+          window.__timelines["point"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,6 +1,6 @@
 /**
  * Plays the agent against an isolated framejam instance for the footage.
- *   seed   — pick a style, open the hero review (Ledgerly teaser) plus two background reviews
+ *   seed   — pick a style, open the hero review (Launch teaser) plus two background reviews
  *   listen — block on wait_for_feedback for the hero review, then ship v2 with a note
  * Env: FJ_URL (default http://localhost:4600)
  */
@@ -42,12 +42,12 @@ const mode = process.argv[2] ?? "seed";
 if (mode === "seed") {
   const relay = stageProject("relay", "neon-terminal");
   const sweep = stageProject("sweep", "soft-gradient-saas");
-  const ledgerly = path.join(stage, "ledgerly");
+  const ledgerly = path.join(stage, "orbit");
 
   const r1 = json(await call("open_review", { title: "Relay deploy teaser", videoPath: path.join(relay, "renders/v1.mp4"), compositionDir: path.join(relay, "composition"), note: "First cut" }));
   await call("add_version", { reviewId: r1.reviewId, videoPath: path.join(relay, "renders/v1.mp4"), note: "Slower cursor, bigger log lines" });
   const r2 = json(await call("open_review", { title: "Morning sweep promo", videoPath: path.join(sweep, "renders/v1.mp4"), compositionDir: path.join(sweep, "composition"), note: "First cut" }));
-  const hero = json(await call("open_review", { title: "Ledgerly teaser", videoPath: path.join(ledgerly, "renders/v1.mp4"), compositionDir: path.join(ledgerly, "composition"), note: "First cut" }));
+  const hero = json(await call("open_review", { title: "Launch teaser", videoPath: path.join(ledgerly, "renders/v1.mp4"), compositionDir: path.join(ledgerly, "composition"), note: "First cut" }));
   fs.writeFileSync(stateFile, JSON.stringify({ hero, relay: r1, sweep: r2 }, null, 2));
   console.log(JSON.stringify({ hero: hero.url, relay: r1.url, sweep: r2.url }));
 }
@@ -60,9 +60,9 @@ if (mode === "listen") {
     if (p.status !== "feedback") continue;
     for (const c of p.comments) console.log(`  [${c.at}] ${c.text}${c.element ? ` ← ${c.element.selector}` : ""}`);
     await new Promise((r) => setTimeout(r, Number(process.env.WORK_MS ?? 5000)));
-    const ledgerly = path.join(stage, "ledgerly");
+    const ledgerly = path.join(stage, "orbit");
     fs.cpSync(path.join(ledgerly, "composition-v2"), path.join(ledgerly, "composition"), { recursive: true });
-    const v = json(await call("add_version", { reviewId: hero.reviewId, videoPath: path.join(ledgerly, "renders/v2.mp4"), note: "Lime marker on “reads”, tags land a beat apart" }));
+    const v = json(await call("add_version", { reviewId: hero.reviewId, videoPath: path.join(ledgerly, "renders/v2.mp4"), note: "Lime orb, bars rise one by one" }));
     console.log("[agent] add_version → v" + v.version);
     break;
   }

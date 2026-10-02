@@ -5,6 +5,8 @@ stage/
 assets/renders/
 assets/footage/*.mp4
 assets/audio/*.wav
+assets/audio/*.mp3
+renders/
 *.mp4
 *.mov
 *.webm

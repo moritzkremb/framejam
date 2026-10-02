@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+        #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #f4f4f5; }
+        #claim-bg { position: absolute; inset: 0; background: #0c0c0d; }
+        #claim-glow { position: absolute; left: 260px; top: -160px; width: 1400px; height: 1400px; border-radius: 50%; background: radial-gradient(circle, rgba(212, 255, 58, 0.16), rgba(212, 255, 58, 0) 60%); }
+        #claim-glow2 { position: absolute; left: 1100px; top: 420px; width: 1000px; height: 1000px; border-radius: 50%; background: radial-gradient(circle, rgba(124, 196, 255, 0.12), rgba(124, 196, 255, 0) 62%); }
+        #claim-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #claim-mark { display: block; font-weight: 700; font-size: 230px; letter-spacing: -0.055em; line-height: 1; white-space: nowrap; }
+        .claim-ch { display: inline-block; }
+        .claim-jam { color: #d4ff3a; }
+        #claim-rule { display: block; width: 1100px; height: 3px; margin-top: 48px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); transform-origin: center; }
+        #claim-sub { display: block; margin-top: 50px; font-weight: 600; font-size: 64px; letter-spacing: -0.03em; color: #f4f4f5; white-space: nowrap; }
+        .claim-w { display: inline-block; }
+        .claim-lime { color: #d4ff3a; }
+        #claim-pill { display: inline-flex; align-items: center; gap: 18px; margin-top: 60px; padding: 24px 46px 26px; border-radius: 999px; background: #d4ff3a; color: #0c0c0d; font-size: 40px; font-weight: 650; letter-spacing: -0.02em; box-shadow: 0 0 60px rgba(212, 255, 58, 0.28); }
+        #claim-arrow { display: inline-block; }
+      </style>
+
+      <div id="root" data-composition-id="claim" data-width="1920" data-height="1080">
+        <div id="claim-bg" class="clip" data-start="0" data-duration="4.5" data-track-index="0"></div>
+        <div id="claim-glow" class="clip" data-start="0" data-duration="4.5" data-track-index="1"></div>
+        <div id="claim-glow2" class="clip" data-start="0" data-duration="4.5" data-track-index="1"></div>
+        <div id="claim-wrap" class="clip" data-start="0" data-duration="4.5" data-track-index="2">
+          <span id="claim-mark"><span class="claim-ch">F</span><span class="claim-ch">r</span><span class="claim-ch">a</span><span class="claim-ch">m</span><span class="claim-ch">e</span><span class="claim-ch">&#160;</span><span class="claim-ch claim-jam">J</span><span class="claim-ch claim-jam">a</span><span class="claim-ch claim-jam">m</span></span>
+          <span id="claim-rule"></span>
+          <span id="claim-sub"><span class="claim-w claim-lime">Agent-native</span> <span class="claim-w">video</span> <span class="claim-w">editing.</span></span>
+          <span id="claim-pill"><span>Install with one prompt</span><span id="claim-arrow">→</span></span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          tl.fromTo(".claim-ch", { y: 120, opacity: 0, rotation: 4 }, { y: 0, opacity: 1, rotation: 0, duration: 0.6, ease: "expo.out", stagger: 0.035 }, 0.05);
+          tl.fromTo("#claim-mark", { scale: 1.08 }, { scale: 1, duration: 1.1, ease: "expo.out" }, 0.05);
+          tl.fromTo("#claim-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power3.inOut" }, 0.55);
+          tl.fromTo(".claim-w", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out", stagger: 0.09 }, 0.9);
+          tl.fromTo("#claim-pill", { y: 30, scale: 0.85, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.55, ease: "back.out(1.7)" }, 1.55);
+          tl.fromTo("#claim-arrow", { x: 0 }, { x: 10, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 2.2);
+          tl.fromTo("#claim-glow", { scale: 0.7, opacity: 0 }, { scale: 1.05, opacity: 1, duration: 4.5, ease: "sine.out" }, 0);
+          tl.fromTo("#claim-glow2", { scale: 0.8, opacity: 0, x: 80 }, { scale: 1, opacity: 1, x: 0, duration: 4.5, ease: "sine.out" }, 0.6);
+          window.__timelines["claim"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

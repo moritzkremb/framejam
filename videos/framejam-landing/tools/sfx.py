@@ -1,4 +1,4 @@
-"""Synthesise the UI sound-effects bed (one 44s stereo WAV) from cue times.
+"""Synthesise the UI sound-effects bed (one stereo WAV) from cue times.
 
 Cue times are global seconds, derived from the footage event logs and each scene's
 data-media-start / playback-rate (see the comments per scene).
@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 SR = 48000
-DUR = 44.0
+DUR = 33.35
 OUT = Path(__file__).resolve().parent.parent / "assets" / "audio" / "sfx.wav"
 rng = np.random.default_rng(7)
 random.seed(7)
@@ -117,60 +117,68 @@ def typing(start, end, chars, gain=0.22, pan=-0.15):
         put(tick(), start + (end - start) * k / max(chars - 1, 1) + random.uniform(-0.01, 0.01), gain * random.uniform(0.7, 1.0), pan)
 
 
-# 01 hook: footage cut to type (1.7), the mumbled ask types itself, the strike.
-put(whoosh(0.3, 0.4), 1.5, 0.35)
-put(pop(380, 160, 0.14), 1.72, 0.5)
-put(pop(420, 200, 0.12), 2.22, 0.35)
-typing(2.75, 2.75 + 0.022 * 44, 22, 0.16)
-put(whoosh(0.28, 1.6), 3.82, 0.4, 0.2)
+# 01 looks: a soft knock on every montage cut, the pill lands, whip out.
+for at in (0.0, 0.45, 0.87, 1.29, 1.69, 2.09, 2.47, 2.85):
+    put(pop(260, 110, 0.12), at + 0.01, 0.45)
+    put(tick(), at + 0.01, 0.35)
+put(pop(700, 340, 0.1), 0.14, 0.5)
+put(whoosh(0.45, 0.4), 3.3, 0.55)
 
-# 02 claim: wordmark lands, zoom-through exit.
-put(boom(), 4.55, 0.55)
-put(shimmer(0.7), 4.8, 0.5)
-put(whoosh(0.55, 0.5), 7.45, 0.6)
+# 02 grid (start 3.8): dive in, down to Doodle Mascot (1.76), Use (3.32), out to the toast.
+put(whoosh(0.35, 1.4), 3.78, 0.35)
+put(whoosh(0.3, 0.5), 3.8 + 1.4, 0.25)
+put(click(), 3.8 + 3.32, 0.9, -0.3)
+put(pop(820, 420, 0.09), 3.8 + 3.4, 0.45)
+put(whoosh(0.3, 0.6), 3.8 + 3.6, 0.3)
 
-# 03 point (start 8, media 5.98): pin click 7.823, typing 8.621-10.007, Enter 10.36.
-put(click(), 8 + 7.823 - 5.98, 0.9, -0.2)
-put(pop(900, 500, 0.08), 8 + 7.9 - 5.98, 0.35, -0.2)
-typing(8 + 8.621 - 5.98, 8 + 10.007 - 5.98, 22)
-put(pop(), 8 + 10.36 - 5.98, 0.5)
-put(whoosh(0.4, 0.8), 12.15, 0.25, 0.3)
+# 03 build (start 8.1): the agent app opens, the prompt types and sends, three steps tick, Frame Jam slides in, zoom.
+put(whoosh(0.35, 0.6), 8.05, 0.3)
+put(pop(), 8.2, 0.35)
+typing(8.55, 9.92, 42, 0.18)
+put(click(), 8.0 + 2.0, 0.7)
+put(pop(700, 340, 0.1), 8.1 + 1.97, 0.4)
+for k in range(3):
+    put(pop(900, 520, 0.07), 8.1 + 2.17 + 0.25 * k, 0.35)
+put(whoosh(0.45, 0.7), 8.1 + 2.85, 0.5, 0.4)
+put(whoosh(0.5, 0.5), 8.1 + 4.5, 0.35)
 
-# 04 range (start 15, media 12.4, rate 1.5): drag 12.979-14.318, typing 15.018-18.003, Enter 18.305.
-r = lambda m: 15 + (m - 12.4) / 1.5
-put(click(), r(12.979), 0.8)
-put(tick(), r(14.318), 0.5)
-typing(r(15.018), r(18.003), 30, 0.18)
-put(pop(), r(18.305), 0.5)
+# 04 point (start 13.3, media 6.6, rate 1.3): pin 7.821, typing 8.617-9.813, add 10.168.
+p4 = lambda m: 13.3 + (m - 6.6) / 1.3
+put(click(), p4(7.821), 0.9, -0.2)
+put(pop(900, 500, 0.08), p4(7.88), 0.35, -0.2)
+put(pop(), 14.7, 0.3)
+typing(p4(8.617), p4(9.813), 17, 0.2)
+put(pop(), p4(10.168), 0.5)
 
-# 05 exact: underline draws (local 0.9).
-put(whoosh(0.32, 1.2), 19.4, 0.3)
-put(shimmer(0.55), 20.4, 0.55, 0.3)
+# 05 range (start 16.9): clip A continues from media 11.28 at 2x for 1.56s, then clip B from media 14.4 at 2x.
+r = lambda m: 16.9 + ((m - 11.28) / 2 if m <= 14.4 else 1.56 + (m - 14.4) / 2)
+put(pop(), 17.25, 0.3)
+put(click(), r(12.83), 0.8)
+put(tick(), r(14.169), 0.5)
+typing(r(14.87), r(17.121), 30, 0.15)
+put(pop(), r(17.423), 0.5)
 
-# 06 send (start 24, media 26.3, rate 1.6): Finish 26.818, Version 2 ready 32.889.
-s = lambda m: 24 + (m - 26.3) / 1.6
-put(click(), s(26.818), 0.9, 0.2)
-put(whoosh(0.5, 0.6), s(26.9), 0.4)
-put(chime(), s(32.889), 0.55)
+# 07 send (start 20.35): Finish (0.72), the agent window (0.85) gets the comments and applies them, then "Version 2 is ready" (3.47).
+put(click(), 20.35 + 0.72, 0.9, 0.2)
+put(whoosh(0.35, 0.6), 20.35 + 0.8, 0.35)
+put(pop(700, 340, 0.1), 20.35 + 1.12, 0.45)
+for k in range(3):
+    put(pop(900, 520, 0.07), 20.35 + 1.32 + 0.1 * k, 0.25)
+for k in range(3):
+    put(pop(900, 520, 0.07), 20.35 + 1.97 + 0.28 * k, 0.35)
+put(chime(), 20.35 + 3.47, 0.6)
 
-# 07 v2 (start 29): marker swipe (media 39.5 → local 0.3), split-screen in at 2.1.
-put(whoosh(0.5, 1.0), 29.25, 0.3, -0.2)
-put(whoosh(0.4, 0.5), 30.95, 0.45)
-put(pop(500, 260, 0.1), 31.12, 0.35, -0.3)
-put(pop(560, 280, 0.1), 31.22, 0.35, 0.3)
+# 08 v2 (start 25.15): lime orb in the player, split-screen in at 1.7.
+put(pop(500, 200, 0.14), 25.25, 0.45)
+put(whoosh(0.45, 0.5), 25.15 + 1.6, 0.4)
+put(pop(500, 260, 0.1), 25.15 + 1.72, 0.35, -0.3)
+put(pop(560, 280, 0.1), 25.15 + 1.84, 0.35, 0.3)
 
-# 08 styles (start 34): grid in, cut to detail (2.6), cut back (3.9), Use click 15.22 (media 13.9, rate 1.25).
-put(whoosh(0.4, 0.5), 33.85, 0.4)
-put(whoosh(0.25, 0.5), 36.45, 0.3)
-put(whoosh(0.25, 0.5), 37.75, 0.3)
-put(click(), 34 + 3.9 + (15.22 - 13.9) / 1.25, 0.9, 0.3)
-put(pop(820, 420, 0.09), 34 + 3.9 + (15.3 - 13.9) / 1.25, 0.45, 0.3)
-
-# 09 cta (start 40): lockup lands, pill pops.
-put(whoosh(0.45, 0.4), 39.7, 0.45)
-put(boom(), 40.08, 0.6)
-put(shimmer(0.9), 40.3, 0.5)
-put(pop(640, 320, 0.11), 40.98, 0.5)
+# 09 end card (start 28.85): wordmark lands, the pill pops.
+put(whoosh(0.4, 0.5), 28.6, 0.4)
+put(boom(), 28.9, 0.6)
+put(shimmer(0.8), 29.15, 0.5)
+put(pop(640, 320, 0.11), 28.85 + 1.6, 0.5)
 
 mix = np.stack([L, R], axis=1)
 peak = np.max(np.abs(mix))
