@@ -14,20 +14,21 @@ that chat does badly:
 
 Everything is local. One Node process serves the web UI on `http://localhost:2400`, runs MCP over stdio and streamable
 HTTP, and keeps projects (each video or storyboard with its versions and comments) as JSON files in `~/.framejam`. It's built for a half-screen browser pane next to the chat.
-
-Upgrading from framecut: the first start moves `~/.framecut` to `~/.framejam`, and the old `FRAMECUT_*` environment
-variables still work. Re-add the MCP server under its new name (`framejam`) in your agent app.
+The only thing that leaves your machine is a note you send with the **Feedback** button in the header.
 
 ## Community and updates
 
 Frame Jam is free, local and open source. To get great at making videos with it, join
 [Prompt Warrior](https://www.skool.com/promptwarrior), the community from the maker of Frame Jam: training for the Frame Jam
 workflow with Claude Code and Cursor, new styles before anyone else, early access to new features, and weekly calls.
-For release and new-style emails, sign up at [framejam.ai](https://www.framejam.ai/#updates).
+For release and new-style emails, sign up at [framejam.ai](https://www.framejam.ai/#updates). Bug reports and ideas are
+welcome through the **Feedback** button in the app or as [GitHub issues](https://github.com/moritzkremb/framejam/issues).
 
 ## Quick start
 
 ```bash
+git clone https://github.com/moritzkremb/framejam.git
+cd framejam
 npm install
 npm run build
 npm start                 # http://localhost:2400  (MCP at http://localhost:2400/mcp)
@@ -139,7 +140,7 @@ Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTim
   `@hyperframes/core`), so clicks can target elements. Older versions play their mp4 snapshot, so they look as they
   did then.
 - **Keys.** `Space` play/pause, `←/→` step one frame, `Shift+←/→` step one second, `C` focus the comment box,
-  `Esc` clear, `?` shortcuts.
+  `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
 
 ## Storyboards
@@ -158,7 +159,7 @@ open_review({
 The review page shows the panels as a **board** (a grid with titles and captions) and a **panel** view (one panel
 large, with a strip of all panels underneath). Click a panel on the board to open it, click inside it to pin a spot,
 or just type to comment on the whole panel. On the board, the comment box is for the whole storyboard. Keys: `←/→`
-previous/next panel, `B` board, `C` comment.
+previous/next panel, `B` board, `C` comment, `⌘↩` finish review.
 
 Comments reach the agent by panel: `at: "panel 3 (Cold open)"`, with the panel's number, title, caption and image path,
 the pin position, and an image of the panel with the pin drawn on it. Rounds, Finish review, Edit comments and versions
@@ -214,6 +215,8 @@ npm run lint
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, composition serving, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). `lib/composition.ts` handles live playback and element/tween resolution. |
 | `design/` | The Frame Jam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
+| `skills/framejam/` | The agent skill (also mirrored as the Cursor rule in `.cursor/rules/framejam.mdc`). |
+| `videos/framejam-landing/` | Hyperframes source for the Frame Jam landing video (sources only; renders aren't committed). |
 
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), and `FRAMEJAM_PUBLIC_URL` (the base URL used in links).
