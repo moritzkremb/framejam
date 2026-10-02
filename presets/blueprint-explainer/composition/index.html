@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Blueprint Explainer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=STIX+Two+Text:ital,wght@0,500;1,500&family=IBM+Plex+Mono:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0f1626; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: #e8edf5; font-family: "IBM Plex Sans", sans-serif;
+        background-color: #0f1626;
+        background-image: linear-gradient(rgba(122, 140, 170, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(122, 140, 170, 0.08) 1px, transparent 1px);
+        background-size: 60px 60px; }
+      svg#draw { position: absolute; left: 0; top: 0; }
+      .ln { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+      .formula { position: absolute; left: 0; right: 0; text-align: center; font-family: "STIX Two Text", serif; font-weight: 500; white-space: nowrap; }
+      .formula i { font-style: italic; }
+      .formula span { opacity: 0; }
+      .sub { position: absolute; left: 0; right: 0; top: 950px; text-align: center; font-size: 34px; color: #e8edf5; opacity: 0; }
+      .label { position: absolute; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 30px; color: #ffc857; }
+      .muted { color: #7a869c; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="blueprint-explainer" data-width="1920" data-height="1080" data-duration="9">
+      <svg id="draw" width="1920" height="1080" viewBox="0 0 1920 1080">
+        <path id="road" class="ln" pathLength="1" d="M120 760 L1800 760" stroke="#e8edf5" stroke-width="3" />
+        <path id="lane" d="M120 812 L1800 812" stroke="#7a869c" stroke-width="3" stroke-dasharray="28 22" fill="none" opacity="0" />
+        <g id="gauge">
+          <path id="arc" class="ln" pathLength="1" d="M1470 330 A 120 120 0 1 1 1650 330" stroke="#e8edf5" stroke-width="4" />
+          <path id="ticks" class="ln" pathLength="1" d="M1452 290 L1470 284 M1468 202 L1484 212 M1560 150 L1560 168 M1652 202 L1636 212 M1668 290 L1650 284" stroke="#7a869c" stroke-width="4" />
+          <line id="needle" x1="1560" y1="260" x2="1560" y2="170" stroke="#ff6b6b" stroke-width="5" stroke-linecap="round" />
+          <circle cx="1560" cy="260" r="10" fill="#e8edf5" id="hub" />
+        </g>
+        <g id="car">
+          <path class="ln carln" pathLength="1" d="M0 60 L0 36 L38 30 L66 6 L128 6 L156 30 L180 36 L180 60 Z M74 12 L74 30 M120 12 L120 30" stroke="#7fd3ff" stroke-width="4" />
+          <circle class="ln carln" pathLength="1" cx="42" cy="62" r="14" stroke="#7fd3ff" stroke-width="4" />
+          <circle class="ln carln" pathLength="1" cx="138" cy="62" r="14" stroke="#7fd3ff" stroke-width="4" />
+        </g>
+        <path id="mA" class="ln" pathLength="1" d="M490 720 L490 800" stroke="#ffc857" stroke-width="4" />
+        <path id="mB" class="ln" pathLength="1" d="M1490 720 L1490 800" stroke="#ffc857" stroke-width="4" />
+        <path id="bracket" class="ln" pathLength="1" d="M490 640 L490 620 L1490 620 L1490 640" stroke="#ffc857" stroke-width="3" />
+        <path id="ul2" class="ln" pathLength="1" d="M620 420 L1300 420" stroke="#ffc857" stroke-width="4" />
+        <path id="ul4" class="ln" pathLength="1" d="M560 520 L1360 520" stroke="#ffc857" stroke-width="4" />
+      </svg>
+
+      <div class="label" id="kmh" style="left: 1500px; top: 300px">60 km/h</div>
+      <div class="formula" id="f1" style="top: 300px; font-size: 92px"></div>
+      <div class="label" id="dist" style="left: 920px; top: 566px">120 km</div>
+      <div class="label" id="timer" style="left: 120px; top: 120px">t = 0:00 h</div>
+      <div class="formula" id="f3" style="top: 300px; font-size: 76px; opacity: 0"><i>120 km</i> ÷ <i>2 h</i> = <i style="color: #ffc857">60 km/h</i></div>
+      <div class="formula" id="q4" style="top: 300px; font-size: 64px; font-family: 'IBM Plex Sans', sans-serif; color: #7a869c; opacity: 0">So what does the needle measure?</div>
+      <div class="formula" id="a4" style="top: 410px; font-size: 92px; color: #ffc857; opacity: 0"><i>the speed at one instant.</i></div>
+
+      <div class="sub" id="sub1">The dashboard says 60 km/h right now.</div>
+      <div class="sub" id="sub2">But in class we learned: speed = distance ÷ time.</div>
+      <div class="sub" id="sub3">120 km in 2 hours is an average of 60 km/h.</div>
+      <div class="sub" id="sub4">The needle shows how fast you are going at this exact moment.</div>
+    </div>
+
+    <script>
+      var f1 = document.getElementById("f1");
+      [["speed", true], [" = ", false], ["distance", true], [" ÷ ", false], ["time", true]].forEach(function (part) {
+        part[0].split("").forEach(function (ch) {
+          var s = document.createElement("span");
+          s.textContent = ch;
+          if (part[1]) s.style.fontStyle = "italic";
+          if (ch === " ") s.innerHTML = "&nbsp;";
+          f1.appendChild(s);
+        });
+      });
+
+      var tl = gsap.timeline({ paused: true });
+      function draw(id, at, dur, ease) {
+        tl.to(id, { strokeDashoffset: 0, duration: dur || 0.6, ease: ease || "power2.inOut" }, at);
+      }
+      function sub(id, at, out) {
+        tl.to(id, { opacity: 1, duration: 0.4, ease: "power1.out" }, at);
+        if (out !== undefined) tl.to(id, { opacity: 0, duration: 0.3, ease: "power1.in" }, out);
+      }
+
+      draw("#road", 0.05, 0.7);
+      tl.to("#lane", { opacity: 1, duration: 0.5 }, 0.5);
+      gsap.set("#car", { x: -300, y: 684 });
+      draw(".carln", 0.1, 0.6);
+      tl.to("#car", { x: 400, duration: 1.6, ease: "power2.out" }, 0.3);
+      draw("#arc", 0.5, 0.6);
+      draw("#ticks", 0.8, 0.4);
+      gsap.set("#needle", { svgOrigin: "1560 260", rotation: -125 });
+      gsap.set(["#needle", "#hub", "#kmh"], { opacity: 0 });
+      tl.to(["#needle", "#hub"], { opacity: 1, duration: 0.2 }, 0.9)
+        .to("#needle", { rotation: 0, duration: 1.0, ease: "back.out(1.6)" }, 1.0)
+        .to("#kmh", { opacity: 1, duration: 0.3 }, 1.6);
+      sub("#sub1", 0.4, 2.3);
+
+      gsap.utils.toArray("#f1 span").forEach(function (s, i) {
+        tl.to(s, { opacity: 1, duration: 0.08, ease: "none" }, 2.5 + i * 0.04);
+      });
+      draw("#ul2", 3.6, 0.5);
+      sub("#sub2", 2.6, 4.5);
+      tl.to(["#f1", "#ul2"], { opacity: 0, y: -20, duration: 0.3, ease: "power2.in" }, 4.5);
+
+      draw("#mA", 4.7, 0.3);
+      draw("#mB", 4.85, 0.3);
+      draw("#bracket", 5.0, 0.5);
+      gsap.set(["#dist", "#timer"], { opacity: 0 });
+      tl.to("#dist", { opacity: 1, duration: 0.3 }, 5.35)
+        .to("#timer", { opacity: 1, duration: 0.3 }, 5.0)
+        .to("#car", { x: 1400, duration: 1.4, ease: "none" }, 5.05);
+      var clock = { v: 0 };
+      tl.to(clock, {
+        v: 1, duration: 1.4, ease: "none",
+        onUpdate: function () {
+          var m = Math.round(clock.v * 120);
+          document.getElementById("timer").textContent = "t = " + Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0") + " h";
+        }
+      }, 5.05);
+      tl.to("#f3", { opacity: 1, duration: 0.4, ease: "power2.out" }, 6.45);
+      sub("#sub3", 4.8, 6.9);
+      tl.to(["#f3", "#dist", "#bracket", "#timer"], { opacity: 0, duration: 0.3, ease: "power1.in" }, 6.9);
+
+      tl.to("#q4", { opacity: 1, duration: 0.4, ease: "power2.out" }, 7.25)
+        .to("#a4", { opacity: 1, duration: 0.5, ease: "power2.out" }, 7.75);
+      draw("#ul4", 8.2, 0.45);
+      tl.to("#needle", { rotation: 8, duration: 0.25, ease: "sine.inOut", yoyo: true, repeat: 3 }, 7.6);
+      sub("#sub4", 7.2);
+
+      tl.set({}, {}, 9);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["blueprint-explainer"] = tl;
+    </script>
+  </body>
+</html>

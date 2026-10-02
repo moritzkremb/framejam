@@ -1,0 +1,79 @@
+{
+  "id": "flash-sale",
+  "name": "Flash Sale",
+  "tagline": "Loud vertical retail promo: spinning sunbursts, outlined price slams, a coupon ticket and a pulsing CTA.",
+  "description": "Vertical promo style for limited-time offers, launches with a discount and app-store-style ads. Each scene sits on a rotating sunburst in saturated yellow, electric violet or hot pink; chunky rounded display type with thick white or deep-violet outlines and hard offset shadows slams in, a lightning bolt replaces a letter, a giant price drops by a dollar, a perforated coupon ticket swings up with its code, white price cards stack in and the end card pulses a yellow pill CTA over confetti and legal fine print.",
+  "mood": [
+    "loud",
+    "playful",
+    "urgent"
+  ],
+  "pacing": "fast",
+  "format": "9:16",
+  "width": 1080,
+  "height": 1920,
+  "durationSeconds": 8,
+  "palette": {
+    "sunYellow": "#ffd60a",
+    "sunYellowRay": "#ffc300",
+    "violet": "#5a12f0",
+    "violetRay": "#4a08d8",
+    "hotPink": "#ff2d87",
+    "outlineDark": "#2a0a7a",
+    "lavender": "#efe9ff",
+    "white": "#ffffff",
+    "confettiMint": "#22e3c4"
+  },
+  "fonts": {
+    "display": {
+      "family": "Lilita One",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Headlines 130–330px and hero prices 420–440px, with a 22–26px stroke (paint-order: stroke fill) and a 16px hard drop shadow"
+    },
+    "body": {
+      "family": "Rubik",
+      "weights": [
+        500,
+        700,
+        900
+      ],
+      "source": "Google Fonts",
+      "usage": "Pills and CTAs in 900 uppercase 40–58px, supporting lines 700 at 34–72px, fine print 500 at 22px"
+    }
+  },
+  "easing": {
+    "pop": "back.out(2.6)",
+    "slam": "expo.out",
+    "strike": "power4.in",
+    "pulse": "sine.inOut",
+    "burstSpin": "none"
+  },
+  "transitions": [
+    "hard cut between sunburst colours (yellow → violet → pink → lavender → violet), no fades",
+    "white full-frame flash (0.85 → 0 in 0.25s) on the lightning strike",
+    "cards slide in from off-frame right with a slight rotation"
+  ],
+  "textAnimations": [
+    "letters pop from scale 0 with -18° rotation, 0.06s stagger",
+    "lightning bolt glyph drops from above with power4.in and triggers the flash",
+    "hero price slams from scale 3, then the old number exits up and the new one (one dollar less) springs up from below",
+    "coupon code letters bounce in one by one, ticket rocks ±2°",
+    "pill CTA pulses scale 1 → 1.07 four times"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.6,
+    "notes": "Five scenes in 8s. Every scene changes its background colour and lands its main element in the first 0.3s; confetti, sparkles or a wiggle keep it moving until the cut."
+  },
+  "tags": [
+    "promo",
+    "retail",
+    "vertical",
+    "sale",
+    "ad",
+    "bold"
+  ],
+  "guide": "- Every scene sits on a sunburst: a 3000px circle with repeating-conic-gradient (two shades, 7.5° rays) that rotates 18–26° per scene with ease \"none\", plus a soft white centre glow. Rotate through #ffd60a yellow, #5a12f0 violet and #ff2d87 pink; use #efe9ff lavender for the card list.\n- Display type is Lilita One with a thick outline via -webkit-text-stroke 22–26px + paint-order: stroke fill, and a hard 16px offset shadow in #2a0a7a. White outline on coloured text, deep-violet outline on yellow/white text.\n- Replace one letter of the headline with an inline SVG lightning bolt (pink fill, white stroke) that strikes in last with power4.in and a white flash.\n- The hero price is 420–440px. Slam it in from scale 3 with expo.out, then count it down by exactly one unit (19 → 18): old number up and out in 0.18s, new one up from below with back.out(2.4) and a burst of confetti.\n- Coupons are white tickets with semicircle notches and a dashed violet inner border; the code is in hot pink and its letters bounce in with a 0.05s stagger.\n- End on brand pill, two-line yellow shout, a pink urgency pill, a yellow CTA pill with a hard shadow that pulses, a URL and 22px fine print at the bottom. Use seeded pseudo-random confetti, never Math.random()."
+}

@@ -1,0 +1,86 @@
+{
+  "id": "pop-zine",
+  "name": "Pop Zine",
+  "tagline": "Y2K riso zine: hot-pink punch words, halftone navy, sunbursts, a rolling counter and hard cuts.",
+  "description": "Loud, printed-paper style for podcasts, explainers and launch-day countdowns. Cream grainy paper and dusty navy halftone panels, huge condensed hot-pink words with a navy outline, a spinning pink-and-cream sunburst, a mechanical LCD digit counter, a dotted chart that draws, and persistent HUD cards (a P(SUCCESS) percentage chip and a LIVE date stamp) that update on every hard cut.",
+  "mood": [
+    "loud",
+    "playful",
+    "editorial"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "paper": "#efe6d2",
+    "card": "#f3ead6",
+    "navy": "#2e3a6b",
+    "deepNavy": "#232b52",
+    "halftone": "#34417a",
+    "periwinkle": "#6f7fb8",
+    "hotPink": "#ff4f9a",
+    "burstPink": "#ff6fae",
+    "percent": "#f0582a",
+    "liveRed": "#e8402f",
+    "yellow": "#f5c84b"
+  },
+  "fonts": {
+    "display": {
+      "family": "Anton",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "Punch words 150–340px, all caps, #ff4f9a with a 4px navy outline and a 12px hard navy offset shadow; percentages 78px"
+    },
+    "body": {
+      "family": "Space Grotesk",
+      "weights": [600],
+      "source": "Google Fonts",
+      "usage": "Captions 46px in a dark navy pill bottom-left, first word underlined in pink; kickers 54px tracked 0.3em"
+    },
+    "mono": {
+      "family": "Share Tech Mono",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "LIVE stamp, dates, chart labels and LCD headers 28–56px"
+    },
+    "digits": {
+      "family": "Silkscreen",
+      "weights": [700],
+      "source": "Google Fonts",
+      "usage": "Mechanical counter digits 168px in cream windows"
+    }
+  },
+  "easing": {
+    "punch": "expo.out",
+    "card": "back.out(1.6–3)",
+    "counter": "power3.inOut",
+    "chart": "power2.inOut",
+    "stamp": "power4.in",
+    "burst": "none (linear rotation)"
+  },
+  "transitions": [
+    "hard cuts only, every 1.2–1.6s, alternating cream paper / navy halftone / pink sunburst",
+    "persistent chip and LIVE stamp stay on top and update their value on each cut with a scale pop"
+  ],
+  "textAnimations": [
+    "punch words: scale 1.3 + rotation -4° → rest in 0.3s expo.out, 0.1–0.18s stagger per word",
+    "caption pill rises 40px in 0.22s right after the cut",
+    "counter digits roll on vertical strips, each stopping 0.22s after the previous one",
+    "OUT NOW stamp slams from scale 1.8 with power4.in"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.35,
+    "notes": "Six hard-cut scenes in 8s. Each cut = new background, one punch phrase or one graphic (disc, counter, chart), a new caption, and an updated percentage/date. Something rotates or rolls in every shot."
+  },
+  "tags": [
+    "podcast",
+    "zine",
+    "y2k",
+    "kinetic-type",
+    "halftone",
+    "countdown"
+  ],
+  "guide": "- Alternate three grounds on hard cuts: cream paper #efe6d2, navy #34417a with a 9px halftone dot pattern and soft mottling, and a slowly rotating repeating-conic sunburst (#ff6fae / #f3e7d0, 9° rays). Lay a multiply feTurbulence grain over everything (~30%).\n- Punch words are Anton all caps, 150–340px, #ff4f9a with a 4px #2e3a6b outline (8 text-shadows) plus a 12px hard navy offset. One to three words per scene, each word punching in from scale 1.3 / -4°.\n- Keep two HUD cards on top the whole time: a cream 'P(SUCCESS)' chip top-left with an #f0582a Anton percentage that climbs each scene, and a 'LIVE' stamp top-right with a ticking clock and a date that changes per cut. Cards are cream #f3ead6 with a 3px navy border, a hard 7px shadow and a 1–2° tilt.\n- Captions live in a #232b52 pill bottom-left (Space Grotesk 600, 46px, cream), first word underlined in pink. One short sentence per scene.\n- Data moments are physical: a mechanical LCD counter (pink header bar, navy screen, cream Silkscreen digit windows that roll and stop left to right) or a dotted line chart (stroke-dasharray '0 28', round caps) revealed by a mask wipe with pink points popping.\n- Finish on a sunburst end card with the show title, a navy episode pill and a red rubber-stamp 'OUT NOW'. No fades, no gradients on type, no characters or photos."
+}

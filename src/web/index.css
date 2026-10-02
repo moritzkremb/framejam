@@ -1,0 +1,11 @@
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "./styles/tokens.css";
+@import "./styles/components.css";
+@import "./styles/app.css";
+
+html,
+body,
+#root {
+  height: 100%;
+}

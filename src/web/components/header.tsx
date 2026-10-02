@@ -1,0 +1,96 @@
+import { ChevronLeft } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { api, type PresetSummary } from "@/lib/api";
+
+export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
+
+export function Wordmark() {
+  return (
+    <Link to="/home" className="fc-logo" aria-label="Frame Jam home">
+      Frame <b>Jam</b>
+    </Link>
+  );
+}
+
+/** The style in use, as its colour dots and name. Updates when a style is picked anywhere in the app. */
+function useSelectedStyle() {
+  const [style, setStyle] = useState<PresetSummary | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () =>
+      api
+        .presets()
+        .then(({ selected, presets }) => !cancelled && setStyle(presets.find((p) => p.id === selected) ?? null))
+        .catch(() => !cancelled && setStyle(null));
+    void refresh();
+    window.addEventListener(PRESET_SELECTED_EVENT, refresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(PRESET_SELECTED_EVENT, refresh);
+    };
+  }, []);
+  return style;
+}
+
+export function Dots({ colors, size }: { colors: string[]; size?: number }) {
+  return (
+    <span className="sw">
+      {colors.slice(0, 3).map((c, i) => (
+        <span key={i} style={{ background: c, ...(size ? { width: size, height: size } : {}) }} />
+      ))}
+    </span>
+  );
+}
+
+const NAV = [
+  { to: "/home", label: "Home" },
+  { to: "/styles", label: "Styles" },
+  { to: "/projects", label: "Projects" },
+];
+
+/** App header: wordmark, the main pages, and the style in use. */
+export function HomeHeader() {
+  const style = useSelectedStyle();
+  return (
+    <header className="fc-header">
+      <Wordmark />
+      <nav className="fc-nav" aria-label="Main">
+        {NAV.map(({ to, label }) => (
+          <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "on" : "")}>
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+      <span className="fc-grow" />
+      {style ? (
+        <Link to={`/styles/${style.id}`} className="fc-style-chip" title="The style your agent uses for the next video">
+          <Dots colors={Object.values(style.palette)} />
+          <span className="fc-truncate">{style.name}</span>
+        </Link>
+      ) : style === null ? (
+        <Link to="/styles" className="fc-style-chip empty">
+          No style picked
+        </Link>
+      ) : null}
+    </header>
+  );
+}
+
+/** Header inside a review or a style: back, two-line title, and up to two controls. */
+export function BackHeader({ to, title, sub, children }: { to: string; title: string; sub?: ReactNode; children?: ReactNode }) {
+  return (
+    <header className="fc-header has-back">
+      <Link to={to} className="fc-btn ghost icon round" aria-label="Back">
+        <ChevronLeft className="fc-i" />
+      </Link>
+      <div className="titles">
+        <span className="t" title={title}>
+          {title}
+        </span>
+        {sub && <span className="s">{sub}</span>}
+      </div>
+      {children}
+    </header>
+  );
+}

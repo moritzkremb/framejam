@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Cyanotype Mac</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #1d1dd3; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #1d1dd3; font-family: "Pixelify Sans", sans-serif; }
+      #cam { position: absolute; inset: 0; }
+      #bg { position: absolute; left: 0; top: 0; }
+      #mac { position: absolute; left: 750px; top: 250px; width: 420px; height: 560px; }
+      .body { position: absolute; left: 0; top: 0; width: 420px; height: 492px; border-radius: 16px 16px 6px 6px; background: linear-gradient(180deg, #e4dbc4, #d3c8ac);
+        box-shadow: inset -7px 0 0 rgba(60, 40, 10, 0.1), inset 5px 5px 0 rgba(255, 255, 255, 0.4), 0 24px 50px rgba(0, 0, 50, 0.5); }
+      .bezel { position: absolute; left: 50px; top: 34px; width: 320px; height: 250px; border-radius: 12px; background: #cabea2; box-shadow: inset 4px 4px 0 rgba(60, 40, 10, 0.2), inset -3px -3px 0 rgba(255, 255, 255, 0.45); }
+      .slot { position: absolute; left: 236px; top: 352px; width: 124px; height: 12px; border-radius: 3px; background: #3b352b; box-shadow: 0 2px 0 rgba(255, 255, 255, 0.5); }
+      .badge { position: absolute; left: 58px; top: 344px; width: 28px; height: 28px; border-radius: 4px; border: 2px solid #bdb093; }
+      .vent { position: absolute; left: 236px; top: 400px; width: 124px; height: 40px; background: repeating-linear-gradient(90deg, #b7aa8c 0 3px, transparent 3px 10px); opacity: 0.7; }
+      .foot { position: absolute; left: 8px; top: 484px; width: 404px; height: 76px; border-radius: 4px 4px 12px 12px; background: linear-gradient(180deg, #cdc2a5, #bcaf90); box-shadow: inset 0 4px 0 rgba(0, 0, 0, 0.12), 0 20px 30px rgba(0, 0, 40, 0.35); }
+      .port { position: absolute; top: 26px; height: 16px; border-radius: 2px; background: #6d6450; }
+      #scr { position: absolute; left: 65px; top: 50px; width: 290px; height: 218px; border-radius: 9px; overflow: hidden; background: #000; }
+      #ui { position: absolute; left: 0; top: 0; width: 580px; height: 436px; overflow: hidden; color: #000; font-size: 20px;
+        background: repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0 / 4px 4px; }
+      .mb { position: absolute; left: 0; top: 0; width: 580px; height: 30px; background: #fff; border-bottom: 2px solid #000; line-height: 29px; padding-left: 14px; white-space: nowrap; }
+      .mb span { display: inline-block; padding: 0 10px; }
+      .mb .clk { position: absolute; right: 14px; top: 0; font-family: "Silkscreen", sans-serif; font-size: 14px; }
+      .win { position: absolute; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 #000; overflow: hidden; }
+      .tb { position: relative; height: 26px; border-bottom: 2px solid #000; text-align: center; line-height: 24px; font-size: 17px;
+        background: repeating-linear-gradient(180deg, #fff 0 4px, #000 4px 6px) 0 1px / 100% 22px no-repeat, #fff; }
+      .tb b { font-weight: 400; background: #fff; padding: 0 10px; }
+      .tb i { position: absolute; left: 12px; top: 5px; width: 16px; height: 16px; background: #fff; border: 2px solid #000; box-shadow: 0 0 0 3px #fff; }
+      .doc { padding: 12px 16px; font-size: 23px; line-height: 31px; }
+      .doc s { text-decoration: none; display: inline-block; width: 11px; height: 24px; background: #000; vertical-align: -4px; }
+      .ico { position: absolute; width: 74px; text-align: center; font-family: "Silkscreen", sans-serif; font-size: 12px; }
+      .ico div { margin: 0 auto 4px; width: 44px; height: 34px; background: #fff; border: 2px solid #000; }
+      .ico span { background: #fff; padding: 0 3px; }
+      #menu { position: absolute; left: 196px; top: 30px; width: 200px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0 #000; padding: 4px 0; visibility: hidden; }
+      #menu div { padding: 0 14px; line-height: 30px; font-size: 19px; }
+      #menu .sep { height: 2px; margin: 4px 0; background: repeating-linear-gradient(90deg, #000 0 2px, #fff 2px 4px); padding: 0; }
+      .zoom { position: absolute; border: 2px dashed #000; visibility: hidden; }
+      #dlg { position: absolute; left: 96px; top: 138px; width: 388px; height: 160px; background: #fff; border: 2px solid #000; box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 6px #000, 5px 5px 0 #000; padding: 26px 26px; visibility: hidden; font-size: 21px; line-height: 28px; }
+      #dlg .bang { float: left; width: 44px; height: 44px; margin-right: 18px; border: 3px solid #000; text-align: center; font-weight: 700; font-size: 30px; line-height: 38px; }
+      #ok { position: absolute; right: 26px; bottom: 20px; width: 96px; height: 36px; border: 3px solid #000; border-radius: 12px; text-align: center; line-height: 30px; box-shadow: 0 0 0 3px #fff, 0 0 0 6px #000; }
+      #cursor { position: absolute; left: 0; top: 0; }
+      #card { position: absolute; inset: 0; background: #fff; visibility: hidden; text-align: center; }
+      #card .nm { position: absolute; left: 0; right: 0; top: 112px; font-weight: 700; font-size: 104px; line-height: 1; letter-spacing: 0.02em; }
+      #card .rule { position: absolute; left: 150px; width: 280px; top: 236px; height: 4px; background: repeating-linear-gradient(90deg, #000 0 4px, #fff 4px 8px); }
+      #card .tg { position: absolute; left: 0; right: 0; top: 262px; font-size: 24px; }
+      #card .url { position: absolute; left: 0; right: 0; top: 330px; font-family: "Silkscreen", sans-serif; font-size: 15px; letter-spacing: 0.1em; }
+      .glass { position: absolute; inset: 0; border-radius: 9px; pointer-events: none;
+        background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.16), transparent 55%);
+        box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55); }
+      #boot { position: absolute; inset: 0; background: #000; }
+      #dock { position: absolute; left: 640px; top: 970px; width: 640px; height: 80px; border-radius: 20px; background: rgba(16, 16, 120, 0.55); border: 1px solid rgba(220, 220, 255, 0.3);
+        display: flex; align-items: center; justify-content: space-evenly; padding: 0 12px; }
+      .dk { width: 52px; height: 52px; border-radius: 13px; background: linear-gradient(180deg, #5656f0, #2c2cc4); border: 1px solid rgba(230, 230, 255, 0.45); position: relative; overflow: hidden; }
+      .dk svg { position: absolute; left: 0; top: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="cyanotype-mac" data-width="1920" data-height="1080" data-duration="8">
+      <div id="cam">
+        <svg id="bg" width="1920" height="1080" viewBox="0 0 1920 1080">
+          <defs>
+            <radialGradient id="vig" cx="0.5" cy="0.45" r="0.75"><stop offset="0" stop-color="#2a2ae8" /><stop offset="1" stop-color="#1414b8" /></radialGradient>
+            <filter id="cloudMid" filterUnits="userSpaceOnUse" x="-200" y="0" width="2320" height="1080">
+              <feTurbulence type="fractalNoise" baseFrequency="0.0014 0.0036" numOctaves="5" seed="8" result="c0" /><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" result="c" />
+              <feTurbulence type="fractalNoise" baseFrequency="0.32" numOctaves="1" seed="2" result="f0" /><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" result="f" />
+              <feComposite in="c" in2="f" operator="arithmetic" k2="1" k3="0.6" result="sum" />
+              <feColorMatrix in="sum" values="0 0 0 0 0.45  0 0 0 0 0.45  0 0 0 0 1  30 0 0 0 -27.3" />
+            </filter>
+            <filter id="cloudHi" filterUnits="userSpaceOnUse" x="-200" y="0" width="2320" height="1080">
+              <feTurbulence type="fractalNoise" baseFrequency="0.0014 0.0036" numOctaves="5" seed="8" result="c0" /><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" result="c" />
+              <feTurbulence type="fractalNoise" baseFrequency="0.32" numOctaves="1" seed="5" result="f0" /><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" result="f" />
+              <feComposite in="c" in2="f" operator="arithmetic" k2="1" k3="0.6" result="sum" />
+              <feColorMatrix in="sum" values="0 0 0 0 0.86  0 0 0 0 0.86  0 0 0 0 1  30 0 0 0 -29.4" />
+            </filter>
+            <filter id="handTex" filterUnits="userSpaceOnUse" x="-200" y="0" width="2320" height="1080">
+              <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="3" seed="21" result="c0" /><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" result="c" />
+              <feTurbulence type="fractalNoise" baseFrequency="0.32" numOctaves="1" seed="9" result="f0" /><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" result="f" />
+              <feComposite in="c" in2="f" operator="arithmetic" k2="1" k3="0.6" result="sum" />
+              <feColorMatrix in="sum" values="0 0 0 0 0.85  0 0 0 0 0.85  0 0 0 0 1  26 0 0 0 -20" />
+            </filter>
+            <g id="handL">
+              <path d="M-160 250 C 120 290, 360 380, 520 450 L 545 565 C 360 525, 120 475, -160 475 Z" />
+              <ellipse cx="600" cy="515" rx="102" ry="64" transform="rotate(18 600 515)" />
+              <path d="M630 498 L 724 526 M652 532 Q 708 556 694 592 M636 552 Q 680 584 664 612 M612 566 Q 644 596 632 616 M584 478 Q 640 462 684 480" fill="none" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M640 515 L 712 537 M646 548 Q 680 572 676 600 M626 560 Q 656 588 648 610 M590 492 Q 630 482 668 488 M520 470 Q 530 510 540 550" fill="none" stroke="#1414b8" stroke-width="4" stroke-linecap="round" />
+            </g>
+            <g id="handR">
+              <path d="M2080 560 C 1800 560, 1560 590, 1390 612 L 1390 724 C 1560 724, 1800 762, 2080 792 Z" />
+              <ellipse cx="1320" cy="662" rx="116" ry="62" transform="rotate(-6 1320 662)" />
+              <path d="M1255 618 Q 1214 596 1204 568 M1250 640 Q 1200 630 1188 600 M1250 662 Q 1204 664 1192 640 M1255 686 Q 1220 692 1206 672 M1292 618 Q 1268 576 1240 560" fill="none" stroke-width="32" stroke-linecap="round" />
+              <path d="M1250 629 Q 1205 614 1196 586 M1250 651 Q 1204 648 1190 622 M1252 674 Q 1212 678 1199 657 M1360 640 Q 1310 660 1270 650 M1395 625 Q 1385 670 1392 715" fill="none" stroke="#1414b8" stroke-width="4" stroke-linecap="round" />
+            </g>
+            <filter id="outl" x="-5%" y="-5%" width="110%" height="110%"><feMorphology operator="dilate" radius="6" /></filter>
+            <mask id="hm" maskUnits="userSpaceOnUse" x="-200" y="0" width="2320" height="1080">
+              <use id="mL" href="#handL" fill="#fff" stroke="#fff" /><use id="mR" href="#handR" fill="#fff" stroke="#fff" />
+            </mask>
+          </defs>
+          <rect width="1920" height="1080" fill="url(#vig)" />
+          <g id="clouds"><rect x="-200" width="2320" height="1080" filter="url(#cloudMid)" /><rect x="-200" width="2320" height="1080" filter="url(#cloudHi)" /></g>
+          <use id="sL" href="#handL" fill="#10109a" stroke="#10109a" opacity="0.7" transform="translate(10 22)" />
+          <use id="sR" href="#handR" fill="#10109a" stroke="#10109a" opacity="0.7" transform="translate(-10 22)" />
+          <g filter="url(#outl)"><use id="oL" href="#handL" fill="#0c0c86" stroke="#0c0c86" /><use id="oR" href="#handR" fill="#0c0c86" stroke="#0c0c86" /></g>
+          <g mask="url(#hm)"><rect x="-200" width="2320" height="1080" fill="#3a3ae4" /><rect x="-200" width="2320" height="1080" filter="url(#handTex)" /></g>
+        </svg>
+
+        <div id="mac">
+          <div class="foot"><div class="port" style="left: 40px; width: 22px"></div><div class="port" style="left: 72px; width: 22px"></div><div class="port" style="left: 330px; width: 34px"></div></div>
+          <div class="body"></div>
+          <div class="bezel"></div>
+          <div class="badge"></div><div class="slot"></div><div class="vent"></div>
+          <div id="scr">
+            <div id="ui">
+              <div class="ico" id="ic1" style="left: 492px; top: 48px"><div></div><span>Drafts</span></div>
+              <div class="ico" id="ic2" style="left: 492px; top: 128px"><div style="width: 36px; height: 40px; border-radius: 0 0 4px 4px"></div><span>Notes</span></div>
+              <div class="ico" id="ic3" style="left: 492px; top: 344px"><div style="width: 34px; height: 40px; background: repeating-linear-gradient(90deg, #fff 0 6px, #000 6px 8px)"></div><span>Trash</span></div>
+              <div class="zoom" id="z1" style="left: 40px; top: 62px; width: 420px; height: 270px"></div><div class="zoom" id="z2" style="left: 0; top: 32px; width: 580px; height: 404px"></div>
+              <div class="win" id="w1" style="left: 40px; top: 62px; width: 420px; height: 270px; visibility: hidden">
+                <div class="tb"><i></i><b>Morning pages</b></div>
+                <div class="doc"><span id="t1"></span><span id="t2"></span><s id="caret"></s></div>
+              </div>
+              <div class="mb" id="mb"><span>&#9670;</span><span>File</span><span>Edit</span><span id="mWrite">Write</span><span>View</span><span class="clk">10:24</span></div>
+              <div id="menu"><div id="mi1">Focus mode</div><div>Typewriter</div><div class="sep"></div><div>Word count</div><div>Export…</div></div>
+              <div id="dlg"><div class="bang">!</div>Focus mode is on. Nothing else is open now.<div id="ok">OK</div></div>
+              <div id="card"><div class="nm">Margin</div><div class="rule"></div><div class="tg">the writing app with nothing else in it.</div><div class="url" id="url">margin.app · version 1.0</div></div>
+              <svg id="cursor" width="24" height="36" viewBox="0 0 12 18"><path d="M1 1 L1 15 L4.5 11.5 L7 17 L9 16 L6.6 10.6 L11 10.6 Z" fill="#000" stroke="#fff" stroke-width="1.2" stroke-linejoin="miter" /></svg>
+            </div>
+            <div id="boot"></div>
+            <div class="glass"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="dock"></div>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      var glyphs = ["M14 18 h24 v18 h-24 Z M14 18 l4 -5 h8 l3 5", "M26 12 a14 14 0 1 0 0.1 0 M12 26 h28 M26 12 q-8 14 0 28 q8 -14 0 -28", "M16 38 L34 14 L39 19 L21 43 L14 44 Z",
+        "M26 13 a13 13 0 1 0 0.1 0 M26 18 v9 l6 4", "M15 14 h22 v26 h-22 Z M19 21 h14 M19 27 h14 M19 33 h9", "M26 17 a9 9 0 1 0 0.1 0 M26 9 v5 M26 38 v5 M9 26 h5 M38 26 h5",
+        "M26 11 l4 10 h11 l-9 7 3 11 -9 -7 -9 7 3 -11 -9 -7 h11 Z", "M12 20 q14 -12 28 0 M16 26 q10 -8 20 0 M21 32 q5 -4 10 0 M26 37 v1", "M17 17 h18 l-2 25 h-14 Z M14 17 h24 M22 13 h8"];
+      var dock = document.getElementById("dock"), dks = [];
+      glyphs.forEach(function (g) { var d = document.createElement("div"); d.className = "dk"; var s = document.createElementNS(NS, "svg"); s.setAttribute("width", 52); s.setAttribute("height", 52);
+        var p = document.createElementNS(NS, "path"); p.setAttribute("d", g); p.setAttribute("fill", "none"); p.setAttribute("stroke", "#e4e4ff"); p.setAttribute("stroke-width", 2.6); p.setAttribute("stroke-linejoin", "round"); p.setAttribute("stroke-linecap", "round");
+        s.appendChild(p); d.appendChild(s); dock.appendChild(d); dks.push(d); });
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) { tl.set(id, { visibility: "visible" }, from); if (to !== undefined) tl.set(id, { visibility: "hidden" }, to); }
+      function type(id, text, at, rate) { var e = document.getElementById(id); for (var i = 1; i <= text.length; i++) tl.set(e, { textContent: text.slice(0, i) }, at + i * rate); return at + text.length * rate; }
+      function move(x, y, at, dur) { tl.to("#cursor", { x: x, y: y, duration: dur, ease: "power2.inOut" }, at); }
+      function click(id, at, out) { tl.set(id, { backgroundColor: "#000", color: "#fff" }, at); if (out !== undefined) tl.set(id, { backgroundColor: "#fff", color: "#000" }, out); }
+      gsap.set("#ui", { scale: 0.5, transformOrigin: "0 0" });
+      gsap.set("#cursor", { x: 300, y: 380 });
+      gsap.set("#cam", { transformOrigin: "960px 409px" });
+
+      tl.fromTo("#cam", { scale: 1, y: 0 }, { scale: 1.42, y: 40, duration: 5.6, ease: "power1.inOut" }, 0)
+        .to("#cam", { scale: 3.85, y: 131, duration: 1.05, ease: "power3.inOut" }, 5.6)
+        .fromTo(["#mL", "#sL", "#oL"], { x: -20 }, { x: 14, duration: 6.6, ease: "sine.inOut", immediateRender: false }, 0)
+        .fromTo(["#mR", "#sR", "#oR"], { x: 20 }, { x: -14, duration: 6.6, ease: "sine.inOut", immediateRender: false }, 0)
+        .fromTo("#clouds", { x: 0 }, { x: -120, duration: 6.6, ease: "none", immediateRender: false }, 0)
+        .fromTo(dks, { y: 90 }, { y: 0, duration: 0.5, ease: "back.out(1.6)", stagger: 0.04 }, 0.15)
+        .to("#dock", { y: 140, opacity: 0, duration: 0.5, ease: "power2.in" }, 5.55)
+        .fromTo("#boot", { scaleY: 1 }, { scaleY: 0, duration: 0.32, ease: "steps(4)", immediateRender: false }, 0.25);
+
+      gsap.set(".zoom", { transformOrigin: "0 0" });
+      show("#z1", 0.75, 1.0);
+      tl.fromTo("#z1", { x: 460, y: -12, scaleX: 0.143, scaleY: 0.185 }, { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 0.25, ease: "steps(5)", immediateRender: false }, 0.75);
+      show("#w1", 1.0);
+      move(470, 90, 0.4, 0.4); click("#ic1 span", 0.65, 0.85);
+      var t = type("t1", "It was the first quiet morning in weeks. ", 1.15, 0.033);
+      tl.fromTo("#caret", { opacity: 1 }, { opacity: 0, duration: 0.25, ease: "steps(1)", yoyo: true, repeat: 3 }, 0.2);
+
+      move(215, 12, 2.25, 0.4); click("#mWrite", 2.68);
+      show("#menu", 2.68, 3.56);
+      move(250, 48, 2.95, 0.22); click("#mi1", 3.15);
+      tl.set("#mWrite", { backgroundColor: "#fff", color: "#000" }, 3.56);
+
+      show("#z2", 3.6, 3.85);
+      tl.fromTo("#z2", { x: 40, y: 30, scaleX: 0.724, scaleY: 0.668 }, { x: 0, y: 0, scaleX: 1, scaleY: 1, duration: 0.25, ease: "steps(5)", immediateRender: false }, 3.6)
+        .set(["#ic1", "#ic2", "#ic3"], { visibility: "hidden" }, 3.6)
+        .set("#w1", { left: 0, top: 32, width: 580, height: 404, boxShadow: "none" }, 3.85)
+        .set("#ui", { background: "#fff" }, 3.85);
+
+      show("#dlg", 4.05, 5.0);
+      tl.fromTo("#dlg", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "steps(3)", immediateRender: false }, 4.05);
+      move(420, 280, 4.25, 0.45); click("#ok", 4.8);
+      type("t2", "Just you and the page.", 5.05, 0.04);
+      tl.to("#cursor", { opacity: 0, duration: 0.1 }, 5.1);
+
+      show("#card", 6.05);
+      tl.fromTo("#card .nm", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.42, ease: "steps(5)", immediateRender: false }, 6.2)
+        .fromTo("#card .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "steps(7)", immediateRender: false }, 6.6)
+        .fromTo("#card .tg", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "steps(3)", immediateRender: false }, 6.85)
+        .fromTo("#url", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "steps(2)", immediateRender: false }, 7.15);
+      gsap.set(["#card .nm", "#card .tg", "#url"], { opacity: 0 });
+      gsap.set("#card .rule", { scaleX: 0 });
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["cyanotype-mac"] = tl;
+    </script>
+  </body>
+</html>

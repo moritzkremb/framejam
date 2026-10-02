@@ -1,0 +1,74 @@
+{
+  "id": "red-band-title",
+  "name": "Red Band Title",
+  "tagline": "A kanji slam, a spinning sunburst and an RGB-split title that lands on a skewed red band.",
+  "description": "Anime-opening title style for launches, series intros and brand names. A one-word English slam, a giant kanji crashing onto a vignetted cream card with a shake, then a dark sunburst where the title drops in letter by letter with chromatic red/cyan split, a skewed crimson band slides in behind it, and small letterspaced corner labels lock it up.",
+  "mood": [
+    "dramatic",
+    "hype",
+    "cinematic"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7,
+  "palette": {
+    "background": "#1b1b1d",
+    "red": "#e5173f",
+    "text": "#f7f5f2",
+    "splitRed": "#ff2a55",
+    "splitCyan": "#27e3ff",
+    "cream": "#f4f3ee",
+    "ink": "#141414"
+  },
+  "fonts": {
+    "display": {
+      "family": "Dela Gothic One",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Kanji 560px, Japanese title 180px"
+    },
+    "body": {
+      "family": "Oswald",
+      "weights": [
+        500,
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Opening English word 230px; subline 42px tracking 0.34em; corner labels 22px tracking 0.24em"
+    }
+  },
+  "easing": {
+    "slam": "power4.in",
+    "drop": "back.out(2.5)",
+    "band": "power4.out",
+    "split": "power2.out",
+    "burst": "none"
+  },
+  "transitions": [
+    "hard cuts: black word → cream kanji card → dark sunburst",
+    "camera-shake on impact (6 × 40ms jitter)",
+    "glitch hit: band and split layers jump 14–22px then settle"
+  ],
+  "textAnimations": [
+    "per-character drop with back.out, 80ms apart, on all three layers",
+    "red and cyan copies start offset ±18px and converge (chromatic aberration)",
+    "opening word widens (scaleX 1 → 1.12) after its slam",
+    "subline rises under the band, a white rule draws beneath"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.6,
+    "notes": "Two very short hits (~0.8s each) then one long title hold. Band lands ~1.4s after the title starts; one glitch hit near the end."
+  },
+  "tags": [
+    "title",
+    "japanese",
+    "anime",
+    "glitch",
+    "intro"
+  ],
+  "guide": "- Charcoal #1b1b1d, crimson #e5173f and off-white only; red/cyan appear just as split layers.\n- Open with two hard hits: one English word, then one kanji on a cream vignette that slams from scale 2.1 with power4.in and shakes.\n- Build the title as three stacked layers (red, cyan, white) of the same spans, animate characters by index across all layers, and converge the offsets to 0.\n- The band is a full-width crimson bar, skewY -4° and rotated -2°, sliding in behind the title with power4.out. Dim the sunburst to ~35% when it lands.\n- Keep a slowly rotating conic-gradient sunburst behind everything.\n- Lock up with a letterspaced Oswald subline, a thin rule and tiny corner labels (system name, report/year)."
+}

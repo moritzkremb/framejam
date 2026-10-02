@@ -1,0 +1,17 @@
+# Recorded takes and scratch projects (hundreds of MB)
+stage/
+
+# Renders and large media; kept on disk, not in git
+assets/renders/
+assets/footage/*.mp4
+assets/audio/*.wav
+*.mp4
+*.mov
+*.webm
+
+# Generated snapshots and tool caches
+snapshots/
+.thumbnails/
+.hyperframes/
+.waveform-cache/
+.media/

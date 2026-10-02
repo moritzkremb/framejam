@@ -1,0 +1,81 @@
+{
+  "id": "blueprint-explainer",
+  "name": "Blueprint Explainer",
+  "tagline": "Thin line drawings on a navy grid, a needle that sweeps, a formula that writes itself and calm subtitles.",
+  "description": "Patient teaching style for science, maths and how-it-works explainers. White and cyan line art draws itself on a navy blueprint grid, a gauge needle sweeps into place, an italic serif formula writes on letter by letter, measurements appear in amber mono, and one subtitle line at the bottom narrates each step.",
+  "mood": [
+    "calm",
+    "curious",
+    "clear"
+  ],
+  "pacing": "slow",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 9,
+  "palette": {
+    "background": "#0f1626",
+    "grid": "rgba(122,140,170,0.08)",
+    "line": "#e8edf5",
+    "object": "#7fd3ff",
+    "measure": "#ffc857",
+    "needle": "#ff6b6b",
+    "muted": "#7a869c"
+  },
+  "fonts": {
+    "display": {
+      "family": "STIX Two Text",
+      "weights": [
+        500,
+        "500 italic"
+      ],
+      "source": "Google Fonts",
+      "usage": "Formulas 76–92px; variables in italic, operators upright"
+    },
+    "body": {
+      "family": "IBM Plex Sans",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Subtitles 34px; questions 64px muted"
+    },
+    "mono": {
+      "family": "IBM Plex Mono",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Measurements and timers 30px in amber"
+    }
+  },
+  "easing": {
+    "draw": "power2.inOut",
+    "needle": "back.out(1.6)",
+    "move": "power2.out / none (constant speed when measuring)",
+    "subtitle": "power1.out"
+  },
+  "transitions": [
+    "no cuts: elements draw on, fade up 20px or fade out in place",
+    "subtitles crossfade (0.3s out, 0.4s in)"
+  ],
+  "textAnimations": [
+    "formula writes on character by character (40ms)",
+    "amber underline draws beneath the key line",
+    "timer counts with the motion (0:00 → 2:00 h)",
+    "needle wobbles gently to show an instantaneous value"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 2.2,
+    "notes": "One idea per ~2.2s beat, each with exactly one subtitle. Give drawings time to finish before the next line appears."
+  },
+  "tags": [
+    "explainer",
+    "education",
+    "diagram",
+    "math",
+    "blueprint"
+  ],
+  "guide": "- Navy #0f1626 with a faint 60px grid; draw everything as 3–5px strokes, no fills except tiny hubs.\n- Objects are cyan #7fd3ff, structure is off-white #e8edf5, measurements are amber #ffc857 mono, warnings/needles coral.\n- Draw lines with pathLength=1 and dashoffset 1→0 (power2.inOut). Move objects at constant speed when the motion itself is being measured.\n- Formulas in STIX Two Text: italic variables, upright operators; reveal letter by letter and underline the key one.\n- Always keep exactly one plain-language subtitle at the bottom (34px), phrased as a narrator would say it.\n- Build to a question, then answer it in amber italic."
+}

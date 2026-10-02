@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Topo Credits</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #070707; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #070707; color: #e9e4da; font-family: "Cormorant Garamond", serif; font-weight: 500; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      svg { position: absolute; left: 0; top: 0; }
+      .c { fill: none; stroke-dasharray: 1; stroke-dashoffset: 1; stroke-linejoin: round; }
+      .credit { position: absolute; text-transform: uppercase; letter-spacing: 0.32em; white-space: nowrap; }
+      .role { font-size: 22px; color: #8d877d; letter-spacing: 0.4em; }
+      .name { font-size: 44px; margin-top: 10px; }
+      .blob { position: absolute; border-radius: 50%; filter: blur(46px); }
+      #bars::before, #bars::after { content: ""; position: absolute; left: 0; right: 0; height: 110px; background: #000; z-index: 5; }
+      #bars::before { top: 0; }
+      #bars::after { bottom: 0; }
+      #bars { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+      .title { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-weight: 600; font-size: 104px; letter-spacing: 0.24em; text-transform: uppercase; padding-left: 0.24em; }
+      .redline { position: absolute; left: 860px; top: 620px; width: 200px; height: 2px; background: #c4161c; transform-origin: center; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="topo-credits" data-width="1920" data-height="1080" data-duration="8">
+      <div id="s1" class="scene">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080"><g id="topo"></g></svg>
+        <div class="credit" id="cr1" style="left: 600px; top: 470px">
+          <div class="role">A film by</div>
+          <div class="name">Ilse Varga</div>
+        </div>
+      </div>
+
+      <div id="s2" class="scene">
+        <div class="blob" id="b1" style="left: 800px; top: 380px; width: 360px; height: 300px; background: #c4161c"></div>
+        <div class="blob" id="b2" style="left: 900px; top: 450px; width: 260px; height: 220px; background: #8f0f14"></div>
+        <div class="blob" id="b3" style="left: 760px; top: 470px; width: 220px; height: 180px; background: #e0262c"></div>
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+          <circle id="ring" class="c" pathLength="1" cx="960" cy="530" r="270" stroke="#d9d6cf" stroke-opacity="0.6" stroke-width="2" transform="rotate(-90 960 530)" />
+        </svg>
+        <div class="credit" id="cr2" style="left: 1300px; top: 400px">
+          <div class="role">Music</div>
+          <div class="name">Tomás Reyne</div>
+        </div>
+        <div class="credit" id="cr3" style="left: 1300px; top: 540px">
+          <div class="role">Edited by</div>
+          <div class="name">Oona Hale</div>
+        </div>
+      </div>
+
+      <div id="s3" class="scene">
+        <svg width="1920" height="1080" viewBox="0 0 1920 1080"><g id="topo2" opacity="0.22"></g></svg>
+        <div class="title" id="title">The High Country</div>
+        <div class="redline" id="redline"></div>
+        <div class="credit" id="date" style="left: 0; right: 0; top: 670px; text-align: center; font-size: 24px; color: #8d877d; letter-spacing: 0.5em; padding-left: 0.5em">In cinemas this winter</div>
+      </div>
+
+      <div id="bars"></div>
+    </div>
+
+    <script>
+      function contourPath(k, cx, cy) {
+        var base = 46 + k * 40, pts = [];
+        for (var a = 0; a <= 120; a++) {
+          var t = (a / 120) * Math.PI * 2;
+          var r = base * (1 + 0.13 * Math.sin(3 * t + k * 0.45) + 0.07 * Math.sin(5 * t - k * 0.32) + 0.035 * Math.sin(9 * t + k * 1.1));
+          pts.push((cx + Math.cos(t) * r * 1.25).toFixed(1) + " " + (cy + Math.sin(t) * r).toFixed(1));
+        }
+        return "M" + pts.join(" L") + " Z";
+      }
+      function buildTopo(id, n, red) {
+        var g = document.getElementById(id);
+        for (var k = 0; k < n; k++) {
+          var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          p.setAttribute("d", contourPath(k, 1000, 540));
+          p.setAttribute("pathLength", "1");
+          p.setAttribute("class", "c " + id + "-c");
+          p.setAttribute("stroke", "#d9d6cf");
+          p.setAttribute("stroke-opacity", (0.6 - k * 0.028).toFixed(2));
+          p.setAttribute("stroke-width", k % 4 === 0 ? "2.2" : "1.2");
+          g.appendChild(p);
+        }
+        if (red) {
+          var rp = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          rp.setAttribute("d", contourPath(red, 1000, 540));
+          rp.setAttribute("pathLength", "1");
+          rp.setAttribute("class", "c");
+          rp.setAttribute("id", id + "-red");
+          rp.setAttribute("stroke", "#c4161c");
+          rp.setAttribute("stroke-width", "3");
+          g.appendChild(rp);
+        }
+      }
+      buildTopo("topo", 18, 6);
+      buildTopo("topo2", 18, 0);
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function credit(id, at, out) {
+        tl.fromTo(id, { opacity: 0, y: 14, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.9, ease: "power2.out", immediateRender: false }, at);
+        if (out !== undefined) tl.to(id, { opacity: 0, filter: "blur(6px)", duration: 0.5, ease: "power1.in" }, out);
+      }
+      gsap.set(["#cr1", "#cr2", "#cr3", "#title", "#date"], { opacity: 0 });
+
+      show("#s1", 0, 3.6);
+      tl.to(".topo-c", { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut", stagger: 0.06 }, 0)
+        .fromTo("#topo", { scale: 1, rotation: 0 }, { scale: 1.1, rotation: 4, svgOrigin: "1000 540", duration: 3.6, ease: "none", immediateRender: false }, 0)
+        .to("#topo-red", { strokeDashoffset: 0, duration: 1.4, ease: "power1.inOut" }, 1.6);
+      gsap.set("#topo", { svgOrigin: "1000 540" });
+      credit("#cr1", 1.1);
+
+      show("#s2", 3.6, 6.2);
+      tl.fromTo("#b1", { scale: 0.2, x: 0, y: 0 }, { scale: 1.3, x: 40, y: -20, duration: 2.6, ease: "power2.out", immediateRender: false }, 3.6)
+        .fromTo("#b2", { scale: 0.1, x: 0, y: 0 }, { scale: 1.5, x: -50, y: 30, duration: 2.6, ease: "power2.out", immediateRender: false }, 3.7)
+        .fromTo("#b3", { scale: 0.1, x: 0, y: 0 }, { scale: 1.4, x: 30, y: 40, duration: 2.6, ease: "power2.out", immediateRender: false }, 3.85)
+        .to("#ring", { strokeDashoffset: 0, duration: 1.2, ease: "power2.inOut" }, 3.9);
+      credit("#cr2", 4.2, 5.7);
+      credit("#cr3", 4.7, 5.7);
+
+      show("#s3", 6.2);
+      tl.to(".topo2-c", { strokeDashoffset: 0, duration: 1.2, ease: "power2.out", stagger: 0.02 }, 6.2)
+        .fromTo("#title", { opacity: 0, filter: "blur(14px)", scale: 1.04 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 1.1, ease: "power2.out", immediateRender: false }, 6.3)
+        .from("#redline", { scaleX: 0, duration: 0.8, ease: "power3.inOut" }, 6.9)
+        .to("#date", { opacity: 1, duration: 0.6, ease: "power1.out" }, 7.2);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["topo-credits"] = tl;
+    </script>
+  </body>
+</html>

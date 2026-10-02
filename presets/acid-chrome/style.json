@@ -1,0 +1,75 @@
+{
+  "id": "acid-chrome",
+  "name": "Acid Chrome",
+  "tagline": "Acid-lime brand reel: heavy all-caps statements, a spinning liquid-chrome knot and hard cuts on every beat.",
+  "description": "Portfolio and brand-reel style for studios, agencies, launches and sizzle intros. Backgrounds hard-cut between near-black, acid lime and off-white on the beat; each scene states one huge heavy grotesk all-caps line that ends in a period, with the second line in lime (or a black box on lime). A glossy liquid-chrome object (torus knot, ring, figure-eight, puffy lime star) spins and morphs on the right, framed by a thin mono HUD: scene index 01 — 06, section labels, progress dashes, timecode, arrows and a pulsing beat waveform.",
+  "mood": [
+    "loud",
+    "confident",
+    "glossy"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7.5,
+  "palette": {
+    "black": "#0b0b0a",
+    "lime": "#d4ff3a",
+    "limeDeep": "#b6dc1c",
+    "offWhite": "#efeee6",
+    "text": "#f2f1ea",
+    "chromeMid": "#8d8e88",
+    "chromeShadow": "#0e0e0e"
+  },
+  "fonts": {
+    "display": {
+      "family": "Inter Tight",
+      "weights": [
+        900
+      ],
+      "source": "Google Fonts",
+      "usage": "All-caps statements 186px, line-height 0.9, tracking -0.03em, always ending in a period"
+    },
+    "body": {
+      "family": "JetBrains Mono",
+      "weights": [
+        500,
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Uppercase sublines 26px and HUD labels 19px, tracking 0.06–0.08em"
+    }
+  },
+  "easing": {
+    "lineReveal": "expo.out",
+    "objectPop": "back.out(1.4)",
+    "morph": "power3.out",
+    "sublines": "power3.out",
+    "spin": "none"
+  },
+  "transitions": [
+    "hard cut on the beat with a full background colour swap (black → lime → black → off-white → black → lime)",
+    "chrome object re-pops from scale 0 with a back-out overshoot on every cut",
+    "ghost outline copies of the word slide past in opposite directions"
+  ],
+  "textAnimations": [
+    "each line rises out of its own mask (yPercent 105 → 0, 0.42s expo.out, 0.07s stagger)",
+    "mono sublines rise 24px and fade in 0.3s after the headline",
+    "percentage counter and progress bar tick up under the object",
+    "CTA chip pops with back.out then flips to black with lime text"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.25,
+    "notes": "One statement per beat-length shot (~1.25s at 144 BPM); only the end card holds 1.5s. The chrome object never stops rotating and the HUD progress line runs continuously."
+  },
+  "tags": [
+    "brand-reel",
+    "portfolio",
+    "chrome",
+    "acid-lime",
+    "kinetic-type",
+    "hud"
+  ],
+  "guide": "- Cycle backgrounds #0b0b0a / #d4ff3a (radial-lit, #e6ff7a centre) / #efeee6 with a hard cut every ~1.25s; never crossfade.\n- Headlines: Inter Tight 900 uppercase, ~186px, line-height 0.9, tracking -0.03em, left at 90px, 2–3 short lines ending in a period. Second line is lime #d4ff3a on black, or a black box with lime text on lime; black only on off-white.\n- Reveal each line from its own overflow-hidden mask (yPercent 105, 0.42s expo.out, 0.07s stagger); mono sublines follow 0.3s later.\n- Right half holds one liquid-chrome object (~460px): a z-sorted SVG tube with stacked strokes (black edge, two reflected chrome gradients that slide over time, a lime reflection band offset down-right, a thin white specular offset up-left). Keep it rotating linearly and pop it in with back-out on every cut; morph between curves (knot → figure-eight) for variety.\n- Frame every scene with a JetBrains Mono HUD: brand top-left with a lime dot, '0N — 06' top-right, section label under a hairline rule, bottom rule with a running lime progress line, progress dashes centre, timecode right. Add an arrow glyph, a beat waveform or a % counter for detail.\n- End on lime with the studio name, a black-box tagline and a bordered CTA chip that flips to black.\n- Avoid soft gradients behind type, script fonts, or more than one accent colour."
+}

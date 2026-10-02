@@ -1,0 +1,69 @@
+{
+  "id": "data-story",
+  "name": "Data Story",
+  "tagline": "Bars that grow, a hero number that counts up, and a source line you can trust.",
+  "description": "Explainer style for metrics, reports and investor updates. A navy chart where bars grow in sequence and the insight bar glows teal, followed by a giant counting statistic with a one-sentence takeaway and its source.",
+  "mood": [
+    "clear",
+    "trustworthy",
+    "analytical"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7.5,
+  "palette": {
+    "background": "#0b1730",
+    "text": "#e8f1ff",
+    "highlight": "#2ee6c5",
+    "neutral": "#284066",
+    "muted": "#6f86ad",
+    "label": "#9fb4d6"
+  },
+  "fonts": {
+    "display": {
+      "family": "Space Grotesk",
+      "weights": [
+        700
+      ],
+      "source": "Google Fonts",
+      "usage": "Titles 76px, hero stat 300px tracking -0.05em"
+    },
+    "body": {
+      "family": "Space Grotesk",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Labels 22–30px, takeaway 46px"
+    }
+  },
+  "easing": {
+    "bars": "expo.out",
+    "enter": "power3.out",
+    "counter": "power2.out",
+    "exit": "power2.in"
+  },
+  "transitions": [
+    "fade-up exit (y -30)",
+    "scale-in for the hero number"
+  ],
+  "textAnimations": [
+    "count-up via onUpdate (0 → value in 1.6s)",
+    "value labels rise after their bar",
+    "eyebrow slide from left"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 3.7,
+    "notes": "Bars grow 0.12s apart; dim the non-insight bars to 45% once the last one lands."
+  },
+  "tags": [
+    "chart",
+    "metrics",
+    "explainer",
+    "report"
+  ],
+  "guide": "- One chart, one insight. Neutral bars are #284066; the insight bar is a teal gradient with a glow. Dim the rest to 45% after the reveal.\n- Bars grow from the baseline with scaleY 0→1, expo.out, 0.9s, 0.12s stagger. Value labels follow 0.4s later.\n- Hero numbers count up with a proxy object + onUpdate writing Math.round(value) into the DOM, 1.6s power2.out.\n- Every statistic needs a one-sentence plain-language takeaway and a small source line (who, when, n=).\n- Use real, specific numbers (e.g. 87%, 1,240 videos) — never round placeholders like 100%."
+}

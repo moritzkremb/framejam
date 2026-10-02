@@ -1,0 +1,71 @@
+{
+  "id": "doodle-mascot",
+  "name": "Doodle Mascot",
+  "tagline": "A wobbly hand-drawn mascot walks on, squashes, jumps and celebrates on sketchbook paper.",
+  "description": "Charming doodle-animation style for release announcements, milestones and thank-you notes. Ink outlines that boil like a hand-drawn cartoon, flat fills with pencil hatching, a cute mascot with dot eyes and stubby legs that walks, blinks and reacts with squash & stretch, speech bubbles, bunting, confetti and a handwritten sign-off.",
+  "mood": [
+    "charming",
+    "hand-drawn",
+    "warm"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "paper": "#f3f0e7",
+    "ink": "#2a2622",
+    "mascot": "#ffd84a",
+    "mascotShade": "#e5ad25",
+    "coral": "#ef7b63",
+    "teal": "#5bb8ad",
+    "sky": "#8fc8e8",
+    "pink": "#f7b7c4",
+    "red": "#e2554a"
+  },
+  "fonts": {
+    "display": {
+      "family": "Gochi Hand",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "Speech bubbles 52–72px and the end-card title 140–160px, ink with one coral word"
+    },
+    "body": {
+      "family": "Patrick Hand",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "Sign-off lines, labels and props 40–60px"
+    }
+  },
+  "easing": {
+    "walk": "power1.out (position) + sine.inOut 0.11s leg yoyo",
+    "squash": "power2.out",
+    "recover": "elastic.out(1, 0.4)",
+    "pop": "back.out(2.4)",
+    "fall": "power2.in",
+    "ambient": "sine.inOut yoyo"
+  },
+  "transitions": [
+    "no cuts: one continuous sketchbook set, the camera creeps in 3.5% over the whole video",
+    "speech bubbles pop from their tail and shrink out",
+    "end-card title is written on with a left-to-right wipe"
+  ],
+  "textAnimations": [
+    "speech bubble scale 0→1 from the tail with back.out(2.4), slight -2° wobble while held",
+    "handwritten title revealed by a clip-rect wipe over 0.85s, then a marker underline draws on",
+    "sign-off fades up 20px"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 8,
+    "notes": "One continuous shot told in beats: walk on (1.6s), notice + bubble (1.1s), anticipation squash → jump with confetti (0.9s), happy hops, then the handwritten sign-off. Something always moves: line boil, bobbing balloons, swaying bunting."
+  },
+  "tags": [
+    "mascot",
+    "hand-drawn",
+    "celebration",
+    "release",
+    "character"
+  ],
+  "guide": "- Paper #f3f0e7 with a faint feTurbulence grain; all drawing is inline SVG with #2a2622 ink strokes 4–6px, round caps and joins. Fills are flat palette colours with a 38° pencil-hatch pattern (1.5px lines, 20% ink) laid over the same shape.\n- Line boil is mandatory: wrap the ink layer in an feTurbulence + feDisplacementMap filter (scale ~5) and swap the turbulence seed 1→2→3 every 0.12s with tl.set. Never let the drawing sit perfectly still.\n- Design an original, simple mascot: one flat shape (here a sticky note), dot eyes 22×30px, pink cheek ovals, stubby legs and line arms. Walks = position power1.out + legs rotating ±20° on a 0.11s yoyo + 12px body bob. Swap dot eyes for ^ ^ arcs when happy; blink with scaleY 0.1 for 0.14s.\n- Every big action has anticipation and follow-through: squash scaleY 0.78/scaleX 1.14 before a jump, stretch 1.14/0.9 on take-off, squash on landing, recover with elastic.out(1, 0.4). Shadow ellipse shrinks while airborne.\n- Speech bubbles are white with an ink outline and a tail pointing at the mouth; one short line in Gochi Hand 52–72px. Celebrate with bunting across the top (flags drop in with back.out, 0.045s stagger), 40–50 paper confetti pieces (seeded PRNG, burst power3.out then fall power1.in) and short radiating 'tada' lines.\n- End on the same set: a handwritten title wiped on, a teal marker underline, a Patrick Hand sign-off, and the mascot waving. No hard cuts, no gradients, no drop shadows."
+}

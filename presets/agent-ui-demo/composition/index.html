@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Agent UI Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f6f6f4; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f6f6f4; color: #1f1f1f; font-family: "Inter", sans-serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .glow { position: absolute; left: 360px; top: 380px; width: 1200px; height: 300px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(120, 165, 255, 0.45) 0%, rgba(120, 165, 255, 0) 70%); filter: blur(30px); }
+      .bar { position: absolute; left: 410px; top: 470px; width: 1100px; height: 116px; border-radius: 999px; background: #ffffff; box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 18px 50px rgba(61, 107, 255, 0.16); }
+      .btext { position: absolute; left: 52px; top: 38px; font-size: 32px; white-space: nowrap; }
+      .btext span { opacity: 0; }
+      .ph { position: absolute; left: 52px; top: 38px; font-size: 32px; color: #a5a5a5; }
+      .send { position: absolute; right: 24px; top: 24px; width: 68px; height: 68px; border-radius: 50%; background: #3d6bff; }
+      .send::after { content: ""; position: absolute; left: 26px; top: 28px; width: 14px; height: 14px; border-left: 5px solid #fff; border-top: 5px solid #fff; transform: rotate(45deg); }
+      #cursor { position: absolute; left: 0; top: 0; width: 46px; height: 46px; }
+      .bubble { position: absolute; right: 260px; top: 130px; max-width: 900px; background: #ebebe8; border-radius: 26px; padding: 24px 34px; font-size: 32px; }
+      .step { position: absolute; left: 220px; font-size: 36px; font-weight: 500; white-space: nowrap; overflow: hidden; padding: 6px 4px; }
+      .step svg { width: 28px; height: 28px; vertical-align: -5px; margin-right: 16px; }
+      .shine { position: absolute; top: 0; left: 0; width: 160px; height: 100%; background: linear-gradient(90deg, rgba(246,246,244,0) 0%, rgba(246,246,244,0.9) 50%, rgba(246,246,244,0) 100%); }
+      .chev { color: #a5a5a5; margin-left: 8px; }
+      .card { position: absolute; background: #ffffff; border-radius: 26px; box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 24px 60px rgba(0, 0, 0, 0.08); }
+      .ctitle { font-size: 34px; font-weight: 600; }
+      .cmeta { font-size: 26px; color: #6f6f6f; line-height: 1.6; margin-top: 14px; }
+      .lockup { position: absolute; left: 0; right: 0; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="agent-ui-demo" data-width="1920" data-height="1080" data-duration="9">
+      <div id="s1" class="scene">
+        <div class="glow" id="glow"></div>
+        <div id="hello" class="lockup" style="top: 330px; font-size: 54px; font-weight: 500; color: #6f6f6f">What can I book for you, Maya?</div>
+        <div class="bar" id="bar">
+          <div class="ph" id="ph">Ask Tabled anything</div>
+          <div class="btext" id="btext"></div>
+          <div class="send" id="send"></div>
+        </div>
+      </div>
+
+      <div id="s2" class="scene">
+        <div class="bubble" id="bubble">Book a table for 6 near the office on Friday, around 7:30</div>
+        <div class="step" id="st1" style="top: 330px"><svg viewBox="0 0 28 28"><path d="M14 1 L17 11 L27 14 L17 17 L14 27 L11 17 L1 14 L11 11 Z" fill="#3d6bff" /></svg>Thinking<span class="chev">›</span><div class="shine"></div></div>
+        <div class="step" id="st2" style="top: 410px"><svg viewBox="0 0 28 28"><path d="M14 1 L17 11 L27 14 L17 17 L14 27 L11 17 L1 14 L11 11 Z" fill="#3d6bff" /></svg>Checked 14 places within a 10-minute walk<span class="chev">›</span><div class="shine"></div></div>
+        <div class="step" id="st3" style="top: 490px"><svg viewBox="0 0 28 28"><path d="M14 1 L17 11 L27 14 L17 17 L14 27 L11 17 L1 14 L11 11 Z" fill="#3d6bff" /></svg>Found 3 with a table for 6 on Friday<span class="chev">›</span><div class="shine"></div></div>
+        <div class="step" id="st4" style="top: 570px"><svg viewBox="0 0 28 28"><path d="M14 1 L17 11 L27 14 L17 17 L14 27 L11 17 L1 14 L11 11 Z" fill="#3d6bff" /></svg>Holding 7:30 at Osteria Nove<span class="chev">›</span><div class="shine"></div></div>
+
+        <div class="card" id="photo" style="left: 1080px; top: 300px; width: 300px; height: 380px; overflow: hidden; background: linear-gradient(170deg, #f3c58f 0%, #d9784f 45%, #6b3a2a 100%)">
+          <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.45))"></div>
+          <div style="position: absolute; left: 24px; bottom: 22px; color: #fff; font-size: 26px; font-weight: 600">Osteria Nove</div>
+        </div>
+        <div class="card" id="confirm" style="left: 1240px; top: 560px; width: 520px; padding: 30px 34px">
+          <svg width="56" height="56" viewBox="0 0 56 56" style="position: absolute; right: 30px; top: 28px">
+            <circle cx="28" cy="28" r="26" fill="#19a974" />
+            <path id="tick" d="M16 29 L24 37 L40 20" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" />
+          </svg>
+          <div class="ctitle">Reservation confirmed</div>
+          <div class="cmeta">Fri, 7:30 PM · 6 guests<br />Osteria Nove · 4 min walk</div>
+        </div>
+      </div>
+
+      <div id="s3" class="scene">
+        <div class="lockup" id="logo" style="top: 400px; font-size: 136px; font-weight: 600; letter-spacing: -0.04em">
+          <span style="display: inline-block; width: 60px; height: 60px; border-radius: 50%; background: #3d6bff; margin-right: 26px; vertical-align: 12px"></span>Tabled
+        </div>
+        <div class="lockup" id="line" style="top: 600px; font-size: 36px; color: #6f6f6f">Your table, handled · tabled.app/agents</div>
+      </div>
+
+      <svg id="cursor" viewBox="0 0 46 46"><path d="M8 4 L8 37 L16 29 L22 42 L28 39 L22 27 L34 27 Z" fill="#1f1f1f" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" /></svg>
+    </div>
+
+    <script>
+      var Q = "Book a table for 6 near the office on Friday, around 7:30";
+      var bt = document.getElementById("btext");
+      Q.split("").forEach(function (ch) {
+        var s = document.createElement("span");
+        s.textContent = ch;
+        bt.appendChild(s);
+      });
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+
+      show("#s1", 0, 2.3);
+      tl.from("#hello", { opacity: 0, y: 20, duration: 0.5, ease: "power3.out" }, 0.05)
+        .from("#bar", { opacity: 0, y: 40, scale: 0.96, duration: 0.6, ease: "expo.out" }, 0.1)
+        .from("#glow", { opacity: 0, scale: 0.7, duration: 0.9, ease: "power2.out" }, 0.1)
+        .set("#ph", { opacity: 0 }, 0.5);
+      gsap.utils.toArray("#btext span").forEach(function (s, i) {
+        tl.set(s, { opacity: 1 }, 0.5 + i * 0.019);
+      });
+      gsap.set("#cursor", { x: 1700, y: 900, opacity: 0 });
+      tl.to("#cursor", { opacity: 1, duration: 0.15 }, 1.2)
+        .to("#cursor", { x: 1444, y: 524, duration: 0.5, ease: "power3.inOut" }, 1.25)
+        .to("#cursor", { scale: 0.82, duration: 0.08, yoyo: true, repeat: 1, ease: "power1.inOut" }, 1.8)
+        .to("#send", { scale: 0.88, duration: 0.08, yoyo: true, repeat: 1, ease: "power1.inOut" }, 1.8)
+        .to("#cursor", { opacity: 0, duration: 0.2 }, 2.0)
+        .to("#bar", { y: -60, opacity: 0, duration: 0.3, ease: "power2.in" }, 2.0)
+        .to("#hello", { opacity: 0, duration: 0.2 }, 2.0);
+
+      show("#s2", 2.3, 7.4);
+      tl.from("#bubble", { y: 80, opacity: 0, duration: 0.5, ease: "expo.out" }, 2.3);
+      var steps = ["#st1", "#st2", "#st3", "#st4"];
+      steps.forEach(function (id, i) {
+        var at = 2.6 + i * 0.5;
+        tl.from(id, { opacity: 0, y: 14, duration: 0.3, ease: "power3.out" }, at)
+          .fromTo(id + " .shine", { x: -200 }, { x: 900, duration: 0.55, ease: "none", immediateRender: false }, at + 0.05);
+        if (i < steps.length - 1) tl.to(id, { color: "#a5a5a5", duration: 0.2 }, at + 0.5);
+      });
+      gsap.set(".shine", { x: -200 });
+      tl.from("#photo", { x: 120, opacity: 0, duration: 0.6, ease: "expo.out" }, 3.4)
+        .from("#confirm", { x: 160, y: 40, opacity: 0, duration: 0.6, ease: "expo.out" }, 4.5)
+        .to("#tick", { strokeDashoffset: 0, duration: 0.35, ease: "power2.out" }, 4.9)
+        .to("#st4", { color: "#19a974", duration: 0.25 }, 4.9)
+        .to(["#st1", "#st2", "#st3"], { opacity: 0.55, duration: 0.3 }, 4.9);
+
+      show("#s3", 7.4);
+      tl.from("#logo", { opacity: 0, scale: 0.94, filter: "blur(10px)", duration: 0.6, ease: "power3.out" }, 7.4)
+        .from("#line", { opacity: 0, y: 20, duration: 0.45, ease: "power3.out" }, 7.75);
+
+      tl.set({}, {}, 9);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["agent-ui-demo"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>Flash Sale</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Rubik:wght@500;700;900&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #5a12f0; }
+      #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #5a12f0; color: #fff; font-family: "Rubik", sans-serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+      .burst { position: absolute; left: -960px; top: -540px; width: 3000px; height: 3000px; border-radius: 50%; }
+      .b-yel { background: repeating-conic-gradient(#ffd60a 0deg 7.5deg, #ffc300 7.5deg 15deg); }
+      .b-vio { background: repeating-conic-gradient(#5a12f0 0deg 7.5deg, #4a08d8 7.5deg 15deg); }
+      .b-pnk { background: repeating-conic-gradient(#ff2d87 0deg 7.5deg, #f0137a 7.5deg 15deg); }
+      .glow { position: absolute; inset: 0; background: radial-gradient(circle at 50% 46%, rgba(255,255,255,0.32), rgba(255,255,255,0) 52%); }
+      .vign { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(30,0,80,0.28) 100%); }
+      .row { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+      .disp { font-family: "Lilita One", sans-serif; line-height: 0.95; paint-order: stroke fill; }
+      .olw { -webkit-text-stroke: 26px #fff; text-shadow: 0 16px 0 rgba(40,6,110,0.55); }
+      .old { -webkit-text-stroke: 22px #2a0a7a; text-shadow: 0 16px 0 #2a0a7a; }
+      .ib { display: inline-block; }
+      .bolt { display: inline-block; width: 0.5em; height: 0.92em; vertical-align: -0.06em; margin: 0 -0.04em; overflow: visible; }
+      .pill { display: inline-block; border-radius: 999px; font-family: "Rubik", sans-serif; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
+      .fine { position: absolute; left: 110px; right: 110px; bottom: 70px; text-align: center; font-size: 22px; line-height: 1.4; font-weight: 500; color: rgba(255,255,255,0.72); }
+      .conf { position: absolute; inset: 0; pointer-events: none; }
+      .cf { position: absolute; border-radius: 3px; }
+      .spark { position: absolute; width: 70px; height: 70px; }
+      .ticket { position: absolute; left: 110px; width: 860px; height: 330px; background: #fff; border-radius: 28px; box-shadow: 0 18px 0 rgba(90,0,50,0.35); }
+      .notch { position: absolute; top: 125px; width: 80px; height: 80px; border-radius: 50%; background: #f7208a; }
+      .dash { position: absolute; inset: 28px 56px; border: 5px dashed #5a12f0; border-radius: 18px; }
+      .card { position: absolute; left: 90px; width: 900px; height: 230px; background: #fff; border-radius: 34px; box-shadow: 0 16px 0 rgba(74,8,216,0.18), 0 30px 50px rgba(74,8,216,0.18); }
+      .card .nm { position: absolute; left: 56px; top: 50px; font-family: "Lilita One", sans-serif; font-size: 72px; color: #1d0a4f; }
+      .card .sb { position: absolute; left: 58px; top: 140px; font-size: 30px; font-weight: 700; color: #ff2d87; }
+      .card .pr { position: absolute; right: 56px; top: 40px; font-family: "Lilita One", sans-serif; font-size: 130px; color: #5a12f0; line-height: 1; }
+      .card .pr small { font-size: 56px; vertical-align: 0.9em; margin-right: 4px; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="flash-sale" data-width="1080" data-height="1920" data-duration="8">
+      <div id="s1" class="scene">
+        <div class="burst b-yel" id="bu1"></div><div class="glow"></div><div class="vign"></div>
+        <div class="row" style="top: 560px"><span class="pill" id="k1" style="font-size: 44px; padding: 16px 44px; background: #5a12f0; letter-spacing: 0.08em">Ironhaus Gym</span></div>
+        <div class="row disp olw" id="t1" style="top: 720px; font-size: 300px; color: #5a12f0">
+          <span class="ib l1">B</span><span class="ib l1">L</span><svg class="bolt l1" id="bolt1" viewBox="0 0 50 92"><path d="M32 2 L6 52 L24 52 L14 90 L46 34 L27 34 L38 2 Z" fill="#ff2d87" stroke="#fff" stroke-width="7" stroke-linejoin="round" paint-order="stroke" /></svg><span class="ib l1">T</span><span class="ib l1">Z</span>
+        </div>
+        <div class="row disp olw" id="t1b" style="top: 1040px; font-size: 330px; color: #ff2d87">SALE</div>
+        <div class="conf" id="cf1"></div>
+        <div id="flash" style="position: absolute; inset: 0; background: #fff; opacity: 0"></div>
+      </div>
+
+      <div id="s2" class="scene">
+        <div class="burst b-vio" id="bu2"></div><div class="glow"></div><div class="vign"></div>
+        <div class="row disp old" id="m2" style="top: 470px; font-size: 130px; color: #ffd60a">MEMBERSHIP</div>
+        <div class="row" id="f2" style="top: 660px; font-size: 72px; font-weight: 700">from</div>
+        <div class="row" id="p2" style="top: 760px; height: 420px">
+          <span class="disp old ib" style="font-size: 170px; color: #ffd60a; vertical-align: top; margin-top: 40px">$</span>
+          <span class="ib" style="position: relative; width: 470px; height: 420px; vertical-align: top">
+            <span class="disp olw" id="n19" style="position: absolute; left: 0; right: 0; font-size: 440px; color: #fff; -webkit-text-stroke-color: #2a0a7a">19</span>
+            <span class="disp olw" id="n18" style="position: absolute; left: 0; right: 0; font-size: 440px; color: #fff; -webkit-text-stroke-color: #2a0a7a">18</span>
+          </span>
+          <span class="disp old ib" style="font-size: 100px; color: #ffd60a; vertical-align: top; margin-top: 70px">*</span>
+        </div>
+        <div class="row" id="mo2" style="top: 1190px; font-size: 64px; font-weight: 900; letter-spacing: 0.04em">PER MONTH</div>
+        <div class="row" style="top: 1330px"><span class="pill" id="pl2" style="font-size: 40px; padding: 18px 46px; border: 5px solid #fff; letter-spacing: 0.04em">⚡ Ends Sunday at midnight</span></div>
+        <div class="conf" id="cf2"></div>
+        <div class="fine" id="fine2">*$18/mo billed annually on the 12-month plan. New members only. Taxes and joining fee may apply.</div>
+      </div>
+
+      <div id="s3" class="scene">
+        <div class="burst b-pnk" id="bu3"></div><div class="glow"></div><div class="vign"></div>
+        <div class="row disp" id="u3" style="top: 380px; font-size: 120px; color: #fff">UP TO</div>
+        <div class="row disp olw" id="n3" style="top: 520px; font-size: 420px; color: #fff; -webkit-text-stroke-color: #5a12f0; text-shadow: 0 18px 0 #3a0aa8">40%</div>
+        <div class="row disp olw" id="o3" style="top: 900px; font-size: 250px; color: #ffd60a; -webkit-text-stroke-color: #5a12f0; text-shadow: 0 16px 0 #3a0aa8">OFF</div>
+        <div class="ticket" id="tk" style="top: 1260px">
+          <div class="notch" style="left: -40px"></div><div class="notch" style="right: -40px"></div>
+          <div class="dash"></div>
+          <div class="row" style="top: 62px; font-size: 38px; font-weight: 900; letter-spacing: 0.4em; padding-left: 0.4em; color: #5a12f0">COUPON</div>
+          <div class="row disp" id="code" style="top: 120px; font-size: 150px; color: #ff2d87"><span class="ib cc">B</span><span class="ib cc">L</span><span class="ib cc">T</span><span class="ib cc">Z</span><span class="ib cc">&nbsp;</span><span class="ib cc">4</span><span class="ib cc">0</span></div>
+        </div>
+        <div class="conf" id="cf3"></div>
+      </div>
+
+      <div id="s4" class="scene" style="background: #efe9ff">
+        <div id="slab" style="position: absolute; left: -200px; top: 1300px; width: 1600px; height: 900px; background: #ddd0ff; transform-origin: 0 0"></div>
+        <div class="row disp" id="h4" style="top: 230px; font-size: 150px; color: #5a12f0; -webkit-text-stroke: 18px #fff; text-shadow: 0 12px 0 #c9b8ff">¡STACK THE</div>
+        <div class="row disp" id="h4b" style="top: 380px; font-size: 170px; color: #ff2d87; -webkit-text-stroke: 18px #fff; text-shadow: 0 12px 0 #c9b8ff">SAVINGS!</div>
+        <div class="card" id="c1" style="top: 660px"><div class="nm">Day Pass</div><div class="sb">Any club · 24 hours</div><div class="pr"><small>$</small>4</div></div>
+        <div class="card" id="c2" style="top: 930px"><div class="nm">Monthly</div><div class="sb">All classes included</div><div class="pr"><small>$</small>18</div></div>
+        <div class="card" id="c3" style="top: 1200px"><div class="nm">Annual</div><div class="sb">2 months free · code BLTZ 40</div><div class="pr"><small>$</small>149</div></div>
+        <div class="fine" style="color: rgba(29,10,79,0.5)">Prices per member. Annual plan paid upfront. Offers subject to availability.</div>
+      </div>
+
+      <div id="s5" class="scene">
+        <div class="burst b-vio" id="bu5"></div><div class="glow"></div><div class="vign"></div>
+        <div class="row" style="top: 300px"><span class="pill" id="br5" style="font-size: 46px; padding: 18px 50px; background: #fff; color: #5a12f0; letter-spacing: 0.06em">⚡ Ironhaus</span></div>
+        <div class="row disp old" id="j5" style="top: 470px; font-size: 290px; color: #ffd60a">¡JOIN</div>
+        <div class="row disp old" id="j5b" style="top: 740px; font-size: 290px; color: #ffd60a">NOW!</div>
+        <div class="row" style="top: 1080px"><span class="pill" id="hr5" style="font-size: 42px; padding: 16px 44px; background: #ff2d87; letter-spacing: 0.04em">⚡ 48 hours only</span></div>
+        <div class="row" id="ln5" style="top: 1210px; font-size: 54px; font-weight: 700">Membership from $18/mo*</div>
+        <div class="row" id="ln5b" style="top: 1290px; font-size: 34px; font-weight: 500; color: rgba(255,255,255,0.8)">No joining fee · Code BLTZ 40</div>
+        <div class="row" style="top: 1420px"><span class="pill" id="cta" style="font-size: 58px; padding: 34px 80px; background: #ffd60a; color: #2a0a7a; box-shadow: 0 12px 0 #2a0a7a">Claim my deal</span></div>
+        <div class="row" id="url5" style="top: 1610px; font-size: 38px; font-weight: 700">ironhaus.fit/blitz</div>
+        <div class="conf" id="cf5"></div>
+        <div class="fine" id="fine5">*$18/mo billed annually on the 12-month plan. New members only. Offer valid Oct 3–5 at participating clubs. Terms apply.</div>
+      </div>
+    </div>
+
+    <script>
+      var seed = 13;
+      function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+      var COLORS = ["#ffd60a", "#ff2d87", "#ffffff", "#22e3c4", "#5a12f0"];
+      function confetti(id, n, skip) {
+        var box = document.getElementById(id), out = [];
+        for (var i = 0; i < n; i++) {
+          var d = document.createElement("div");
+          d.className = "cf";
+          var w = 14 + rnd() * 16;
+          d.style.cssText = "left:" + (rnd() * 1040).toFixed(0) + "px;top:" + (-80 - rnd() * 500).toFixed(0) + "px;width:" + w.toFixed(0) + "px;height:" + (w * (0.4 + rnd() * 0.5)).toFixed(0) + "px;background:" + COLORS[(i + (skip || 0)) % 5];
+          box.appendChild(d);
+          out.push({ el: d, fall: 1700 + rnd() * 900, rot: 360 + rnd() * 540, sway: (rnd() - 0.5) * 160, delay: rnd() * 0.6 });
+        }
+        return out;
+      }
+      function sparkle(id, pts) {
+        var box = document.getElementById(id), out = [];
+        pts.forEach(function (p) {
+          var s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          s.setAttribute("viewBox", "0 0 70 70");
+          s.setAttribute("class", "spark");
+          s.style.left = p[0] + "px"; s.style.top = p[1] + "px";
+          s.innerHTML = '<path d="M35 0 C38 26 44 32 70 35 C44 38 38 44 35 70 C32 44 26 38 0 35 C26 32 32 26 35 0 Z" fill="' + p[2] + '"/>';
+          box.appendChild(s); out.push(s);
+        });
+        return out;
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function rain(list, at, dur) {
+        list.forEach(function (c) {
+          tl.fromTo(c.el, { y: 0, x: 0, rotation: 0 }, { y: c.fall, x: c.sway, rotation: c.rot, duration: dur, ease: "none", immediateRender: false }, at + c.delay);
+        });
+      }
+      function twinkle(list, at) {
+        list.forEach(function (s, i) {
+          gsap.set(s, { scale: 0, rotation: -45 });
+          tl.to(s, { scale: 1, rotation: 0, duration: 0.3, ease: "back.out(3)" }, at + i * 0.12)
+            .to(s, { scale: 0.35, duration: 0.25, ease: "power1.inOut", yoyo: true, repeat: 3 }, at + i * 0.12 + 0.3);
+        });
+      }
+      function spin(id, from, dur, deg) {
+        tl.fromTo(id, { rotation: 0 }, { rotation: deg, duration: dur, ease: "none", immediateRender: false }, from);
+      }
+
+      // S1 — BLITZ SALE
+      show("#s1", 0, 1.6);
+      spin("#bu1", 0, 1.6, 22);
+      tl.from("#k1", { y: -60, opacity: 0, duration: 0.3, ease: "back.out(2.5)" }, 0.05)
+        .from("#t1 .l1", { scale: 0, rotation: -18, opacity: 0, duration: 0.36, ease: "back.out(2.6)", stagger: 0.06 }, 0.15)
+        .fromTo("#bolt1", { y: -700, rotation: 25 }, { y: 0, rotation: 0, duration: 0.22, ease: "power4.in", immediateRender: false }, 0.5)
+        .to("#flash", { opacity: 0.85, duration: 0.04 }, 0.72)
+        .to("#flash", { opacity: 0, duration: 0.25, ease: "power2.out" }, 0.76)
+        .from("#t1b", { scale: 2.4, opacity: 0, duration: 0.32, ease: "expo.out" }, 0.74)
+        .fromTo(["#t1", "#t1b"], { rotation: 0 }, { rotation: -3, duration: 0.18, ease: "sine.inOut", yoyo: true, repeat: 3, immediateRender: false }, 1.0);
+      gsap.set("#bolt1", { transformOrigin: "50% 50%" });
+      twinkle(sparkle("cf1", [[120, 480, "#fff"], [880, 640, "#ff2d87"], [150, 1420, "#5a12f0"], [860, 1380, "#fff"]]), 0.6);
+
+      // S2 — price slam and countdown
+      show("#s2", 1.6, 3.6);
+      spin("#bu2", 1.6, 2.0, -26);
+      gsap.set("#n18", { opacity: 0 });
+      tl.from("#m2", { y: -120, opacity: 0, duration: 0.35, ease: "back.out(2)" }, 1.62)
+        .from("#f2", { opacity: 0, y: 20, duration: 0.25, ease: "power2.out" }, 1.75)
+        .from("#p2", { scale: 3, opacity: 0, duration: 0.34, ease: "expo.out" }, 1.85)
+        .fromTo("#p2", { y: 0 }, { y: 18, duration: 0.07, ease: "power1.out", yoyo: true, repeat: 1, immediateRender: false }, 2.15)
+        .to("#n19", { y: -160, opacity: 0, duration: 0.18, ease: "power2.in" }, 2.6)
+        .fromTo("#n18", { y: 160, opacity: 0, scale: 1.3 }, { y: 0, opacity: 1, scale: 1, duration: 0.32, ease: "back.out(2.4)", immediateRender: false }, 2.72)
+        .from("#mo2", { opacity: 0, y: 30, duration: 0.25, ease: "power2.out" }, 2.2)
+        .from("#pl2", { scale: 0, duration: 0.35, ease: "back.out(2.5)" }, 2.4)
+        .from("#fine2", { opacity: 0, duration: 0.3 }, 2.5);
+      rain(confetti("cf2", 34, 0), 2.7, 1.6);
+
+      // S3 — percent and coupon
+      show("#s3", 3.6, 5.2);
+      spin("#bu3", 3.6, 1.6, 20);
+      tl.from("#u3", { y: -80, opacity: 0, duration: 0.25, ease: "back.out(2)" }, 3.62)
+        .from("#n3", { scale: 0.2, rotation: -12, opacity: 0, duration: 0.4, ease: "back.out(2.2)" }, 3.7)
+        .from("#o3", { scale: 2.2, opacity: 0, duration: 0.28, ease: "expo.out" }, 3.95)
+        .fromTo("#tk", { y: 950, rotation: -14 }, { y: 0, rotation: -3, duration: 0.5, ease: "back.out(1.6)", immediateRender: false }, 4.1)
+        .from("#code .cc", { y: 40, scale: 0.4, opacity: 0, duration: 0.22, ease: "back.out(3)", stagger: 0.05 }, 4.45)
+        .to("#tk", { rotation: 1.5, duration: 0.35, ease: "sine.inOut", yoyo: true, repeat: 1 }, 4.6);
+      gsap.set("#tk", { y: 950, rotation: -14 });
+      rain(confetti("cf3", 26, 2), 3.75, 1.5);
+
+      // S4 — stacking price cards
+      show("#s4", 5.2, 6.4);
+      tl.fromTo("#slab", { rotation: -8 }, { rotation: -14, duration: 1.2, ease: "power1.inOut", immediateRender: false }, 5.2)
+        .from(["#h4", "#h4b"], { y: -90, opacity: 0, scale: 1.3, duration: 0.3, ease: "back.out(2)", stagger: 0.1 }, 5.22)
+        .from(["#c1", "#c2", "#c3"], { x: 1100, rotation: 6, duration: 0.38, ease: "back.out(1.4)", stagger: 0.14 }, 5.4);
+
+      // S5 — end card
+      show("#s5", 6.4);
+      spin("#bu5", 6.4, 1.6, 18);
+      tl.from("#br5", { y: -80, opacity: 0, duration: 0.3, ease: "back.out(2.5)" }, 6.42)
+        .from(["#j5", "#j5b"], { scale: 2.2, opacity: 0, duration: 0.3, ease: "expo.out", stagger: 0.12 }, 6.45)
+        .from("#hr5", { scale: 0, rotation: -8, duration: 0.3, ease: "back.out(3)" }, 6.75)
+        .from(["#ln5", "#ln5b"], { opacity: 0, y: 24, duration: 0.25, ease: "power2.out", stagger: 0.07 }, 6.85)
+        .from("#cta", { scale: 0, duration: 0.35, ease: "back.out(2.6)" }, 6.95)
+        .to("#cta", { scale: 1.07, duration: 0.2, ease: "sine.inOut", yoyo: true, repeat: 3 }, 7.3)
+        .from(["#url5", "#fine5"], { opacity: 0, duration: 0.3, stagger: 0.08 }, 7.1);
+      rain(confetti("cf5", 30, 1), 6.5, 1.5);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["flash-sale"] = tl;
+    </script>
+  </body>
+</html>

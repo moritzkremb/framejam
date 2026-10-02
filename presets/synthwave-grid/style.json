@@ -1,0 +1,83 @@
+{
+  "id": "synthwave-grid",
+  "name": "Synthwave Grid",
+  "tagline": "80s outrun: a striped neon sun, an endless scrolling grid, chrome type and VHS glitch cuts.",
+  "description": "Retro-futurist style for synth plugins, retro games, music drops and night events. A magenta-to-gold striped sun sinks behind wireframe mountains while a neon perspective grid scrolls toward camera; chrome italic display type and a glowing script subtitle punch in on VHS tracking glitches, under scanlines and a fake camcorder HUD.",
+  "mood": [
+    "nostalgic",
+    "neon",
+    "cinematic"
+  ],
+  "pacing": "fast",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7.5,
+  "palette": {
+    "night": "#07021a",
+    "dusk": "#1d0640",
+    "plum": "#5a0f6e",
+    "magenta": "#ff3fd8",
+    "hotPink": "#ff2a8a",
+    "orange": "#ff9d3c",
+    "gold": "#fff07a",
+    "cyan": "#2ff3ff",
+    "chromeShadow": "#3b0b62"
+  },
+  "fonts": {
+    "display": {
+      "family": "Bungee",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "Chrome titles 170–230px, skewX(-10deg), gradient clipped to text with a white 2px stroke"
+    },
+    "body": {
+      "family": "Mr Dafoe",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "Neon script subtitles 120–190px, rotated -7°, overlapping the chrome title's lower right"
+    },
+    "accent": {
+      "family": "Monoton",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "Cyan neon-tube feature words 150–170px, one per beat"
+    },
+    "mono": {
+      "family": "VT323",
+      "weights": [400],
+      "source": "Google Fonts",
+      "usage": "Camcorder HUD 46–54px and tracked caption bands, uppercase, letter-spacing 0.32em"
+    }
+  },
+  "easing": {
+    "titleSlam": "expo.out",
+    "shine": "power2.inOut",
+    "scriptWrite": "power2.out",
+    "sunDrift": "sine.inOut",
+    "grid": "none (linear scroll)"
+  },
+  "transitions": [
+    "VHS glitch cut: 0.13s of hard x/skew jitter on the whole world, screen-blended colour bars and a tracking-noise band sweeping down",
+    "hard cut between feature words, each with its own mini glitch"
+  ],
+  "textAnimations": [
+    "chrome squash-slam: scaleX 1.7 / scaleY 0.6 → 1 with expo.out in 0.6s",
+    "specular shine sweeps across the chrome gradient (background-position) over ~1s",
+    "script subtitle writes on with a left-to-right clip-path inset wipe",
+    "neon words punch in from scale 1.35 and their glow flickers up"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.5,
+    "notes": "Atmospheric opener (~1.7s) while the sun rises, a 2.7s hero title hold, then rapid 0.55s feature beats, and a chrome end card. Grid, sun stripes and timecode never stop moving."
+  },
+  "tags": [
+    "synthwave",
+    "retro",
+    "music",
+    "gaming",
+    "neon",
+    "80s"
+  ],
+  "guide": "- Fixed set: sky gradient #07021a → #5a0f6e → #ff5f9e with the horizon at y=640, seeded starfield, sun r≈290 with a #fff07a → #ff9d3c → #ff2a8a gradient and black mask bands (3→27px tall) scrolling upward, wireframe mountains in #12042b with #ff3fd8 ridges and #2ff3ff struts.\n- The floor is one wide div with transform: perspective(520px) rotateX(78deg), transform-origin 50% 0, magenta vertical and cyan horizontal 4px gradient lines; tween only its background-position (linear, never stops). Add a pink haze at the horizon.\n- Chrome type: Bungee, skewX(-10deg) on an inner span, text-clipped gradient #f8fcff → #9cd9ff → #24165c (hard horizon at 51%) → #ff7fd4 → white, white 2px stroke, a #3b0b62 7px drop shadow plus magenta bloom. Sweep a white specular band across it.\n- Script subtitle in Mr Dafoe, pale pink #ffe1f6 with layered #ff4fd8 / #ff2fa0 glows, rotated -7°, revealed with a clip-path wipe. Feature words in Monoton cyan neon, one per 0.5–0.6s beat.\n- Every cut is a VHS glitch (≤0.16s): world x ±34px + skewX ±9°, colour bars in screen blend, a tracking-noise band sweeping down. Keep a camcorder HUD (VT323: ▶ PLAY, running SP timecode, date, channel number that changes per cut) outside the glitching layer.\n- Always overlay 2px scanlines (28% black) and a vignette. Avoid flat backgrounds, sans-serif body copy and pastel colours."
+}

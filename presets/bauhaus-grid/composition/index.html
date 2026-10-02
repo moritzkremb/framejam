@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1080" />
+    <title>Bauhaus Grid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;800&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1080px; overflow: hidden; background: #ece6d6; }
+      #stage { position: relative; width: 1080px; height: 1080px; overflow: hidden; background: #ece6d6; color: #121212; font-family: "Outfit", sans-serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .ring { position: absolute; left: 240px; top: 240px; width: 600px; height: 600px; border-radius: 50%; border: 56px solid #f2542d; }
+      .dot { position: absolute; left: 510px; top: 510px; width: 60px; height: 60px; border-radius: 50%; background: #121212; }
+      #grid { position: absolute; left: 180px; top: 180px; width: 720px; height: 720px; }
+      .tile { position: absolute; width: 168px; height: 168px; }
+      .wipe { position: absolute; inset: 0; background: #2f4bf5; transform-origin: bottom center; }
+      #s4 { background: #2f4bf5; color: #ece6d6; }
+      .word { position: absolute; left: 110px; top: 300px; font-weight: 800; font-size: 210px; line-height: 0.9; letter-spacing: -0.04em; }
+      .word span { display: inline-block; }
+      .reddot { position: absolute; left: 812px; top: 300px; width: 74px; height: 74px; border-radius: 50%; background: #f2542d; }
+      .sub { position: absolute; left: 116px; top: 760px; font-weight: 500; font-size: 34px; letter-spacing: 0.01em; }
+      .hud { position: absolute; z-index: 5; }
+      .label { left: 56px; top: 44px; font-family: "Instrument Serif", serif; font-style: italic; font-size: 40px; }
+      .meta { font-family: "JetBrains Mono", monospace; font-size: 17px; letter-spacing: 0.08em; text-transform: uppercase; }
+      #hudL { left: 56px; bottom: 44px; }
+      #hudR { right: 56px; bottom: 44px; }
+      .onblue { color: #ece6d6; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="bauhaus-grid" data-width="1080" data-height="1080" data-duration="7">
+      <div id="s1" class="scene">
+        <div class="ring" id="ring"></div>
+        <div class="dot" id="dot"></div>
+      </div>
+      <div id="s2" class="scene">
+        <div id="grid"></div>
+      </div>
+      <div class="wipe" id="wipe"></div>
+      <div id="s4" class="scene">
+        <div class="word" id="word"></div>
+        <div class="reddot" id="reddot"></div>
+        <div class="sub" id="sub">Open studios · 12–18 May · Hall 4, Dessau</div>
+      </div>
+
+      <div class="hud label" id="label">Geometry</div>
+      <div class="hud meta" id="hudL">Scene 01 — 16 modules</div>
+      <div class="hud meta" id="hudR">00:00:00</div>
+    </div>
+
+    <script>
+      var colors = { r: "#f2542d", b: "#2f4bf5", k: "#121212" };
+      var radii = {
+        circle: "50%",
+        arch: "84px 84px 0 0",
+        quarter: "100% 0 0 0",
+        leaf: "0 100% 0 100%",
+        square: "0",
+        drop: "50% 50% 0 50%"
+      };
+      var pattern = [
+        ["circle", "k"], ["arch", "b"], ["square", "r"], ["quarter", "k"],
+        ["leaf", "r"], ["circle", "b"], ["drop", "k"], ["arch", "r"],
+        ["quarter", "b"], ["square", "k"], ["circle", "r"], ["leaf", "b"],
+        ["arch", "k"], ["drop", "r"], ["quarter", "b"], ["circle", "k"]
+      ];
+      var grid = document.getElementById("grid");
+      pattern.forEach(function (p, i) {
+        var t = document.createElement("div");
+        t.className = "tile";
+        t.id = "tile" + i;
+        t.style.left = (i % 4) * 184 + "px";
+        t.style.top = Math.floor(i / 4) * 184 + "px";
+        t.style.borderRadius = radii[p[0]];
+        t.style.background = colors[p[1]];
+        t.dataset.c = p[1];
+        grid.appendChild(t);
+      });
+      var word = document.getElementById("word");
+      ["shape", "week"].forEach(function (w, li) {
+        var line = document.createElement("div");
+        w.split("").forEach(function (ch) {
+          var s = document.createElement("span");
+          s.textContent = ch;
+          s.className = "ch";
+          line.appendChild(s);
+        });
+        word.appendChild(line);
+      });
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      var clock = { f: 0 };
+      tl.to(clock, {
+        f: 210, duration: 7, ease: "none",
+        onUpdate: function () {
+          var f = Math.round(clock.f), s = Math.floor(f / 30), ff = f % 30;
+          document.getElementById("hudR").textContent = "00:00:" + String(s).padStart(2, "0") + ":" + String(ff).padStart(2, "0");
+          var t = f / 30, onBlue = t >= 4.3;
+          document.getElementById("hudL").textContent = t < 1 ? "Scene 01 — Origin" : onBlue ? "Scene 03 — Poster" : "Scene 02 — 16 modules";
+          document.getElementById("label").textContent = onBlue ? "Typography" : "Geometry";
+          ["label", "hudL", "hudR"].forEach(function (id) { document.getElementById(id).style.color = onBlue ? "#ece6d6" : "#121212"; });
+        }
+      }, 0);
+
+      show("#s1", 0, 1.0);
+      tl.from("#ring", { scale: 0, duration: 0.5, ease: "back.out(1.6)" }, 0.05)
+        .from("#dot", { y: -500, duration: 0.45, ease: "bounce.out" }, 0.25)
+        .to("#ring", { scale: 2.6, duration: 0.35, ease: "power3.in" }, 0.68)
+        .to("#dot", { scale: 0, duration: 0.25, ease: "power2.in" }, 0.72);
+
+      show("#s2", 1.0, 4.3);
+      var tiles = gsap.utils.toArray(".tile");
+      tl.from(tiles, { scale: 0, duration: 0.45, ease: "back.out(1.8)", stagger: { grid: [4, 4], from: "center", amount: 0.45 } }, 1.0)
+        .to(tiles, { rotation: 90, duration: 0.5, ease: "power3.inOut", stagger: { grid: [4, 4], from: "start", amount: 0.5 } }, 2.05)
+        .set(tiles.filter(function (t) { return t.dataset.c === "r"; }), { backgroundColor: "#2f4bf5" }, 2.9)
+        .set(tiles.filter(function (t) { return t.dataset.c === "b"; }), { backgroundColor: "#f2542d" }, 2.9)
+        .to(tiles, { rotation: 180, duration: 0.5, ease: "power3.inOut", stagger: { grid: [4, 4], from: "end", amount: 0.5 } }, 3.1)
+        .to(tiles, { scale: 0.86, duration: 0.25, ease: "power2.inOut", yoyo: true, repeat: 1 }, 3.75);
+
+      gsap.set("#wipe", { scaleY: 0 });
+      tl.to("#wipe", { scaleY: 1, duration: 0.35, ease: "expo.inOut" }, 4.0)
+        .set("#wipe", { visibility: "hidden" }, 4.36);
+
+      show("#s4", 4.3);
+      var chars = gsap.utils.toArray(".ch");
+      tl.from(chars, {
+        y: 160, opacity: 0, duration: 0.5, ease: "back.out(2.2)", stagger: 0.04,
+        rotation: function (i) { return (i % 2 ? -1 : 1) * 14; }
+      }, 4.4)
+        .from("#reddot", { y: -420, duration: 0.6, ease: "bounce.out" }, 4.9)
+        .to(chars, { y: function (i) { return (i % 2 ? 1 : -1) * 10; }, rotation: function (i) { return (i % 2 ? 1 : -1) * 4; }, duration: 0.3, ease: "sine.inOut", stagger: 0.03, yoyo: true, repeat: 1 }, 5.6)
+        .from("#sub", { y: 30, opacity: 0, duration: 0.4, ease: "power3.out" }, 5.5);
+
+      tl.set({}, {}, 7);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["bauhaus-grid"] = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Noir Quote</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,400;1,500&family=Cormorant+Garamond:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #2a2622 0%, #0b0a09 65%, #000 100%); color: #ede6d8; font-family: "Playfair Display", serif; }
+      .clip { position: absolute; inset: 0; visibility: hidden; }
+      .bar { position: absolute; left: 0; width: 100%; height: 130px; background: #000; z-index: 10; }
+      .grain { position: absolute; inset: -50%; z-index: 9; opacity: 0.16; pointer-events: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+      .light { position: absolute; left: 50%; top: -200px; width: 1200px; height: 1400px; transform: translateX(-50%) rotate(14deg); background: linear-gradient(180deg, rgba(255,240,210,0.10), transparent 70%); filter: blur(30px); }
+      .quote { position: absolute; left: 260px; right: 260px; top: 360px; text-align: center; font-style: italic; font-size: 82px; line-height: 1.25; font-weight: 400; }
+      .quote .w { display: inline-block; }
+      .attr { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font-family: "Cormorant Garamond", serif; font-size: 34px; letter-spacing: 0.4em; text-transform: uppercase; color: #a89c86; }
+      .rule { position: absolute; left: 50%; top: 670px; width: 140px; height: 1px; margin-left: -70px; background: #a89c86; }
+      .title { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 120px; font-weight: 500; letter-spacing: 0.08em; }
+      .title-sub { position: absolute; left: 0; right: 0; top: 640px; text-align: center; font-family: "Cormorant Garamond", serif; font-size: 30px; letter-spacing: 0.5em; text-transform: uppercase; color: #a89c86; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="noir-quote" data-width="1920" data-height="1080">
+      <div class="light" id="light"></div>
+
+      <div id="scene-quote" class="clip" data-start="0" data-duration="5.4" data-track-index="1">
+        <p class="quote" id="quote">
+          <span class="w">“We</span> <span class="w">do</span> <span class="w">not</span> <span class="w">remember</span> <span class="w">days,</span><br />
+          <span class="w">we</span> <span class="w">remember</span> <span class="w">moments.”</span>
+        </p>
+        <div class="rule" id="rule"></div>
+        <div class="attr" id="attr">Cesare Pavese</div>
+      </div>
+
+      <div id="scene-title" class="clip" data-start="5.4" data-duration="2.6" data-track-index="1">
+        <div class="title" id="title">THE QUIET HOURS</div>
+        <div class="title-sub" id="title-sub">A short film · Autumn</div>
+      </div>
+
+      <div class="grain" id="grain"></div>
+      <div class="bar" style="top: 0"></div>
+      <div class="bar" style="bottom: 0"></div>
+    </div>
+
+    <script>
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power1.inOut" } });
+
+      tl.from("#light", { opacity: 0, duration: 2.5 }, 0)
+        .to("#light", { rotation: 8, duration: 8, ease: "sine.inOut" }, 0)
+        .to("#grain", { x: 60, y: -40, duration: 8, ease: "steps(48)" }, 0);
+
+      tl.from("#quote .w", { opacity: 0, y: 14, filter: "blur(6px)", duration: 1.1, stagger: 0.22 }, 0.4)
+        .from("#rule", { scaleX: 0, duration: 1.0, ease: "power2.inOut" }, 2.6)
+        .from("#attr", { opacity: 0, scale: 1.12, duration: 1.4 }, 2.9)
+        .to("#quote, #attr, #rule", { opacity: 0, duration: 1.0 }, 4.4);
+
+      tl.from("#title", { opacity: 0, scale: 1.08, duration: 1.6 }, 5.4)
+        .from("#title-sub", { opacity: 0, duration: 1.2 }, 6.2);
+
+      tl.set({}, {}, 8);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["noir-quote"] = tl;
+    </script>
+  </body>
+</html>

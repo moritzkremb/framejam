@@ -1,0 +1,77 @@
+{
+  "id": "recipe-steps",
+  "name": "Recipe Steps",
+  "tagline": "A hand-drawn glass fills step by step while a recipe card and step dots count you through it.",
+  "description": "Warm, illustrated how-to style for recipes, setup guides and any process with a handful of steps. A centred SVG vessel with a soft ink outline fills layer by layer: liquids rise with a wobbling surface, ingredients drop in, bottles tilt and pour. A chunky red rounded title sits on top, a white step card on the right shows 'STEP 3 OF 5', a big quantity and the ingredient with a progress bar, numbered dots along the bottom fill as you advance, and it ends on a celebratory finish card.",
+  "mood": [
+    "warm",
+    "friendly",
+    "hand-made"
+  ],
+  "pacing": "medium",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8.5,
+  "palette": {
+    "background": "#fbf6ec",
+    "ink": "#3b2f2f",
+    "red": "#e5484d",
+    "redSoft": "#f6c3c4",
+    "muted": "#6b5d55",
+    "inactive": "#c9c0b4",
+    "glassTint": "#e3f1f1",
+    "card": "#fffdf8",
+    "matcha": "#86b552",
+    "honey": "#f0a93b"
+  },
+  "fonts": {
+    "display": {
+      "family": "Baloo 2",
+      "weights": [
+        700,
+        800
+      ],
+      "source": "Google Fonts",
+      "usage": "Title 120px in red with a 4px ink stroke and a 6px soft-pink offset shadow; card quantity 104px, ingredient 50px, step labels 26–28px tracked 0.06–0.08em"
+    },
+    "body": {
+      "family": "Patrick Hand",
+      "weights": [
+        400
+      ],
+      "source": "Google Fonts",
+      "usage": "Subtitle 40px, card notes 30px, measurement tick labels 30px in muted brown"
+    }
+  },
+  "easing": {
+    "pour": "power2.inOut",
+    "level": "power1.inOut",
+    "wobble": "elastic.out(1, 0.3)",
+    "drop": "bounce.out",
+    "pop": "back.out(2)"
+  },
+  "transitions": [
+    "no scene cuts: one continuous illustrated set where only the vessel, card and dots change",
+    "card content crossfades (out 0.15s up, in 0.25s from 16px below) with a 3% card bump on each step",
+    "props (bottle, jug, spoon) enter from the upper left, tilt to pour, then leave the way they came"
+  ],
+  "textAnimations": [
+    "title letters rise from below at scale 2.2 with back.out, 0.04s stagger",
+    "card quantity and ingredient swap per step; progress bar scaleX fills over the step",
+    "step dot ring turns red and pops 1.25×, then fills red with a white check when the step ends",
+    "measurement tick label turns red when the liquid reaches it"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 1.2,
+    "notes": "Intro title 1.2s, then one step every 0.9–1.5s (pours get the longer slots), then a 1.5s finish card. Something always moves: the liquid surface scrolls its wave continuously."
+  },
+  "tags": [
+    "how-to",
+    "recipe",
+    "illustrated",
+    "explainer",
+    "steps"
+  ],
+  "guide": "- Cream #fbf6ec background with a faint dot grain; every drawing has a 4–5px #3b2f2f round-joined outline and a flat light fill, so it feels hand-drawn. Never use gradients or photos.\n- Layout is fixed: red Baloo 2 800 title (120px, 4px ink stroke, 6px #f6c3c4 offset shadow) and Patrick Hand subtitle at top, the vessel centred-left (~360px wide), measurement ticks right of it, the step card at x≈1150, numbered dots along y≈950.\n- Liquids are clipped layers with a sine-wave top that scrolls continuously; raise them with power1.inOut and finish with an elastic.out(1, 0.3) rotation wobble. Solid ingredients drop with bounce.out.\n- Pours: the prop tilts to ~115° around its mouth, a 16px outlined stream grows to the surface (attr height), then retracts downward before the prop leaves.\n- The card always shows 'STEP N OF M' (red, tracked), a big quantity ('6 OZ', '1 TSP', '10 SEC'), the ingredient, a one-line note and a progress bar. Keep it to 4–6 steps.\n- Step dots: grey outline = upcoming, red ring = current (pop 1.25×), red fill with white check = done; connectors fill red as you advance.\n- Finish with an 'ALL DONE!' card (slight -2.5° tilt, back.out), red celebration rays drawing on around the vessel and every dot filled."
+}

@@ -1,0 +1,72 @@
+{
+  "id": "topo-credits",
+  "name": "Topo Credits",
+  "tagline": "Topographic contours that draw themselves, a bloom of red ink and widely spaced serif credits.",
+  "description": "Cinematic title-sequence style for films, documentaries, trailers and premium brand intros. Pale contour lines draw outward from a summit on black letterbox while the map slowly turns, one contour traces in red, a blurred red ink bloom grows inside a drawn ring as credits resolve from blur, and the title settles over faint contours with a thin red rule.",
+  "mood": [
+    "cinematic",
+    "brooding",
+    "elegant"
+  ],
+  "pacing": "slow",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "background": "#070707",
+    "letterbox": "#000000",
+    "contour": "#d9d6cf",
+    "red": "#c4161c",
+    "redDeep": "#8f0f14",
+    "text": "#e9e4da",
+    "muted": "#8d877d"
+  },
+  "fonts": {
+    "display": {
+      "family": "Cormorant Garamond",
+      "weights": [
+        600
+      ],
+      "source": "Google Fonts",
+      "usage": "Uppercase title 104px, tracking 0.24em"
+    },
+    "body": {
+      "family": "Cormorant Garamond",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Credit names 44px tracking 0.32em; roles 22px muted tracking 0.4em"
+    }
+  },
+  "easing": {
+    "contours": "power2.inOut",
+    "drift": "none",
+    "credit": "power2.out",
+    "bloom": "power2.out",
+    "rule": "power3.inOut"
+  },
+  "transitions": [
+    "hard cut to black between the map and the ink bloom",
+    "credits dissolve out through blur(6px)",
+    "letterbox bars stay fixed for the whole piece"
+  ],
+  "textAnimations": [
+    "credits resolve from blur(6px) while rising 14px",
+    "title resolves from blur(14px) and scale 1.04",
+    "thin red rule grows from the centre under the title"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 2.7,
+    "notes": "Three long shots. Each credit holds at least 1.5s; nothing moves fast except the contour draw-on."
+  },
+  "tags": [
+    "title-sequence",
+    "film",
+    "credits",
+    "cinematic",
+    "topographic"
+  ],
+  "guide": "- Black #070707 with permanent 110px letterbox bars; the only colour is red #c4161c.\n- Contours are 16–18 closed SVG paths built from layered sine wobbles around one summit; vary stroke weight every fourth line and fade opacity outward. Draw them outward with a small stagger.\n- Keep the map slowly rotating and scaling (linear) under the credits; trace one contour in red after the draw.\n- Ink blooms are a few blurred (40–50px) red ellipses scaling up at different times inside a thin drawn ring.\n- Credits: uppercase Cormorant Garamond, role small and muted above the name, very wide tracking; resolve from blur, never slide far.\n- End on the title with a short red rule and one quiet line (release window)."
+}

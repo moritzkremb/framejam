@@ -1,0 +1,66 @@
+{
+  "id": "mono-changelog",
+  "name": "Mono Changelog",
+  "tagline": "Black on white, Plex type, one release note at a time.",
+  "description": "Calm, precise style for release notes and product changelogs. A version tag, a plain title, and list items that fade up one by one with their issue numbers, ending on a blinking caret call to action.",
+  "mood": [
+    "minimal",
+    "calm",
+    "technical"
+  ],
+  "pacing": "slow",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 7.5,
+  "palette": {
+    "background": "#fafafa",
+    "text": "#0a0a0a",
+    "muted": "#737373",
+    "rule": "#e5e5e5"
+  },
+  "fonts": {
+    "display": {
+      "family": "IBM Plex Sans",
+      "weights": [
+        600
+      ],
+      "source": "Google Fonts",
+      "usage": "Title 104px, items 44px"
+    },
+    "mono": {
+      "family": "IBM Plex Mono",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Version tag, dates, kinds and issue numbers 24–30px"
+    }
+  },
+  "easing": {
+    "enter": "power2.out",
+    "exit": "power1.in"
+  },
+  "transitions": [
+    "fade",
+    "hard cut to end card"
+  ],
+  "textAnimations": [
+    "fade-up list stagger (0.55s apart)",
+    "rule lines fading in with their item",
+    "blinking caret"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 3.7,
+    "holdAfterTextSeconds": 1.5,
+    "notes": "Give each item half a second alone before the next one appears."
+  },
+  "tags": [
+    "changelog",
+    "release notes",
+    "product",
+    "minimal"
+  ],
+  "guide": "- Only black, white and two grays. No color accents, no shadows, no rounded shapes except the 8px version tag.\n- Layout: version tag (mono, outlined) → title → mono date → list with 2px #e5e5e5 rules.\n- Each item: uppercase mono kind (NEW / FIXED / IMPROVED), a short benefit-first sentence, and the issue/PR number right-aligned.\n- Items fade up (y 30, 0.5s power2.out) 0.55s apart. Max 4 items per scene.\n- End card: one short imperative line with a blinking caret, and the changelog URL in mono gray."
+}

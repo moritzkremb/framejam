@@ -1,0 +1,42 @@
+{
+  "offset": -0.543,
+  "frames": 713,
+  "events": [
+    {
+      "t": -0.543,
+      "type": "start"
+    },
+    {
+      "t": 1.145,
+      "type": "hover",
+      "data": 1
+    },
+    {
+      "t": 4.178,
+      "type": "hover",
+      "data": 5
+    },
+    {
+      "t": 7.212,
+      "type": "hover",
+      "data": 4
+    },
+    {
+      "t": 9.405,
+      "type": "scroll"
+    },
+    {
+      "t": 12.911,
+      "type": "hover-paper-marker"
+    },
+    {
+      "t": 15.22,
+      "type": "click",
+      "data": "use-paper-marker"
+    },
+    {
+      "t": 17.718,
+      "type": "end"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "id": "noir-quote",
+  "name": "Noir Quote",
+  "tagline": "Letterboxed, grainy and slow. Italic serif words drift in out of the dark.",
+  "description": "Cinematic title-card style for quotes, trailers and brand films. Letterbox bars, animated film grain, a slowly rotating shaft of light, and words that fade in one at a time from a soft blur before a widely tracked title.",
+  "mood": [
+    "cinematic",
+    "moody",
+    "elegant"
+  ],
+  "pacing": "slow",
+  "format": "16:9",
+  "width": 1920,
+  "height": 1080,
+  "durationSeconds": 8,
+  "palette": {
+    "background": "#0b0a09",
+    "vignette": "#2a2622",
+    "text": "#ede6d8",
+    "muted": "#a89c86",
+    "bars": "#000000"
+  },
+  "fonts": {
+    "display": {
+      "family": "Playfair Display",
+      "weights": [
+        400,
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Quote 82px italic, title 120px roman tracked 0.08em"
+    },
+    "caption": {
+      "family": "Cormorant Garamond",
+      "weights": [
+        500
+      ],
+      "source": "Google Fonts",
+      "usage": "Attribution 30–34px uppercase, tracked 0.4–0.5em"
+    }
+  },
+  "easing": {
+    "default": "power1.inOut",
+    "rule": "power2.inOut",
+    "ambient": "sine.inOut",
+    "grain": "steps(48)"
+  },
+  "transitions": [
+    "slow cross-fade (1.0s)",
+    "fade through black"
+  ],
+  "textAnimations": [
+    "word-by-word blur fade (0.22s stagger, 1.1s each)",
+    "slow scale settle on attribution and title (1.08–1.12 → 1)"
+  ],
+  "rhythm": {
+    "averageShotSeconds": 4.0,
+    "holdAfterTextSeconds": 1.5,
+    "notes": "Nothing moves faster than 1s. Let the last word breathe before the fade."
+  },
+  "tags": [
+    "quote",
+    "trailer",
+    "film",
+    "brand"
+  ],
+  "guide": "- Always keep the 130px black letterbox bars and the grain layer (SVG turbulence, ~16% opacity, stepped drift) on top.\n- Words fade in individually: opacity 0, y 14, blur 6px → sharp, 1.1s, 0.22s stagger, power1.inOut.\n- Quotes are italic Playfair at ~82px, centered, max two lines. Attribution sits under a thin 140px rule in tracked uppercase Cormorant.\n- Nothing faster than 1s, no bounces, no saturated color. The only light source is a soft warm beam drifting a few degrees.\n- Transition with a 1s fade to black, then reveal the title with a slow scale settle from 1.08 (transforms only; letter-spacing tweens stutter in frame-by-frame renders)."
+}

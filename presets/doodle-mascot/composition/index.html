@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Doodle Mascot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Patrick+Hand&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f3f0e7; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f3f0e7; }
+      svg#art { position: absolute; left: 0; top: 0; }
+      .k { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+      .k:not([stroke]) { stroke: #2a2622; }
+      .o { stroke: #2a2622; stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; }
+      .d { stroke-dasharray: 1; stroke-dashoffset: 1; }
+      .hand { font-family: "Gochi Hand", cursive; fill: #2a2622; }
+      .note { font-family: "Patrick Hand", cursive; fill: #2a2622; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="doodle-mascot" data-width="1920" data-height="1080" data-duration="8">
+      <svg id="art" width="1920" height="1080" viewBox="0 0 1920 1080">
+        <defs>
+          <filter id="boil" filterUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080">
+            <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="1" result="n" />
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <filter id="paper" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="7" />
+            <feColorMatrix values="0 0 0 0 0.16  0 0 0 0 0.14  0 0 0 0 0.12  0 0 0 0.55 0" />
+          </filter>
+          <pattern id="hatch" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(38)">
+            <line x1="0" y1="0" x2="0" y2="9" stroke="#2a2622" stroke-width="1.5" opacity="0.2" />
+          </pattern>
+          <clipPath id="wipe"><rect id="wipeR" x="300" y="200" width="0" height="220" /></clipPath>
+        </defs>
+        <rect width="1920" height="1080" fill="#f3f0e7" />
+        <rect width="1920" height="1080" filter="url(#paper)" opacity="0.18" />
+
+        <g id="ink" filter="url(#boil)">
+          <g id="cam">
+            <path class="k" d="M30 902 C 420 896, 820 907, 1220 899 S 1720 905, 1890 899" stroke-width="4" />
+            <path class="k" d="M140 930 l 40 -2 M 520 936 l 70 1 M 1080 928 l 50 -1 M 1600 934 l 80 2" stroke-width="3" opacity="0.35" />
+
+            <g id="bunting">
+              <path id="string" class="k d" pathLength="1" stroke-width="3" d="" />
+              <g id="flags"></g>
+            </g>
+
+            <g id="balloons">
+              <g id="bal1"><path class="k" stroke-width="3" d="M1600 588 C 1580 650, 1500 700, 1440 752" /><ellipse class="o" cx="1600" cy="520" rx="55" ry="68" fill="#5bb8ad" /><ellipse cx="1600" cy="520" rx="55" ry="68" fill="url(#hatch)" /><path class="k" d="M1580 488 q 8 -16 24 -18" stroke="#f3f0e7" stroke-width="6" /></g>
+              <g id="bal2"><path class="k" stroke-width="3" d="M1720 538 C 1700 640, 1520 690, 1442 752" /><ellipse class="o" cx="1720" cy="470" rx="55" ry="68" fill="#ef7b63" /><ellipse cx="1720" cy="470" rx="55" ry="68" fill="url(#hatch)" /><path class="k" d="M1700 438 q 8 -16 24 -18" stroke="#f3f0e7" stroke-width="6" /></g>
+            </g>
+
+            <g transform="translate(1300 900)">
+              <g id="cake">
+                <ellipse class="o" cx="0" cy="-6" rx="175" ry="16" fill="#ffffff" />
+                <path class="o" d="M-130 -18 V-150 H130 V-18 Z" fill="#f7b7c4" />
+                <path d="M-130 -18 V-150 H130 V-18 Z" fill="url(#hatch)" />
+                <path class="o" d="M-138 -152 H138 V-128 C 128 -96, 110 -96, 104 -126 C 92 -100, 70 -100, 62 -124 C 48 -92, 24 -92, 16 -124 C 0 -102, -22 -102, -30 -124 C -44 -96, -66 -96, -74 -126 C -88 -104, -108 -104, -116 -128 C -124 -110, -136 -112, -138 -128 Z" fill="#fff7ef" />
+                <text class="hand" x="0" y="-38" text-anchor="middle" font-size="68" fill="#e2554a">v1.0</text>
+                <rect class="o" x="-10" y="-218" width="20" height="66" rx="4" fill="#8fc8e8" />
+                <path class="k" d="M-10 -200 l 20 -10 M-10 -178 l 20 -10" stroke-width="3" />
+                <path class="k" d="M0 -218 v -12" stroke-width="3" />
+                <g id="flame">
+                  <path class="o" d="M0 -232 C -22 -250, -16 -276, 0 -296 C 16 -276, 22 -250, 0 -232 Z" fill="#ffb53b" stroke-width="4" />
+                  <path d="M0 -240 C -9 -250, -6 -264, 0 -274 C 6 -264, 9 -250, 0 -240 Z" fill="#ffe27a" />
+                </g>
+              </g>
+            </g>
+            <g id="rays"></g>
+
+            <g transform="translate(0 900)">
+              <ellipse id="mShadow" cx="760" cy="2" rx="120" ry="12" fill="#2a2622" opacity="0.12" />
+              <g id="m">
+                <g id="mJump">
+                  <g id="mSquash">
+                    <rect id="legL" class="o" x="-64" y="-68" width="26" height="68" rx="11" fill="#ffd84a" />
+                    <rect id="legR" class="o" x="38" y="-68" width="26" height="68" rx="11" fill="#ffd84a" />
+                    <path id="armL" class="k" stroke-width="10" d="M-122 -172 Q -160 -176, -180 -206" />
+                    <path id="armR" class="k" stroke-width="10" d="M122 -172 Q 160 -176, 180 -206" />
+                    <path class="o" d="M-125 -305 H125 V-115 L75 -60 H-125 Z" fill="#ffd84a" />
+                    <path d="M-125 -305 H125 V-115 L75 -60 H-125 Z" fill="url(#hatch)" />
+                    <rect x="-121" y="-301" width="242" height="32" fill="#f0c235" opacity="0.7" />
+                    <path class="o" d="M125 -115 H75 V-60 Z" fill="#e5ad25" />
+                    <path class="k" d="M-95 -132 H85 M-95 -102 H50" stroke="#7fa9d6" stroke-width="3" />
+                    <g id="eyes">
+                      <ellipse cx="-48" cy="-206" rx="11" ry="15" fill="#2a2622" />
+                      <ellipse cx="48" cy="-206" rx="11" ry="15" fill="#2a2622" />
+                    </g>
+                    <g id="happy">
+                      <path class="k" stroke-width="7" d="M-66 -200 Q -48 -224, -30 -200 M30 -200 Q 48 -224, 66 -200" />
+                    </g>
+                    <ellipse cx="-84" cy="-176" rx="18" ry="9" fill="#f59a8f" opacity="0.75" />
+                    <ellipse cx="84" cy="-176" rx="18" ry="9" fill="#f59a8f" opacity="0.75" />
+                    <path id="mouth" class="k" d="M-16 -180 Q 0 -166, 16 -180" />
+                    <path id="mouthO" class="o" d="M-22 -184 Q 0 -146, 22 -184 Z" fill="#c9473e" stroke-width="4" />
+                  </g>
+                </g>
+              </g>
+            </g>
+
+            <g id="bub1">
+              <path class="o" d="M360 382 C 520 380, 610 420, 606 470 C 602 518, 520 556, 420 558 L 560 620 L 360 556 C 220 552, 116 520, 118 468 C 120 416, 220 384, 360 382 Z" fill="#ffffff" />
+              <text class="hand" x="362" y="488" text-anchor="middle" font-size="52">wait... is it today?</text>
+            </g>
+            <g id="bub2">
+              <path class="o" d="M360 372 C 530 370, 616 414, 612 470 C 608 522, 520 558, 420 560 L 568 626 L 352 558 C 210 554, 108 520, 110 466 C 112 410, 210 374, 360 372 Z" fill="#ffffff" />
+              <text class="hand" x="362" y="494" text-anchor="middle" font-size="72">WE SHIPPED!</text>
+            </g>
+
+            <g id="confetti"></g>
+
+            <g clip-path="url(#wipe)">
+              <text class="hand" x="960" y="360" text-anchor="middle" font-size="150">Jotter <tspan fill="#e2554a">1.0</tspan> is here!</text>
+            </g>
+            <path id="under" class="k d" pathLength="1" stroke="#5bb8ad" stroke-width="9" d="M560 392 C 760 378, 1000 404, 1180 384 S 1340 380, 1380 390" />
+            <text id="sign" class="note" x="960" y="470" text-anchor="middle" font-size="58">thanks for every little note ♥ love, Notey</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <script>
+      var seed = 11;
+      function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+      var NS = "http://www.w3.org/2000/svg";
+      function el(tag, attrs, parent) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        parent.appendChild(e);
+        return e;
+      }
+
+      function sag(x) { var u = (x - 960) / 1000; return 52 + 70 * (1 - u * u); }
+      var sd = "M-20 " + sag(-20).toFixed(1);
+      for (var x = 40; x <= 1940; x += 60) sd += " L" + x + " " + sag(x).toFixed(1);
+      document.getElementById("string").setAttribute("d", sd);
+      var flagCols = ["#ef7b63", "#5bb8ad", "#ffd84a", "#8fc8e8"];
+      var flags = document.getElementById("flags");
+      for (var i = 0; i < 16; i++) {
+        var fx = 30 + i * 124, fy = sag(fx);
+        var g = el("g", { class: "flag" }, flags);
+        var pts = (fx - 44) + "," + (fy - 2) + " " + (fx + 44) + "," + (fy + 2) + " " + (fx + 2) + "," + (fy + 84);
+        el("polygon", { points: pts, class: "o", fill: flagCols[i % 4], "stroke-width": "4" }, g);
+        if (i % 2 === 0) el("polygon", { points: pts, fill: "url(#hatch)" }, g);
+      }
+
+      var rays = document.getElementById("rays");
+      for (var r = 0; r < 9; r++) {
+        var a = Math.PI * (1.05 + (r / 8) * 0.9);
+        var cx = 1300, cy = 640;
+        el("path", { class: "k d ray", pathLength: "1", "stroke-width": "5",
+          d: "M" + (cx + Math.cos(a) * 80).toFixed(1) + " " + (cy + Math.sin(a) * 80).toFixed(1) + " L" + (cx + Math.cos(a) * 140).toFixed(1) + " " + (cy + Math.sin(a) * 140).toFixed(1) }, rays);
+      }
+
+      var conf = document.getElementById("confetti");
+      var confCols = ["#ef7b63", "#5bb8ad", "#ffd84a", "#8fc8e8", "#f7b7c4"];
+      var pieces = [];
+      for (var c = 0; c < 48; c++) {
+        var ox = c % 2 ? 1300 : 760, oy = c % 2 ? 650 : 640;
+        var p = c % 3 === 0
+          ? el("path", { class: "k", d: "M" + (ox - 10) + " " + oy + " q 5 -8 10 0 t 10 0", stroke: confCols[c % 5], "stroke-width": "5" }, conf)
+          : el("rect", { x: ox - 8, y: oy - 5, width: 16, height: 10, fill: confCols[c % 5], stroke: "#2a2622", "stroke-width": "2" }, conf);
+        var ang = Math.PI * (1.08 + rnd() * 0.84), dist = 220 + rnd() * 420;
+        pieces.push({ el: p, x: Math.cos(ang) * dist, y: Math.sin(ang) * dist * 0.9, rot: (rnd() - 0.5) * 720, fall: 420 + rnd() * 380 });
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      for (var b = 0, t = 0; t < 8; t += 0.12, b++) tl.set("#turb", { attr: { seed: (b % 3) + 1 } }, t);
+
+      gsap.set("#cam", { svgOrigin: "960 700" });
+      tl.fromTo("#cam", { scale: 1 }, { scale: 1.035, duration: 8, ease: "none", immediateRender: false }, 0);
+
+      tl.to("#string", { strokeDashoffset: 0, duration: 0.6, ease: "power2.inOut" }, 0);
+      gsap.set(".flag", { scaleY: 0, transformOrigin: "50% 0%" });
+      tl.to(".flag", { scaleY: 1, duration: 0.45, ease: "back.out(2.6)", stagger: 0.045 }, 0.15);
+      tl.to(".flag", { rotation: 4, transformOrigin: "50% 0%", duration: 0.9, ease: "sine.inOut", yoyo: true, repeat: 7, stagger: 0.06 }, 1.0);
+
+      gsap.set("#cake", { scale: 0, svgOrigin: "0 0" });
+      tl.to("#cake", { scale: 1, duration: 0.55, ease: "back.out(2.2)" }, 0.45);
+      gsap.set(["#bal1", "#bal2"], { y: 260, opacity: 0 });
+      tl.to(["#bal1", "#bal2"], { y: 0, opacity: 1, duration: 0.9, ease: "back.out(1.4)", stagger: 0.12 }, 0.6);
+      tl.to("#bal1", { y: -14, rotation: -3, svgOrigin: "1600 588", duration: 0.8, ease: "sine.inOut", yoyo: true, repeat: 7 }, 1.5);
+      tl.to("#bal2", { y: -18, rotation: 3, svgOrigin: "1720 538", duration: 0.95, ease: "sine.inOut", yoyo: true, repeat: 5 }, 1.6);
+      gsap.set("#flame", { scale: 0, svgOrigin: "0 -232" });
+
+      gsap.set("#m", { x: -300 });
+      gsap.set("#mShadow", { x: -1060 });
+      gsap.set("#mSquash", { svgOrigin: "0 0" });
+      gsap.set(["#happy", "#mouthO", "#bub1", "#bub2", "#sign"], { opacity: 0 });
+      gsap.set("#legL", { svgOrigin: "-51 -60" });
+      gsap.set("#legR", { svgOrigin: "51 -60" });
+      gsap.set("#armL", { svgOrigin: "-122 -172" });
+      gsap.set("#armR", { svgOrigin: "122 -172" });
+
+      tl.to("#m", { x: 760, duration: 1.6, ease: "power1.out" }, 0)
+        .to("#mShadow", { x: 0, duration: 1.6, ease: "power1.out" }, 0)
+        .fromTo("#legL", { rotation: -20 }, { rotation: 20, duration: 0.11, ease: "sine.inOut", yoyo: true, repeat: 13, immediateRender: false }, 0)
+        .fromTo("#legR", { rotation: 20 }, { rotation: -20, duration: 0.11, ease: "sine.inOut", yoyo: true, repeat: 13, immediateRender: false }, 0)
+        .to("#mJump", { y: -12, duration: 0.11, ease: "sine.inOut", yoyo: true, repeat: 13 }, 0)
+        .to(["#legL", "#legR"], { rotation: 0, duration: 0.1 }, 1.56)
+        .to("#mSquash", { scaleY: 0.9, scaleX: 1.07, duration: 0.1, ease: "power2.out" }, 1.6)
+        .to("#mSquash", { scaleY: 1, scaleX: 1, duration: 0.45, ease: "elastic.out(1, 0.4)" }, 1.72);
+
+      function blink(at) {
+        tl.to("#eyes", { scaleY: 0.1, svgOrigin: "0 -206", duration: 0.06, ease: "power1.in" }, at)
+          .to("#eyes", { scaleY: 1, svgOrigin: "0 -206", duration: 0.08, ease: "power1.out" }, at + 0.07);
+      }
+      blink(1.85);
+      tl.to("#eyes", { x: 10, duration: 0.18, ease: "power2.out" }, 2.0);
+      gsap.set("#bub1", { scale: 0, svgOrigin: "560 620" });
+      tl.to("#bub1", { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2.4)" }, 2.0);
+      blink(2.45);
+      tl.to("#bub1", { opacity: 0, scale: 0.6, duration: 0.14, ease: "power2.in" }, 2.78);
+
+      tl.to("#mSquash", { scaleY: 0.78, scaleX: 1.14, duration: 0.16, ease: "power2.out" }, 2.72)
+        .to("#mSquash", { scaleY: 1.14, scaleX: 0.9, duration: 0.22, ease: "power2.out" }, 2.9)
+        .to("#mJump", { y: -170, duration: 0.32, ease: "power2.out" }, 2.88)
+        .to("#mShadow", { scale: 0.6, svgOrigin: "760 2", opacity: 0.06, duration: 0.32, ease: "power2.out" }, 2.88)
+        .to(["#armL"], { rotation: 40, duration: 0.2, ease: "back.out(3)" }, 2.9)
+        .to(["#armR"], { rotation: -40, duration: 0.2, ease: "back.out(3)" }, 2.9)
+        .set(["#eyes", "#mouth"], { opacity: 0 }, 2.92)
+        .set(["#happy", "#mouthO"], { opacity: 1 }, 2.92)
+        .to("#mSquash", { scaleY: 1, scaleX: 1, duration: 0.2, ease: "power1.out" }, 3.13)
+        .to("#mJump", { y: 0, duration: 0.3, ease: "power2.in" }, 3.25)
+        .to("#mShadow", { scale: 1, opacity: 0.12, duration: 0.3, ease: "power2.in" }, 3.25)
+        .to("#mSquash", { scaleY: 0.84, scaleX: 1.12, duration: 0.08, ease: "power2.out" }, 3.55)
+        .to("#mSquash", { scaleY: 1, scaleX: 1, duration: 0.5, ease: "elastic.out(1, 0.35)" }, 3.65);
+
+      tl.to("#flame", { scale: 1, duration: 0.3, ease: "back.out(3)" }, 2.95)
+        .to("#flame", { scaleX: 0.85, scaleY: 1.1, svgOrigin: "0 -232", duration: 0.14, ease: "sine.inOut", yoyo: true, repeat: 31 }, 3.25)
+        .to(".ray", { strokeDashoffset: 0, duration: 0.25, ease: "power2.out", stagger: 0.02 }, 2.95)
+        .to(".ray", { opacity: 0, duration: 0.4, ease: "power1.in" }, 3.7);
+
+      pieces.forEach(function (p, i) {
+        gsap.set(p.el, { opacity: 0 });
+        tl.to(p.el, { opacity: 1, duration: 0.05 }, 2.95)
+          .to(p.el, { x: p.x, y: p.y, rotation: p.rot * 0.4, transformOrigin: "50% 50%", duration: 0.7, ease: "power3.out" }, 2.95 + (i % 6) * 0.01)
+          .to(p.el, { y: p.y + p.fall, rotation: p.rot, transformOrigin: "50% 50%", duration: 2.6, ease: "power1.in" }, 3.65 + (i % 6) * 0.01);
+      });
+
+      gsap.set("#bub2", { scale: 0, svgOrigin: "568 626" });
+      tl.to("#bub2", { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.6)" }, 3.0)
+        .to("#bub2", { rotation: -2, svgOrigin: "568 626", duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 5 }, 3.4)
+        .to("#bub2", { opacity: 0, scale: 0.7, duration: 0.16, ease: "power2.in" }, 5.55);
+
+      function hop(at, h) {
+        tl.to("#mSquash", { scaleY: 0.88, scaleX: 1.08, duration: 0.08, ease: "power2.out" }, at)
+          .to("#mJump", { y: -h, duration: 0.2, ease: "power2.out" }, at + 0.08)
+          .to("#mSquash", { scaleY: 1.06, scaleX: 0.96, duration: 0.16, ease: "power1.out" }, at + 0.08)
+          .to("#mJump", { y: 0, duration: 0.18, ease: "power2.in" }, at + 0.28)
+          .to("#mSquash", { scaleY: 0.9, scaleX: 1.08, duration: 0.07, ease: "power2.out" }, at + 0.46)
+          .to("#mSquash", { scaleY: 1, scaleX: 1, duration: 0.3, ease: "back.out(3)" }, at + 0.53);
+      }
+      hop(4.15, 60);
+      hop(5.0, 60);
+      tl.to("#armL", { rotation: 10, duration: 0.18, ease: "sine.inOut", yoyo: true, repeat: 9 }, 3.9)
+        .to("#armR", { rotation: -10, duration: 0.18, ease: "sine.inOut", yoyo: true, repeat: 9 }, 3.9);
+
+      tl.set(["#happy", "#mouthO"], { opacity: 0 }, 5.7)
+        .set(["#eyes", "#mouth"], { opacity: 1 }, 5.7)
+        .to("#eyes", { x: 0, duration: 0.15 }, 5.7)
+        .to("#armL", { rotation: 0, duration: 0.25, ease: "power2.out" }, 5.7)
+        .to("#armR", { rotation: -50, duration: 0.25, ease: "back.out(2)" }, 5.8)
+        .to("#armR", { rotation: -20, duration: 0.16, ease: "sine.inOut", yoyo: true, repeat: 11 }, 6.05);
+      blink(6.5);
+      blink(7.45);
+
+      tl.to("#wipeR", { attr: { width: 1320 }, duration: 0.85, ease: "power1.inOut" }, 5.75)
+        .to("#under", { strokeDashoffset: 0, duration: 0.45, ease: "power2.inOut" }, 6.55)
+        .fromTo("#sign", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", immediateRender: false }, 6.9);
+      hop(7.0, 40);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["doodle-mascot"] = tl;
+    </script>
+  </body>
+</html>

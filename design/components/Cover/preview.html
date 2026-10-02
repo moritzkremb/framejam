@@ -1,0 +1,43 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Frame Jam</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; width:960px; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; }
+  .art svg { display:block; }
+  .tile { rx:var(--radius-lg); }
+  .accent { fill:var(--accent); }
+  .ink { fill:var(--text); }
+  .agent { fill:var(--agent); }
+  .t3 { fill:var(--border-strong); }
+  .track { fill:var(--surface-3); rx:8px; }
+  .head { fill:var(--focus); }
+  .range { fill:var(--accent-soft); stroke:var(--focus); stroke-width:2; rx:8px; }
+  .text { position:absolute; left:48px; bottom:44px; max-width:440px; }
+  .name { margin:0; font:700 80px/.92 var(--font-sans); letter-spacing:-0.04em; }
+  .name b { color:var(--accent-text); font-weight:700; }
+  .tag { margin:16px 0 0; font:400 14px/20px var(--font-sans); color:var(--text-2); }
+</style></head>
+<body>
+<div class="cover">
+  <div class="art"><svg viewBox="0 0 480 288" width="480" height="288" aria-hidden="true">
+<!-- blocks: accent (lime, identity) 80x142 frame + a 288px range band, ink frame, agent frame, two surface-3 frames; 9:16 tiles like a filmstrip
+     arrangement: five frames on one row (space-4 gaps), the last bleeding off the right edge, standing over a timeline track
+     pattern: the filmstrip itself (tiles cut by radius-lg) plus one range selection and a playhead, because Frame Jam is about pointing at moments in a video
+     scales: space-4 (16) gaps, radius-lg (14) tile corners, radius-sm track ends; playhead in the focus token so it reads on both grounds -->
+<rect class="t3 tile" x="16" y="32" width="80" height="142"/><rect class="accent tile" x="112" y="32" width="80" height="142"/><rect class="ink tile" x="208" y="32" width="80" height="142"/><rect class="agent tile" x="304" y="32" width="80" height="142"/><rect class="t3 tile" x="400" y="32" width="80" height="142"/>
+<rect class="track" x="16" y="206" width="480" height="16"/>
+<rect class="range" x="112" y="206" width="176" height="16"/>
+<rect class="head" x="190" y="18" width="4" height="220" rx="2"/>
+<circle class="head" cx="192" cy="18" r="9"/>
+<circle class="agent" cx="64" cy="252" r="9"/>
+<circle class="accent" cx="160" cy="252" r="9"/>
+<circle class="t3" cx="352" cy="252" r="9"/>
+</svg></div>
+  <div class="text"><h1 class="name">Frame <b>Jam</b></h1><p class="tag">Point at what to change. Your agent fixes it.</p></div>
+</div>
+</body>
+</html>

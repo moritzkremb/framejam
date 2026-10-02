@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Ink Wash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&display=block" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #ece5d3; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: radial-gradient(ellipse at 55% 35%, #f3eddd 0%, #ebe3cf 55%, #d9cfb6 100%); color: #2b2a26; font-family: "Noto Serif SC", serif; }
+      #world { position: absolute; inset: 0; }
+      svg.full { position: absolute; left: 0; top: 0; overflow: visible; }
+      .cloud { position: absolute; border-radius: 50%; background: radial-gradient(ellipse, rgba(250, 248, 242, 0.95) 0%, rgba(250, 248, 242, 0.6) 45%, rgba(250, 248, 242, 0) 72%); filter: blur(8px); }
+      .cloudg { position: absolute; border-radius: 50%; background: radial-gradient(ellipse, rgba(150, 160, 160, 0.28) 0%, rgba(150, 160, 160, 0) 70%); filter: blur(14px); }
+      .mist { position: absolute; left: -200px; width: 2320px; border-radius: 50%; background: radial-gradient(ellipse, rgba(240, 234, 220, 0.9) 0%, rgba(240, 234, 220, 0) 70%); filter: blur(10px); }
+      #moon { position: absolute; left: 1110px; top: 520px; width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 45% 42%, #fffdf7 0%, #fbf6ea 70%, #f1e6cf 100%); box-shadow: 0 0 40px 10px rgba(255, 244, 214, 0.9), 0 0 140px 50px rgba(250, 232, 190, 0.45); }
+      #halo { position: absolute; left: 860px; top: 60px; width: 650px; height: 520px; border-radius: 50%; background: radial-gradient(ellipse, rgba(120, 132, 134, 0.34) 0%, rgba(120, 132, 134, 0.16) 45%, rgba(120, 132, 134, 0) 70%); filter: blur(10px); }
+      .title { position: absolute; left: 1600px; top: 150px; writing-mode: vertical-rl; font-weight: 700; font-size: 104px; letter-spacing: 0.22em; color: #24231f; }
+      .title span { display: inline-block; }
+      #seal { position: absolute; left: 1622px; top: 690px; width: 64px; height: 64px; background: #b23a2c; border-radius: 6px; color: #f6e9dc; font-weight: 700; font-size: 25px; line-height: 1.02; writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center; filter: url(#rough); }
+      .cn { position: absolute; left: 0; right: 0; top: 896px; text-align: center; font-weight: 500; font-size: 38px; letter-spacing: 0.32em; padding-left: 0.32em; color: #3a3934; white-space: nowrap; }
+      .en { position: absolute; left: 0; right: 0; top: 960px; text-align: center; font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 500; font-size: 30px; letter-spacing: 0.04em; color: #5d5b52; white-space: nowrap; }
+      .fiber { position: absolute; inset: 0; pointer-events: none; opacity: 0.3; mix-blend-mode: multiply; }
+      .vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 60%, rgba(90, 75, 45, 0.22) 100%); }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="ink-wash" data-width="1920" data-height="1080" data-duration="8.5">
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <filter id="ink" x="-5%" y="-20%" width="110%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="1" seed="2" result="g" />
+            <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -2.4 0 0 0 1.95" result="ga" />
+            <feComposite in="SourceGraphic" in2="ga" operator="in" result="s" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="4" result="w" />
+            <feDisplacementMap in="s" in2="w" scale="22" xChannelSelector="R" yChannelSelector="G" result="d" />
+            <feGaussianBlur in="d" stdDeviation="0.7" />
+          </filter>
+          <filter id="inkSoft" x="-5%" y="-20%" width="110%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="8" result="w" />
+            <feDisplacementMap in="SourceGraphic" in2="w" scale="26" xChannelSelector="R" yChannelSelector="G" result="d" />
+            <feGaussianBlur in="d" stdDeviation="3.5" />
+          </filter>
+          <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" seed="6" result="w" />
+            <feDisplacementMap in="SourceGraphic" in2="w" scale="4" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <linearGradient id="gFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fa2aa" stop-opacity="0.85" /><stop offset="0.6" stop-color="#a9b8bc" stop-opacity="0.35" /><stop offset="1" stop-color="#c8cfcc" stop-opacity="0" /></linearGradient>
+          <linearGradient id="gMid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f5d60" stop-opacity="0.92" /><stop offset="0.5" stop-color="#6e7c7e" stop-opacity="0.45" /><stop offset="1" stop-color="#9aa5a3" stop-opacity="0" /></linearGradient>
+          <linearGradient id="gNear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141614" stop-opacity="1" /><stop offset="0.45" stop-color="#2a2d2b" stop-opacity="0.72" /><stop offset="1" stop-color="#5c605c" stop-opacity="0" /></linearGradient>
+        </defs>
+      </svg>
+
+      <div id="world">
+        <div class="cloudg" id="cg1" style="left: 520px; top: 120px; width: 900px; height: 160px"></div>
+        <div id="halo"></div>
+        <div id="moon"></div>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="far" filter="url(#inkSoft)"></g></svg>
+        <div class="cloud" id="cl1" style="left: 260px; top: 430px; width: 760px; height: 120px"></div>
+        <div class="cloud" id="cl2" style="left: 1240px; top: 470px; width: 640px; height: 110px"></div>
+        <div class="mist" id="m1" style="top: 560px; height: 120px"></div>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="mid" filter="url(#ink)"></g></svg>
+        <div class="mist" id="m2" style="top: 640px; height: 110px"></div>
+        <svg class="full" width="1920" height="1080" viewBox="0 0 1920 1080">
+          <g id="near" filter="url(#ink)"></g>
+          <path id="ridge" pathLength="1" fill="none" stroke="#1d1f1d" stroke-width="3" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="1" filter="url(#rough)" />
+          <g id="water" stroke="#6b7572" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.5"></g>
+          <ellipse id="refl" cx="1185" cy="860" rx="90" ry="10" fill="#fbf6e8" opacity="0" style="filter: blur(6px)" />
+          <g id="boat" filter="url(#rough)">
+            <path d="M600 846 q 70 14 140 0 q -10 12 -70 14 q -60 -2 -70 -14 Z" fill="#232522" />
+            <path d="M664 846 l 6 -34 l 8 34 Z M670 812 q -14 4 -16 10 q 18 -3 32 0 q -2 -6 -16 -10" fill="#232522" />
+          </g>
+          <g id="branch" filter="url(#rough)" stroke="#2a2622" stroke-linecap="round" fill="none"></g>
+          <g id="birds" stroke="#2b2b28" stroke-width="2.4" stroke-linecap="round" fill="none"></g>
+        </svg>
+      </div>
+
+      <div class="title" id="title"><span>月</span><span>照</span><span>千</span><span>山</span></div>
+      <div id="seal">山月</div>
+      <div class="cn" id="cn1">雾起时，山便远了。</div>
+      <div class="en" id="en1">When the mist rises, the mountains drift away.</div>
+      <div class="cn" id="cn2">月上东岭，万壑无声。</div>
+      <div class="en" id="en2">The moon clears the eastern ridge, and every valley falls quiet.</div>
+
+      <svg class="fiber" width="1920" height="1080" viewBox="0 0 1920 1080">
+        <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.09" numOctaves="3" seed="12" /><feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.25  0 0 0 0.9 -0.32" /></filter>
+        <rect width="1920" height="1080" filter="url(#paper)" />
+      </svg>
+      <div class="vig"></div>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      function el(g, tag, attrs) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        g.appendChild(e);
+        return e;
+      }
+      function peak(x, h, w, base) {
+        return "M" + (x - w) + " " + base + " C" + (x - w * 0.5) + " " + base + " " + (x - w * 0.22) + " " + (base - h * 0.72) + " " + x + " " + (base - h) +
+          " C" + (x + w * 0.24) + " " + (base - h * 0.66) + " " + (x + w * 0.55) + " " + base + " " + (x + w) + " " + base + " Z";
+      }
+      function layer(id, base, grad, peaks) {
+        var g = document.getElementById(id);
+        peaks.forEach(function (p) { el(g, "path", { d: peak(p[0], p[1], p[2], base + (p[3] || 0)), fill: "url(#" + grad + ")" }); });
+      }
+      layer("far", 640, "gFar", [[140, 150, 260], [470, 230, 280], [760, 170, 240], [1010, 260, 300], [1330, 190, 260], [1640, 240, 300], [1930, 160, 260]]);
+      layer("mid", 700, "gMid", [[60, 110, 170], [330, 150, 190], [610, 100, 150], [930, 170, 200], [1220, 120, 170], [1480, 150, 190], [1780, 110, 170], [2050, 130, 180]]);
+      layer("near", 770, "gNear", [[230, 190, 190], [400, 120, 150, 8], [820, 230, 210], [1020, 140, 160, 6], [1470, 260, 230], [1660, 150, 170, 10], [2000, 200, 210]]);
+
+      var rd = "M-60 772";
+      for (var x = -60; x <= 2100; x += 20) rd += " L" + x + " " + (772 + 7 * Math.sin(x / 95) + 4 * Math.sin(x / 31 + 1.3)).toFixed(1);
+      document.getElementById("ridge").setAttribute("d", rd);
+
+      var wg = document.getElementById("water");
+      [[820, 120, 520], [840, 700, 380], [872, 260, 300], [880, 1320, 460], [910, 520, 640], [948, 1460, 340], [980, 180, 420], [1010, 900, 560]].forEach(function (w) {
+        el(wg, "path", { d: "M" + w[1] + " " + w[0] + " q " + w[2] / 4 + " -4 " + w[2] / 2 + " 0 t " + w[2] / 2 + " 0" });
+      });
+
+      var bg = document.getElementById("branch");
+      [["M-30 70 C 120 90, 230 60, 330 110 S 520 150, 600 120", 9], ["M210 78 C 250 130, 300 160, 360 190", 5], ["M420 132 C 450 90, 500 70, 560 64", 4], ["M330 110 C 360 150, 380 210, 430 250", 3.4], ["M520 140 C 560 170, 600 200, 640 196", 2.6]].forEach(function (b) {
+        el(bg, "path", { d: b[0], "stroke-width": b[1], pathLength: 1, "class": "twig", "stroke-dasharray": 1, "stroke-dashoffset": 1 });
+      });
+      [[360, 190], [430, 250], [560, 64], [640, 196], [300, 92], [470, 116], [250, 128], [600, 120], [395, 222]].forEach(function (b, i) {
+        var f = el(bg, "g", { "class": "bloom", transform: "translate(" + b[0] + " " + b[1] + ")" });
+        for (var k = 0; k < 5; k++) { var a = k * 72 * Math.PI / 180; el(f, "circle", { cx: (Math.cos(a) * 6).toFixed(1), cy: (Math.sin(a) * 6).toFixed(1), r: 5.5, fill: i % 3 ? "#c44a3a" : "#d9705c", stroke: "none" }); }
+        el(f, "circle", { cx: 0, cy: 0, r: 2.4, fill: "#f2d38a", stroke: "none" });
+      });
+
+      var birdsG = document.getElementById("birds");
+      [[0, 0, 1], [46, 18, 0.8], [90, -10, 0.9], [130, 26, 0.7], [170, 6, 0.75]].forEach(function (b, i) {
+        var g = el(birdsG, "g", { transform: "translate(" + (1340 + b[0]) + " " + (300 + b[1]) + ") scale(" + b[2] + ")" });
+        el(g, "path", { d: "M-16 0 Q -8 -9 0 0 Q 8 -9 16 0", "class": "wing" });
+      });
+
+      var tl = gsap.timeline({ paused: true });
+      var soft = "sine.inOut";
+      gsap.set(["#far", "#mid", "#near", "#boat", "#cn1", "#en1", "#cn2", "#en2", "#seal", "#birds", ".bloom"], { opacity: 0 });
+      gsap.set("#title span", { opacity: 0 });
+
+      tl.fromTo("#world", { scale: 1 }, { scale: 1.05, transformOrigin: "50% 62%", duration: 8.5, ease: soft, immediateRender: false }, 0)
+        .fromTo("#far", { opacity: 0.25, x: 0 }, { opacity: 1, x: -18, duration: 2.2, ease: soft, immediateRender: false }, 0)
+        .to("#far", { x: -40, duration: 6.3, ease: "none" }, 2.2)
+        .fromTo("#mid", { opacity: 0, x: 0 }, { opacity: 1, x: -30, duration: 2.2, ease: soft, immediateRender: false }, 0.3)
+        .to("#mid", { x: -90, duration: 6.0, ease: "none" }, 2.5)
+        .fromTo("#near", { opacity: 0, x: 0 }, { opacity: 1, x: -40, duration: 2.2, ease: soft, immediateRender: false }, 0.6)
+        .to("#near", { x: -150, duration: 5.68, ease: "none" }, 2.82)
+        .to("#ridge", { strokeDashoffset: 0, duration: 3.2, ease: soft }, 0.4)
+        .fromTo(["#ridge", "#water"], { x: 0 }, { x: -150, duration: 8.5, ease: "none", immediateRender: false }, 0)
+        .fromTo("#boat", { opacity: 0, x: 0 }, { opacity: 1, x: 40, duration: 2.5, ease: soft, immediateRender: false }, 1.6)
+        .to("#boat", { x: 110, duration: 4.4, ease: "none" }, 4.1)
+        .fromTo("#moon", { y: 0, opacity: 0.8 }, { y: -320, opacity: 1, duration: 7.4, ease: soft, immediateRender: false }, 0.4)
+        .to("#refl", { opacity: 0.7, duration: 4, ease: soft }, 3.5)
+        .fromTo(["#cl1", "#m1"], { x: 0 }, { x: 160, duration: 8.5, ease: "none", immediateRender: false }, 0)
+        .fromTo(["#cl2", "#cg1"], { x: 0 }, { x: -140, duration: 8.5, ease: "none", immediateRender: false }, 0)
+        .fromTo("#m2", { x: 0 }, { x: -120, duration: 8.5, ease: "none", immediateRender: false }, 0)
+        .to(".twig", { strokeDashoffset: 0, duration: 1.6, ease: soft, stagger: 0.25 }, 0.5)
+        .fromTo(".bloom", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.9, ease: "power2.out", stagger: 0.12, transformOrigin: "50% 50%", immediateRender: false }, 1.6)
+        .fromTo("#birds", { opacity: 0, x: 0, y: 0 }, { opacity: 1, x: -200, y: -30, duration: 2.2, ease: "none", immediateRender: false }, 1.8)
+        .to("#birds", { x: -760, y: -120, duration: 4.5, ease: "none" }, 4.0)
+        .fromTo(".wing", { scaleY: 1 }, { scaleY: 0.35, duration: 0.42, ease: soft, yoyo: true, repeat: 15, transformOrigin: "50% 50%", immediateRender: false }, 1.8)
+        .fromTo("#title span", { opacity: 0, y: -16, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.3, ease: "power2.out", stagger: 0.25, immediateRender: false }, 1.2)
+        .fromTo("#seal", { opacity: 0, scale: 1.12 }, { opacity: 0.95, scale: 1, duration: 1.0, ease: "power2.out", immediateRender: false }, 2.6)
+        .fromTo(["#cn1", "#en1"], { opacity: 0, y: 10, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.2, ease: "power2.out", stagger: 0.35, immediateRender: false }, 1.6)
+        .to(["#cn1", "#en1"], { opacity: 0, filter: "blur(6px)", duration: 0.8, ease: soft }, 4.5)
+        .fromTo(["#cn2", "#en2"], { opacity: 0, y: 10, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.3, ease: "power2.out", stagger: 0.35, immediateRender: false }, 5.2);
+
+      tl.set({}, {}, 8.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["ink-wash"] = tl;
+    </script>
+  </body>
+</html>

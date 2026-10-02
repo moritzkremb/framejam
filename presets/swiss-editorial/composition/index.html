@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Swiss Editorial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;800;900&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f4f1ea; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #f4f1ea; color: #111; font-family: "Inter Tight", sans-serif; }
+      .clip { position: absolute; inset: 0; visibility: hidden; }
+      .grid-line { position: absolute; background: #111; }
+      .v { top: 0; width: 2px; height: 100%; transform-origin: top; }
+      .h { left: 0; height: 2px; width: 100%; transform-origin: left; }
+      .mask { overflow: hidden; display: block; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+      .mask > span { display: block; }
+      .kicker { position: absolute; left: 120px; top: 110px; font-size: 28px; font-weight: 500; letter-spacing: 0.02em; }
+      .issue { position: absolute; right: 120px; top: 110px; font-size: 28px; font-weight: 500; }
+      .headline { position: absolute; left: 112px; top: 300px; font-size: 230px; line-height: 0.88; font-weight: 900; letter-spacing: -0.045em; }
+      .red { color: #e30613; }
+      .block { position: absolute; background: #e30613; }
+      .sections { position: absolute; left: 120px; right: 120px; top: 380px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+      .section { border-left: 2px solid #111; padding: 0 40px; height: 420px; position: relative; }
+      .section .num { font-size: 150px; font-weight: 900; letter-spacing: -0.05em; line-height: 1; }
+      .section .label { margin-top: 30px; font-size: 54px; font-weight: 800; letter-spacing: -0.02em; }
+      .section .copy { margin-top: 18px; font-size: 26px; font-weight: 500; line-height: 1.35; color: #3a3a3a; max-width: 440px; }
+      .outro { position: absolute; left: 120px; bottom: 140px; font-size: 140px; font-weight: 900; letter-spacing: -0.045em; line-height: 0.9; }
+      .outro-meta { position: absolute; right: 120px; bottom: 150px; text-align: right; font-size: 28px; font-weight: 500; line-height: 1.5; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="swiss-editorial" data-width="1920" data-height="1080">
+      <div class="grid-line v" id="gv1" style="left: 120px"></div>
+      <div class="grid-line v" id="gv2" style="left: 1800px"></div>
+      <div class="grid-line h" id="gh1" style="top: 180px"></div>
+
+      <div id="scene-title" class="clip" data-start="0" data-duration="3" data-track-index="1">
+        <div class="kicker" id="kicker">Field Report — Product Team</div>
+        <div class="issue" id="issue">No. 24 / Q3</div>
+        <div class="block" id="red-block" style="left: 1480px; top: 300px; width: 320px; height: 320px"></div>
+        <h1 class="headline" id="headline">
+          <span class="mask"><span id="hl1">Fewer</span></span>
+          <span class="mask"><span id="hl2">meetings.</span></span>
+          <span class="mask"><span id="hl3" class="red">More shipping.</span></span>
+        </h1>
+      </div>
+
+      <div id="scene-sections" class="clip" data-start="3" data-duration="2.6" data-track-index="1">
+        <div class="kicker">How we work now</div>
+        <div class="sections">
+          <div class="section" id="sec1"><div class="num">01</div><div class="label">Plan</div><div class="copy">One page. One owner. Written before anyone opens Figma.</div></div>
+          <div class="section" id="sec2"><div class="num">02</div><div class="label">Build</div><div class="copy">Small batches behind flags, reviewed the same day.</div></div>
+          <div class="section" id="sec3"><div class="num red">03</div><div class="label">Ship</div><div class="copy">Every Thursday. If it isn't ready, it waits a week.</div></div>
+        </div>
+      </div>
+
+      <div id="scene-outro" class="clip" data-start="5.6" data-duration="1.9" data-track-index="1">
+        <div class="block" id="outro-block" style="left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: left"></div>
+        <div class="outro" id="outro-text" style="color: #f4f1ea">Ship on<br />Thursday.</div>
+        <div class="outro-meta" id="outro-meta" style="color: #f4f1ea">Field Report No. 24<br />Read the full issue →</div>
+      </div>
+    </div>
+
+    <script>
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power4.out" } });
+
+      tl.from("#gv1, #gv2", { scaleY: 0, duration: 0.7, stagger: 0.08, ease: "power3.inOut" }, 0)
+        .from("#gh1", { scaleX: 0, duration: 0.7, ease: "power3.inOut" }, 0.1)
+        .from("#kicker, #issue", { y: 24, opacity: 0, duration: 0.5 }, 0.35)
+        .from("#hl1", { yPercent: 105, duration: 0.7 }, 0.45)
+        .from("#hl2", { yPercent: 105, duration: 0.7 }, 0.58)
+        .from("#hl3", { yPercent: 105, duration: 0.7 }, 0.85)
+        .from("#red-block", { scale: 0, transformOrigin: "100% 0%", duration: 0.6, ease: "expo.out" }, 1.1)
+        .to("#red-block", { rotation: 90, duration: 0.8, ease: "power2.inOut" }, 2.1);
+
+      tl.from("#sec1, #sec2, #sec3", { y: 80, opacity: 0, duration: 0.6, stagger: 0.18 }, 3.05)
+        .from("#sec1 .num, #sec2 .num, #sec3 .num", { yPercent: 40, duration: 0.6, stagger: 0.18 }, 3.05);
+
+      tl.from("#outro-block", { scaleX: 0, duration: 0.55, ease: "expo.inOut" }, 5.6)
+        .from("#outro-text", { y: 60, opacity: 0, duration: 0.6 }, 5.95)
+        .from("#outro-meta", { opacity: 0, duration: 0.4 }, 6.2);
+
+      tl.set({}, {}, 7.5);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["swiss-editorial"] = tl;
+    </script>
+  </body>
+</html>

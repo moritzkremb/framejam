@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Dot Field Showreel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@600&family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0c0c0d; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #0c0c0d; color: #f4f4f0; font-family: "Archivo Black", sans-serif; }
+      .scene { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+      .center { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+      .ch { display: inline-block; }
+      .serif { font-family: "Instrument Serif", serif; font-style: italic; }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .outline { color: transparent; -webkit-text-stroke: 3px #f4f4f0; }
+      .slice { position: absolute; left: 0; right: 0; top: 380px; text-align: center; font-size: 300px; line-height: 1; }
+      #dots { position: absolute; left: 150px; top: 150px; width: 1620px; height: 780px; }
+      .dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #f4f4f0; }
+      .hud { position: absolute; z-index: 10; font-family: "JetBrains Mono", monospace; font-size: 18px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(244, 244, 240, 0.75); }
+      .br { position: absolute; z-index: 10; width: 36px; height: 36px; border-color: rgba(244, 244, 240, 0.75); border-style: solid; border-width: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="dot-field-showreel" data-width="1920" data-height="1080" data-duration="7.5">
+      <div id="s1" class="scene">
+        <div class="slice" id="motion"><span class="ch">M</span><span class="ch" style="color: #ff5a1f">O</span><span class="ch">T</span><span class="ch">I</span><span class="ch" style="color: #ff5a1f">O</span><span class="ch">N</span></div>
+        <div class="slice" id="g1" style="color: #ff5a1f; clip-path: inset(18% 0 62% 0); opacity: 0">MOTION</div>
+        <div class="slice" id="g2" style="color: #2b45ff; clip-path: inset(55% 0 25% 0); opacity: 0">MOTION</div>
+        <div class="center mono" id="sub1" style="top: 720px; font-size: 22px; letter-spacing: 0.3em; color: rgba(244,244,240,0.7)">TYPOGRAPHY THAT PERFORMS</div>
+      </div>
+
+      <div id="s2" class="scene" style="background: #2b45ff">
+        <div class="center serif" id="with" style="top: 170px; font-size: 130px">with</div>
+        <div class="center outline" id="i1" style="top: 330px; font-size: 200px; line-height: 1">INTENT INTENT INTENT</div>
+        <div class="center" id="i2" style="top: 530px; font-size: 200px; line-height: 1">INTENT</div>
+        <div class="center outline" id="i3" style="top: 730px; font-size: 200px; line-height: 1">INTENT INTENT INTENT</div>
+      </div>
+
+      <div id="s3" class="scene" style="background: #ff5a1f; color: #0c0c0d">
+        <div class="center serif" id="fno" style="top: 250px; font-size: 90px">frame no.</div>
+        <div class="center mono" id="counter" style="top: 370px; font-size: 300px; font-weight: 500; line-height: 1">0240</div>
+        <div id="prog" style="position: absolute; left: 560px; top: 760px; width: 800px; height: 10px; background: #0c0c0d; transform-origin: left center"></div>
+      </div>
+
+      <div id="s4" class="scene">
+        <div id="dots"></div>
+        <div id="sys" style="position: absolute; left: 150px; top: 880px; font-size: 64px">SYSTEMS</div>
+        <div class="mono" id="sysSub" style="position: absolute; left: 154px; top: 960px; font-size: 20px; letter-spacing: 0.12em; color: rgba(244,244,240,0.6)">ONE RULE · 512 DOTS · NO KEYFRAMES BY HAND</div>
+      </div>
+
+      <div id="s5" class="scene" style="background: #d4ff3a; color: #0c0c0d">
+        <div class="center" id="m1" style="top: 120px; font-size: 240px; line-height: 1; color: transparent; -webkit-text-stroke: 3px #0c0c0d">MOVE</div>
+        <div class="center" id="m2" style="top: 330px; font-size: 300px; line-height: 1">MOVE</div>
+        <div class="center" id="m3" style="top: 590px; font-size: 240px; line-height: 1; color: transparent; -webkit-text-stroke: 3px #0c0c0d">MOVE</div>
+        <div class="center" id="endtag" style="top: 880px; font-family: 'Archivo', sans-serif; font-weight: 600; font-size: 40px">Nadia Ferro — motion design · open for Q1 2027</div>
+      </div>
+
+      <div class="br" style="left: 48px; top: 48px; border-left-width: 2px; border-top-width: 2px"></div>
+      <div class="br" style="right: 48px; top: 48px; border-right-width: 2px; border-top-width: 2px"></div>
+      <div class="br" style="left: 48px; bottom: 48px; border-left-width: 2px; border-bottom-width: 2px"></div>
+      <div class="br" style="right: 48px; bottom: 48px; border-right-width: 2px; border-bottom-width: 2px"></div>
+      <div class="hud" style="left: 100px; top: 56px">Reel — 2026</div>
+      <div class="hud" id="tc" style="right: 100px; top: 56px">00:00:00:00</div>
+      <div class="hud" id="scn" style="left: 100px; bottom: 56px">Scene 01 / Type</div>
+      <div class="hud" style="right: 100px; bottom: 56px">Nadia Ferro</div>
+    </div>
+
+    <script>
+      var COLS = 32, ROWS = 14;
+      var dotsEl = document.getElementById("dots");
+      for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+        var d = document.createElement("div");
+        d.className = "dot";
+        d.style.left = c * 50 + 18 + "px";
+        d.style.top = r * 52 + 18 + "px";
+        dotsEl.appendChild(d);
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      var names = ["Scene 01 / Type", "Scene 02 / Intent", "Scene 03 / Timing", "Scene 04 / Systems", "Scene 05 / Move"];
+      var clock = { f: 0 };
+      tl.to(clock, {
+        f: 225, duration: 7.5, ease: "none",
+        onUpdate: function () {
+          var f = Math.round(clock.f), t = f / 30;
+          document.getElementById("tc").textContent = "00:00:" + String(Math.floor(f / 30)).padStart(2, "0") + ":" + String(f % 30).padStart(2, "0");
+          var k = t < 1.3 ? 0 : t < 2.5 ? 1 : t < 3.5 ? 2 : t < 5.7 ? 3 : 4;
+          document.getElementById("scn").textContent = names[k];
+          var dark = k === 2 || k === 4;
+          document.querySelectorAll(".hud").forEach(function (h) { h.style.color = dark ? "rgba(12,12,13,0.8)" : "rgba(244,244,240,0.75)"; });
+          document.querySelectorAll(".br").forEach(function (b) { b.style.borderColor = dark ? "rgba(12,12,13,0.8)" : "rgba(244,244,240,0.75)"; });
+          var n = Math.min(21, Math.max(0, Math.round((t - 2.6) / 0.75 * 21)));
+          document.getElementById("counter").textContent = String(240 + n).padStart(4, "0");
+        }
+      }, 0);
+
+      show("#s1", 0, 1.3);
+      tl.from("#motion .ch", { y: -340, rotation: function (i) { return (i % 2 ? 1 : -1) * 28; }, opacity: 0, duration: 0.5, ease: "back.out(1.8)", stagger: 0.05 }, 0.05)
+        .from("#sub1", { opacity: 0, duration: 0.3 }, 0.5)
+        .set(["#g1", "#g2"], { opacity: 1 }, 0.95)
+        .fromTo("#g1", { x: -60 }, { x: 40, duration: 0.12, ease: "steps(3)", immediateRender: false }, 0.95)
+        .fromTo("#g2", { x: 70 }, { x: -30, duration: 0.12, ease: "steps(3)", immediateRender: false }, 0.95)
+        .set(["#g1", "#g2"], { opacity: 0 }, 1.08);
+
+      show("#s2", 1.3, 2.5);
+      tl.from("#with", { opacity: 0, y: 30, duration: 0.3, ease: "power3.out" }, 1.32)
+        .fromTo("#i1", { x: -500 }, { x: 0, duration: 0.9, ease: "power3.out", immediateRender: false }, 1.3)
+        .fromTo("#i3", { x: 500 }, { x: 0, duration: 0.9, ease: "power3.out", immediateRender: false }, 1.3)
+        .from("#i2", { scale: 1.6, opacity: 0, duration: 0.4, ease: "expo.out" }, 1.45);
+
+      show("#s3", 2.5, 3.5);
+      gsap.set("#prog", { scaleX: 0 });
+      tl.from("#fno", { opacity: 0, y: 20, duration: 0.25, ease: "power3.out" }, 2.5)
+        .from("#counter", { scale: 1.2, opacity: 0, duration: 0.3, ease: "expo.out" }, 2.52)
+        .to("#prog", { scaleX: 1, duration: 0.85, ease: "power2.inOut" }, 2.55);
+
+      show("#s4", 3.5, 5.7);
+      var dots = gsap.utils.toArray(".dot");
+      tl.from(dots, { scale: 0, duration: 0.25, ease: "back.out(2)", stagger: { grid: [ROWS, COLS], from: "center", amount: 0.3 } }, 3.5)
+        .to(dots, { scale: 2.2, backgroundColor: "#ff5a1f", duration: 0.22, ease: "power2.out", yoyo: true, repeat: 1, stagger: { grid: [ROWS, COLS], from: "center", amount: 0.45 } }, 4.08)
+        .to(dots, { scale: 1.8, backgroundColor: "#2b45ff", duration: 0.17, ease: "power2.out", yoyo: true, repeat: 1, stagger: { grid: [ROWS, COLS], from: [0, 0], amount: 0.35 } }, 5.0)
+        .from("#sys", { x: -40, opacity: 0, duration: 0.35, ease: "expo.out" }, 4.1)
+        .from("#sysSub", { opacity: 0, duration: 0.3 }, 4.3);
+
+      show("#s5", 5.7);
+      tl.from("#m2", { scaleY: 0.1, duration: 0.45, ease: "expo.out" }, 5.7)
+        .fromTo("#m1", { y: 210, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "expo.out", immediateRender: false }, 5.85)
+        .fromTo("#m3", { y: -260, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "expo.out", immediateRender: false }, 5.85)
+        .from("#endtag", { y: 30, opacity: 0, duration: 0.4, ease: "power3.out" }, 6.4);
+      gsap.set(["#m1", "#m3"], { opacity: 0 });
+
+      tl.set({}, {}, 7.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["dot-field-showreel"] = tl;
+    </script>
+  </body>
+</html>

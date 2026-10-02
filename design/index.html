@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head><meta charset="utf-8"><title>Frame Jam design system</title>
+<link rel="stylesheet" href="tokens.css"><link rel="stylesheet" href="components/bundle.css">
+<style>
+  body { padding: 24px; }
+  .bar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 12px; padding: 12px 0 16px; background: var(--bg); }
+  .gallery { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
+  figure { margin: 0; }
+  figcaption { margin-bottom: 8px; font: 500 12px/16px var(--font-mono); color: var(--text-3); }
+  .card { background: var(--bg); border-radius: 14px; box-shadow: 0 0 0 1px var(--border); overflow: hidden; position: relative; }
+  .card .fc-dock, .card .fc-header { position: static; }
+</style></head>
+<body>
+<div class="bar"><span class="fc-h2">Frame Jam design system</span><span class="fc-grow"></span>
+<div class="fc-seg sm"><button aria-pressed="true" onclick="setTheme('dark',this)">Dark</button><button onclick="setTheme('light',this)">Light</button></div></div>
+<p class="fc-caption" style="margin:0 0 24px">Rules and rationale: README.md. Values: tokens.json (compiled to tokens.css). Component styles: components/bundle.css.</p>
+<div class="gallery">
+<figure><figcaption>Cover</figcaption><div class="card cover-wrap" style="width:960px;padding:0"><style>
+  
+  .cover-wrap { background:var(--bg); color:var(--text); font-family:var(--font-sans); overflow:hidden; }
+  .cover-wrap .cover { position:relative; width:960px; height:288px; overflow:hidden; }
+  .cover-wrap .art { position:absolute; top:0; left:480px; width:480px; height:288px; }
+  .cover-wrap .art svg { display:block; }
+  .cover-wrap .tile { rx:var(--radius-lg); }
+  .cover-wrap .accent { fill:var(--accent); }
+  .cover-wrap .ink { fill:var(--text); }
+  .cover-wrap .agent { fill:var(--agent); }
+  .cover-wrap .t3 { fill:var(--border-strong); }
+  .cover-wrap .track { fill:var(--surface-3); rx:8px; }
+  .cover-wrap .head { fill:var(--focus); }
+  .cover-wrap .range { fill:var(--accent-soft); stroke:var(--focus); stroke-width:2; rx:8px; }
+  .cover-wrap .text { position:absolute; left:48px; bottom:44px; max-width:440px; }
+  .cover-wrap .name { margin:0; font:700 80px/.92 var(--font-sans); letter-spacing:-0.04em; }
+  .cover-wrap .name b { color:var(--accent-text); font-weight:700; }
+  .cover-wrap .tag { margin:16px 0 0; font:400 14px/20px var(--font-sans); color:var(--text-2); }
+</style>
+<div class="cover">
+  <div class="art"><svg viewBox="0 0 480 288" width="480" height="288" aria-hidden="true">
+<!-- blocks: accent (lime, identity) 80x142 frame + a 288px range band, ink frame, agent frame, two surface-3 frames; 9:16 tiles like a filmstrip
+     arrangement: five frames on one row (space-4 gaps), the last bleeding off the right edge, standing over a timeline track
+     pattern: the filmstrip itself (tiles cut by radius-lg) plus one range selection and a playhead, because Frame Jam is about pointing at moments in a video
+     scales: space-4 (16) gaps, radius-lg (14) tile corners, radius-sm track ends; playhead in the focus token so it reads on both grounds -->
+<rect class="t3 tile" x="16" y="32" width="80" height="142"/><rect class="accent tile" x="112" y="32" width="80" height="142"/><rect class="ink tile" x="208" y="32" width="80" height="142"/><rect class="agent tile" x="304" y="32" width="80" height="142"/><rect class="t3 tile" x="400" y="32" width="80" height="142"/>
+<rect class="track" x="16" y="206" width="480" height="16"/>
+<rect class="range" x="112" y="206" width="176" height="16"/>
+<rect class="head" x="190" y="18" width="4" height="220" rx="2"/>
+<circle class="head" cx="192" cy="18" r="9"/>
+<circle class="agent" cx="64" cy="252" r="9"/>
+<circle class="accent" cx="160" cy="252" r="9"/>
+<circle class="t3" cx="352" cy="252" r="9"/>
+</svg></div>
+  <div class="text"><h1 class="name">Frame <b>Jam</b></h1><p class="tag">Point at what to change. Your agent fixes it.</p></div>
+</div>
+</div></figure>
+<figure><figcaption>AgentStatus</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col">
+  <span class="fc-agent waiting"><span class="dot"></span>Your agent is listening</span>
+  <span class="fc-agent working"><span class="dot"></span>Agent is working on v3</span>
+  <span class="fc-agent"><span class="dot"></span>Agent not listening · we'll show you what to tell it</span>
+  <span class="fc-agent connected"><span class="dot"></span>Connected to Claude Code</span>
+</div>
+</div></figure>
+<figure><figcaption>Badge</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-row"><span class="fc-badge">v2</span><span class="fc-badge">9:16 · 0:10</span><span class="fc-badge solid"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>In use</span><span class="fc-badge on-video" style="background:#000">Fast</span></div>
+</div></figure>
+<figure><figcaption>Button</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col">
+  <div class="fc-row">
+    <button class="fc-btn primary lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Send 3 to agent</button>
+    <button class="fc-btn primary">Use this style</button>
+    <button class="fc-btn"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy prompt</button>
+    <button class="fc-btn outline">Open in browser</button>
+  </div>
+  <div class="fc-row">
+    <button class="fc-btn ghost sm"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg> Edit</button>
+    
+    <button class="fc-btn danger sm"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Delete</button>
+    <button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+    <button class="fc-btn primary" disabled>Send to agent</button>
+  </div>
+</div>
+</div></figure>
+<figure><figcaption>CodeBlock</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col">
+  <div class="fc-seg sm" role="group"><button aria-pressed="true">Claude Code</button><button>Cursor</button><button>ChatGPT</button></div>
+  <div class="fc-code"><code>claude mcp add framejam -- npx -y framejam --stdio</code><button class="fc-btn sm"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy</button></div>
+  <p class="fc-caption" style="margin:0">Run once in your terminal, then restart Claude Code.</p>
+</div>
+</div></figure>
+<figure><figcaption>Comment</figcaption><div class="card" style="width:480px;padding:20px"><style> </style>
+
+<div class="fc-caption" style="margin:0 0 4px 4px">Open version: editable</div>
+<ul class="fc-thread"><li class="fc-item is-active"><span class="fc-num draft">1</span><div><div class="top"><span class="when">0:04.1 – 0:05.9</span></div><p class="body">The yellow word should hold half a beat longer before the next one comes in.</p><div class="ctx"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg> span.word · scale 0→1 · back.out</div></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li><li class="fc-item"><span class="fc-num draft">2</span><div><div class="top"><span class="when">Whole video</span></div><p class="body">Captions feel a little too fast overall.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li></ul>
+<div class="fc-caption" style="margin:16px 0 4px 4px">Sent version: read-only</div>
+<ul class="fc-thread"><li class="fc-item is-sent"><span class="fc-num sent">1</span><div><div class="top"><span class="when">0:01.2</span></div><p class="body">Move the handle up so it doesn't cover the face.</p></div><span></span></li></ul>
+</div></figure>
+<figure><figcaption>EmptyState</figcaption><div class="card" style="width:520px;padding:20px"><style> </style>
+
+<div class="fc-empty">
+  <span class="ic"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg></span>
+  <div class="fc-h3">What should change?</div>
+  <p>Pause anywhere and type below. Or point at exactly what you mean:</p>
+  <div class="fc-ways">
+    <div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg> Click the video to mark a spot</div>
+    <div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18"/><path d="M7 8l-4 4 4 4"/><path d="M17 8l4 4-4 4"/></svg> Drag on the timeline to pick a range</div>
+    <div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg> Comment at the current time <span class="fc-kbd">C</span></div>
+  </div>
+</div>
+</div></figure>
+<figure><figcaption>FeedbackDock</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col" style="gap:20px">
+<div class="fc-dock" style="position:static;padding:0">
+  <div class="box">
+    <div class="tools"><span class="fc-anchor"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> 0:04.1 · on the yellow word <span class="x"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span><span class="fc-grow"></span><button class="fc-btn ghost sm" style="height:26px">Whole video</button></div>
+    <textarea placeholder="What should change here?">Hold the yellow word half a beat longer</textarea>
+  </div>
+  <div class="send"><span class="fc-agent waiting fc-grow"><span class="dot"></span><span class="fc-truncate">Your agent is listening</span></span><button class="fc-btn primary lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Send 3 to agent</button></div>
+</div>
+<div class="fc-dock" style="position:static;padding:0">
+  <div class="box">
+    <div class="tools"><span class="fc-anchor plain"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> At 0:02.3</span><span class="fc-grow"></span><button class="fc-btn ghost sm" style="height:26px">Whole video</button></div>
+    <textarea placeholder="Pause anywhere and type what should change…"></textarea>
+  </div>
+  <div class="send"><span class="fc-agent fc-grow"><span class="dot"></span><span class="fc-truncate">Agent not listening · we'll show you what to tell it</span></span><button class="fc-btn primary lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Send 2 to agent</button></div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>FeedbackPanel</figcaption><div class="card" style="width:380px;padding:20px"><style> </style>
+
+<div style="height:380px;display:flex"><div class="fc-panel" style="min-height:0"><div class="fc-panel-h"><span class="fc-h3">Comments</span><button class="fc-btn ghost icon sm round" aria-label="Collapse comments"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div class="fc-panel-body"><ul class="fc-thread compact"><li class="fc-item"><span class="fc-num draft">1</span><div><div class="top"><span class="when">0:01.2</span></div><p class="body">Move the handle up so it doesn’t cover the face.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li><li class="fc-item"><span class="fc-num draft">2</span><div><div class="top"><span class="when">0:06.8</span></div><p class="body">End card needs the logo.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li><li class="fc-item"><span class="fc-num draft">3</span><div><div class="top"><span class="when">0:08.2</span></div><p class="body">Last word should fade, not cut.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li></ul></div></div></div>
+</div></figure>
+<figure><figcaption>FilterBar</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col">
+  <label class="fc-search"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input class="fc-input" placeholder="Search 8 styles"></label>
+  <div class="fc-filters">
+    <div class="fc-seg" role="group"><button aria-pressed="true">All</button><button>16:9</button><button>9:16</button><button>1:1</button></div>
+    <button class="fc-drop">Mood <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="fc-drop on">Fast <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  </div>
+</div>
+</div></figure>
+<figure><figcaption>HandoffCard</figcaption><div class="card" style="width:520px;padding:20px"><style> </style>
+
+<div class="fc-col" style="gap:16px"><div class="fc-handoff warn">
+  <div class="hd"><span class="ic wait"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg></span><div><div class="t">Sent. Now tell your agent.</div>
+    <div class="d">Your agent isn't listening right now. Paste this into your chat so it picks up your comments:</div></div></div>
+  <div class="fc-code"><code>Apply my Frame Jam feedback for rev_14dea90011</code><button class="fc-btn primary sm"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy</button></div>
+</div><div class="fc-handoff">
+  <div class="hd"><span class="ic ok"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><div><div class="t">Your agent is making version 3</div>
+    <div class="d">It has your comments. This page switches to version 3 when it's ready.</div></div></div>
+</div></div>
+</div></figure>
+<figure><figcaption>Header</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col" style="gap:16px">
+  <div class="fc-header" style="position:static;border-radius:14px;border:1px solid var(--border)">
+    <a class="fc-logo" href="#">Frame <b>Jam</b></a>
+    <div class="fc-seg sm" role="tablist"><button aria-pressed="true">Reviews</button><button>Styles</button></div>
+    <span class="fc-grow"></span>
+    <a class="fc-style-chip" href="#"><span class="sw"><span style="background:#000"></span><span style="background:#ffe600"></span><span style="background:#fff"></span></span><span class="fc-truncate">Kinetic Captions</span></a>
+  </div>
+  <div class="fc-header has-back" style="position:static;border-radius:14px;border:1px solid var(--border)">
+    <button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div class="titles"><span class="t">Spill the Tokens 006</span><span class="s">Version 2 of 2 · 0:10 · 9:16</span></div>
+    <button class="fc-btn sm">v2 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+  </div>
+  <div class="fc-header has-back" style="position:static;border-radius:14px;border:1px solid var(--border);width:360px">
+    <button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div class="titles"><span class="t">Spill the Tokens 006</span><span class="s">v2 · 0:10</span></div>
+    <button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+  </div>
+</div>
+</div></figure>
+<figure><figcaption>Menu</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-menu">
+  <div class="lbl">Version</div>
+  <button>v3 · latest <span class="chk"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></button>
+  <button>v2 <span class="r">40 min ago</span></button>
+  <button>v1 <span class="r">2 hours ago</span></button>
+  <hr>
+  <button><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy comments as text</button>
+  <button><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8h.01"/><path d="M12 12h.01"/><path d="M14 8h.01"/><path d="M16 12h.01"/><path d="M18 8h.01"/><path d="M6 8h.01"/><path d="M7 16h10"/><path d="M8 12h.01"/><rect width="20" height="16" x="2" y="4" rx="2"/></svg> Keyboard shortcuts <span class="r">?</span></button>
+  <hr>
+  <button class="danger"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Delete review</button>
+</div>
+</div></figure>
+<figure><figcaption>Pin</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div style="position:relative;height:60px;background:var(--video);border-radius:14px">
+  <span class="fc-pin draft" style="left:40px;top:30px">3</span>
+  <span class="fc-pin sent" style="left:100px;top:30px">1</span>
+  <span class="fc-pin new" style="left:164px;top:30px"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span>
+</div>
+</div></figure>
+<figure><figcaption>Player</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-player wide"><div class="frame"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:34px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div>
+  <span class="fc-pin sent" style="left:78%;top:24%">1</span>
+  <div class="fc-target" style="left:9%;top:36%;width:60%;height:34%"></div>
+  <span class="fc-pin new" style="left:40%;top:50%"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></div>
+  <span class="tip"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg> Click anything to comment on it</span>
+</div>
+<div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:04.1 <span>/ 0:07.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div>
+</div></figure>
+<figure><figcaption>ReviewCard</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-col" style="gap:8px">
+  <a class="fc-rcard" href="#"><div class="poster"><div style="position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 30%,#2a2a2e,#0a0a0b)"><div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);padding:1px 4px;background:#ffe600;color:#000;font:900 13px/1 var(--font-sans)">ONE</div></div></div>
+    <div class="fc-grow"><div class="name">Spill the Tokens 006</div><div class="state agent"><span class="dot"></span>Waiting for your feedback</div><div class="meta">v2 · Kinetic Captions · 2 min ago</div></div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+  <a class="fc-rcard" href="#"><div class="poster wide"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:10px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div></div>
+    <div class="fc-grow"><div class="name">Product launch teaser</div><div class="state you"><span class="dot"></span>3 comments not sent</div><div class="meta">v3 · Swiss Editorial · 1 hour ago</div></div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+  <a class="fc-rcard" href="#"><div class="poster wide"><div class="fc-fake" style="background:#05070a;color:#39ff88"><div class="k">~/release</div><div class="h" style="font-size:10px">npm i</div><div class="bar" style="background:#39ff88"></div></div></div>
+    <div class="fc-grow"><div class="name">CLI changelog 0.4</div><div class="state done"><span class="dot"></span>All done</div><div class="meta">v5 · Neon Terminal · Yesterday</div></div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+</div>
+</div></figure>
+<figure><figcaption>Segmented</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col">
+  <div class="fc-seg" role="group" aria-label="Format"><button aria-pressed="true">All</button><button>16:9</button><button>9:16</button><button>1:1</button></div>
+  <div class="fc-seg sm" role="tablist"><button aria-pressed="true">Reviews</button><button>Styles</button></div>
+</div>
+</div></figure>
+<figure><figcaption>SetupSteps</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<ol class="fc-steps">
+  <li class="fc-step done"><span class="n"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><div><div class="st">Connect your agent</div><p class="sd">Frame Jam is connected to Claude Code.</p></div></li>
+  <li class="fc-step current"><span class="n">2</span><div><div class="st">Pick a style</div><p class="sd">Choose how your video should look. Your agent gets the colours, fonts and motion.</p><button class="fc-btn primary sm">Browse styles</button></div></li>
+  <li class="fc-step"><span class="n">3</span><div><div class="st">Ask for a video</div><p class="sd">Paste this into your agent chat:</p>
+    <div class="fc-code"><code>Make a 10s launch teaser with Frame Jam and open it for review</code><button class="fc-btn ghost icon sm round" aria-label="Copy"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div></div></li>
+</ol>
+</div></figure>
+<figure><figcaption>StyleCard</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-sgrid" style="grid-template-columns:1fr 1fr"><div class="fc-scard is-selected"><div class="media"><div style="position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 30%,#2a2a2e,#0a0a0b)"><div style="position:absolute;left:12%;top:9%;display:flex;align-items:center;gap:6px;color:#fff;font:600 10px/1 var(--font-sans)"><span style="width:18px;height:18px;border-radius:50%;background:#ffcc33"></span>@spill.tokens</div><div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);padding:4px 12px;background:#ffe600;color:#000;font:900 44px/1 var(--font-sans);letter-spacing:-0.03em">ONE</div><div style="position:absolute;left:50%;top:60%;transform:translateX(-50%);color:#fff;font:700 15px/1.2 var(--font-sans);text-align:center;width:80%">giant word at a time</div></div><button class="fc-use on use"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>In use</button><span class="br fc-badge on-video">9:16 · Fast</span></div><div><div class="name">Kinetic Captions <span class="fc-dots"><span style="background:#000"></span><span style="background:#ffe600"></span><span style="background:#fff"></span></span></div><div class="tagline">One giant word at a time.</div></div></div><div class="fc-scard"><div class="media"><div class="fc-fake" style="background:#0b1730;color:#e8f1ff"><div class="k">Week 38</div><div class="h" style="font-size:18px">Review<br>rounds</div><div class="bar" style="background:#2ee6c5"></div></div><button class="fc-use use">Use</button><span class="br fc-badge on-video">16:9 · Medium</span></div><div><div class="name">Data Story <span class="fc-dots"><span style="background:#0b1730"></span><span style="background:#2ee6c5"></span><span style="background:#e8f1ff"></span></span></div><div class="tagline">Bars that grow, a number that counts up.</div></div></div></div>
+</div></figure>
+<figure><figcaption>Swatches</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-swatches">
+  <button class="fc-swatch"><span class="c" style="background:#0b1730"></span><span><div class="l">Background</div><div class="v">#0b1730</div></span></button>
+  <button class="fc-swatch"><span class="c" style="background:#e8f1ff"></span><span><div class="l">Text</div><div class="v">#e8f1ff</div></span></button>
+  <button class="fc-swatch"><span class="c" style="background:#2ee6c5"></span><span><div class="l">Highlight</div><div class="v">#2ee6c5</div></span></button>
+  <button class="fc-swatch"><span class="c" style="background:#284066"></span><span><div class="l">Neutral</div><div class="v">#284066</div></span></button>
+  <button class="fc-swatch"><span class="c" style="background:#6f86ad"></span><span><div class="l">Muted</div><div class="v">#6f86ad</div></span></button>
+</div>
+</div></figure>
+<figure><figcaption>Tabs</figcaption><div class="card" style="width:520px;padding:20px"><style> </style>
+
+<nav class="fc-tabs"><a href="#" aria-selected="true">Overview</a><a href="#">Motion</a><a href="#">For your agent</a></nav>
+</div></figure>
+<figure><figcaption>Timeline</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#2a2a2e,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#3a3a40,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#ffe600,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1f1f23,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#2a2a2e,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#3a3a40,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#ffe600,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1f1f23,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#2a2a2e,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#3a3a40,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#ffe600,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1f1f23,#0b0b0c)"></div><div class="played" style="width:41%"></div></div><button class="fc-mark sent" style="left:12%">1</button><button class="fc-mark draft" style="left:55%">3</button><div class="fc-range" style="left:55%;width:18%"></div><div class="fc-head" style="left:41%"></div></div><div class="fc-scale"><span>0:00</span><span>0:10</span></div></div>
+</div></figure>
+<figure><figcaption>Toast</figcaption><div class="card" style="width:560px;padding:20px"><style> </style>
+
+<div class="fc-col">
+  <div class="fc-toast"><span class="ic" style="background:var(--agent-soft);color:var(--agent)"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg></span><div class="fc-grow"><div class="t">Sent to your agent</div><div class="d">3 comments delivered instantly.</div></div></div>
+  <div class="fc-toast"><span class="ic" style="background:var(--accent-soft);color:var(--accent-text)"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg></span><div class="fc-grow"><div class="t">Version 3 is ready</div><div class="d">“Delayed the headline, softened the ease.”</div></div><button class="fc-btn sm">Watch</button></div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewAfterSend</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-rshell" style="height:900px">
+<div class="fc-header has-back"><button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="titles"><span class="t">Product launch teaser</span><span class="s">Version 2 · sent · 0:07 · 16:9</span></div><button class="fc-btn sm">v2 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+<div class="fc-rbody stack">
+  <div class="fc-col" style="gap:4px">
+    <div class="fc-player wide"><div class="frame"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:30px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div><span class="fc-pin sent" style="left:12%;top:20%">1</span></div></div>
+    <div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:04.1 <span>/ 0:07.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="played" style="width:58%"></div></div><button class="fc-mark sent" style="left:20%">1</button><button class="fc-mark sent" style="left:57%">2</button><div class="fc-head" style="left:58%"></div></div><div class="fc-scale"><span>0:00</span><span>0:07</span></div></div>
+  </div>
+  <div class="fc-panel" style="min-height:0"><div class="fc-panel-h"><span class="fc-h3">Comments</span></div><div class="fc-panel-body"><ul class="fc-thread compact"><li class="fc-item is-sent"><span class="fc-num sent">1</span><div><div class="top"><span class="when">0:01.4</span></div><p class="body">Logo is too small on the first frame.</p></div><span></span></li><li class="fc-item is-sent"><span class="fc-num sent">2</span><div><div class="top"><span class="when">0:04.0 – 0:05.2</span></div><p class="body">Hold the headline longer before the line slides in.</p></div><span></span></li></ul></div></div>
+</div>
+<div class="fc-dock"><div class="fc-handoff warn">
+  <div class="hd"><span class="ic wait"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg></span><div><div class="t">Sent. Now tell your agent.</div>
+    <div class="d">Your agent isn't listening right now. Paste this into your chat so it picks up your comments:</div></div></div>
+  <div class="fc-code"><code>Apply my Frame Jam feedback for rev_14dea90011</code><button class="fc-btn primary sm"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy</button></div>
+</div></div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewFirstLook</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-rshell" style="height:900px">
+<div class="fc-header has-back"><button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="titles"><span class="t">Product launch teaser</span><span class="s">Version 3 · 0:07 · 16:9</span></div><button class="fc-btn sm">v3 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+<div class="fc-rbody stack">
+  <div class="fc-col" style="gap:4px">
+    <div class="fc-player wide"><div class="frame"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:30px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div></div><span class="tip"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"/></svg> Click anything to comment on it</span></div>
+    <div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:00.0 <span>/ 0:07.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="played" style="width:0%"></div></div><div class="fc-head" style="left:0%"></div></div><div class="fc-scale"><span>0:00</span><span>0:07</span></div></div>
+  </div>
+  <div class="fc-empty" style="padding:8px 0;justify-content:flex-start">
+    <div class="fc-h3">Version 3 is here. What should change?</div>
+    <p>“Bigger logo, held the headline longer.” Pause anywhere and type below, or click the video to point at something.</p>
+  </div>
+</div>
+<div class="fc-dock">
+  <div class="box"><div class="tools"><span class="fc-anchor plain"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> At 0:00.0</span><span class="fc-grow"></span><button class="fc-btn ghost sm" style="height:26px">Whole video</button></div>
+    <textarea placeholder="Pause anywhere and type what should change…"></textarea></div>
+  <div class="send"><span class="fc-agent waiting fc-grow"><span class="dot"></span><span class="fc-truncate">Your agent is listening</span></span></div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewHorizontal</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-rshell" style="height:900px">
+<div class="fc-header has-back"><button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="titles"><span class="t">Product launch teaser</span><span class="s">Version 2 · 0:07 · 16:9</span></div><button class="fc-btn sm">v2 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+<div class="fc-rbody stack">
+  <div class="fc-col" style="gap:4px">
+    <div class="fc-player wide"><div class="frame"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:30px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div><span class="fc-pin draft" style="left:12%;top:20%">1</span></div></div>
+    <div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:04.1 <span>/ 0:07.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="played" style="width:58%"></div></div><button class="fc-mark draft" style="left:20%">1</button><button class="fc-mark draft" style="left:57%">2</button><div class="fc-head" style="left:58%"></div></div><div class="fc-scale"><span>0:00</span><span>0:07</span></div></div>
+  </div>
+  <div class="fc-panel" style="min-height:0"><div class="fc-panel-h"><span class="fc-h3">Comments</span></div><div class="fc-panel-body"><ul class="fc-thread compact"><li class="fc-item"><span class="fc-num draft">1</span><div><div class="top"><span class="when">0:01.4</span></div><p class="body">Logo is too small on the first frame.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li><li class="fc-item"><span class="fc-num draft">2</span><div><div class="top"><span class="when">0:04.0 – 0:05.2</span></div><p class="body">Hold the headline longer before the line slides in.</p><div class="ctx"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg> h1.headline · y 40→0 · power3.out</div></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li></ul></div></div>
+</div>
+<div class="fc-dock">
+  <div class="box"><div class="tools"><span class="fc-anchor plain"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> At 0:02.3</span><span class="fc-grow"></span><button class="fc-btn ghost sm" style="height:26px">Whole video</button></div>
+    <textarea placeholder="Pause anywhere and type what should change…"></textarea></div>
+  <div class="send"><span class="fc-agent fc-grow"><span class="dot"></span><span class="fc-truncate">Agent not listening · we'll show you what to tell it</span></span><button class="fc-btn primary lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Send 2 to agent</button></div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewOldVersion</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-rshell" style="height:900px">
+<div class="fc-header has-back"><button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="titles"><span class="t">Product launch teaser</span><span class="s">Version 1 of 2 · 0:07 · 16:9</span></div><button class="fc-btn sm">v1 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+<div class="fc-rbody stack">
+  <div class="fc-col" style="gap:4px">
+    <div class="fc-player wide"><div class="frame"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:30px">Ship video<br>with your agent.</div><div class="bar" style="background:#ff7a2e"></div></div><span class="fc-pin sent" style="left:12%;top:20%">1</span></div></div>
+    <div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:01.4 <span>/ 0:07.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="played" style="width:20%"></div></div><button class="fc-mark sent" style="left:20%">1</button><button class="fc-mark sent" style="left:57%">2</button><div class="fc-head" style="left:20%"></div></div><div class="fc-scale"><span>0:00</span><span>0:07</span></div></div>
+  </div>
+  <div class="fc-panel" style="min-height:0">
+    <div class="fc-oldbar"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span class="fc-grow">You're looking at <b>version 1</b>. Its comments were sent and made version 2.</span><button class="fc-btn primary sm">Go to latest</button></div>
+    <div class="fc-panel-body" style="margin-top:12px"><ul class="fc-thread compact"><li class="fc-item is-sent"><span class="fc-num sent">1</span><div><div class="top"><span class="when">0:01.4</span></div><p class="body">Logo is too small on the first frame.</p></div><span></span></li><li class="fc-item is-sent"><span class="fc-num sent">2</span><div><div class="top"><span class="when">0:04.0 – 0:05.2</span></div><p class="body">Hold the headline longer before the line slides in.</p></div><span></span></li><li class="fc-item is-sent"><span class="fc-num sent">3</span><div><div class="top"><span class="when">Whole video</span></div><p class="body">Use the warmer orange from the brand kit.</p></div><span></span></li></ul></div>
+  </div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewVertical</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-rshell" style="height:900px">
+<div class="fc-header has-back"><button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="titles"><span class="t">Spill the Tokens 006</span><span class="s">Version 2 · 0:10 · 9:16</span></div><button class="fc-btn sm">v2 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+<div class="fc-rbody side">
+  <div class="fc-vcol"><div class="fc-player tall" style="height:440px"><div class="frame"><div style="position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 30%,#2a2a2e,#0a0a0b)"><div style="position:absolute;left:12%;top:9%;display:flex;align-items:center;gap:6px;color:#fff;font:600 10px/1 var(--font-sans)"><span style="width:18px;height:18px;border-radius:50%;background:#ffcc33"></span>@spill.tokens</div><div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);padding:4px 12px;background:#ffe600;color:#000;font:900 44px/1 var(--font-sans);letter-spacing:-0.03em">ONE</div><div style="position:absolute;left:50%;top:60%;transform:translateX(-50%);color:#fff;font:700 15px/1.2 var(--font-sans);text-align:center;width:80%">giant word at a time</div></div>
+    <span class="fc-pin draft" style="left:72%;top:16%">1</span><div class="fc-target" style="left:22%;top:39%;width:56%;height:14%"></div>
+    <span class="fc-pin new" style="left:58%;top:46%"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span></div></div></div>
+  <div class="fc-panel" style="min-height:0"><div class="fc-panel-h"><span class="fc-h3">Comments</span></div><div class="fc-panel-body"><ul class="fc-thread compact"><li class="fc-item"><span class="fc-num draft">1</span><div><div class="top"><span class="when">0:01.2</span></div><p class="body">Move the handle up so it doesn’t cover the face.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li><li class="fc-item"><span class="fc-num draft">2</span><div><div class="top"><span class="when">0:03.0</span></div><p class="body">Too much text here.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li><li class="fc-item"><span class="fc-num draft">3</span><div><div class="top"><span class="when">0:06.8</span></div><p class="body">End card needs the logo, not just the handle.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li></ul></div></div>
+  <div class="fc-transport-wide"><div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:04.1 <span>/ 0:10.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#2a2a2e,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#3a3a40,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#ffe600,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1f1f23,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#2a2a2e,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#3a3a40,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#ffe600,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1f1f23,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#2a2a2e,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#3a3a40,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#ffe600,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1f1f23,#0b0b0c)"></div><div class="played" style="width:41%"></div></div><button class="fc-mark draft" style="left:12%">1</button><button class="fc-mark draft" style="left:30%">2</button><button class="fc-mark draft" style="left:68%">3</button><div class="fc-head" style="left:41%"></div></div><div class="fc-scale"><span>0:00</span><span>0:10</span></div></div></div>
+</div>
+<div class="fc-dock">
+  <div class="box"><div class="tools"><span class="fc-anchor"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> 0:04.1 · on the yellow word <span class="x"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span><span class="fc-grow"></span><button class="fc-btn ghost sm" style="height:26px">Whole video</button></div>
+    <textarea placeholder="What should change here?">Hold the yellow word half a beat longer</textarea></div>
+  <div class="send"><span class="fc-agent waiting fc-grow"><span class="dot"></span><span class="fc-truncate">Your agent is listening</span></span><button class="fc-btn primary lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Send 3 to agent</button></div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewWide</figcaption><div class="card" style="width:1160px;padding:0"><style> </style>
+
+<div class="fc-rshell" style="height:700px">
+<div class="fc-header has-back"><button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="titles"><span class="t">Product launch teaser</span><span class="s">Version 2 of 2 · 0:07 · 16:9</span></div><button class="fc-btn sm">v2 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+<div class="fc-rbody wide">
+  <div class="stage">
+    <div class="fc-player wide" style="max-width:720px;align-self:center;width:100%"><div class="frame"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:40px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div><span class="fc-pin draft" style="left:12%;top:20%">1</span></div></div>
+    <div style="max-width:720px;align-self:center;width:100%"><div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:04.1 <span>/ 0:07.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="played" style="width:58%"></div></div><button class="fc-mark draft" style="left:20%">1</button><button class="fc-mark draft" style="left:57%">2</button><div class="fc-head" style="left:58%"></div></div><div class="fc-scale"><span>0:00</span><span>0:07</span></div></div></div>
+    
+  </div>
+  <div class="side"><div style="flex:1;min-height:0;display:flex;padding:var(--space-4) var(--space-3) 0"><div class="fc-panel" style="min-height:0"><div class="fc-panel-h"><span class="fc-h3">Comments</span><button class="fc-btn ghost icon sm round" aria-label="Collapse comments"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div class="fc-panel-body"><ul class="fc-thread compact"><li class="fc-item"><span class="fc-num draft">1</span><div><div class="top"><span class="when">0:01.4</span></div><p class="body">Logo is too small on the first frame.</p></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li><li class="fc-item"><span class="fc-num draft">2</span><div><div class="top"><span class="when">0:04.0 – 0:05.2</span></div><p class="body">Hold the headline longer before the line slides in.</p><div class="ctx"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg> h1.headline · y 40→0 · power3.out</div></div><button class="fc-btn ghost icon sm round" aria-label="More"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></li></ul></div></div></div>
+        <div class="fc-dock" style="padding:12px">
+  <div class="box"><div class="tools"><span class="fc-anchor"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> 0:04.1 · on the headline <span class="x"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span><span class="fc-grow"></span><button class="fc-btn ghost sm" style="height:26px">Whole video</button></div>
+    <textarea placeholder="What should change here?">Hold this half a beat longer</textarea></div>
+  <div class="send"><span class="fc-agent waiting fc-grow"><span class="dot"></span><span class="fc-truncate">Your agent is listening</span></span><button class="fc-btn primary lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Send 2</button></div>
+</div></div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewWideCollapsed</figcaption><div class="card" style="width:1160px;padding:0"><style> </style>
+
+<div class="fc-rshell" style="height:880px">
+<div class="fc-header has-back"><button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><div class="titles"><span class="t">Product launch teaser</span><span class="s">Version 2 of 2 · 0:07 · 16:9</span></div><button class="fc-btn sm">v2 <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div>
+<div class="fc-rbody wide collapsed">
+  <div class="stage">
+    <div class="fc-player wide" style="max-width:900px;align-self:center;width:100%"><div class="frame"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:44px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div><span class="fc-pin draft" style="left:12%;top:20%">1</span></div></div>
+    <div style="max-width:900px;align-self:center;width:100%"><div class="fc-controls"><button class="fc-play" aria-label="Play"><svg class="fc-i fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button><span class="fc-readout">0:04.1 <span>/ 0:07.0</span></span><span class="fc-grow"></span><button class="fc-btn ghost icon sm round" aria-label="Previous frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><button class="fc-btn ghost icon sm round" aria-label="Next frame"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></div><div><div class="fc-timeline"><div class="fc-strip"><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#1c2e4a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#d4ff3a,#0b0b0c)"></div><div class="f" style="background:linear-gradient(180deg,#0f1b2d,#0b0b0c)"></div><div class="played" style="width:58%"></div></div><button class="fc-mark draft" style="left:20%">1</button><button class="fc-mark draft" style="left:57%">2</button><div class="fc-head" style="left:58%"></div></div><div class="fc-scale"><span>0:00</span><span>0:07</span></div></div></div>
+    <div class="fc-dock" style="position:static;padding:0;margin-top:auto;width:100%;max-width:900px;align-self:center">
+  <div class="box"><div class="tools"><span class="fc-anchor plain"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> At 0:04.1</span><span class="fc-grow"></span><button class="fc-btn ghost sm" style="height:26px">Whole video</button></div>
+    <textarea placeholder="Type what should change at 0:04…"></textarea></div>
+  <div class="send"><span class="fc-agent waiting fc-grow"><span class="dot"></span><span class="fc-truncate">Your agent is listening</span></span><button class="fc-btn primary lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg> Send 2 to agent</button></div>
+</div>
+  </div>
+  <div class="side"><div class="fc-rail">
+        <button class="fc-railbtn" aria-label="Show comments"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="fc-railbtn" aria-label="2 comments not sent"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg><span class="c draft">2</span></button></div></div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>ReviewsScreen</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-screen">
+<div class="fc-header">
+  <a class="fc-logo" href="#">Frame <b>Jam</b></a>
+  <div class="fc-seg sm" role="tablist"><button aria-pressed="true">Reviews</button><button aria-pressed="false">Styles</button></div>
+  <span class="fc-grow"></span>
+  <a class="fc-style-chip" href="#"><span class="sw"><span style="background:#000"></span><span style="background:#ffe600"></span><span style="background:#fff"></span></span><span class="fc-truncate">Kinetic Captions</span></a>
+</div>
+<div class="fc-main">
+  <h1 class="fc-h1">Reviews</h1>
+  <div class="fc-col" style="gap:8px">
+    <div class="fc-caption" style="margin-top:-8px">Needs you</div>
+    <a class="fc-rcard" href="#"><div class="poster"><div style="position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 30%,#2a2a2e,#0a0a0b)"><div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);padding:1px 4px;background:#ffe600;color:#000;font:900 13px/1 var(--font-sans)">ONE</div></div></div>
+      <div class="fc-grow"><div class="name">Spill the Tokens 006</div><div class="state agent"><span class="dot"></span>Waiting for your feedback</div><div class="meta">v2 · Kinetic Captions · 2 min ago</div></div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    <a class="fc-rcard" href="#"><div class="poster wide"><div class="fc-fake" style="background:#0f1b2d;color:#f5f1e8"><div class="k">Launch · 2026</div><div class="h" style="font-size:10px">Ship video<br>with your agent.</div><div class="bar" style="background:#d4ff3a"></div></div></div>
+      <div class="fc-grow"><div class="name">Product launch teaser</div><div class="state you"><span class="dot"></span>3 comments not sent</div><div class="meta">v3 · Swiss Editorial · 1 hour ago</div></div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    <div class="fc-caption" style="margin-top:12px">Earlier</div>
+    <a class="fc-rcard" href="#"><div class="poster wide"><div class="fc-fake" style="background:#0b1730;color:#e8f1ff"><div class="k">Week 38</div><div class="h" style="font-size:10px">Rounds</div><div class="bar" style="background:#2ee6c5"></div></div></div>
+      <div class="fc-grow"><div class="name">Studio usage, week 38</div><div class="state agent"><span class="fc-agent working" style="gap:6px"><span class="dot"></span></span>Agent is working on v2</div><div class="meta">v1 · Data Story · 3 hours ago</div></div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    <a class="fc-rcard" href="#"><div class="poster wide"><div class="fc-fake" style="background:#05070a;color:#39ff88"><div class="k">~/release</div><div class="h" style="font-size:10px">npm i</div><div class="bar" style="background:#39ff88"></div></div></div>
+      <div class="fc-grow"><div class="name">CLI changelog 0.4</div><div class="state done"><span class="dot"></span>All done</div><div class="meta">v5 · Neon Terminal · Yesterday</div></div><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+  </div>
+  <div class="fc-row" style="justify-content:space-between;padding:12px 4px 0;border-top:1px solid var(--border)">
+    <span class="fc-agent connected"><span class="dot"></span>Connected to Claude Code</span>
+    <button class="fc-btn ghost sm">Setup help</button>
+  </div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>StatesScreen</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-col" style="gap:16px;padding:16px">
+  <div class="fc-card fc-col" style="gap:10px">
+    <div class="fc-caption">Loading a review</div>
+    <div class="fc-skel" style="height:200px;border-radius:14px"></div>
+    <div class="fc-skel" style="height:48px"></div>
+    <div class="fc-skel" style="height:56px;width:70%"></div>
+  </div>
+  <div class="fc-card"><div class="fc-empty" style="padding:12px 0">
+    <span class="ic"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><div class="fc-h3">This review isn't here</div>
+    <p>It may have been deleted, or the link is from another computer.</p>
+    <button class="fc-btn" style="margin-top:8px">Back to reviews</button></div></div>
+  <div class="fc-card"><div class="fc-empty" style="padding:12px 0">
+    <span class="ic" style="color:var(--danger);background:var(--danger-soft)"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h.01"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/><path d="M5 12.859a10 10 0 0 1 5.17-2.69"/><path d="M19 12.859a10 10 0 0 0-2.007-1.523"/><path d="M2 8.82a15 15 0 0 1 4.177-2.643"/><path d="M22 8.82a15 15 0 0 0-11.288-3.764"/><path d="m2 2 20 20"/></svg></span><div class="fc-h3">Frame Jam isn't running</div>
+    <p>Start it again in your terminal, and this page reconnects by itself.</p>
+    <div class="fc-code" style="margin-top:8px;width:100%;max-width:320px"><code>npx framejam</code><button class="fc-btn ghost icon sm round" aria-label="Copy"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div></div></div>
+</div>
+</div></figure>
+<figure><figcaption>StyleDetailScreen</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-screen">
+<div class="fc-header has-back">
+  <button class="fc-btn ghost icon round" aria-label="Back"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+  <div class="titles"><span class="t">Data Story</span><span class="s">Style · 16:9 · 7.5s</span></div>
+  <button class="fc-btn ghost icon round" aria-label="More"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+</div>
+<div class="fc-main">
+  <div class="fc-player wide"><div class="frame" style="cursor:default"><div class="fc-fake" style="background:#0b1730;color:#e8f1ff"><div class="k">Week 38 · Studio usage</div><div class="h" style="font-size:30px">Review rounds<br>per video, by day</div><div class="bar" style="background:#2ee6c5"></div></div></div><span class="corner fc-badge on-video"><svg class="fc-i xs fill" viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg> 0:07</span></div>
+  <div>
+    <h1 class="fc-h1">Data Story</h1>
+    <p style="margin:6px 0 10px;color:var(--text-2)">Bars that grow, a hero number that counts up, and a source line you can trust.</p>
+    <div class="fc-row" style="gap:6px"><span class="fc-badge">16:9</span><span class="fc-badge">Medium pace</span><span class="fc-badge">clear</span><span class="fc-badge">trustworthy</span></div>
+  </div>
+  <nav class="fc-tabs"><a href="#" aria-selected="true">Overview</a><a href="#">Motion</a><a href="#">For your agent</a></nav>
+  <div class="fc-col" style="gap:20px">
+    <div><div class="fc-sec-h"><span class="fc-h3">Colours</span><span class="fc-grow"></span><span class="fc-caption">Click to copy</span></div>
+      <div class="fc-swatches">
+        <button class="fc-swatch"><span class="c" style="background:#0b1730"></span><span><div class="l">Background</div><div class="v">#0b1730</div></span></button>
+        <button class="fc-swatch"><span class="c" style="background:#e8f1ff"></span><span><div class="l">Text</div><div class="v">#e8f1ff</div></span></button>
+        <button class="fc-swatch"><span class="c" style="background:#2ee6c5"></span><span><div class="l">Highlight</div><div class="v">#2ee6c5</div></span></button>
+        <button class="fc-swatch"><span class="c" style="background:#284066"></span><span><div class="l">Neutral</div><div class="v">#284066</div></span></button>
+      </div></div>
+    <div><div class="fc-sec-h"><span class="fc-h3">Type</span></div>
+      <dl class="fc-kv"><dt>Headlines</dt><dd>Space Grotesk · Bold</dd><dt>Body</dt><dd>Space Grotesk · Regular</dd></dl></div>
+  </div>
+</div>
+<div class="fc-dock"><div class="send" style="margin:0"><button class="fc-btn outline lg"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy prompt</button><button class="fc-btn primary lg fc-grow"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Use this style</button></div></div>
+</div>
+</div></figure>
+<figure><figcaption>StylesScreen</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-screen">
+<div class="fc-header">
+  <a class="fc-logo" href="#">Frame <b>Jam</b></a>
+  <div class="fc-seg sm" role="tablist"><button aria-pressed="false">Reviews</button><button aria-pressed="true">Styles</button></div>
+  <span class="fc-grow"></span>
+  <a class="fc-style-chip" href="#"><span class="sw"><span style="background:#000"></span><span style="background:#ffe600"></span><span style="background:#fff"></span></span><span class="fc-truncate">Kinetic Captions</span></a>
+</div>
+<div class="fc-main">
+  <div><h1 class="fc-h1">Styles</h1><p class="fc-caption" style="margin:4px 0 0;font-size:14px;line-height:21px">Pick a look for your next video. Open one to see the details.</p></div>
+  <div class="fc-col">
+    <label class="fc-search"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input class="fc-input" placeholder="Search 8 styles"></label>
+    <div class="fc-filters"><div class="fc-seg" role="group"><button aria-pressed="true">All</button><button>16:9</button><button>9:16</button><button>1:1</button></div><button class="fc-drop">Mood <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="fc-drop">Pace <svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+  </div>
+  <div class="fc-sgrid" style="grid-template-columns:1fr 1fr;row-gap:20px"><div class="fc-scard is-selected"><div class="media"><div style="position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 30%,#2a2a2e,#0a0a0b)"><div style="position:absolute;left:12%;top:9%;display:flex;align-items:center;gap:6px;color:#fff;font:600 10px/1 var(--font-sans)"><span style="width:18px;height:18px;border-radius:50%;background:#ffcc33"></span>@spill.tokens</div><div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);padding:4px 12px;background:#ffe600;color:#000;font:900 44px/1 var(--font-sans);letter-spacing:-0.03em">ONE</div><div style="position:absolute;left:50%;top:60%;transform:translateX(-50%);color:#fff;font:700 15px/1.2 var(--font-sans);text-align:center;width:80%">giant word at a time</div></div><button class="fc-use on use"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>In use</button><span class="br fc-badge on-video">9:16 · Fast</span></div><div><div class="name">Kinetic Captions <span class="fc-dots"><span style="background:#000"></span><span style="background:#ffe600"></span><span style="background:#fff"></span></span></div><div class="tagline">One giant word at a time.</div></div></div><div class="fc-scard"><div class="media"><div class="fc-fake" style="background:#0b1730;color:#e8f1ff"><div class="k">Week 38</div><div class="h" style="font-size:18px">Review<br>rounds</div><div class="bar" style="background:#2ee6c5"></div></div><button class="fc-use use">Use</button><span class="br fc-badge on-video">16:9 · Medium</span></div><div><div class="name">Data Story <span class="fc-dots"><span style="background:#0b1730"></span><span style="background:#2ee6c5"></span><span style="background:#e8f1ff"></span></span></div><div class="tagline">Bars that grow, a number that counts up.</div></div></div><div class="fc-scard"><div class="media"><div class="fc-fake" style="background:#ffffff;color:#111"><div class="k">v2.4.0</div><div class="h" style="font-size:18px">What's new<br>in Relay</div><div class="bar" style="background:#111"></div></div><button class="fc-use use">Use</button><span class="br fc-badge on-video">16:9 · Slow</span></div><div><div class="name">Mono Changelog <span class="fc-dots"><span style="background:#fff"></span><span style="background:#111"></span><span style="background:#888"></span></span></div><div class="tagline">Black on white, one note at a time.</div></div></div><div class="fc-scard"><div class="media"><div class="fc-fake" style="background:#05070a;color:#39ff88"><div class="k">~/release</div><div class="h" style="font-size:18px">npm i<br>relay</div><div class="bar" style="background:#39ff88"></div></div><button class="fc-use use">Use</button><span class="br fc-badge on-video">16:9 · Fast</span></div><div><div class="name">Neon Terminal <span class="fc-dots"><span style="background:#05070a"></span><span style="background:#39ff88"></span><span style="background:#7cf"></span></span></div><div class="tagline">Typed commands, phosphor glow.</div></div></div></div>
+</div>
+</div>
+</div></figure>
+<figure><figcaption>WelcomeScreen</figcaption><div class="card" style="width:560px;padding:0"><style> </style>
+
+<div class="fc-screen">
+<div class="fc-header">
+  <a class="fc-logo" href="#">Frame <b>Jam</b></a>
+  <div class="fc-seg sm" role="tablist"><button aria-pressed="true">Reviews</button><button aria-pressed="false">Styles</button></div>
+  <span class="fc-grow"></span>
+  <a style="display:none" class="fc-style-chip" href="#"><span class="sw"><span style="background:#000"></span><span style="background:#ffe600"></span><span style="background:#fff"></span></span><span class="fc-truncate">Kinetic Captions</span></a>
+</div>
+<div class="fc-main" style="gap:24px">
+  <div><h1 class="fc-h1">Make your first video</h1><p class="fc-caption" style="margin:6px 0 0;font-size:14px;line-height:21px">Frame Jam sits next to your agent. Your agent builds the video; you point at what to change.</p></div>
+  <ol class="fc-steps">
+    <li class="fc-step done"><span class="n"><svg class="fc-i xs" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><div><div class="st">Connect your agent</div><p class="sd">Connected to Claude Code.</p></div></li>
+    <li class="fc-step current"><span class="n">2</span><div><div class="st">Pick a style</div><p class="sd">Choose how your video should look. Your agent gets the colours, fonts and motion.</p><button class="fc-btn primary"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg> Browse styles</button></div></li>
+    <li class="fc-step"><span class="n">3</span><div><div class="st">Ask for a video</div><p class="sd">Paste this into your agent chat:</p>
+      <div class="fc-code"><code>Make a 10s launch teaser with Frame Jam and open it for review</code><button class="fc-btn ghost icon sm round" aria-label="Copy"><svg class="fc-i sm" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div></div></li>
+  </ol>
+  <div class="fc-card" style="display:flex;gap:12px;align-items:flex-start">
+    <span style="color:var(--text-2)"><svg class="fc-i" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>
+    <div><div class="fc-h3">Your review will appear here</div><p class="fc-caption" style="margin:2px 0 0;font-size:13px;line-height:19px">When your agent opens a review, this page switches to it automatically.</p></div>
+  </div>
+</div>
+</div>
+</div></figure>
+</div>
+<script>
+function setTheme(t, b) { document.documentElement.dataset.theme = t; b.parentNode.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); }
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Acid Chrome</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@900&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b0b0a; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #0b0b0a; font-family: "JetBrains Mono", monospace; font-weight: 500; }
+      .scene { position: absolute; inset: 0; visibility: hidden; --acc: #0b0b0a; color: #0b0b0a; }
+      .dark { background: #0b0b0a; color: #f2f1ea; --acc: #d4ff3a; }
+      .lime { background: radial-gradient(circle at 62% 48%, #e6ff7a 0%, #d4ff3a 42%, #b6dc1c 100%); }
+      .cream { background: #efeee6; }
+      .big { position: absolute; left: 90px; font-family: "Inter Tight", sans-serif; font-weight: 900; font-size: 186px; line-height: 0.9; letter-spacing: -0.03em; text-transform: uppercase; white-space: nowrap; }
+      .ln { display: block; overflow: hidden; padding-bottom: 0.03em; }
+      .in { display: block; }
+      .acc { color: var(--acc); }
+      .box { display: inline-block; background: #0b0b0a; color: #d4ff3a; padding: 0 0.1em 0.02em; }
+      .mono { position: absolute; font-size: 26px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.45; white-space: nowrap; }
+      .muted { opacity: 0.6; font-size: 19px; }
+      .hud { position: absolute; inset: 0; font-size: 19px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .hud div { position: absolute; white-space: nowrap; }
+      .rule { height: 1px; left: 80px; right: 80px; background: currentColor; opacity: 0.18; }
+      .prog { left: 80px; height: 3px; width: 420px; background: var(--acc); transform-origin: left center; }
+      .dash { display: inline-block; width: 28px; height: 3px; margin: 0 4px; background: currentColor; opacity: 0.22; vertical-align: middle; }
+      .dash.on { opacity: 1; background: var(--acc); }
+      .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--acc); margin-right: 12px; vertical-align: 2px; }
+      svg { position: absolute; overflow: visible; }
+      .bars { position: absolute; left: 80px; right: 80px; top: 770px; height: 90px; display: flex; align-items: center; justify-content: space-between; }
+      .bar { width: 9px; height: 90px; background: #0b0b0a; transform-origin: center; }
+      .bar.l { background: #a8d400; }
+      .ghost { position: absolute; left: 0; right: 0; text-align: center; font-family: "Inter Tight", sans-serif; font-weight: 900; font-size: 280px; line-height: 0.9; letter-spacing: -0.045em; color: transparent; -webkit-text-stroke: 2px rgba(242, 241, 234, 0.2); white-space: nowrap; }
+      .chip { position: absolute; font-size: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 26px; border: 3px solid #0b0b0a; white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="acid-chrome" data-width="1920" data-height="1080" data-duration="7.5">
+      <div id="s1" class="scene dark" data-n="1" data-label="01 / Loud by default" data-tc="00:00:42">
+        <svg id="sun" width="90" height="90" viewBox="-45 -45 90 90" style="left: 1690px; top: 150px"></svg>
+        <svg class="obj" id="o1" width="900" height="900" viewBox="0 0 900 900" style="left: 1000px; top: 90px"></svg>
+        <div class="big" style="top: 250px"><span class="ln"><span class="in" id="t1a">We make</span></span><span class="ln"><span class="in acc" id="t1b">noise.</span></span></div>
+        <div class="mono" id="m1" style="left: 96px; top: 640px"><div>7.5 seconds.</div><div>Zero quiet frames.</div></div>
+        <div class="mono muted" id="m1b" style="left: 96px; top: 790px">Sound on / Volume up</div>
+        <svg id="ar1" width="70" height="70" viewBox="0 0 70 70" style="left: 860px; top: 760px"><path d="M8 62 L62 8 M24 8 L62 8 L62 46" stroke="#d4ff3a" stroke-width="4" fill="none" /></svg>
+      </div>
+
+      <div id="s2" class="scene lime" data-n="2" data-label="02 / Kinetic type" data-tc="00:01:16">
+        <svg class="obj" id="o2" width="900" height="900" viewBox="0 0 900 900" style="left: 1010px; top: 90px"></svg>
+        <div class="big" style="top: 250px"><span class="ln"><span class="in" id="t2a">Type</span></span><span class="ln"><span class="in" id="t2b"><span class="box">that hits.</span></span></span></div>
+        <div class="mono" id="m2" style="left: 96px; top: 660px"><div>Let the letters dance.</div></div>
+        <svg id="ar2" width="70" height="70" viewBox="0 0 70 70" style="left: 860px; top: 760px"><path d="M8 62 L62 8 M24 8 L62 8 L62 46" stroke="#0b0b0a" stroke-width="4" fill="none" /></svg>
+      </div>
+
+      <div id="s3" class="scene dark" data-n="3" data-label="03 / 3D / Material study" data-tc="00:02:08">
+        <svg class="obj" id="o3" width="900" height="900" viewBox="0 0 900 900" style="left: 1000px; top: 90px"></svg>
+        <div class="big" style="top: 200px"><span class="ln"><span class="in" id="t3a">Form.</span></span><span class="ln"><span class="in acc" id="t3b">No</span></span><span class="ln"><span class="in acc" id="t3c">limits.</span></span></div>
+        <div class="mono" id="m3" style="left: 96px; top: 760px"><div>Chrome / Light / Depth</div><div class="muted">Dimension is a design tool.</div></div>
+        <div style="position: absolute; left: 1180px; top: 905px; width: 500px; height: 2px; background: rgba(242, 241, 234, 0.2)"><div id="pbar" style="width: 100%; height: 2px; background: #d4ff3a; transform-origin: left center"></div></div>
+        <div class="mono" id="pct" style="left: 1720px; top: 886px; font-size: 24px">000%</div>
+      </div>
+
+      <div id="s4" class="scene cream" data-n="4" data-label="04 / Every frame in sync" data-tc="00:02:51">
+        <svg id="o4" width="900" height="900" viewBox="0 0 900 900" style="left: 1000px; top: 0px"></svg>
+        <div class="big" style="top: 210px"><span class="ln"><span class="in" id="t4a">Hit</span></span><span class="ln"><span class="in" id="t4b">the beat.</span></span></div>
+        <div class="mono" id="m4" style="left: 96px; top: 600px"><div>Every frame.</div><div>Right on time.</div></div>
+        <div class="bars" id="bars"></div>
+        <div class="mono muted" style="left: 96px; top: 885px; font-size: 22px; opacity: 1">144 BPM</div>
+        <div class="mono muted" style="right: 96px; top: 885px; font-size: 22px; opacity: 1">Frame-perfect</div>
+      </div>
+
+      <div id="s5" class="scene dark" data-n="5" data-label="05 / No accidents" data-tc="00:03:30">
+        <div class="ghost" id="g1" style="top: 170px">PRECISE.</div>
+        <div class="ghost" id="g2" style="top: 650px">PRECISE.</div>
+        <div class="big" id="t5" style="left: 0; right: 0; top: 410px; text-align: center; font-size: 280px">PRECISE.</div>
+        <div class="mono muted" id="m5" style="left: 96px; top: 925px">00 accidents.</div>
+        <svg id="ar5" width="56" height="56" viewBox="0 0 70 70" style="left: 1764px; top: 912px"><path d="M8 62 L62 8 M24 8 L62 8 L62 46" stroke="#d4ff3a" stroke-width="5" fill="none" /></svg>
+      </div>
+
+      <div id="s6" class="scene lime" data-n="6" data-label="06 / Book the studio" data-tc="00:04:15">
+        <svg class="obj" id="o6" width="900" height="900" viewBox="0 0 900 900" style="left: 1040px; top: 90px"></svg>
+        <div class="big" style="top: 300px; font-size: 200px"><span class="ln"><span class="in" id="t6a">Voltwerk</span></span><span class="ln"><span class="in" id="t6b" style="font-size: 120px"><span class="box">make it loud.</span></span></span></div>
+        <div class="chip" id="cta" style="left: 96px; top: 690px">Book a slot ↗</div>
+        <div class="mono" id="url" style="left: 420px; top: 706px">voltwerk.studio</div>
+      </div>
+    </div>
+
+    <script>
+      var NS = "http://www.w3.org/2000/svg";
+      function el(tag, attrs, parent) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        if (parent) parent.appendChild(e);
+        return e;
+      }
+      function lerp(a, b, x) { return a + (b - a) * x; }
+      function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+      function backOut(x) { x = clamp(x) - 1; return 1 + 2.4 * x * x * x + 1.4 * x * x; }
+      function cubicOut(x) { x = 1 - clamp(x); return 1 - x * x * x; }
+
+      // HUD per scene
+      document.querySelectorAll(".scene").forEach(function (s) {
+        var n = +s.dataset.n, dashes = "";
+        for (var i = 1; i <= 6; i++) dashes += '<span class="dash' + (i <= n ? " on" : "") + '"></span>';
+        var h = document.createElement("div");
+        h.className = "hud";
+        h.innerHTML =
+          '<div style="left:80px;top:40px;font-weight:700"><span class="dot"></span>Voltwerk / Reel 26</div>' +
+          '<div style="right:80px;top:34px;font-size:30px;font-weight:700"><span style="font-size:17px;opacity:.5;margin-right:24px">16:9</span>0' + n + " — 06</div>" +
+          '<div class="rule" style="top:92px"></div>' +
+          '<div style="left:80px;top:128px;opacity:.6">' + s.dataset.label + "</div>" +
+          '<div class="rule" style="top:984px"></div>' +
+          '<div class="prog" style="top:982px"></div>' +
+          '<div style="left:80px;top:1008px;font-weight:700">Make it loud</div>' +
+          '<div style="left:0;right:0;top:1008px;text-align:center">' + dashes + "</div>" +
+          '<div style="right:80px;top:1008px;font-weight:700">' + s.dataset.tc + " / 00:07</div>";
+        s.appendChild(h);
+      });
+
+      // lime sunburst
+      (function () {
+        var g = el("g", { id: "sung" }, document.getElementById("sun"));
+        el("circle", { r: 22, fill: "#d4ff3a" }, g);
+        for (var i = 0; i < 16; i++) {
+          var a = (i / 16) * Math.PI * 2;
+          el("line", { x1: Math.cos(a) * 28, y1: Math.sin(a) * 28, x2: Math.cos(a) * 42, y2: Math.sin(a) * 42, stroke: "#d4ff3a", "stroke-width": 5, "stroke-linecap": "round" }, g);
+        }
+      })();
+
+      // liquid chrome tube: z-sorted chunks, each a stack of offset strokes
+      var CHROME = [[0, "#0c0c0c"], [0.1, "#8d8e88"], [0.18, "#ffffff"], [0.27, "#3b3b38"], [0.38, "#0e0e0e"], [0.47, "#c9cac2"], [0.55, "#ffffff"], [0.62, "#d4ff3a"], [0.7, "#262624"], [0.84, "#b4b5ad"], [1, "#f7f7f2"]];
+      var N = 240, CH = 20;
+      function grad(defs, id, x1, y1, x2, y2) {
+        var g = el("linearGradient", { id: id, gradientUnits: "userSpaceOnUse", x1: x1, y1: y1, x2: x2, y2: y2, spreadMethod: "reflect" }, defs);
+        CHROME.forEach(function (s) { el("stop", { offset: s[0], "stop-color": s[1] }, g); });
+        return g;
+      }
+      function Chrome(id, w, orbit) {
+        var svg = document.getElementById(id), defs = el("defs", {}, svg);
+        this.ga = grad(defs, id + "a", 150, 150, 750, 750);
+        this.gb = grad(defs, id + "b", 750, 200, 200, 650);
+        var glow = el("radialGradient", { id: id + "glow" }, defs);
+        el("stop", { offset: 0, "stop-color": "#000", "stop-opacity": 0.35 }, glow);
+        el("stop", { offset: 1, "stop-color": "#000", "stop-opacity": 0 }, glow);
+        el("ellipse", { cx: 450, cy: 760, rx: 260, ry: 40, fill: "url(#" + id + "glow)" }, svg);
+        if (orbit) this.orbit = el("ellipse", { cx: 450, cy: 450, rx: 390, ry: 250, fill: "none", stroke: orbit, "stroke-opacity": 0.22, "stroke-width": 2 }, svg);
+        this.root = el("g", {}, svg);
+        this.chunks = [];
+        var layers = [["#050505", w + 10, 0, 0, 1], ["url(#" + id + "a)", w, 0, 0, 1], ["url(#" + id + "b)", w * 0.56, 0, 0, 0.7], ["#d4ff3a", w * 0.22, 0, 0, 0.8], ["#ffffff", w * 0.07, -w * 0.03, -w * 0.03, 0.95]];
+        var base = el("g", {}, svg);
+        svg.insertBefore(base, this.root);
+        this.full = el("path", { id: id + "full" }, defs);
+        layers.slice(1).forEach(function (L) {
+          el("use", { href: "#" + id + "full", x: L[2], y: L[3], fill: "none", stroke: L[0], "stroke-width": L[1], "stroke-opacity": L[4], "stroke-linejoin": "round" }, base);
+        });
+        for (var i = 0; i < CH; i++) {
+          var g = el("g", {}, this.root), p = el("path", { id: id + "p" + i }, defs);
+          layers.forEach(function (L) {
+            el("use", { href: "#" + id + "p" + i, x: L[2], y: L[3], fill: "none", stroke: L[0], "stroke-width": L[1], "stroke-opacity": L[4], "stroke-linejoin": "round" }, g);
+          });
+          this.chunks.push({ g: g, p: p, z: 0 });
+        }
+      }
+      Chrome.prototype.draw = function (curve, a, b, s, t) {
+        var pts = [], ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+        for (var i = 0; i < N; i++) {
+          var P = curve((i / N) * Math.PI * 2);
+          var x = P[0] * ca + P[2] * sa, z = -P[0] * sa + P[2] * ca;
+          var y = P[1] * cb - z * sb, z2 = P[1] * sb + z * cb, f = 1 / (1 - z2 * 0.12);
+          pts.push([450 + x * s * f, 450 + y * s * f, z2]);
+        }
+        var k = N / CH;
+        this.full.setAttribute("d", "M" + pts.map(function (q) { return q[0].toFixed(1) + " " + q[1].toFixed(1); }).join(" L") + " Z");
+        this.chunks.forEach(function (c, ci) {
+          var d = "", zs = 0;
+          for (var j = 0; j <= k; j++) {
+            var q = pts[(ci * k + j) % N];
+            d += (j ? " L" : "M") + q[0].toFixed(1) + " " + q[1].toFixed(1);
+            zs += q[2];
+          }
+          c.p.setAttribute("d", d);
+          c.z = zs;
+        });
+        var root = this.root;
+        this.chunks.slice().sort(function (m, n) { return m.z - n.z; }).forEach(function (c) { root.appendChild(c.g); });
+        var gx = 220 * Math.sin(t * 1.7), gy = 160 * Math.cos(t * 1.3);
+        this.ga.setAttribute("x1", 150 + gx); this.ga.setAttribute("y1", 150 + gy);
+        this.ga.setAttribute("x2", 750 + gx); this.ga.setAttribute("y2", 750 - gy);
+        this.gb.setAttribute("x1", 750 - gy); this.gb.setAttribute("x2", 200 + gx);
+        if (this.orbit) this.orbit.setAttribute("transform", "rotate(" + (-14 + t * 9).toFixed(2) + " 450 450)");
+      };
+      function knot(u) { var r = 1 + 0.42 * Math.cos(3 * u); return [r * Math.cos(2 * u), r * Math.sin(2 * u), 0.6 * Math.sin(3 * u)]; }
+      function ring(u) { return [Math.cos(u), Math.sin(u), 0]; }
+      function eight(u) { return [0.7 * Math.sin(2 * u), 1.3 * Math.sin(u), 0.5 * Math.cos(u)]; }
+
+      var c1 = new Chrome("o1", 62, "#f2f1ea"), c2 = new Chrome("o2", 74, "#0b0b0a"), c3 = new Chrome("o3", 66, "#f2f1ea"), c6 = new Chrome("o6", 54, "#0b0b0a");
+
+      // S4: chrome ball + lime star blob + waveform
+      var o4 = document.getElementById("o4"), d4 = el("defs", {}, o4);
+      var gl = el("radialGradient", { id: "limeg", cx: 0.38, cy: 0.32, r: 0.75 }, d4);
+      [[0, "#f6ffc4"], [0.35, "#d4ff3a"], [0.8, "#8fb800"], [1, "#5e7a00"]].forEach(function (s) { el("stop", { offset: s[0], "stop-color": s[1] }, gl); });
+      var gbll = el("radialGradient", { id: "ballg", cx: 0.36, cy: 0.3, r: 0.8 }, d4);
+      [[0, "#9a9a96"], [0.25, "#2a2a28"], [0.7, "#0b0b0a"], [1, "#3c3c3a"]].forEach(function (s) { el("stop", { offset: s[0], "stop-color": s[1] }, gbll); });
+      el("ellipse", { cx: 480, cy: 700, rx: 230, ry: 70, fill: "none", stroke: "#0b0b0a", "stroke-opacity": 0.14, "stroke-width": 2 }, o4);
+      var star = el("path", { fill: "url(#limeg)" }, o4);
+      var starHi = el("path", { fill: "none", stroke: "#ffffff", "stroke-opacity": 0.75, "stroke-width": 5, "stroke-linecap": "round" }, o4);
+      var shadow = el("ellipse", { cx: 260, cy: 760, rx: 70, ry: 12, fill: "#0b0b0a", "fill-opacity": 0.18 }, o4);
+      var ball = el("g", {}, o4);
+      el("circle", { r: 72, fill: "url(#ballg)" }, ball);
+      el("path", { d: "M-46 -30 A 56 56 0 0 1 10 -60", stroke: "#fff", "stroke-width": 5, fill: "none", "stroke-linecap": "round", "stroke-opacity": 0.8 }, ball);
+      el("path", { d: "M-60 18 C -20 40, 30 40, 64 10", stroke: "#d4ff3a", "stroke-width": 4, fill: "none", "stroke-opacity": 0.7 }, ball);
+      function blob(rot, sq, s) {
+        var d = "";
+        for (var i = 0; i <= 120; i++) {
+          var th = (i / 120) * Math.PI * 2, r = s * (1 + 0.3 * Math.cos(4 * (th - rot)));
+          d += (i ? " L" : "M") + (480 + Math.cos(th) * r * sq).toFixed(1) + " " + (400 + Math.sin(th) * r / sq).toFixed(1);
+        }
+        return d + " Z";
+      }
+      var bars = document.getElementById("bars"), barEls = [], seed = 7;
+      function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+      for (var i = 0; i < 88; i++) {
+        var b = document.createElement("div");
+        b.className = "bar" + (i % 6 === 2 ? " l" : "");
+        b.dataset.h = (0.25 + rnd() * 0.75).toFixed(3);
+        bars.appendChild(b);
+        barEls.push(b);
+      }
+
+      var pct = document.getElementById("pct");
+      function frame(t) {
+        if (t < 1.25) c1.draw(knot, 0.5 + t * 1.8, 0.5 + 0.2 * Math.sin(t * 2), 168 * backOut((t - 0.05) / 0.5), t);
+        else if (t < 2.5) c2.draw(ring, 0.4 + (t - 1.25) * 2.6, 0.75, 228 * backOut((t - 1.25) / 0.45), t);
+        else if (t < 3.9) {
+          var w = cubicOut((t - 2.5) / 0.55);
+          c3.draw(function (u) { var A = knot(u), B = eight(u); return [lerp(A[0], B[0], w), lerp(A[1], B[1], w), lerp(A[2], B[2], w)]; }, -0.7 + (t - 2.5) * 1.2, 0.3, 205 * backOut((t - 2.5) / 0.4), t);
+          var p = cubicOut((t - 2.6) / 1.1);
+          pct.textContent = ("00" + Math.round(p * 58)).slice(-3) + "%";
+          document.getElementById("pbar").style.transform = "scaleX(" + (p * 0.58).toFixed(3) + ")";
+        } else if (t < 5.15) {
+          var lt = t - 3.9, pop = backOut(lt / 0.45);
+          star.setAttribute("d", blob(lt * 1.4, 1 + 0.06 * Math.sin(lt * 9), 175 * pop));
+          starHi.setAttribute("d", "M405 318 C 420 282, 462 266, 505 272");
+          starHi.setAttribute("opacity", pop.toFixed(2));
+          var beat = (lt % 0.416) / 0.416, hgt = Math.sin(beat * Math.PI) * 260 * clamp(lt / 0.2);
+          var sq = beat < 0.08 || beat > 0.92 ? 0.82 : 1;
+          ball.setAttribute("transform", "translate(260 " + (690 - hgt).toFixed(1) + ") scale(" + (1 / sq).toFixed(2) + " " + sq + ")");
+          shadow.setAttribute("rx", (70 - hgt * 0.12).toFixed(1));
+          barEls.forEach(function (b, i) {
+            var v = +b.dataset.h * (0.35 + 0.65 * Math.abs(Math.sin(lt * 7.55 + i * 0.37)));
+            if (Math.abs(i - (lt / 1.25) * 88) < 4) v = 1;
+            b.style.transform = "scaleY(" + v.toFixed(3) + ")";
+          });
+        } else if (t >= 6) c6.draw(knot, 0.2 + (t - 6) * 1.6, 0.55, 150 * backOut((t - 6.05) / 0.5), t);
+        var sg = document.getElementById("sung");
+        sg.setAttribute("transform", "rotate(" + (t * 120).toFixed(1) + ")");
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function lines(ids, at) {
+        tl.from(ids, { yPercent: 105, duration: 0.42, ease: "expo.out", stagger: 0.07 }, at);
+      }
+      function prog(scene, at, dur) {
+        tl.fromTo(scene + " .prog", { scaleX: 0 }, { scaleX: 1, duration: dur, ease: "none", immediateRender: false }, at);
+      }
+      function rise(ids, at) {
+        tl.from(ids, { y: 24, opacity: 0, duration: 0.3, ease: "power3.out", stagger: 0.06 }, at);
+      }
+      var clock = { t: 0 };
+      tl.to(clock, { t: 7.5, duration: 7.5, ease: "none", onUpdate: function () { frame(clock.t); } }, 0);
+      frame(0);
+
+      show("#s1", 0, 1.25);
+      lines(["#t1a", "#t1b"], 0.02);
+      rise(["#m1", "#m1b"], 0.35);
+      tl.from("#ar1", { x: -30, y: 30, opacity: 0, duration: 0.3, ease: "back.out(2)" }, 0.55);
+      prog("#s1", 0, 1.25);
+
+      show("#s2", 1.25, 2.5);
+      lines(["#t2a", "#t2b"], 1.25);
+      rise(["#m2"], 1.55);
+      tl.from("#ar2", { x: -30, y: 30, opacity: 0, duration: 0.3, ease: "back.out(2)" }, 1.75);
+      prog("#s2", 1.25, 1.25);
+
+      show("#s3", 2.5, 3.9);
+      lines(["#t3a", "#t3b", "#t3c"], 2.5);
+      rise(["#m3"], 2.75);
+      prog("#s3", 2.5, 1.4);
+
+      show("#s4", 3.9, 5.15);
+      lines(["#t4a", "#t4b"], 3.9);
+      rise(["#m4"], 4.15);
+      tl.from("#bars", { scaleX: 0, transformOrigin: "left center", duration: 0.5, ease: "expo.out" }, 3.95);
+      prog("#s4", 3.9, 1.25);
+
+      show("#s5", 5.15, 6.0);
+      tl.from("#t5", { scale: 1.35, opacity: 0, duration: 0.32, ease: "expo.out" }, 5.15)
+        .fromTo("#g1", { x: -160 }, { x: 160, duration: 0.85, ease: "none", immediateRender: false }, 5.15)
+        .fromTo("#g2", { x: 160 }, { x: -160, duration: 0.85, ease: "none", immediateRender: false }, 5.15)
+        .from(["#g1", "#g2"], { opacity: 0, duration: 0.2 }, 5.2);
+      rise(["#m5", "#ar5"], 5.35);
+      prog("#s5", 5.15, 0.85);
+
+      show("#s6", 6.0);
+      lines(["#t6a", "#t6b"], 6.0);
+      tl.from("#cta", { scale: 0.6, opacity: 0, duration: 0.4, ease: "back.out(2.4)" }, 6.4);
+      rise(["#url"], 6.55);
+      tl.fromTo("#cta", { backgroundColor: "rgba(11,11,10,0)", color: "#0b0b0a" }, { backgroundColor: "#0b0b0a", color: "#d4ff3a", duration: 0.12, ease: "none", immediateRender: false }, 7.0);
+      prog("#s6", 6.0, 1.5);
+
+      tl.set({}, {}, 7.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["acid-chrome"] = tl;
+    </script>
+  </body>
+</html>

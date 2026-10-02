@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Mincho Editorial</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@800&family=Noto+Sans+JP:wght@500&family=IBM+Plex+Mono:wght@400;600&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #efece6; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #efece6; color: #141414; font-family: "Shippori Mincho B1", serif; font-weight: 800; }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .cream { background: #efece6; color: #141414; }
+      .red { background: #c8102e; color: #ffffff; }
+      .ink { background: #141414; color: #efece6; }
+      .v { position: absolute; writing-mode: vertical-rl; line-height: 1; letter-spacing: 0.04em; }
+      .h { position: absolute; line-height: 1; white-space: nowrap; }
+      .kicker { position: absolute; font-family: "Noto Sans JP", sans-serif; font-weight: 500; font-size: 34px; color: #6d6c68; }
+      .gloss { position: absolute; font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 22px; letter-spacing: 0.06em; color: #8a8a85; }
+      .outline { color: transparent; -webkit-text-stroke: 3px #141414; }
+      .code { position: absolute; font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 28px; line-height: 1.6; color: #3a3a38; white-space: pre; }
+      .code div { overflow: hidden; white-space: nowrap; width: 0; }
+      #wave { position: absolute; left: 760px; top: 340px; width: 1000px; height: 400px; }
+      .bar { position: absolute; bottom: 200px; width: 12px; background: #efece6; border-radius: 6px; transform-origin: center center; height: 360px; }
+      .sq { position: absolute; top: 640px; width: 64px; height: 64px; border: 4px solid #ffffff; }
+      .sqf { position: absolute; inset: 4px; background: #ffffff; transform-origin: left center; }
+      .seal { position: absolute; left: 1380px; top: 640px; width: 190px; height: 190px; border: 10px solid #c8102e; border-radius: 18px; color: #c8102e; font-size: 130px; display: grid; place-items: center; }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="mincho-editorial" data-width="1920" data-height="1080" data-duration="8">
+      <div id="s1" class="scene cream">
+        <div class="kicker" id="k1" style="left: 160px; top: 140px">頼んだのは、</div>
+        <div class="v outline" id="hito" style="left: 1100px; top: 150px; font-size: 200px">ひとこと</div>
+        <div class="v" id="hitoFill" style="left: 1100px; top: 150px; font-size: 200px">ひとこと</div>
+        <div class="v" id="dake" style="left: 960px; top: 560px; font-size: 96px; color: #c8102e">だけ。</div>
+        <div class="gloss" id="g1" style="left: 160px; bottom: 120px">All I asked for was one line.</div>
+      </div>
+
+      <div id="s2" class="scene red">
+        <div class="v" id="sono" style="left: 1240px; top: 190px; font-size: 240px">其ノ壱</div>
+        <div class="v" id="daihonS" style="left: 1080px; top: 520px; font-size: 80px">台本</div>
+      </div>
+
+      <div id="s3" class="scene cream">
+        <div class="h" id="daihon" style="left: 160px; top: 380px; font-size: 300px">台本</div>
+        <div class="code" id="code" style="left: 1020px; top: 360px">
+          <div>{ "scene": 1, "line": "おはよう、東京。" },</div>
+          <div>{ "scene": 2, "line": "今日の天気は晴れ。" },</div>
+          <div>{ "scene": 3, "line": "いってらっしゃい。" }</div>
+        </div>
+        <div class="gloss" style="left: 160px; bottom: 120px">Part 1 — The script</div>
+      </div>
+
+      <div id="s4" class="scene ink">
+        <div class="h" id="koe" style="left: 180px; top: 330px; font-size: 400px">声</div>
+        <div id="wave"></div>
+        <div class="gloss" style="left: 1060px; top: 200px; color: #8a8a85">voice / take 3 / 0:04</div>
+      </div>
+
+      <div id="s5" class="scene red">
+        <div class="h" id="haku" style="left: 180px; top: 300px; font-size: 400px">拍</div>
+        <div class="h" id="bpm" style="left: 820px; top: 430px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 96px">124 BPM</div>
+        <div id="squares"></div>
+      </div>
+
+      <div id="s6" class="scene cream">
+        <div class="v" id="end1" style="left: 1060px; top: 180px; font-size: 170px">一晩で、</div>
+        <div class="v" id="end2" style="left: 840px; top: 360px; font-size: 170px">できた。</div>
+        <div class="seal" id="seal">完</div>
+        <div class="gloss" id="g6" style="left: 160px; bottom: 120px">Script, voice and beat — finished in one night.</div>
+      </div>
+    </div>
+
+    <script>
+      var B = 60 / 124;
+      var wave = document.getElementById("wave");
+      for (var i = 0; i < 44; i++) {
+        var b = document.createElement("div");
+        b.className = "bar";
+        b.style.left = i * 22 + "px";
+        b.style.top = "20px";
+        wave.appendChild(b);
+      }
+      var sqs = document.getElementById("squares");
+      for (var j = 0; j < 8; j++) {
+        var s = document.createElement("div");
+        s.className = "sq";
+        s.style.left = 820 + j * 88 + "px";
+        s.innerHTML = '<div class="sqf"></div>';
+        sqs.appendChild(s);
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+
+      show("#s1", 0, 5 * B);
+      gsap.set("#hitoFill", { clipPath: "inset(0% 0% 100% 0%)" });
+      tl.from("#k1", { opacity: 0, x: -20, duration: 0.3, ease: "power2.out" }, 0.05)
+        .from("#hito", { opacity: 0, y: -40, duration: 0.5, ease: "power3.out" }, B * 0.5)
+        .to("#hitoFill", { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "power2.inOut" }, B * 2)
+        .from("#dake", { opacity: 0, scale: 1.4, duration: 0.25, ease: "power4.out" }, B * 3)
+        .from("#g1", { opacity: 0, duration: 0.3 }, B * 3.2);
+
+      show("#s2", 5 * B, 6 * B);
+      tl.from("#sono", { scale: 1.25, opacity: 0, duration: 0.22, ease: "power4.out" }, 5 * B)
+        .from("#daihonS", { opacity: 0, duration: 0.15 }, 5.4 * B);
+
+      show("#s3", 6 * B, 8 * B);
+      tl.from("#daihon", { x: -60, opacity: 0, duration: 0.3, ease: "expo.out" }, 6 * B);
+      gsap.utils.toArray("#code div").forEach(function (line, k) {
+        tl.to(line, { width: "auto", duration: 0.28, ease: "steps(18)" }, 6.3 * B + k * 0.3);
+      });
+
+      show("#s4", 8 * B, 11 * B);
+      tl.from("#koe", { scale: 1.3, opacity: 0, duration: 0.25, ease: "power4.out" }, 8 * B);
+      var bars = gsap.utils.toArray(".bar");
+      gsap.set(bars, { scaleY: 0.02 });
+      for (var beat = 0; beat < 3; beat++) {
+        tl.to(bars, {
+          scaleY: function (i) { var x = i / 43; return 0.08 + 0.92 * Math.abs(Math.sin(x * Math.PI * (2 + beat)) * Math.sin(x * Math.PI)); },
+          duration: B * 0.45, ease: "power3.out"
+        }, (8 + beat) * B + 0.04)
+          .to(bars, { scaleY: function (i) { return 0.05 + 0.1 * Math.abs(Math.sin(i * 0.7)); }, duration: B * 0.4, ease: "power2.in" }, (8 + beat) * B + B * 0.55);
+      }
+
+      show("#s5", 11 * B, 14 * B);
+      tl.from("#haku", { scale: 1.3, opacity: 0, duration: 0.25, ease: "power4.out" }, 11 * B)
+        .from("#bpm", { opacity: 0, x: 30, duration: 0.25, ease: "power3.out" }, 11.3 * B);
+      gsap.set(".sqf", { scaleX: 0 });
+      gsap.utils.toArray(".sqf").forEach(function (f, k) {
+        tl.to(f, { scaleX: 1, duration: 0.08, ease: "none" }, 11 * B + k * B * 0.35 + 0.1);
+      });
+
+      show("#s6", 14 * B);
+      tl.from("#end1", { opacity: 0, y: -50, duration: 0.4, ease: "power3.out" }, 14 * B)
+        .from("#end2", { opacity: 0, y: -50, duration: 0.4, ease: "power3.out" }, 14.5 * B)
+        .from("#seal", { scale: 2.2, rotation: -18, opacity: 0, duration: 0.22, ease: "power4.in" }, 15.4 * B)
+        .to("#seal", { x: 4, duration: 0.05, yoyo: true, repeat: 3, ease: "none" }, 15.4 * B + 0.22)
+        .from("#g6", { opacity: 0, duration: 0.3 }, 15.8 * B);
+
+      tl.set({}, {}, 8);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["mincho-editorial"] = tl;
+    </script>
+  </body>
+</html>

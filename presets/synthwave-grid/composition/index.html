@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Synthwave Grid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Monoton&family=Mr+Dafoe&family=VT323&display=block" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #07021a; }
+      #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #07021a; color: #fff; font-family: "VT323", monospace; }
+      #world { position: absolute; inset: 0; }
+      .sky { position: absolute; left: 0; right: 0; top: 0; height: 640px; background: linear-gradient(180deg, #07021a 0%, #1d0640 38%, #5a0f6e 70%, #c2237f 92%, #ff5f9e 100%); }
+      #stars { position: absolute; left: 0; top: 0; }
+      .sunglow { position: absolute; left: 560px; top: 120px; width: 800px; height: 800px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 90, 160, 0.55) 0%, rgba(255, 60, 140, 0.18) 45%, transparent 70%); }
+      #sunsvg, #mtn { position: absolute; left: 0; top: 0; }
+      .floor { position: absolute; left: 0; right: 0; top: 640px; bottom: 0; overflow: hidden; background: linear-gradient(180deg, #2a0640 0%, #0c0220 30%, #07021a 100%); }
+      #plane { position: absolute; left: -1540px; top: 0; width: 5000px; height: 470px; transform-origin: 50% 0; transform: perspective(600px) rotateX(76deg);
+        background-image: linear-gradient(90deg, #ff3fd8 0 4px, transparent 4px), linear-gradient(0deg, #2ff3ff 0 4px, transparent 4px);
+        background-size: 110px 100%, 100% 64px; filter: drop-shadow(0 0 6px #ff3fd8); }
+      .haze { position: absolute; left: 0; right: 0; top: 0; height: 170px; background: linear-gradient(180deg, rgba(255, 95, 158, 0.85) 0%, rgba(140, 20, 120, 0.4) 35%, transparent 100%); }
+      .scene { position: absolute; inset: 0; visibility: hidden; }
+      .center { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+      .chrome { display: inline-block; font-family: "Bungee", sans-serif; transform: skewX(-10deg); color: transparent; -webkit-text-stroke: 2px #ffffff;
+        background-image: linear-gradient(100deg, transparent 42%, rgba(255, 255, 255, 0.95) 50%, transparent 58%), linear-gradient(180deg, #f8fcff 0%, #9cd9ff 40%, #24165c 51%, #ff7fd4 55%, #ffe9f8 82%, #ffffff 100%);
+        background-size: 200% 100%, 100% 100%; background-repeat: no-repeat; -webkit-background-clip: text; background-clip: text;
+        filter: drop-shadow(0 7px 0 #3b0b62) drop-shadow(0 0 22px rgba(255, 63, 216, 0.8)); }
+      .script { display: inline-block; font-family: "Mr Dafoe", cursive; color: #ffe1f6; transform: rotate(-7deg);
+        text-shadow: 0 0 6px #ff4fd8, 0 0 18px #ff2fa0, 0 0 42px #ff2fa0; }
+      .neon { font-family: "Monoton", cursive; word-spacing: 0.35em; color: #c9fbff; text-shadow: 0 0 8px #2ff3ff, 0 0 24px #2ff3ff, 0 0 60px #1aa3ff; }
+      .mono { font-size: 46px; letter-spacing: 0.32em; padding-left: 0.32em; color: #fff; text-shadow: 0 0 10px #ff3fd8; }
+      .band { display: inline-block; background: rgba(7, 2, 26, 0.72); border-top: 2px solid #ff3fd8; border-bottom: 2px solid #ff3fd8; padding: 6px 34px 2px; }
+      .hud { position: absolute; font-size: 54px; color: #f2f2ff; text-shadow: 2px 0 #ff2f7a, -2px 0 #2ff3ff; letter-spacing: 0.06em; }
+      #glitch { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+      .gbar { position: absolute; left: 0; width: 1920px; mix-blend-mode: screen; }
+      #track { position: absolute; left: 0; width: 1920px; height: 90px; top: -120px; opacity: 0.55;
+        background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.7) 0 3px, transparent 3px 11px, rgba(255, 255, 255, 0.35) 11px 13px, transparent 13px 29px); }
+      .scan { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.28) 0 2px, transparent 2px 4px); }
+      .vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%); }
+    </style>
+  </head>
+  <body>
+    <div id="stage" data-composition-id="synthwave-grid" data-width="1920" data-height="1080" data-duration="7.5">
+      <div id="world">
+        <div class="sky"></div>
+        <svg id="stars" width="1920" height="640" viewBox="0 0 1920 640"></svg>
+        <div class="sunglow" id="sunglow"></div>
+        <svg id="sunsvg" width="1920" height="640" viewBox="0 0 1920 640">
+          <defs>
+            <linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff07a" />
+              <stop offset="0.45" stop-color="#ff9d3c" />
+              <stop offset="1" stop-color="#ff2a8a" />
+            </linearGradient>
+            <mask id="sunMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="640">
+              <rect width="1920" height="640" fill="#fff" />
+              <g id="bands"></g>
+            </mask>
+          </defs>
+          <g id="sun"><circle cx="960" cy="470" r="290" fill="url(#sunGrad)" mask="url(#sunMask)" /></g>
+        </svg>
+        <svg id="mtn" width="1920" height="640" viewBox="0 0 1920 640">
+          <g id="mtnL"></g>
+          <g id="mtnR"></g>
+        </svg>
+        <div class="floor"><div id="plane"></div><div class="haze"></div></div>
+
+        <div id="s1" class="scene">
+          <div class="center mono" id="pres" style="top: 130px; font-size: 52px">NEON CIRCUIT AUDIO PRESENTS</div>
+        </div>
+
+        <div id="s2" class="scene">
+          <div class="center" id="t1" style="top: 220px; font-size: 230px; line-height: 1"><span class="chrome" id="chrome1">STARLINE</span></div>
+          <div class="center" id="sc1" style="top: 400px; left: 560px; font-size: 190px; line-height: 1.2"><span class="script">Night Drive</span></div>
+          <div class="center" id="sub1" style="top: 880px"><span class="mono band">ANALOG DREAM POLYSYNTH</span></div>
+        </div>
+
+        <div id="s3" class="scene">
+          <div class="center neon" id="w1" style="top: 280px; font-size: 168px">64 VOICES</div>
+          <div class="center neon" id="w2" style="top: 280px; font-size: 168px">TAPE DRIFT</div>
+          <div class="center neon" id="w3" style="top: 280px; font-size: 168px">ZERO LAG</div>
+          <div class="center" id="c1" style="top: 880px"><span class="mono band">PER INSTANCE · UNISON X8</span></div>
+          <div class="center" id="c2" style="top: 880px"><span class="mono band">WOW &amp; FLUTTER BUILT IN</span></div>
+          <div class="center" id="c3" style="top: 880px"><span class="mono band">UNDER 1 MS · ANY DAW</span></div>
+        </div>
+
+        <div id="s4" class="scene">
+          <div class="center" id="t2" style="top: 210px; font-size: 176px; line-height: 1"><span class="chrome" id="chrome2">STARLINE 86</span></div>
+          <div class="center" id="sc2" style="top: 360px; left: 520px; font-size: 128px; line-height: 1.3"><span class="script">see you on the grid</span></div>
+          <div class="center" id="sub2" style="top: 880px"><span class="mono band">OUT NOW · VST3 / AU / CLAP</span></div>
+        </div>
+      </div>
+
+      <div id="glitch">
+        <div class="gbar" style="top: 140px; height: 26px; background: rgba(47, 243, 255, 0.55)"></div>
+        <div class="gbar" style="top: 410px; height: 70px; background: rgba(255, 63, 216, 0.45)"></div>
+        <div class="gbar" style="top: 610px; height: 14px; background: rgba(255, 255, 255, 0.8)"></div>
+        <div class="gbar" style="top: 760px; height: 48px; background: rgba(47, 243, 255, 0.4)"></div>
+        <div class="gbar" style="top: 960px; height: 20px; background: rgba(255, 255, 255, 0.55)"></div>
+      </div>
+      <div id="track"></div>
+
+      <div class="hud" style="left: 80px; top: 54px">▶ PLAY</div>
+      <div class="hud" id="tc" style="right: 80px; top: 54px">SP 0:00:00</div>
+      <div class="hud" style="left: 80px; bottom: 50px; font-size: 46px">OCT.17 1986</div>
+      <div class="hud" id="ch" style="right: 80px; bottom: 50px; font-size: 46px">CH 01</div>
+      <div class="scan"></div>
+      <div class="vig"></div>
+    </div>
+
+    <script>
+      var seed = 86;
+      function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+      var NS = "http://www.w3.org/2000/svg";
+      function el(tag, attrs, parent) {
+        var e = document.createElementNS(NS, tag);
+        for (var k in attrs) e.setAttribute(k, attrs[k]);
+        parent.appendChild(e);
+        return e;
+      }
+
+      var stars = document.getElementById("stars");
+      for (var i = 0; i < 90; i++) {
+        el("circle", { cx: (rnd() * 1920).toFixed(1), cy: (rnd() * 520).toFixed(1), r: (0.8 + rnd() * 1.8).toFixed(1), fill: "#fff", class: i % 4 === 0 ? "tw" : "", opacity: (0.35 + rnd() * 0.6).toFixed(2) }, stars);
+      }
+
+      var bands = document.getElementById("bands");
+      for (var b = 0; b < 9; b++) el("rect", { x: 600, y: 470 + b * 36, width: 720, height: 3 + b * 3, fill: "#000" }, bands);
+
+      function ridge(g, pts, base) {
+        var d = "M" + pts.map(function (p) { return p[0] + " " + p[1]; }).join(" L") + " Z";
+        el("path", { d: d, fill: "#12042b", stroke: "#ff3fd8", "stroke-width": "3", "stroke-linejoin": "round" }, g);
+        for (var k = 1; k < pts.length - 1; k++) {
+          el("path", { d: "M" + pts[k][0] + " " + pts[k][1] + " L" + (pts[k][0] + (k % 2 ? 60 : -50)) + " " + base, stroke: "#2ff3ff", "stroke-width": "1.5", opacity: "0.55" }, g);
+        }
+      }
+      ridge(document.getElementById("mtnL"), [[0, 640], [0, 520], [110, 470], [220, 540], [360, 430], [520, 560], [640, 500], [780, 640]], 640);
+      ridge(document.getElementById("mtnR"), [[1140, 640], [1260, 510], [1380, 560], [1530, 420], [1660, 530], [1790, 470], [1920, 540], [1920, 640]], 640);
+      document.getElementById("mtn").style.filter = "drop-shadow(0 0 8px #ff3fd8)";
+
+      var tl = gsap.timeline({ paused: true });
+      function show(id, from, to) {
+        tl.set(id, { visibility: "visible" }, from);
+        if (to !== undefined) tl.set(id, { visibility: "hidden" }, to);
+      }
+      function glitch(at, ch) {
+        tl.set("#world", { x: -34, skewX: 9 }, at)
+          .set("#glitch", { opacity: 1, y: 0 }, at)
+          .set("#world", { x: 22, skewX: -6 }, at + 0.04)
+          .set("#glitch", { y: 90 }, at + 0.06)
+          .set("#world", { x: -8, skewX: 2 }, at + 0.09)
+          .set("#world", { x: 0, skewX: 0 }, at + 0.13)
+          .set("#glitch", { opacity: 0 }, at + 0.16)
+          .fromTo("#track", { y: 0 }, { y: 1300, duration: 0.32, ease: "none", immediateRender: false }, at)
+          .set("#ch", { textContent: ch }, at);
+      }
+
+      tl.to("#plane", { backgroundPosition: "0px 0px, 0px 1540px", duration: 7.5, ease: "none" }, 0);
+      tl.fromTo("#bands", { y: 0 }, { y: -36, duration: 0.9, ease: "none", repeat: 7 }, 0);
+      tl.fromTo("#sun", { y: 230 }, { y: 0, duration: 1.8, ease: "power2.out" }, 0)
+        .fromTo("#sunglow", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 1.8, ease: "power2.out" }, 0)
+        .fromTo("#mtnL", { y: 120 }, { y: 0, duration: 1.4, ease: "expo.out" }, 0.1)
+        .fromTo("#mtnR", { y: 120 }, { y: 0, duration: 1.4, ease: "expo.out" }, 0.2)
+        .fromTo("#stars", { opacity: 0 }, { opacity: 1, duration: 1, ease: "power1.out" }, 0)
+        .to(".tw", { opacity: 0.1, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 11, stagger: 0.07 }, 0.6)
+        .to("#sun", { y: 40, duration: 5.69, ease: "sine.inOut" }, 1.81);
+
+      var tc = { t: 0 };
+      tl.to(tc, { t: 7.5, duration: 7.5, ease: "none", onUpdate: function () {
+        var f = Math.floor(tc.t * 30), s = Math.floor(f / 30), fr = f % 30;
+        document.getElementById("tc").textContent = "SP 0:00:0" + s + ":" + (fr < 10 ? "0" : "") + fr;
+      } }, 0);
+
+      show("#s1", 0, 1.7);
+      gsap.set("#pres", { opacity: 0 });
+      tl.fromTo("#pres", { opacity: 0, scaleX: 1.4, filter: "blur(8px)" }, { opacity: 1, scaleX: 1, filter: "blur(0px)", duration: 0.9, ease: "expo.out" }, 0.35);
+
+      glitch(1.7, "CH 02");
+      show("#s2", 1.7, 4.4);
+      tl.fromTo("#t1", { scaleX: 1.7, scaleY: 0.6, opacity: 0, y: -40 }, { scaleX: 1, scaleY: 1, opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 1.7)
+        .fromTo("#chrome1", { backgroundPosition: "160% 0%, 0% 0%" }, { backgroundPosition: "-60% 0%, 0% 0%", duration: 1.1, ease: "power2.inOut" }, 2.15)
+        .fromTo("#sc1", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.75, ease: "power2.out" }, 2.1)
+        .fromTo("#sub1", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 2.6)
+        .to("#t1", { scale: 1.04, duration: 1.7, ease: "sine.inOut" }, 2.4)
+        .to("#chrome1", { backgroundPosition: "160% 0%, 0% 0%", duration: 0.9, ease: "power2.inOut" }, 3.4);
+
+      var words = [["#w1", "#c1", 4.4, "CH 03"], ["#w2", "#c2", 4.95, "CH 04"], ["#w3", "#c3", 5.5, "CH 05"]];
+      show("#s3", 4.4, 6.0);
+      words.forEach(function (w, i) {
+        var at = w[2], end = i < 2 ? words[i + 1][2] : 6.0;
+        glitch(at, w[3]);
+        gsap.set([w[0], w[1]], { opacity: 0 });
+        tl.set([w[0], w[1]], { opacity: 1 }, at)
+          .fromTo(w[0], { scale: 1.35 }, { scale: 1, duration: 0.42, ease: "expo.out" }, at)
+          .fromTo(w[0], { textShadow: "0 0 0px #2ff3ff" }, { textShadow: "0 0 8px #2ff3ff, 0 0 24px #2ff3ff, 0 0 60px #1aa3ff", duration: 0.2, ease: "power1.out" }, at + 0.05)
+          .fromTo(w[1], { y: 24 }, { y: 0, duration: 0.3, ease: "power3.out" }, at + 0.06)
+          .set([w[0], w[1]], { opacity: 0 }, end);
+      });
+
+      glitch(6.0, "CH 06");
+      show("#s4", 6.0);
+      tl.fromTo("#t2", { scaleX: 1.6, scaleY: 0.7, opacity: 0 }, { scaleX: 1, scaleY: 1, opacity: 1, duration: 0.55, ease: "expo.out" }, 6.02)
+        .fromTo("#chrome2", { backgroundPosition: "160% 0%, 0% 0%" }, { backgroundPosition: "-60% 0%, 0% 0%", duration: 1, ease: "power2.inOut" }, 6.35)
+        .fromTo("#sc2", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.7, ease: "power2.out" }, 6.35)
+        .fromTo("#sub2", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 6.75);
+
+      tl.set({}, {}, 7.5);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["synthwave-grid"] = tl;
+    </script>
+  </body>
+</html>
