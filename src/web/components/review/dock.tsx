@@ -116,7 +116,8 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     </span>
   );
 
-  const canFinish = !finishing && (draftCount > 0 || text.trim().length > 0);
+  const typing = text.trim().length > 0;
+  const canFinish = !finishing && (draftCount > 0 || typing);
   const finishRef = useRef(() => {});
   useLayoutEffect(() => {
     finishRef.current = () => {
@@ -166,8 +167,8 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
               if (e.key === "Escape") (e.target as HTMLTextAreaElement).blur();
             }}
           />
-          <button type="button" className="fc-btn sm" onClick={onAdd} disabled={adding || !text.trim()} title="Add comment (Enter)">
-            Add <span className="fc-kbd">↩</span>
+          <button type="button" className={`fc-btn sm${typing ? " primary" : ""}`} onClick={onAdd} disabled={adding || !typing} title="Add comment (Enter)">
+            Add comment <span className="fc-kbd">↩</span>
           </button>
         </div>
       </div>
@@ -176,7 +177,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
         <button
           type="button"
           data-testid="send-to-agent"
-          className="fc-btn primary"
+          className={`fc-btn ${finishing || (draftCount > 0 && !typing) ? "primary" : "outline"}`}
           onClick={onFinish}
           disabled={!canFinish}
           title={canFinish ? `Lock this version's comments and hand them to your agent (${FINISH_KEYS}). You can still reopen them.` : "Add a comment first"}
