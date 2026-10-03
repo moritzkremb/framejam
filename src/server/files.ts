@@ -14,6 +14,8 @@ const MIME: Record<string, string> = {
   ".jpeg": "image/jpeg",
   ".webp": "image/webp",
   ".gif": "image/gif",
+  ".ico": "image/x-icon",
+  ".webmanifest": "application/manifest+json",
   ".mp4": "video/mp4",
   ".webm": "video/webm",
   ".mov": "video/quicktime",

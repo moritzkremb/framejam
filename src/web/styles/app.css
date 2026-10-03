@@ -59,9 +59,11 @@ a { color: inherit; }
 .fc-nav a.ext .fc-i { color: var(--text-3); }
 .fc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .fc-link { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
-@media (max-width: 760px) {
+@media (max-width: 1000px) {
   .fc-feedback-trigger .lbl { display: none; }
   .fc-style-chip .lbl { display: none; }
+}
+@media (max-width: 760px) {
   .fc-nav a.docs { display: none; }
 }
 @media (max-width: 680px) {
