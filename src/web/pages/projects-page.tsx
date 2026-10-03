@@ -154,7 +154,7 @@ export function ProjectsPage() {
               </div>
             )}
 
-            {agent && <CommunityCard />}
+            {agent && <CommunityCard source="app-projects" />}
 
             {agent && (
               <div className="fc-row fc-home-foot" style={{ justifyContent: "space-between" }} data-testid="setup-collapsed">

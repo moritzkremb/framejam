@@ -53,8 +53,7 @@ a { color: inherit; }
 .fc-updates-done { display: flex; align-items: center; gap: 8px; color: var(--text-2); font: 400 13px/19px var(--font-sans); }
 .fc-updates-done .fc-i { color: var(--positive); flex: none; }
 .fc-updates-done b { color: var(--text); font-weight: 500; overflow-wrap: anywhere; }
-.fc-styles-foot { display: flex; flex-direction: column; gap: 12px; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
-.fc-styles-foot .fc-updates { max-width: 440px; }
+.fc-styles-foot { margin-top: var(--space-4); }
 .fc-prompt { display: flex; align-items: flex-start; gap: 12px; padding: 12px 10px 12px 14px; border-radius: var(--radius-md); background: var(--surface-2); }
 .fc-prompt p { flex: 1; min-width: 0; margin: 0; font: 400 12.5px/19px var(--font-mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .fc-prompt .fc-btn { flex: none; }

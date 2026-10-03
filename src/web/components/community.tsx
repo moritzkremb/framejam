@@ -23,7 +23,7 @@ function writeStorage(key: string, value: string) {
 type FormState = { kind: "idle" } | { kind: "sending" } | { kind: "error"; message: string };
 
 /** Email signup for FrameJam news. Posts to the website, which stores it with the site's signups. */
-export function UpdatesForm({ source, hint = true }: { source: string; hint?: boolean }) {
+export function UpdatesForm({ source }: { source: string }) {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(() => readStorage(SUBSCRIBED_KEY));
   const [state, setState] = useState<FormState>({ kind: "idle" });
@@ -85,19 +85,17 @@ export function UpdatesForm({ source, hint = true }: { source: string; hint?: bo
           Get updates
         </button>
       </div>
-      {state.kind === "error" ? (
+      {state.kind === "error" && (
         <p className="fc-caption err" role="alert">
           {state.message}
         </p>
-      ) : (
-        hint && <p className="fc-caption">New styles and releases. No spam.</p>
       )}
     </form>
   );
 }
 
 /** The community pitch, with the email signup as the lighter option underneath. */
-export function CommunityCard() {
+export function CommunityCard({ source }: { source: string }) {
   return (
     <section className="fc-card fc-community" aria-labelledby="community-title" data-testid="community-card">
       <div className="part">
@@ -120,7 +118,7 @@ export function CommunityCard() {
           <div className="t">Stay in the loop</div>
           <p className="fc-caption">New styles and updates when they ship. No spam.</p>
         </div>
-        <UpdatesForm source="app-projects" hint={false} />
+        <UpdatesForm source={source} />
       </div>
     </section>
   );
