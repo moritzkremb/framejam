@@ -22,7 +22,7 @@ function writeStorage(key: string, value: string) {
 
 type FormState = { kind: "idle" } | { kind: "sending" } | { kind: "error"; message: string };
 
-/** Email signup for Frame Jam news. Posts to the website, which stores it with the site's signups. */
+/** Email signup for FrameJam news. Posts to the website, which stores it with the site's signups. */
 export function UpdatesForm({ source, hint = true }: { source: string; hint?: boolean }) {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(() => readStorage(SUBSCRIBED_KEY));
@@ -106,7 +106,7 @@ export function CommunityCard() {
             Get better at AI video, faster
           </h2>
           <p className="fc-caption">
-            Join Prompt Warrior, the community from the maker of Frame Jam: weekly calls with feedback on your videos, new
+            Join Prompt Warrior, the community from the maker of FrameJam: weekly calls with feedback on your videos, new
             styles first, and early features.
           </p>
         </div>

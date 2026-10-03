@@ -10,7 +10,7 @@ export const DOCS_URL = "https://framejam.ai";
 
 export function Wordmark() {
   return (
-    <Link to="/" className="fc-logo" aria-label="Frame Jam projects">
+    <Link to="/" className="fc-logo" aria-label="FrameJam projects">
       <img className="on-dark" src="/brand/lockup.svg" alt="" />
       <img className="on-light" src="/brand/lockup-light.svg" alt="" />
     </Link>

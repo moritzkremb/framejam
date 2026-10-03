@@ -103,7 +103,7 @@ export interface Review {
   batches: FeedbackBatch[];
   /** Computed by the API, not stored: an agent is in (or between) wait_for_feedback calls for this review. */
   agentListening?: boolean;
-  /** The agent's Frame Jam process started before the current build, so it may lack newer features (like the listening heartbeat). */
+  /** The agent's FrameJam process started before the current build, so it may lack newer features (like the listening heartbeat). */
   agentOutdated?: boolean;
 }
 

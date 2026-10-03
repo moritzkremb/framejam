@@ -179,7 +179,7 @@ export function StyleDetailPage() {
   const { preset } = data;
   const inUse = selection.selected === preset.id;
   const vertical = preset.height > preset.width;
-  const agentPrompt = `Use the Frame Jam style "${preset.name}" (id: ${preset.id}). Call get_preset("${preset.id}") and follow its style guide, palette, fonts and easing when building the Hyperframes composition.`;
+  const agentPrompt = `Use the FrameJam style "${preset.name}" (id: ${preset.id}). Call get_preset("${preset.id}") and follow its style guide, palette, fonts and easing when building the Hyperframes composition.`;
   const guideLines = preset.guide
     .split("\n")
     .map((l) => l.replace(/^\s*[-*•]\s*/, "").trim())

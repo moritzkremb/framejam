@@ -246,7 +246,7 @@ export function createApp(ctx: McpContext) {
     const index = path.join(webDistDir, "index.html");
     if (fs.existsSync(index)) return sendFile(index, c.req.raw);
     return c.html(
-      "<p style='font-family:sans-serif'>The Frame Jam UI is not built yet. Run <code>npm run build</code>, or use <code>npm run dev</code> and open port 2401.</p>",
+      "<p style='font-family:sans-serif'>The FrameJam UI is not built yet. Run <code>npm run build</code>, or use <code>npm run dev</code> and open port 2401.</p>",
     );
   });
 

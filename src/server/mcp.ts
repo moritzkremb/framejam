@@ -20,12 +20,12 @@ export interface McpContext {
 
 const MAX_IMAGES = 6;
 
-const serverInstructions = (baseUrl: string) => `Frame Jam lets the user review Hyperframes videos (and storyboards: a sequence of still panels) and pick style presets.
-First, open the Frame Jam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool.
+const serverInstructions = (baseUrl: string) => `FrameJam lets the user review Hyperframes videos (and storyboards: a sequence of still panels) and pick style presets.
+First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool.
 Loop: (optional) get_selected_preset / list_presets -> build the composition -> render -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
-If the user says "apply my Frame Jam feedback" (with or without a review id), call get_feedback.`;
+If the user says "apply my FrameJam feedback" (with or without a review id), call get_feedback.`;
 
 const panelsSchema = z
   .array(
@@ -263,7 +263,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Get review feedback",
       description:
-        "Return the user's comments without waiting. Use when the user says 'apply my Frame Jam feedback'. reviewId is optional: without it, " +
+        "Return the user's comments without waiting. Use when the user says 'apply my FrameJam feedback'. reviewId is optional: without it, " +
         "the review whose feedback hasn't reached you yet is used. If the user wrote comments but never pressed Finish review, they are sent now " +
         "(this locks that version, as Finish review would). include='all' returns every version's comments.",
       inputSchema: {

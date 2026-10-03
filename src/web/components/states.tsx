@@ -23,7 +23,7 @@ export function Offline() {
       <span className="ic" style={{ color: "var(--danger)", background: "var(--danger-soft)" }}>
         <WifiOff className="fc-i" />
       </span>
-      <div className="fc-h3">Frame Jam isn't running</div>
+      <div className="fc-h3">FrameJam isn't running</div>
       <p>Start it again in your terminal, and this page reconnects by itself.</p>
       <div style={{ marginTop: 8, width: "100%", maxWidth: 320 }}>
         <CodeBlock code="npx framejam" />

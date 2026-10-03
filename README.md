@@ -1,6 +1,6 @@
 <div align="center">
 
-# Frame Jam
+# FrameJam
 
 **Make videos with your coding agent, and tell it what to change by pointing at the screen.**
 
@@ -12,17 +12,17 @@ Your agent gets the exact timestamp, the element you clicked and the animation b
 
 <br>
 
-<img src="docs/images/review.jpg" alt="The Frame Jam review page: a video with a timeline, a range selected on the filmstrip and a comment in the sidebar" width="860">
+<img src="docs/images/review.jpg" alt="The FrameJam review page: a video with a timeline, a range selected on the filmstrip and a comment in the sidebar" width="860">
 
 </div>
 
 <br>
 
-## Why Frame Jam
+## Why FrameJam
 
 Coding agents are surprisingly good at making motion graphics with [Hyperframes](https://github.com/heygen-com/hyperframes).
 The hard part is everything around it. Describing a look in words is slow, and "the thing at around three seconds
-should be bigger" is a terrible way to give feedback. Frame Jam is a small app that sits next to your agent
+should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
 (Cursor, Claude Code, ChatGPT desktop) and handles both.
 
 **Pick a style instead of describing one.** Browse 42 example videos and press *Use*. Your agent gets the full
@@ -41,7 +41,7 @@ you can always see what changed and why.
 ## How it works
 
 1. **Pick a look** on the Styles page.
-2. **Ask your agent** for a video, for example *"make a 7-second launch teaser with Frame Jam and open it for review"*.
+2. **Ask your agent** for a video, for example *"make a 7-second launch teaser with FrameJam and open it for review"*.
 3. **Review it** in the browser pane next to your chat: click, type, drag, then press **Finish review**.
 4. **Get version 2.** The agent applies your notes and the page switches to the new version on its own. Repeat
    until you love it.
@@ -74,12 +74,12 @@ projects and shows whose turn it is on each one.
 
 ### Get great at making videos with AI
 
-Frame Jam is free and open source. If you want to get really good with it, join
-**[Prompt Warrior](https://www.skool.com/promptwarrior)**, the community from the maker of Frame Jam:
+FrameJam is free and open source. If you want to get really good with it, join
+**[Prompt Warrior](https://www.skool.com/promptwarrior)**, the community from the maker of FrameJam:
 
-- **Learn the workflow.** Training for making videos with Frame Jam in Claude Code and Cursor.
+- **Learn the workflow.** Training for making videos with FrameJam in Claude Code and Cursor.
 - **New styles first.** Get new presets before anyone else.
-- **Early access.** Try new Frame Jam features before they ship.
+- **Early access.** Try new FrameJam features before they ship.
 - **Weekly calls.** Bring your videos, get feedback, and see what others are making.
 
 **[Join Prompt Warrior →](https://www.skool.com/promptwarrior)**
@@ -187,7 +187,7 @@ side automatically (headless Chrome) and saves screenshots.
 </tr>
 </table>
 
-Frame Jam ships with 42 styles, in 16:9, 9:16 and 1:1:
+FrameJam ships with 42 styles, in 16:9, 9:16 and 1:1:
 
 **Swiss Editorial**, **Neon Terminal**, **Soft Gradient SaaS**, **Kinetic Captions** (9:16), **Noir Quote**,
 **Data Story**, **Retro Pop** (1:1), **Mono Changelog**, **Paper Marker**, **Bauhaus Grid** (1:1), **Dot Matrix**,
@@ -247,7 +247,7 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
   time and range comments as a note in the top-left corner. The cursor over the video is a comment bubble.
 - **Agent listening.** The page says "Agent listening" while the agent is inside `wait_for_feedback` (and for 15
   seconds between its calls). That only happens while the agent's turn is still running: once it ends its turn, nobody
-  is listening, and after you finish the page shows one line to paste into the chat ("Apply my Frame Jam feedback for
+  is listening, and after you finish the page shows one line to paste into the chat ("Apply my FrameJam feedback for
   rev_…"). It switches to "Your agent is making version N" once the agent picks the comments up.
 - **What plays.** The latest version plays the live composition (with the official Hyperframes runtime injected from
   `@hyperframes/core`), so clicks can target elements. Older versions play their mp4 snapshot, so they look as they
@@ -295,7 +295,7 @@ for v2 and v1 still shows what it was.
 | --- | --- |
 | `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
 | `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again. Sends progress notifications while waiting. |
-| `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my Frame Jam feedback". |
+| `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
 | `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
 | `add_version({ reviewId, videoPath?, compositionDir?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
@@ -329,9 +329,9 @@ npm run lint
 | `src/server/store.ts` | JSON file store. Every call re-reads from disk, so several processes can share `~/.framejam`. |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, composition serving, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). `lib/composition.ts` handles live playback and element/tween resolution. |
-| `design/` | The Frame Jam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
+| `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
 | `skills/framejam/` | The agent skill (also mirrored as the Cursor rule in `.cursor/rules/framejam.mdc`). |
-| `videos/framejam-landing/` | Hyperframes source for the Frame Jam landing video (sources only; renders aren't committed). |
+| `videos/framejam-landing/` | Hyperframes source for the FrameJam landing video (sources only; renders aren't committed). |
 
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), and `FRAMEJAM_PUBLIC_URL` (the base URL used in links).

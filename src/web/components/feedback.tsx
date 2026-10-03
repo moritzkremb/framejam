@@ -21,7 +21,7 @@ function storedEmail() {
 
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
-/** Header button that sends a short note straight to the maker of Frame Jam. */
+/** Header button that sends a short note straight to the maker of FrameJam. */
 export function FeedbackButton() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -89,7 +89,7 @@ export function FeedbackButton() {
           ) : (
             <form onSubmit={send}>
               <div className="t">Send feedback</div>
-              <p className="fc-caption">Goes straight to Moritz, who makes Frame Jam. Bugs, ideas, anything.</p>
+              <p className="fc-caption">Goes straight to Moritz, who makes FrameJam. Bugs, ideas, anything.</p>
               <textarea
                 className="fc-input"
                 aria-label="Your feedback"

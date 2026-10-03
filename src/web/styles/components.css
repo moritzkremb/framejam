@@ -1,5 +1,5 @@
 
-/* Frame Jam components. Source of truth: design/components/bundle.css; app-only rules live in app.css. */
+/* FrameJam components. Source of truth: design/components/bundle.css; app-only rules live in app.css. */
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 400 14px/21px var(--font-sans); -webkit-font-smoothing: antialiased; }
 :where(a, button, input, textarea, [tabindex]):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

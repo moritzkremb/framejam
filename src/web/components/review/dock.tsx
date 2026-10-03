@@ -16,7 +16,7 @@ function elementName(el?: ElementInfo) {
 }
 
 const OUTDATED_HELP =
-  "Your agent is running Frame Jam from before the last update, so this page can't tell whether it's listening. Restart the framejam MCP server in your agent (Cursor: Settings → MCP) to fix it.";
+  "Your agent is running FrameJam from before the last update, so this page can't tell whether it's listening. Restart the framejam MCP server in your agent (Cursor: Settings → MCP) to fix it.";
 
 export function AgentLine({ listening, outdated, className }: { listening: boolean; outdated?: boolean; className?: string }) {
   if (outdated && !listening) {
@@ -32,8 +32,8 @@ export function AgentLine({ listening, outdated, className }: { listening: boole
       className={cn("fc-agent fc-grow", listening && "waiting", className)}
       title={
         listening
-          ? "Your agent is waiting in Frame Jam. It gets your comments the moment you finish."
-          : "Your agent isn't waiting in Frame Jam right now. After you finish, you'll get one line to paste into your chat."
+          ? "Your agent is waiting in FrameJam. It gets your comments the moment you finish."
+          : "Your agent isn't waiting in FrameJam right now. After you finish, you'll get one line to paste into your chat."
       }
     >
       <span className="dot" />

@@ -3,15 +3,15 @@ name: framejam
 description: Build Hyperframes videos and storyboards with the user in the loop. Use when making or editing an HTML/GSAP/Hyperframes video, when the user wants a storyboard or shot list reviewed before animating, when they want to pick a visual style, or when they want to review a render and send timestamped feedback. Requires the framejam MCP server.
 ---
 
-# Frame Jam: style presets + one-click video and storyboard review
+# FrameJam: style presets + one-click video and storyboard review
 
-Frame Jam runs next to your chat at http://localhost:2400. It gives you two things the chat is bad at:
+FrameJam runs next to your chat at http://localhost:2400. It gives you two things the chat is bad at:
 **choosing a style** (a structured `style.json` + working template) and **precise feedback**
 (timestamped, pinned comments with the clicked DOM element, its active GSAP tween, and a frame image).
 
-## 0. Open Frame Jam in the built-in browser (always do this first)
+## 0. Open FrameJam in the built-in browser (always do this first)
 
-As soon as this skill is used, open Frame Jam where the user can see it, without being asked:
+As soon as this skill is used, open FrameJam where the user can see it, without being asked:
 
 - **Cursor:** use the built-in browser tool (`cursor-ide-browser` → `browser_navigate`) with
   `position: "side"` so it opens beside the chat. Open `http://localhost:2400/styles` when the user still needs a style,
@@ -84,7 +84,7 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
 
 ## Other ways in
 
-- If the user says "apply my Frame Jam feedback" (with or without a review id), call `get_feedback()`. Without a
+- If the user says "apply my FrameJam feedback" (with or without a review id), call `get_feedback()`. Without a
   `reviewId` it picks the review whose comments haven't reached you yet. If the user typed comments but never pressed
   Finish review, they're handed over now. `list_reviews()` shows every project and where its round stands.
 - If MCP isn't connected, the user can use **Copy comments as text** in the review page's version menu and paste the

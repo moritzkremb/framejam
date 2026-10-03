@@ -27,7 +27,7 @@ export function dataDir(): string {
   return dir;
 }
 
-/** How an agent should launch this copy of Frame Jam, for the setup prompt in the UI. */
+/** How an agent should launch this copy of FrameJam, for the setup prompt in the UI. */
 export function setupInfo() {
   // Installed copies (npx cache, global or project install) get the portable npx command; only a source checkout,
   // which isn't on npm under that name, needs its own absolute path.

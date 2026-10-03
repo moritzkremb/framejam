@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
-/* Frame Jam v2: plain CSS on tokens.css. Prefix fc-. Tone over borders, one primary per screen. */
+/* FrameJam v2: plain CSS on tokens.css. Prefix fc-. Tone over borders, one primary per screen. */
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 400 14px/21px var(--font-sans); -webkit-font-smoothing: antialiased; }
 :where(a, button, input, textarea, [tabindex]):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

@@ -109,7 +109,7 @@ interface AppState {
 }
 
 /**
- * JSON-file store. Every call re-reads from disk so several Frame Jam processes
+ * JSON-file store. Every call re-reads from disk so several FrameJam processes
  * (e.g. one stdio MCP server per harness plus the web server) stay consistent.
  */
 export class Store {

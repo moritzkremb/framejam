@@ -1,4 +1,4 @@
-Frame Jam opens in a browser pane **next to a coding agent**, usually Claude, ChatGPT or Cursor taking up the other half of the screen. Someone watches the video their agent made, points at what's wrong, and sends it back. The interface should feel as easy as leaving a comment in a chat app.
+FrameJam opens in a browser pane **next to a coding agent**, usually Claude, ChatGPT or Cursor taking up the other half of the screen. Someone watches the video their agent made, points at what's wrong, and sends it back. The interface should feel as easy as leaving a comment in a chat app.
 
 ## Principles
 
@@ -62,7 +62,7 @@ Keyboard: `Space` play/pause · `←`/`→` previous/next frame · `C` focus the
 - **Call them comments, and give them no states.** Only a version has a state: the latest is open until you send it, then it's sent. Never label a comment "open", "resolved" or "fixed".
 - Buttons start with a verb and include the count when there is one: "Send 3 to agent", "Use this style", "Browse styles", "Copy prompt".
 - Status lines are sentences: "Waiting for your feedback", "Agent is working on v3", "All done", "3 comments not sent".
-- Empty states ask or invite: "What should change?", "Make your first video". Error states say what happened and how to fix it: "Frame Jam isn't running. Start it again in your terminal."
+- Empty states ask or invite: "What should change?", "Make your first video". Error states say what happened and how to fix it: "FrameJam isn't running. Start it again in your terminal."
 - Tool names (`wait_for_feedback`) appear only on the setup screen, and only as code.
 - The technical name (package, command, MCP server, data folder) is `framejam`, one word, lowercase. Use it only in commands.
 - No exclamation marks, no emoji.
@@ -97,7 +97,7 @@ Keyboard: `Space` play/pause · `←`/`→` previous/next frame · `C` focus the
 - **lucide** (`lucide-react`, already installed): 18px in buttons, 16px in small controls, 14px in chips, `currentColor`, 1.8 stroke.
 - Common icons: `play`, `send`, `check`, `x`, `ellipsis`, `chevron-left`/`right`/`down`, `map-pin` (spot), `clock` (at time), `move-horizontal` (range), `mouse-pointer-click`, `message-square-plus`, `pencil`, `trash-2`, `copy`, `palette`, `layers` (new version), `film`/`code` (video/live), `search`, `wifi-off`.
 - **There is no logo.** The wordmark is "Frame **Jam**" in Geist Bold, with "Jam" in `accent-text`. Don't draw a mark.
-- **Name in text:** always "Frame Jam": two words, both capitalised.
+- **Name in text:** always "FrameJam": two words, both capitalised.
 
 ## Components
 

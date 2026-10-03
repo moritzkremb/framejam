@@ -31,7 +31,7 @@ export function setupPrompt(harness: Harness, setup?: Health["setup"]) {
       ? `add it as an MCP server named "framejam" in ~/.cursor/mcp.json (command "${cmd[0]}", args ${JSON.stringify(cmd.slice(1))})`
       : `run \`${harness} mcp add framejam -- ${cmdLine}\``;
   const skillsDir = harness === "cursor" ? "~/.cursor" : harness === "claude" ? "~/.claude" : "~/.codex";
-  return `Install Frame Jam for me: ${add}, copy ${skillFolder} to ${skillsDir}/skills/framejam, then open ${origin} in the browser.`;
+  return `Install FrameJam for me: ${add}, copy ${skillFolder} to ${skillsDir}/skills/framejam, then open ${origin} in the browser.`;
 }
 
 /** Which tab to show first: the agent that already connected, if we know it. */
@@ -42,8 +42,8 @@ function harnessFor(agentName?: string): Harness {
   return "cursor";
 }
 
-export const STYLE_PROMPT = "Open Frame Jam in your built-in browser so I can pick a style";
-export const FIRST_VIDEO_PROMPT = "Make a 7-second launch teaser with Frame Jam and open it for review.";
+export const STYLE_PROMPT = "Open FrameJam in your built-in browser so I can pick a style";
+export const FIRST_VIDEO_PROMPT = "Make a 7-second launch teaser with FrameJam and open it for review.";
 
 export function CodeBlock({ code, block }: { code: string; block?: boolean }) {
   const [copied, setCopied] = useState(false);
@@ -128,7 +128,7 @@ export function SetupSteps({
           </div>
           <p className="sd">
             {!done[0]
-              ? `Paste this into ${label}. Your agent installs Frame Jam.`
+              ? `Paste this into ${label}. Your agent installs FrameJam.`
               : harness === harnessFor(agentName)
                 ? `Connected to ${agentName}.`
                 : `Connected to ${agentName}. To add ${label} too, paste this there:`}
