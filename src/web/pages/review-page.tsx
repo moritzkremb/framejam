@@ -14,7 +14,7 @@ import { api, compositionUrl, formatTime, videoUrl, type ReviewComment } from "@
 import { cn, FINISH_KEYS } from "@/lib/utils";
 
 const FPS = 30;
-const SHORTCUTS = `Space play/pause · ←/→ frame · Shift+←/→ 1s · C comment · ${FINISH_KEYS} finish review · Esc clear`;
+const SHORTCUTS = `Space play/pause · ←/→ frame · Shift+←/→ 1s · C comment · W whole video · ${FINISH_KEYS} finish review · Esc clear`;
 /** How long a comment without a range stays on screen after its timestamp. */
 const POINT_VISIBLE_FOR = 1.5;
 
@@ -247,6 +247,10 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
         e.preventDefault();
         ctrl?.pause();
         focusBox();
+      } else if ((e.key === "w" || e.key === "W") && isOpen) {
+        e.preventDefault();
+        setWhole((on) => !on);
+        focusBox();
       } else if (e.key === "Escape") {
         setAnchor({ kind: "time" });
         setSelectedId(null);
@@ -282,6 +286,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       ref={boxRef}
       anchor={anchor}
       whole={whole}
+      wholeKey="W"
       time={time}
       text={text}
       draftCount={draftCount}

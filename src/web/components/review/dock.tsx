@@ -62,6 +62,8 @@ interface DockProps {
   placeholder?: string;
   /** "Whole video" or "Whole storyboard". */
   wholeLabel?: string;
+  /** Shortcut that switches to the whole video or storyboard. */
+  wholeKey?: string;
 }
 
 /** The comment box under the timeline, with Finish review beside the agent status. */
@@ -84,6 +86,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     chip: customChip,
     placeholder: customPlaceholder,
     wholeLabel = "Whole video",
+    wholeKey,
   },
   ref,
 ) {
@@ -147,8 +150,14 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
           {chip}
           <span className="fc-grow" />
           {!whole && (
-            <button type="button" className="fc-btn ghost sm fc-chip-btn" onClick={() => onWhole(true)}>
+            <button
+              type="button"
+              className="fc-btn ghost sm fc-chip-btn"
+              onClick={() => onWhole(true)}
+              title={wholeKey ? `Comment on the ${wholeLabel.toLowerCase()} (${wholeKey})` : undefined}
+            >
               {wholeLabel}
+              {wholeKey && <span className="fc-kbd">{wholeKey}</span>}
             </button>
           )}
         </div>

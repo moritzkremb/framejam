@@ -271,6 +271,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
       adding={adding}
       chip={chip}
       wholeLabel="Whole storyboard"
+      wholeKey="B"
       placeholder={spot ? "What should change here?" : `What should change in panel ${panel}? Click the panel to point at a spot.`}
       onText={setText}
       onClearAnchor={() => setSpot(null)}
