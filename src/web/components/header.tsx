@@ -6,7 +6,7 @@ import { FeedbackButton } from "@/components/feedback";
 import { api, type PresetSummary } from "@/lib/api";
 
 export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
-export const DOCS_URL = "https://framejam.ai";
+export const DOCS_URL = "https://www.framejam.ai/docs";
 
 export function Wordmark() {
   return (

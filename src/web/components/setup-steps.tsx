@@ -136,7 +136,7 @@ export function SetupSteps({
           <PromptBlock text={setupPrompt(harness, health?.setup)} primary={current === 0} />
           <p className="sd fc-t3" style={{ margin: "8px 0 0" }}>
             Needs Node 22+ and ffmpeg.{" "}
-            <a href={`${DOCS_URL}/docs/install#manual`} target="_blank" rel="noreferrer">
+            <a href={`${DOCS_URL}/install#manual`} target="_blank" rel="noreferrer">
               Manual setup
             </a>
           </p>
