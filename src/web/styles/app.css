@@ -37,9 +37,14 @@ a { color: inherit; }
 .fc-banner > .fc-i { color: var(--accent-text); }
 .fc-banner b { font-weight: 600; }
 .fc-banner .go { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--accent-text); white-space: nowrap; }
-.fc-community { position: relative; display: flex; flex-direction: column; gap: 12px; }
+.fc-community { display: flex; flex-direction: column; gap: 16px; }
+.fc-community .part { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.fc-community .copy { flex: 1 1 280px; min-width: 0; }
 .fc-community .fc-caption { margin: 2px 0 0; font-size: 13px; line-height: 19px; }
-.fc-community .join { align-self: flex-start; }
+.fc-community .part > .fc-btn { flex: none; }
+.fc-community .news { padding-top: 16px; border-top: 1px solid var(--border); }
+.fc-community .news .t { font: 500 14px/20px var(--font-sans); color: var(--text); }
+.fc-community .news .fc-updates, .fc-community .news .fc-updates-done { flex: 1 1 320px; max-width: 400px; }
 .fc-updates { display: flex; flex-direction: column; gap: 6px; }
 .fc-updates .row { display: flex; gap: 8px; }
 .fc-updates .fc-input { flex: 1; min-width: 0; }

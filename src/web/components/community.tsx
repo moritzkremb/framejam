@@ -23,7 +23,7 @@ function writeStorage(key: string, value: string) {
 type FormState = { kind: "idle" } | { kind: "sending" } | { kind: "error"; message: string };
 
 /** Email signup for Frame Jam news. Posts to the website, which stores it with the site's signups. */
-export function UpdatesForm({ source }: { source: string }) {
+export function UpdatesForm({ source, hint = true }: { source: string; hint?: boolean }) {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(() => readStorage(SUBSCRIBED_KEY));
   const [state, setState] = useState<FormState>({ kind: "idle" });
@@ -90,30 +90,38 @@ export function UpdatesForm({ source }: { source: string }) {
           {state.message}
         </p>
       ) : (
-        <p className="fc-caption">New styles and releases. No spam.</p>
+        hint && <p className="fc-caption">New styles and releases. No spam.</p>
       )}
     </form>
   );
 }
 
-/** The community pitch plus the email signup. */
+/** The community pitch, with the email signup as the lighter option underneath. */
 export function CommunityCard() {
   return (
     <section className="fc-card fc-community" aria-labelledby="community-title" data-testid="community-card">
-      <div>
-        <h2 id="community-title" className="fc-h3">
-          Get great at making videos with AI
-        </h2>
-        <p className="fc-caption">
-          Prompt Warrior is the community from the maker of Frame Jam. Learn the workflow, get new styles first, try features
-          early, and bring your videos to the weekly calls.
-        </p>
+      <div className="part">
+        <div className="copy">
+          <h2 id="community-title" className="fc-h3">
+            Get better at AI video, faster
+          </h2>
+          <p className="fc-caption">
+            Join Prompt Warrior, the community from the maker of Frame Jam: weekly calls with feedback on your videos, new
+            styles first, and early features.
+          </p>
+        </div>
+        <a href={COMMUNITY_URL} target="_blank" rel="noreferrer" className="fc-btn primary sm">
+          Join Prompt Warrior
+          <ArrowUpRight className="fc-i xs" />
+        </a>
       </div>
-      <a href={COMMUNITY_URL} target="_blank" rel="noreferrer" className="fc-btn primary sm join">
-        Join Prompt Warrior
-        <ArrowUpRight className="fc-i xs" />
-      </a>
-      <UpdatesForm source="app-projects" />
+      <div className="part news">
+        <div className="copy">
+          <div className="t">Rather just get the news?</div>
+          <p className="fc-caption">New styles and releases by email. No spam.</p>
+        </div>
+        <UpdatesForm source="app-projects" hint={false} />
+      </div>
     </section>
   );
 }
