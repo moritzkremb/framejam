@@ -103,11 +103,11 @@ export function CommunityCard() {
       <div className="part">
         <div className="copy">
           <h2 id="community-title" className="fc-h3">
-            Get better at AI video, faster
+            Level up your AI videos
           </h2>
           <p className="fc-caption">
-            Join Prompt Warrior, the community from the maker of FrameJam: weekly calls with feedback on your videos, new
-            styles first, and early features.
+            FrameJam is free. If you want to level up faster, join Prompt Warrior, the community from the maker of
+            FrameJam: weekly calls, new styles first, and early features.
           </p>
         </div>
         <a href={COMMUNITY_URL} target="_blank" rel="noreferrer" className="fc-btn primary sm">
@@ -117,8 +117,8 @@ export function CommunityCard() {
       </div>
       <div className="part news">
         <div className="copy">
-          <div className="t">Rather just get the news?</div>
-          <p className="fc-caption">New styles and releases by email. No spam.</p>
+          <div className="t">Stay in the loop</div>
+          <p className="fc-caption">New styles and updates when they ship. No spam.</p>
         </div>
         <UpdatesForm source="app-projects" hint={false} />
       </div>
