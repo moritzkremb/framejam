@@ -5,7 +5,7 @@ import { COMMUNITY_URL, UpdatesForm } from "@/components/community";
 import { HomeHeader } from "@/components/header";
 import { Menu, MenuItem } from "@/components/menu";
 import { isOffline, Offline } from "@/components/states";
-import { api, type PresetSummary } from "@/lib/api";
+import { agentLabel, api, type PresetSummary } from "@/lib/api";
 import { useStyleSelection } from "@/lib/use-style";
 import { cn } from "@/lib/utils";
 
@@ -124,7 +124,7 @@ export function StylesPage() {
   const [pace, setPace] = useState<string | null>(null);
   const [mood, setMood] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [connected, setConnected] = useState(true);
+  const [agent, setAgent] = useState<string | null>();
   const selection = useStyleSelection(null);
   const { setSelected } = selection;
 
@@ -138,7 +138,7 @@ export function StylesPage() {
       .catch(setError);
     api
       .health()
-      .then((h) => setConnected(Boolean(h.agent)))
+      .then((h) => setAgent(agentLabel(h.agent) ?? null))
       .catch(() => {});
   }, [setSelected]);
 
@@ -158,7 +158,7 @@ export function StylesPage() {
     <div className="fc-screen">
       <HomeHeader />
       <main className="fc-main">
-        {!connected && (
+        {agent === null && (
           <Link to="/setup" className="fc-banner">
             <Sparkles className="fc-i sm" />
             <span className="fc-grow">
@@ -249,6 +249,17 @@ export function StylesPage() {
                 </div>
                 <UpdatesForm source="app-styles" />
               </footer>
+            )}
+            {data && agent && (
+              <div className="fc-row fc-home-foot" style={{ justifyContent: "space-between" }}>
+                <span className="fc-agent connected">
+                  <span className="dot" />
+                  Connected to {agent}
+                </span>
+                <Link to="/setup" className="fc-btn ghost sm">
+                  Setup
+                </Link>
+              </div>
             )}
           </>
         )}
