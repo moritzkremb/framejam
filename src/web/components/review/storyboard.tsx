@@ -2,12 +2,21 @@ import { ChevronLeft, ChevronRight, LayoutGrid, MapPin, MessageSquarePlus, Mouse
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { toast } from "sonner";
 import { FeedbackDock } from "@/components/review/dock";
-import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar } from "@/components/review/review-shell";
+import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
 import type { ReviewState } from "@/components/review/use-review";
 import { api, panelUrl, type ReviewComment, type StoryboardPanel } from "@/lib/api";
-import { cn, FINISH_KEYS } from "@/lib/utils";
+import { cn, FINISH_KEYS, SHIFT_KEY } from "@/lib/utils";
 
-const SHORTCUTS = `←/→ previous/next panel · B board · C comment · ${FINISH_KEYS} finish review · Esc clear`;
+const SHORTCUTS: Shortcut[] = [
+  ["Previous or next panel", ["←", "→"]],
+  ["Whole board, or back to the panel", ["B"]],
+  ["Comment", ["C"]],
+  ["Add comment", ["↩"]],
+  ["New line in a comment", [SHIFT_KEY, "↩"]],
+  ["Finish review", [FINISH_KEYS]],
+  ["Clear the selection", ["Esc"]],
+  ["Show shortcuts", ["?"]],
+];
 
 type View = "board" | "panel";
 
@@ -222,8 +231,6 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
         setSpot(null);
         setSelectedId(null);
         if (side.overlay) side.setOpen(false);
-      } else if (e.key === "?") {
-        toast(SHORTCUTS);
       }
     };
     window.addEventListener("keydown", onKey);

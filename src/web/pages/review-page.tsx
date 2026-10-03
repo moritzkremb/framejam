@@ -6,15 +6,26 @@ import { BackHeader } from "@/components/header";
 import { FeedbackDock, type Anchor } from "@/components/review/dock";
 import { Filmstrip, type Marker } from "@/components/review/filmstrip";
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
-import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar } from "@/components/review/review-shell";
+import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
 import { api, compositionUrl, formatTime, videoUrl, type ReviewComment } from "@/lib/api";
-import { cn, FINISH_KEYS } from "@/lib/utils";
+import { cn, FINISH_KEYS, SHIFT_KEY } from "@/lib/utils";
 
 const FPS = 30;
-const SHORTCUTS = `Space play/pause · ←/→ frame · Shift+←/→ 1s · C comment · W whole video · ${FINISH_KEYS} finish review · Esc clear`;
+const SHORTCUTS: Shortcut[] = [
+  ["Play or pause", ["Space"]],
+  ["Previous or next frame", ["←", "→"]],
+  ["Jump 1 second", [SHIFT_KEY, "←", "→"]],
+  ["Comment at this moment", ["C"]],
+  ["Comment on the whole video", ["W"]],
+  ["Add comment", ["↩"]],
+  ["New line in a comment", [SHIFT_KEY, "↩"]],
+  ["Finish review", [FINISH_KEYS]],
+  ["Clear the selection", ["Esc"]],
+  ["Show shortcuts", ["?"]],
+];
 /** How long a comment without a range stays on screen after its timestamp. */
 const POINT_VISIBLE_FOR = 1.5;
 
@@ -255,8 +266,6 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
         setAnchor({ kind: "time" });
         setSelectedId(null);
         if (side.overlay) side.setOpen(false);
-      } else if (e.key === "?") {
-        toast(SHORTCUTS);
       }
     };
     window.addEventListener("keydown", onKey);

@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronLeft, ChevronRight, Clock, Copy, Keyboard, MessageSquare, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { Popover } from "radix-ui";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { BackHeader } from "@/components/header";
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
@@ -40,6 +41,52 @@ export function useSidebar(width: number) {
 
 export type SidebarState = ReturnType<typeof useSidebar>;
 
+/** A label and the keys that trigger it, shown one key per chip. */
+export type Shortcut = [label: string, keys: string[]];
+
+/** Keyboard button that lists every shortcut; `?` opens it too. */
+function ShortcutsButton({ shortcuts }: { shortcuts: Shortcut[] }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (e.key !== "?" || e.metaKey || e.ctrlKey || e.altKey || target?.closest?.("input, textarea, [contenteditable=true]")) return;
+      e.preventDefault();
+      setOpen((o) => !o);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <button type="button" className="fc-btn ghost icon sm" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">
+          <Keyboard className="fc-i sm" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content className="fc-menu fc-shortcuts" align="end" sideOffset={6}>
+          <div className="t">Keyboard shortcuts</div>
+          <dl>
+            {shortcuts.map(([label, keys]) => (
+              <div key={label} className="row">
+                <dt>{label}</dt>
+                <dd>
+                  {keys.map((k) => (
+                    <kbd key={k} className="fc-kbd">
+                      {k}
+                    </kbd>
+                  ))}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 export function ReviewHeader({
   r,
   subline,
@@ -48,13 +95,14 @@ export function ReviewHeader({
 }: {
   r: ReviewState;
   subline: string;
-  shortcuts: string;
+  shortcuts: Shortcut[];
   onPickVersion(n: number): void;
 }) {
   const { review, version, latest } = r;
   if (!review || !version || !latest) return null;
   return (
     <BackHeader to="/" title={review.title} sub={subline}>
+      <ShortcutsButton shortcuts={shortcuts} />
       <Menu
         label="Versions and more"
         trigger={
@@ -88,9 +136,6 @@ export function ReviewHeader({
           }}
         >
           Copy comments as text
-        </MenuItem>
-        <MenuItem icon={<Keyboard className="fc-i sm" />} hint="?" onSelect={() => toast(shortcuts)}>
-          Keyboard shortcuts
         </MenuItem>
       </Menu>
     </BackHeader>

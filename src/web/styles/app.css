@@ -111,6 +111,12 @@ a { color: inherit; }
 .fc-feedback .fc-caption.err { margin: 0; color: var(--danger); }
 .fc-feedback textarea.fc-input { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; font: 400 14px/20px var(--font-sans); }
 .fc-feedback button[type="submit"] { align-self: flex-end; width: auto; height: 32px; padding: 0 12px; justify-content: center; }
+.fc-shortcuts { z-index: 50; width: 300px; padding: 12px 14px; }
+.fc-shortcuts .t { margin-bottom: 6px; font: 500 14px/20px var(--font-sans); color: var(--text); }
+.fc-shortcuts dl { margin: 0; }
+.fc-shortcuts .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 0; }
+.fc-shortcuts dt { color: var(--text-2); font-size: 13px; line-height: 18px; }
+.fc-shortcuts dd { display: flex; gap: 4px; margin: 0; flex: none; }
 .fc-feedback-done { display: flex; gap: 10px; }
 .fc-feedback-done > .fc-i { flex: none; margin-top: 2px; color: var(--positive); }
 .fc-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
