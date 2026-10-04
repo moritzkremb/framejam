@@ -5,6 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/server/app.ts";
+import { prepareCompositionHtml } from "../src/server/files.ts";
 import { BASE_URL, makeFixture, parse, type ToolResult } from "./helpers.ts";
 
 let fx: ReturnType<typeof makeFixture>;
@@ -68,6 +69,17 @@ describe("REST API used by the review UI", () => {
     expect(gsap.status).toBe(200);
     const escape = await app.request(`/api/reviews/${review.id}/versions/1/composition/..%2F..%2Fsecret`);
     expect([403, 404]).toContain(escape.status);
+  });
+
+  it("injects the runtime ahead of the composition's own scripts", () => {
+    const html = prepareCompositionHtml(
+      `<html><head><title>x</title></head><body><script>window.__hf.buildReady.x = 1;</script></body></html>`,
+    );
+    const runtime = html.indexOf('data-framejam="hyperframes-runtime"');
+    expect(runtime).toBeGreaterThan(-1);
+    expect(runtime).toBeLessThan(html.indexOf("</head>"));
+    expect(runtime).toBeLessThan(html.indexOf("window.__hf.buildReady"));
+    expect(prepareCompositionHtml(`<div class="clip"></div><script>1</script>`).startsWith('<script data-framejam="hyperframes-runtime">')).toBe(true);
   });
 
   it("selects a preset for the agent", async () => {

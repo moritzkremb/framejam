@@ -88,12 +88,21 @@ let runtimeScript: string | undefined;
  * local install (works offline) and injects the Hyperframes runtime, which exposes
  * `window.__player` (play/pause/seek/getTime/getDuration) and manages clip visibility
  * and media sync exactly like the renderer.
+ *
+ * The runtime goes in `<head>`, ahead of the composition's own scripts, as the
+ * Hyperframes renderer does: compositions may touch `window.__hf` while they run.
  */
 export function prepareCompositionHtml(html: string): string {
   runtimeScript ??= getHyperframeRuntimeScript().replace(/<\/script/gi, "<\\/script");
   const rewritten = html.replace(GSAP_CDN, (_m, file: string) => `/vendor/gsap/${file}`);
   const inject = `<script data-framejam="hyperframes-runtime">${runtimeScript}</script>`;
-  return rewritten.includes("</body>") ? rewritten.replace(/<\/body>(?![\s\S]*<\/body>)/i, () => `${inject}</body>`) : rewritten + inject;
+  if (/<\/head>/i.test(rewritten)) return rewritten.replace(/<\/head>/i, () => `${inject}</head>`);
+  const htmlOpen = rewritten.match(/<html\b[^>]*>/i);
+  if (htmlOpen?.index !== undefined) {
+    const at = htmlOpen.index + htmlOpen[0].length;
+    return `${rewritten.slice(0, at)}<head>${inject}</head>${rewritten.slice(at)}`;
+  }
+  return inject + rewritten;
 }
 
 export function sendCompositionFile(root: string, rel: string, req: Request): Response {
