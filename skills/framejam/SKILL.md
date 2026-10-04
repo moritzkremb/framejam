@@ -1,13 +1,21 @@
 ---
 name: framejam
-description: Build Hyperframes videos and storyboards with the user in the loop. Use when making or editing an HTML/GSAP/Hyperframes video, when the user wants a storyboard or shot list reviewed before animating, when they want to pick a visual style, or when they want to review a render and send timestamped feedback. Requires the framejam MCP server.
+description: Make and review videos and storyboards with the user in the loop, with any video tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings). Use when the user wants to make or edit a video, motion graphic or animation, wants a storyboard or shot list reviewed before animating, wants to pick a visual style, or wants to review a render and send timestamped feedback. Requires the framejam MCP server.
 ---
 
 # FrameJam: style presets + one-click video and storyboard review
 
 FrameJam runs next to your chat at http://localhost:2400. It gives you two things the chat is bad at:
-**choosing a style** (a structured `style.json` + working template) and **precise feedback**
-(timestamped, pinned comments with the clicked DOM element, its active GSAP tween, and a frame image).
+**choosing a style** (a structured `style.json`, plus a working Hyperframes template) and **precise feedback**
+(timestamped, pinned comments with a frame image, and for live Hyperframes compositions the clicked DOM element and its
+active GSAP tween).
+
+FrameJam works with whatever makes the video. Hyperframes is the upgrade path (live player, click-to-element), not a
+requirement.
+
+**Words to use with the user:** FrameJam calls each review a **project** (the start page is "Projects"). Say
+"I opened the project in FrameJam", not "I opened a review". Tool and field names (`open_review`, `reviewId`) stay as
+they are.
 
 ## 0. Open FrameJam in the built-in browser (always do this first)
 
@@ -17,24 +25,31 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
   `position: "side"` so it opens beside the chat. Open `http://localhost:2400/styles` when the user still needs a style,
   or the review `url` once you have one.
 - **Other harnesses:** use their browser/preview tool if there is one. Otherwise give the user the link.
-- If the page doesn't load, nothing is hosting the UI. The framejam MCP server hosts it while it's connected; otherwise
-  run `npx framejam` (or `node <framejam>/dist/server/cli.js`) in a background terminal.
+- If the page doesn't load, nothing is hosting the UI. Run `npx -y framejam start` (it starts the UI in the background,
+  or reuses a running one, and prints the URL), then open that URL.
+
+## 1. Know what to make
+
+If the user invoked FrameJam without saying what video they want (for example just "use FrameJam" or "/framejam"),
+**ask what video to make** before anything else: what it's about, roughly how long, the format (16:9, 9:16, 1:1), and
+any copy, footage or brand assets to use. Mention they can pick a look on the Styles page you just opened. Don't start
+building from a style alone.
+
+If the open workspace already has a video project (a Hyperframes `index.html` with `data-composition-id`, a Remotion
+or Motion Canvas project, an ffmpeg script, …), use that and its tool. Otherwise default to Hyperframes.
 
 ## The loop
 
 1. **Style.** Call `get_selected_preset`. If it returns `selected: null`, ask the user to pick one on the Styles page you
    just opened (then call it again), or pick one yourself with `list_presets({ mood, pacing, format })` and `get_preset(id)`.
-   - Follow `style.guide` literally. Use the exact `palette` hex values, `fonts`, `easing` names, `transitions`,
-     `textAnimations` and `rhythm.averageShotSeconds`.
-   - `templateFiles` is a working Hyperframes composition. Copy it into the project and replace the copy, rather than
-     starting from a blank file.
-2. **Build** the Hyperframes composition (`index.html` with a root `data-composition-id` + `data-width`/`data-height`,
-   `.clip` elements with `data-start`/`data-duration`/`data-track-index`, and a paused GSAP timeline registered in
-   `window.__timelines["<id>"]`). Run `npx hyperframes lint` and fix errors.
-3. **Render** to a *new file per version*, e.g. `renders/v1.mp4`:
-   `npx hyperframes render -o renders/v1.mp4`.
-4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4", compositionDir: "<abs project dir>" })`.
-   Use absolute paths. Passing `compositionDir` enables the live player and element/tween resolution.
+   - Follow `style.guide` literally, whatever the tool. Use the exact `palette` hex values, `fonts`, `easing` names,
+     `transitions`, `textAnimations` and `rhythm.averageShotSeconds`.
+   - `templateFiles` is a working Hyperframes composition. In a Hyperframes project, copy it in and replace the copy
+     rather than starting from a blank file. With any other tool, don't copy it; read it as a reference for the look.
+2. **Build** the video with the project's tool (Hyperframes details below, other tools further down).
+3. **Render** to a *new file per version*, e.g. `renders/v1.mp4`, `renders/v2.mp4`, so earlier versions stay comparable.
+4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`, plus
+   `compositionDir: "<abs project dir>"` for Hyperframes. Use absolute paths.
    Open the returned `url` in the built-in browser (step 0) and tell the user in one line:
    "Click the video to point at something (or pause and type), then press **Finish review**."
 5. **Wait, in the same turn:** call `wait_for_feedback({ reviewId })` right after opening the review. Don't end your turn
@@ -45,11 +60,14 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
    - `status: "feedback"` returns `comments[]`, a markdown summary, and frame images.
    - `revised: true` means the user reopened their review after you got it and changed the comments. The new list
      **replaces** the old one: drop changes from the old list that aren't in the new one.
+   - **Done?** If the comments only say the video is done, approved or good to go, with nothing to change, don't make
+     another version. Tell the user where the final file is and stop waiting.
 6. **Apply every comment.**
    - `at` / `time` / `endTime` is where in the video. `position` is where in the frame.
    - `element.selector` is the DOM node that was clicked. `element.clip` is its Hyperframes clip. `element.tweens` are the
      GSAP tweens on it at that moment (`relation: "active" | "previous" | "next"`, with start, end, props and ease).
-     Edit those exact lines first.
+     Edit those exact lines first. (Only live Hyperframes compositions have `element`; for other videos, use the time,
+     position and frame image to find the spot in the source.)
    - `wholeVideo: true` means a global note (pacing, colour, music, and so on).
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
    `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `compositionDir`).
@@ -58,6 +76,26 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
    comments. If you couldn't address a comment, say why in chat and in the note.
 8. Go back to step 5.
 
+## Hyperframes (the default)
+
+- **First run on this machine:** run `npx hyperframes doctor` once. It checks Node, ffmpeg and Chrome, which rendering
+  needs. If something is missing, tell the user how to install it before you build.
+- **Build** the composition: `index.html` with a root `data-composition-id` + `data-width`/`data-height`,
+  `.clip` elements with `data-start`/`data-duration`/`data-track-index`, and a paused GSAP timeline registered in
+  `window.__timelines["<id>"]`. Run `npx hyperframes lint` and fix errors.
+- **Render:** `npx hyperframes render -o renders/v1.mp4`.
+- **Open:** pass both `videoPath` and `compositionDir`. `compositionDir` enables the live player and element/tween
+  resolution. If the live player can't load the composition, the review page plays the mp4 instead.
+
+## Other tools (Remotion, Motion Canvas, ffmpeg, recordings, …)
+
+- Keep the project's own tool and render command (`npx remotion render`, the Motion Canvas exporter, an ffmpeg script,
+  a screen recording). **Don't convert the project to Hyperframes.**
+- Render each version to a new mp4/webm/mov file and call `open_review({ title, videoPath })` with **`videoPath` only**.
+  Don't pass `compositionDir` (it's for Hyperframes compositions).
+- Use the preset's `style.guide`, `palette`, `fonts`, `easing` and pacing in the tool's own terms.
+- Comments come with time, position and a frame image, but no `element`/`tweens`.
+
 ## Storyboards (before there's a video)
 
 Use a storyboard review when the user wants to agree on the shots first, or asks for a storyboard, shot list, or
@@ -65,7 +103,8 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
 
 1. **Make the panels.** One image per shot (png, jpg, webp, gif or svg), all the same aspect as the final video, in one
    folder, named so they sort in order: `storyboard/01.png`, `02.png`, … Good sources, in order of preference:
-   - Hyperframes snapshots of a rough composition (`npx hyperframes snapshot --at 0.5,2.5,4.5 -o storyboard`).
+   - Hyperframes snapshots of a rough composition (`npx hyperframes snapshot --at 0.5,2.5,4.5 -o storyboard`), or
+     stills from the project's own tool.
    - Images you generate, one per shot.
    - Quick HTML mockups you screenshot.
 2. **Open it:** `open_review({ title, panelsDir: "<abs>/storyboard", panels: [{ path: "01.png", title: "Cold open",
@@ -79,8 +118,8 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
 5. **Next version:** update or regenerate the images, then `add_version({ reviewId, note })`. With no media it re-reads
    the same `panelsDir` and keeps titles and captions for files that are still there; pass `panels` again to change the
    order, titles or captions. Earlier versions keep their own copies of the images.
-6. When the user approves the storyboard, build the Hyperframes composition shot by shot from the panels and captions,
-   and open it as a normal video review (a new `open_review` with `compositionDir`).
+6. When the user approves the storyboard, build the video shot by shot from the panels and captions, and open it as a
+   normal video review (a new `open_review` with the render, plus `compositionDir` for Hyperframes).
 
 ## Other ways in
 
@@ -93,5 +132,7 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
 ## Rules
 
 - Don't ask the user to describe timestamps in chat. Send them to the review page.
-- Never fake a render. If rendering fails, open the review with `compositionDir` only; the live player still works.
-- Keep the review URL stable: one review per project, with a new version for each render.
+- Never fake a render. If a Hyperframes render fails, open the review with `compositionDir` only; the live player still
+  works. With other tools, fix the render first.
+- Keep the review URL stable: one project per video, with a new version for each render.
+- Call it a "project" when you talk to the user.
