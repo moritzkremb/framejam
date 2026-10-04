@@ -189,7 +189,7 @@ export function StylesPage() {
               </label>
               <div className="fc-filters">
                 <div className="fc-seg" role="group" aria-label="Format">
-                  {FORMATS.map((f) => (
+                  {FORMATS.filter((f) => f === "All" || data?.presets.some((p) => p.format === f)).map((f) => (
                     <button key={f} type="button" aria-pressed={format === f} onClick={() => setFormat(f)}>
                       {f}
                     </button>
