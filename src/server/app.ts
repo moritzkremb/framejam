@@ -25,6 +25,7 @@ export function createApp(ctx: McpContext) {
     c.json({
       ok: true,
       app: "framejam",
+      pid: process.pid,
       dataDir: store.root,
       baseUrl: ctx.baseUrl,
       agent: store.getState().agent ?? null,
