@@ -20,8 +20,8 @@ Your agent gets the exact timestamp, the element you clicked and the animation b
 
 ## Why FrameJam
 
-Coding agents are surprisingly good at making motion graphics with [Hyperframes](https://github.com/heygen-com/hyperframes).
-The hard part is everything around it. Describing a look in words is slow, and "the thing at around three seconds
+Coding agents are surprisingly good at making videos, with [Hyperframes](https://github.com/heygen-com/hyperframes),
+Remotion, Motion Canvas, ffmpeg or whatever your project already uses. The hard part is everything around it. Describing a look in words is slow, and "the thing at around three seconds
 should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
 (Cursor, Claude Code, ChatGPT desktop) and handles both.
 
@@ -30,7 +30,10 @@ recipe: palette, fonts, easing, transitions, text animations, pacing and a worki
 
 **Give feedback like you would to a person.** Pause and type, click the thing that's off, or drag across the
 timeline to mark a range. Press **Finish review** and your agent gets every comment with its timestamp, a frame
-thumbnail and, for live compositions, the exact element and GSAP tween you pointed at.
+thumbnail and, for live Hyperframes compositions, the exact element and GSAP tween you pointed at.
+
+**Works with any video tool.** Anything that renders an mp4 can be reviewed. Hyperframes is the upgrade: its
+compositions play live in the review page, so a click lands on the exact element.
 
 **Go round by round.** Each new version from the agent is a fresh round. Old versions keep their comments, so
 you can always see what changed and why.
@@ -54,6 +57,31 @@ Not ready to animate yet? Ask for a **storyboard** first: one still per shot, wh
 
 ## Quick start
 
+You need **Node 22+** and **ffmpeg** (`brew install ffmpeg` on macOS). Paste this into your agent (shown for Cursor;
+the setup page in the app has the Claude Code and Codex versions):
+
+> Install FrameJam for me: add an MCP server named "framejam" to ~/.cursor/mcp.json (command "npx", args
+> ["-y","framejam","--stdio"]), run `npx -y skills add moritzkremb/framejam -g -a cursor -y` to install the FrameJam
+> skill, then run `npx -y framejam start` and open the URL it prints in your built-in browser.
+
+Your agent adds the MCP server, installs the skill with the [skills CLI](https://github.com/vercel-labs/skills), and
+starts the app in the background. Or do it yourself:
+
+```bash
+npx -y framejam start     # starts the UI in the background and prints http://localhost:2400
+```
+
+Open `http://localhost:2400`. Until an agent has connected, the start page shows a short setup checklist with three
+messages to paste into your agent chat (it stays available at `/setup`). After that, the start page lists your
+projects and shows whose turn it is on each one.
+
+**The framejam tools don't show up?** Claude Code and Codex load MCP servers when they start, so restart them after
+the install (Codex: Settings → MCP servers → Restart). Desktop apps launched from the Dock may not see the `PATH` from
+your shell (nvm, fnm, Homebrew): if the server fails to start because `npx` isn't found, use the full path from
+`which npx` as the command.
+
+To run from a clone instead:
+
 ```bash
 git clone https://github.com/moritzkremb/framejam.git
 cd framejam
@@ -61,10 +89,6 @@ npm install
 npm run build
 npm start                 # http://localhost:2400  (MCP at http://localhost:2400/mcp)
 ```
-
-Open `http://localhost:2400`. Until an agent has connected, the start page shows a short setup checklist with three
-messages to paste into your agent chat (it stays available at `/setup`). After that, the start page lists your
-projects and shows whose turn it is on each one.
 
 ## Join the community
 
@@ -92,8 +116,9 @@ Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for 
 
 ## Connect your agent
 
-The package isn't on npm yet. Until it is, replace `npx -y framejam` below with
-`node /absolute/path/to/framejam/dist/server/cli.js`.
+Manual setup, if you'd rather not have the agent do it. Each app needs the MCP server and the skill; then run
+`npx -y framejam start` to start the UI. When running from a clone, replace `npx -y framejam` with
+`node /absolute/path/to/framejam/dist/server/cli.js` and `moritzkremb/framejam` with the clone's path.
 
 <details open>
 <summary><b>Cursor</b></summary>
@@ -113,6 +138,10 @@ Add this to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
 }
 ```
 
+```bash
+npx -y skills add moritzkremb/framejam -g -a cursor -y
+```
+
 Open `http://localhost:2400` in Cursor's built-in browser so the review sits beside the chat.
 
 </details>
@@ -124,18 +153,33 @@ Open `http://localhost:2400` in Cursor's built-in browser so the review sits bes
 
 ```bash
 claude mcp add framejam -- npx -y framejam --stdio
-# optional: teach Claude the loop
-mkdir -p ~/.claude/skills && cp -r skills/framejam ~/.claude/skills/
+npx -y skills add moritzkremb/framejam -g -a claude-code -y
 ```
+
+Restart Claude Code so it loads the server. It has no built-in browser, so open `http://localhost:2400` yourself.
 
 </details>
 
 <details>
-<summary><b>ChatGPT desktop (or any remote MCP client)</b></summary>
+<summary><b>Codex (ChatGPT desktop app)</b></summary>
 
 <br>
 
-ChatGPT connects to MCP servers over HTTP. Run `npm start`, turn on developer mode for connectors in ChatGPT's
+```bash
+codex mcp add framejam -- npx -y framejam --stdio
+npx -y skills add moritzkremb/framejam -g -a codex -y
+```
+
+Then restart the MCP servers in Settings → MCP servers.
+
+</details>
+
+<details>
+<summary><b>ChatGPT chat mode (or any remote MCP client)</b></summary>
+
+<br>
+
+ChatGPT's chat connectors use MCP over HTTP. Run `npm start`, turn on developer mode for connectors in ChatGPT's
 settings, and add a custom connector with this URL:
 
 ```
@@ -153,9 +197,11 @@ it hands out are reachable.
 
 <br>
 
-[`skills/framejam/SKILL.md`](skills/framejam/SKILL.md) is a skill/rules file. Drop it into Claude Code skills, a Cursor
-rule (`.cursor/rules/framejam.mdc`), or `AGENTS.md`. It walks the agent through: pick a preset → build → render →
-`open_review` → `wait_for_feedback` (and call it again while the result is `pending`) → edit → `add_version` with a note.
+[`skills/framejam/SKILL.md`](skills/framejam/SKILL.md) is the skill. `npx skills add moritzkremb/framejam` installs it
+for most agents; you can also drop it into `AGENTS.md`. It walks the agent through: ask what to make → pick a preset →
+build with the project's tool → render → `open_review` → `wait_for_feedback` (and call it again while the result is
+`pending`) → edit → `add_version` with a note, until you say it's done. `.cursor/rules/framejam.mdc` is the same text
+as a Cursor rule; regenerate it with `npm run sync:rule` after editing the skill.
 
 </details>
 
@@ -249,9 +295,10 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
   seconds between its calls). That only happens while the agent's turn is still running: once it ends its turn, nobody
   is listening, and after you finish the page shows one line to paste into the chat ("Apply my FrameJam feedback for
   rev_…"). It switches to "Your agent is making version N" once the agent picks the comments up.
-- **What plays.** The latest version plays the live composition (with the official Hyperframes runtime injected from
-  `@hyperframes/core`), so clicks can target elements. Older versions play their mp4 snapshot, so they look as they
-  did then.
+- **What plays.** For Hyperframes, the latest version plays the live composition (with the official Hyperframes runtime
+  injected from `@hyperframes/core`), so clicks can target elements. If the live composition can't be loaded, the page
+  plays the version's render instead. Videos from other tools play their render. Older versions play their mp4
+  snapshot, so they look as they did then.
 - **Keys.** `Space` play/pause, `←/→` step one frame, `Shift+←/→` step one second, `C` focus the comment box,
   `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
@@ -293,7 +340,7 @@ for v2 and v1 still shows what it was.
 
 | Tool | What it does |
 | --- | --- |
-| `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
+| `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool; `compositionDir` (Hyperframes only) adds the live player. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
 | `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again. Sends progress notifications while waiting. |
 | `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
 | `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
@@ -324,7 +371,7 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam` starts HTTP; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/server/mcp.ts` | MCP tool definitions. |
 | `src/server/store.ts` | JSON file store. Every call re-reads from disk, so several processes can share `~/.framejam`. |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, composition serving, `/mcp`. |
@@ -345,7 +392,7 @@ Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_H
 
 - **One UI host per port.** If several harnesses each start `framejam --stdio`, the first one hosts the web UI and the
   others reuse it through the shared data directory. If the hosting process exits, restart one of them (or run
-  `npm start` separately).
+  `npx -y framejam start`).
 - **Live preview follows the files on disk.** The live composition always shows the files as they are now, which is
   why older versions play their mp4 snapshot. A version without an mp4 falls back to the current files.
 - **Element resolution covers the top-level document.** Sub-compositions mounted with `data-composition-src` play
