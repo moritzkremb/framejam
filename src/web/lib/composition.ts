@@ -82,12 +82,16 @@ export async function connectLive(iframe: HTMLIFrameElement, timeoutMs = 6000): 
 
   const resolveAt = (x: number, y: number, time: number) => resolveElement(win, tl, x * width, y * height, time, width, height);
 
+  const notComposition = "No timeline registered in window.__timelines — is this a Hyperframes composition?";
   if (player) {
+    // The runtime is injected into any page, so a page that isn't a composition still gets a player, with nothing to play.
+    const duration = player.getDuration() || tl?.totalDuration() || 0;
+    if (!(duration > 0)) throw new Error(notComposition);
     return {
       mode: "hyperframes",
       width,
       height,
-      duration: player.getDuration() || tl?.totalDuration() || 0,
+      duration,
       play: () => player.play(),
       pause: () => player.pause(),
       seek: (t) => player.seek(t),
@@ -96,7 +100,7 @@ export async function connectLive(iframe: HTMLIFrameElement, timeoutMs = 6000): 
       resolveAt,
     };
   }
-  if (!tl) throw new Error("No timeline registered in window.__timelines — is this a Hyperframes composition?");
+  if (!tl || !(tl.totalDuration() > 0)) throw new Error(notComposition);
 
   // Fallback clock: GSAP plus numeric data-start/data-duration visibility; no media sync.
   const clips = [...doc.querySelectorAll<HTMLElement>("[data-start]")]

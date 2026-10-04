@@ -51,6 +51,8 @@ interface PlayerProps {
   className?: string;
   style?: CSSProperties;
   onController(ctrl: MediaController | null): void;
+  /** The live composition couldn't be driven. Without this the player shows the error. */
+  onLiveError?(message: string): void;
   onFrameClick(x: number, y: number): void;
   onPinClick(id: string): void;
   /** Width of the picture as laid out, so the controls under it can match. */
@@ -118,6 +120,7 @@ export function Player({
   className,
   style,
   onController,
+  onLiveError,
   onFrameClick,
   onPinClick,
   onFrameWidth,
@@ -129,8 +132,10 @@ export function Player({
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const onControllerRef = useRef(onController);
+  const onLiveErrorRef = useRef(onLiveError);
   useLayoutEffect(() => {
     onControllerRef.current = onController;
+    onLiveErrorRef.current = onLiveError;
   });
 
   useEffect(() => {
@@ -168,6 +173,7 @@ export function Player({
         resolveAt: live.resolveAt,
       });
     } catch (e) {
+      if (onLiveErrorRef.current) return onLiveErrorRef.current((e as Error).message);
       setStatus("error");
       setError((e as Error).message);
     }

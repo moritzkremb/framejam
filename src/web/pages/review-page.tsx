@@ -140,7 +140,17 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const indexOf = useMemo(() => new Map(comments.map((c, i) => [c.id, i + 1])), [comments]);
 
   // Latest version plays live (so clicks hit exact elements); older versions play their render as it was.
-  const source: "video" | "live" = isLatest ? (version.compositionDir ? "live" : "video") : version.videoPath ? "video" : "live";
+  // A composition the player can't drive (not Hyperframes, or broken) falls back to the render.
+  const [liveFailed, setLiveFailed] = useState<string | null>(null);
+  const versionKey = `${review.id}@${version.number}`;
+  const wantsLive = isLatest ? Boolean(version.compositionDir) : !version.videoPath;
+  const source: "video" | "live" = wantsLive && !(liveFailed === versionKey && version.videoPath) ? "live" : "video";
+  const onLiveError = version.videoPath
+    ? () => {
+        setLiveFailed(versionKey);
+        toast("The live preview didn't load, so this plays the render instead.");
+      }
+    : undefined;
 
   const duration = ctrl?.duration || 0;
 
@@ -351,6 +361,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
             interactive={isOpen}
             style={{ flex: "0 1 auto", width: "100%", aspectRatio: `${ctrl ? ctrl.width / ctrl.height : 16 / 9}`, minHeight: 160 }}
             onController={handleController}
+            onLiveError={onLiveError}
             onFrameClick={onFrameClick}
             onPinClick={selectById}
             onFrameWidth={setFrameWidth}
