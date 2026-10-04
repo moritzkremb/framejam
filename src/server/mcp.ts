@@ -20,11 +20,13 @@ export interface McpContext {
 
 const MAX_IMAGES = 6;
 
-const serverInstructions = (baseUrl: string) => `FrameJam lets the user review Hyperframes videos (and storyboards: a sequence of still panels) and pick style presets.
-First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool.
-Loop: (optional) get_selected_preset / list_presets -> build the composition -> render -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
-Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one.
+const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), and pick style presets.
+First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
+Loop: (optional) get_selected_preset / list_presets -> build the video with the project's own tool -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
+Hyperframes compositions: also pass compositionDir so the user can click elements in a live player. Other tools: pass videoPath only; don't convert the project to Hyperframes.
+Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
+When talking to the user, call a review a "project" (that's what the FrameJam UI calls it).
 If the user says "apply my FrameJam feedback" (with or without a review id), call get_feedback.`;
 
 const panelsSchema = z
@@ -45,10 +47,11 @@ const panelsDirSchema = z
   .optional()
   .describe("Storyboard: absolute path to a folder of panel images (sorted by file name), or the base folder for relative panel paths");
 
+const DONE_NOTE = " If the comments only say it's done or approved, don't make another version: confirm with the user and stop waiting.";
 const nextStep = (review: Review) =>
-  review.versions.at(-1)?.panels?.length
+  (review.versions.at(-1)?.panels?.length
     ? "Apply every comment to the panels, update the images, call add_version with the new panels (or the same panelsDir) and a note, then wait_for_feedback again."
-    : "Apply every comment to the composition, re-render, call add_version with the new render and a note, then wait_for_feedback again.";
+    : "Apply every comment to the video, re-render to a new file, call add_version with the new render and a note, then wait_for_feedback again.") + DONE_NOTE;
 
 function json(data: unknown): CallToolResult["content"][number] {
   return { type: "text", text: JSON.stringify(data, null, 2) };
@@ -123,16 +126,17 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Open a video or storyboard review",
       description:
-        "Open a review page for a rendered video and/or a live Hyperframes composition, or for a storyboard (panels / panelsDir). Returns { reviewId, url, version }. " +
+        "Open a review page (the user calls it a project) for a rendered video from any tool, optionally with its live Hyperframes composition, or for a storyboard (panels / panelsDir). Returns { reviewId, url, version }. " +
+        "For Remotion, Motion Canvas, recordings and other non-Hyperframes videos pass videoPath only. " +
         "Calling it again for the same compositionDir, panelsDir (or title) adds a new version to the existing review; each version starts with no comments. " +
         "Use absolute paths. Show the URL to the user, then call wait_for_feedback.",
       inputSchema: {
         title: z.string().optional().describe("Human-readable title, e.g. 'Launch video'"),
-        videoPath: z.string().optional().describe("Absolute path to the rendered mp4/webm"),
+        videoPath: z.string().optional().describe("Absolute path to the rendered video (mp4/webm/mov), from any tool"),
         compositionDir: z
           .string()
           .optional()
-          .describe("Absolute path to the Hyperframes project folder (containing index.html), or to the composition HTML file"),
+          .describe("Hyperframes only: absolute path to the composition folder (containing index.html), or to the composition HTML file. Enables the live player"),
         panels: panelsSchema,
         panelsDir: panelsDirSchema,
         reviewId: z.string().optional().describe("Force adding a version to this existing review"),
@@ -325,7 +329,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
     "list_reviews",
     {
       title: "List reviews",
-      description: "List the user's video and storyboard reviews, newest first, with their review page URL and where each round stands.",
+      description:
+        "List the user's video and storyboard reviews (shown to the user as projects), newest first, with their review page URL and where each round stands.",
       inputSchema: {},
     },
     async () => {
@@ -451,7 +456,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     "get_preset",
     {
       title: "Get a style preset",
-      description: "Return a preset's style.json (palette, fonts, easing, transitions, text animations, pacing), its agent-facing style guide, and the Hyperframes template source.",
+      description: "Return a preset's style.json (palette, fonts, easing, transitions, text animations, pacing), its agent-facing style guide, and the Hyperframes template source. The style applies to any video tool; copy the template files only into Hyperframes projects.",
       inputSchema: { id: z.string() },
     },
     async ({ id }) => {

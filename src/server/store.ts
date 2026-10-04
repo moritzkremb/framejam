@@ -580,13 +580,17 @@ function resolveMedia(input: MediaInput): ResolvedMedia {
       p = path.dirname(p);
     }
     if (!fs.existsSync(path.join(p, entry))) {
-      throw new StoreError(`compositionDir has no ${entry}: ${p}`);
+      throw new StoreError(
+        `compositionDir has no ${entry}: ${p}. compositionDir is for Hyperframes compositions; for a video made with another tool, pass videoPath only.`,
+      );
     }
     out.compositionDir = p;
     out.compositionEntry = entry;
   }
   if (!out.videoPath && !out.compositionDir) {
-    throw new StoreError("Provide videoPath (rendered mp4), compositionDir (Hyperframes project), or panels/panelsDir (storyboard)");
+    throw new StoreError(
+      "Provide videoPath (a rendered video from any tool), compositionDir (a Hyperframes composition, for the live player), or panels/panelsDir (storyboard)",
+    );
   }
   return out;
 }
