@@ -330,7 +330,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "List reviews",
       description:
-        "List the user's video and storyboard reviews (shown to the user as projects), newest first, with their review page URL and where each round stands.",
+        "List the user's video and storyboard reviews (shown to the user as projects), newest first, with their review page URL, the latest version's file paths (compositionDir / videoPath / panelsDir, to match a project to the current workspace) and where each round stands.",
       inputSchema: {},
     },
     async () => {
@@ -345,6 +345,9 @@ export function createMcpServer(ctx: McpContext): McpServer {
           updatedAt: r.updatedAt,
           latestVersion: latest.number,
           kind: latest.panels?.length ? "storyboard" : "video",
+          compositionDir: latest.compositionDir,
+          videoPath: latest.videoPath,
+          panelsDir: latest.panelsDir,
           state: !latest.sentAt
             ? drafts
               ? "user_commenting"

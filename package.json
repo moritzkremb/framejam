@@ -33,6 +33,7 @@
     "dist",
     "!dist/**/*.map",
     "presets",
+    "!presets/*/preview.mp4",
     "skills",
     "README.md",
     "LICENSE"

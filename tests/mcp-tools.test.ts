@@ -244,7 +244,13 @@ describe("list_reviews", () => {
   it("lists reviews with where each round stands", async () => {
     const { reviewId } = await open();
     const empty = parse(await mcp.call("list_reviews"));
-    expect(empty.reviews[0]).toMatchObject({ reviewId, latestVersion: 1, state: "awaiting_user" });
+    expect(empty.reviews[0]).toMatchObject({
+      reviewId,
+      latestVersion: 1,
+      state: "awaiting_user",
+      compositionDir: fx.compositionDir,
+      videoPath: fx.video,
+    });
     fx.store.addComment(reviewId, { time: 1, text: "x" });
     fx.store.submit(reviewId);
     const sent = parse(await mcp.call("list_reviews"));
@@ -357,9 +363,9 @@ describe("presets", () => {
     const seeded = fs.readdirSync(builtinPresetsDir).filter((d) => fs.existsSync(path.join(builtinPresetsDir, d, "style.json")));
     expect(seeded.length).toBeGreaterThanOrEqual(6);
     expect(all.count).toBe(seeded.length);
-    const vertical = parse(await mcp.call("list_presets", { format: "9:16" }));
-    expect(vertical.presets.map((p: { id: string }) => p.id)).toContain("kinetic-captions");
-    expect(vertical.presets.every((p: { format: string }) => p.format === "9:16")).toBe(true);
+    const square = parse(await mcp.call("list_presets", { format: "1:1" }));
+    expect(square.presets.map((p: { id: string }) => p.id)).toContain("bauhaus-grid");
+    expect(square.presets.every((p: { format: string }) => p.format === "1:1")).toBe(true);
     const slow = parse(await mcp.call("list_presets", { pacing: "slow" }));
     expect(slow.presets.every((p: { pacing: string }) => p.pacing === "slow")).toBe(true);
     const q = parse(await mcp.call("list_presets", { query: "terminal" }));
@@ -395,9 +401,9 @@ describe("presets", () => {
   it("get_selected_preset reflects the gallery selection", async () => {
     const none = parse(await mcp.call("get_selected_preset"));
     expect(none.selected).toBeNull();
-    fx.store.setSelectedPreset("retro-pop");
+    fx.store.setSelectedPreset("bauhaus-grid");
     const sel = parse(await mcp.call("get_selected_preset"));
-    expect(sel.selected).toBe("retro-pop");
+    expect(sel.selected).toBe("bauhaus-grid");
     expect(sel.style.format).toBe("1:1");
     expect(sel.templateFiles.length).toBeGreaterThan(0);
   });

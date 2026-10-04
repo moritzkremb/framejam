@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { PresetStyle, PresetSummary } from "../shared/types.ts";
-import { builtinPresetsDir } from "./paths.ts";
+import { builtinPresetsDir, PREVIEW_BASE_URL } from "./paths.ts";
 
 export interface PresetFilter {
   mood?: string;
@@ -71,14 +71,16 @@ export class PresetLibrary {
   }
 
   summary(p: LoadedPreset): PresetSummary {
-    const base = `/api/presets/${encodeURIComponent(p.style.id)}`;
-    const hasPreview = fs.existsSync(path.join(p.dir, "preview.mp4"));
+    const id = encodeURIComponent(p.style.id);
+    const base = `/api/presets/${id}`;
+    const localPreview = fs.existsSync(path.join(p.dir, "preview.mp4"));
+    const hasPreview = localPreview || p.builtin;
     const hasPoster = fs.existsSync(path.join(p.dir, "poster.jpg"));
     return {
       ...p.style,
       hasPreview,
       hasPoster,
-      previewUrl: hasPreview ? `${base}/files/preview.mp4` : undefined,
+      previewUrl: localPreview ? `${base}/files/preview.mp4` : p.builtin ? `${PREVIEW_BASE_URL}/${id}/preview.mp4` : undefined,
       posterUrl: hasPoster ? `${base}/files/poster.jpg` : undefined,
       compositionUrl: `${base}/files/composition/index.html`,
     };

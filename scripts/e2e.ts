@@ -17,7 +17,7 @@ import { builtinPresetsDir } from "../src/server/paths.ts";
 
 const base = (process.env.FRAMEJAM_URL ?? "http://localhost:2400").replace(/\/$/, "");
 const maxWaits = Number(process.env.E2E_MAX_WAITS ?? 20);
-const presetId = process.env.E2E_PRESET ?? "swiss-editorial";
+const presetId = process.env.E2E_PRESET ?? "data-story";
 
 type ToolResult = { content: { type: string; text?: string }[]; isError?: boolean };
 const firstJson = (r: ToolResult) => JSON.parse(r.content.find((c) => c.type === "text")!.text!);

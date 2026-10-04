@@ -1,6 +1,6 @@
 import { Check, Copy, Palette } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { DOCS_URL } from "@/components/header";
 import { copyText, type Health } from "@/lib/api";
@@ -46,12 +46,16 @@ export function setupPrompt(harness: Harness, setup?: Health["setup"]) {
       : `run \`${harness} mcp add framejam -- ${cmdLine}\``;
   const skillsAgent = HARNESSES.find((h) => h.id === harness)!.skillsAgent;
   const skills = `run \`npx -y skills add ${shellQuote(skillSource)} -g -a ${skillsAgent} -y\` to install the FrameJam skill`;
-  const startLine = `run \`${startCmd.map(shellQuote).join(" ")}\` and open the URL it prints in your built-in browser (or give me the link if you don't have one)`;
+  const start = `run \`${startCmd.map(shellQuote).join(" ")}\` (it downloads FrameJam and starts its UI)`;
+  const open = `open ${origin}/?installed=${harness} in your built-in browser (or give me the link if you don't have one)`;
   const needs =
     "FrameJam needs Node 22+ and ffmpeg: check `node -v` and `ffmpeg -version` and tell me how to install anything that's missing." +
     (fromNpm ? " If the MCP server can't start because npx isn't found, use the full path from `which npx` as the command." : "");
-  return `Install FrameJam for me: ${add}, ${skills}, then ${startLine}. ${needs} ${RESTART_PROMPT[harness]}`;
+  return `Install FrameJam for me: first ${start}, then ${add}, ${skills}, and ${open}. ${needs} ${RESTART_PROMPT[harness]}`;
 }
+
+const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:2400";
+const isHarness = (s: string | null): s is Harness => HARNESSES.some((h) => h.id === s);
 
 /** Which tab to show first: the agent that already connected, if we know it. */
 function harnessFor(agentName?: string): Harness {
@@ -131,10 +135,14 @@ export function SetupSteps({
   const done = [Boolean(agentName), Boolean(styleName), hasReview];
   const current = done.indexOf(false);
   const state = (i: number) => (done[i] ? "done" : i === current ? "current" : "");
-  const [harness, setHarness] = useState<Harness>(() => harnessFor(agentName));
-  const [copiedFor, setCopiedFor] = useState<Harness | null>(null);
+  // The install prompt opens /?installed=<app>, so the page knows the agent just installed FrameJam there.
+  const [params] = useSearchParams();
+  const installed = params.get("installed");
+  const [harness, setHarness] = useState<Harness>(() => (isHarness(installed) ? installed : harnessFor(agentName)));
+  const [copiedFor, setCopiedFor] = useState<Harness | null>(isHarness(installed) ? installed : null);
   const label = HARNESSES.find((h) => h.id === harness)!.label;
   const waiting = !done[0] && copiedFor === harness;
+  const justInstalled = !done[0] && installed === harness;
   return (
     <ol className="fc-steps">
       <li className={cn("fc-step", state(0))}>
@@ -149,13 +157,17 @@ export function SetupSteps({
             ))}
           </div>
           <p className="sd">
-            {!done[0]
-              ? `Paste this into ${label}. Your agent installs FrameJam.`
-              : harness === harnessFor(agentName)
-                ? `Connected to ${agentName}.`
-                : `Connected to ${agentName}. To add ${label} too, paste this there:`}
+            {justInstalled
+              ? `Your agent installed FrameJam. One last step:`
+              : !done[0]
+                ? `Paste this into ${label}. Your agent installs FrameJam.`
+                : harness === harnessFor(agentName)
+                  ? `Connected to ${agentName}.`
+                  : `Connected to ${agentName}. To add ${label} too, paste this there:`}
           </p>
-          <PromptBlock text={setupPrompt(harness, health?.setup)} primary={current === 0} onCopy={() => setCopiedFor(harness)} />
+          {!justInstalled && (
+            <PromptBlock text={setupPrompt(harness, health?.setup)} primary={current === 0} onCopy={() => setCopiedFor(harness)} />
+          )}
           {waiting && (
             <div className="fc-col" style={{ gap: 2, margin: "10px 0 0" }} data-testid="setup-waiting">
               <span className="fc-agent working">

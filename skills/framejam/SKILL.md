@@ -22,21 +22,41 @@ they are.
 As soon as this skill is used, open FrameJam where the user can see it, without being asked:
 
 - **Cursor:** use the built-in browser tool (`cursor-ide-browser` → `browser_navigate`) with
-  `position: "side"` so it opens beside the chat. Open `http://localhost:2400/styles` when the user still needs a style,
-  or the review `url` once you have one.
+  `position: "side"` so it opens beside the chat.
 - **Other harnesses:** use their browser/preview tool if there is one. Otherwise give the user the link.
+- **Which page:** the project's `url` when step 1 finds one, `http://localhost:2400/styles` for a new video, and
+  `http://localhost:2400` (Projects) until you know.
 - If the page doesn't load, nothing is hosting the UI. Run `npx -y framejam start` (it starts the UI in the background,
-  or reuses a running one, and prints the URL), then open that URL.
+  or reuses a running one, and prints the URL), then open that URL. Never ask the user to start it.
+- If the framejam tools themselves aren't available (FrameJam was just installed), still run `npx -y framejam start`
+  and open the page, then tell the user to restart their agent app once so the tools load.
 
-## 1. Know what to make
+## 1. Work out what the user is doing (before asking anything)
 
-If the user invoked FrameJam without saying what video they want (for example just "use FrameJam" or "/framejam"),
-**ask what video to make** before anything else: what it's about, roughly how long, the format (16:9, 9:16, 1:1), and
-any copy, footage or brand assets to use. Mention they can pick a look on the Styles page you just opened. Don't start
-building from a style alone.
+The user may type nothing but `/framejam`. Check these in order and act on the first that applies. Don't ask "what do
+you want to make?" if any of them answers it.
 
-If the open workspace already has a video project (a Hyperframes `index.html` with `data-composition-id`, a Remotion
-or Motion Canvas project, an ffmpeg script, …), use that and its tool. Otherwise default to Hyperframes.
+1. **What they typed.** "/framejam make a 10s teaser for X" → do that. A style check is only needed for a new video.
+2. **This conversation.** If you've been making or editing a video in this chat, keep going with it: render the current
+   state to the next `renders/vN.mp4`, then `open_review` with the same `compositionDir` (or title) as before so it
+   becomes a new version of the same project, and wait for feedback.
+3. **Feedback waiting.** Call `list_reviews()`. If a project is `sent_not_delivered` or `user_commenting`, call
+   `get_feedback({ reviewId })` and apply it.
+4. **A FrameJam project for this folder:** one whose `compositionDir`, `videoPath` or `panelsDir` is inside the
+   current workspace.
+   - `awaiting_user`: open its `url` and call `wait_for_feedback`.
+   - `delivered_to_agent`: an earlier chat got the comments but never shipped the next version. Call `get_feedback` to
+     get them again, apply them, and ship the next version.
+   - A storyboard the user approved, and no video yet: build the video from the panels.
+5. **A video project here, but no FrameJam project.** A Hyperframes `index.html` with `data-composition-id`, a Remotion
+   or Motion Canvas project, a `renders/` folder or a loose video file: use the newest render if it's newer than the
+   source, otherwise render. Open it as v1 and wait for feedback. Use the project's own tool; for a plain video file,
+   pass `videoPath` only.
+6. **Nothing relevant** (empty folder, unrelated code repo): open the Styles page and ask what video to make: what it's
+   about, roughly how long, the format (16:9, 9:16, 1:1), and any copy, footage or brand assets. Mention they can pick a
+   look on the Styles page. Don't start building from a style alone. New videos default to Hyperframes.
+
+If several projects could match, ask one short question that lists them.
 
 ## The loop
 

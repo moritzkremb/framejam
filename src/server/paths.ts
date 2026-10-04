@@ -44,6 +44,8 @@ export function setupInfo() {
 }
 
 export const SKILL_REPO = "moritzkremb/framejam";
+/** Built-in preview videos aren't in the npm package; the Styles page streams them from here. */
+export const PREVIEW_BASE_URL = (env("PREVIEW_URL") ?? "https://www.framejam.ai/presets").replace(/\/$/, "");
 export const builtinPresetsDir = path.join(packageRoot, "presets");
 export const webDistDir = path.join(packageRoot, "dist", "web");
 export const DEFAULT_PORT = 2400;

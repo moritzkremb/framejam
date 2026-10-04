@@ -9,7 +9,7 @@ import { PresetLibrary } from "../src/server/presets.ts";
 import { Store } from "../src/server/store.ts";
 
 export const BASE_URL = "http://localhost:2400";
-export const fixturePreset = path.join(builtinPresetsDir, "swiss-editorial");
+export const fixturePreset = path.join(builtinPresetsDir, "data-story");
 
 export interface ToolResult {
   content: { type: string; text?: string; data?: string; mimeType?: string }[];

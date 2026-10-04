@@ -25,7 +25,7 @@ Remotion, Motion Canvas, ffmpeg or whatever your project already uses. The hard 
 should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
 (Cursor, Claude Code, ChatGPT desktop) and handles both.
 
-**Pick a style instead of describing one.** Browse 42 example videos and press *Use*. Your agent gets the full
+**Pick a style instead of describing one.** Browse 30 example videos and press *Use*. Your agent gets the full
 recipe: palette, fonts, easing, transitions, text animations, pacing and a working template.
 
 **Give feedback like you would to a person.** Pause and type, click the thing that's off, or drag across the
@@ -39,7 +39,8 @@ compositions play live in the review page, so a click lands on the exact element
 you can always see what changed and why.
 
 **Runs on your machine.** One local Node process, no account, no upload. Your projects are plain JSON files in
-`~/.framejam`. The only thing that ever leaves your machine is a note you send with the **Feedback** button.
+`~/.framejam`. Your videos and comments never leave your machine. The Styles page streams its example videos from
+framejam.ai, and the **Feedback** button sends the note you write; nothing else goes out.
 
 ## How it works
 
@@ -60,12 +61,15 @@ Not ready to animate yet? Ask for a **storyboard** first: one still per shot, wh
 You need **Node 22+** and **ffmpeg** (`brew install ffmpeg` on macOS). Paste this into your agent (shown for Cursor;
 the setup page in the app has the Claude Code and Codex versions):
 
-> Install FrameJam for me: add an MCP server named "framejam" to ~/.cursor/mcp.json (command "npx", args
-> ["-y","framejam","--stdio"]), run `npx -y skills add moritzkremb/framejam -g -a cursor -y` to install the FrameJam
-> skill, then run `npx -y framejam start` and open the URL it prints in your built-in browser.
+> Install FrameJam for me: first run `npx -y framejam start` (it downloads FrameJam and starts its UI), then add an
+> MCP server named "framejam" to ~/.cursor/mcp.json (command "npx", args ["-y","framejam","--stdio"]), run
+> `npx -y skills add moritzkremb/framejam -g -a cursor -y` to install the FrameJam skill, and open
+> http://localhost:2400/?installed=cursor in your built-in browser.
 
-Your agent adds the MCP server, installs the skill with the [skills CLI](https://github.com/vercel-labs/skills), and
-starts the app in the background. Or do it yourself:
+Your agent starts the app in the background, adds the MCP server and installs the skill with the
+[skills CLI](https://github.com/vercel-labs/skills). After that, typing `/framejam` in your agent is all it takes: the
+agent opens FrameJam and picks up where you are (a video you're already editing, feedback waiting, or a new video).
+Or start the app yourself:
 
 ```bash
 npx -y framejam start     # starts the UI in the background and prints http://localhost:2400
@@ -233,16 +237,15 @@ side automatically (headless Chrome) and saves screenshots.
 </tr>
 </table>
 
-FrameJam ships with 42 styles, in 16:9, 9:16 and 1:1:
+FrameJam ships with 30 styles:
 
-**Swiss Editorial**, **Neon Terminal**, **Soft Gradient SaaS**, **Kinetic Captions** (9:16), **Noir Quote**,
-**Data Story**, **Retro Pop** (1:1), **Mono Changelog**, **Paper Marker**, **Bauhaus Grid** (1:1), **Dot Matrix**,
-**Verb Reel** (9:16), **Mincho Editorial**, **Red Band Title**, **Pixel Arcade** (1:1), **Midnight Launch**,
-**Cream Serif Launch**, **Agent UI Demo**, **Dot Field Showreel**, **Blueprint Explainer**, **Topo Credits**,
-**Parchment Epic**, **Case File**, **Ink Wash**, **Acid Chrome**, **Op Art** (1:1), **Inflated Type** (1:1),
-**Flash Sale** (9:16), **Recipe Steps**, **Split Flap**, **Window Seat** (1:1), **Label Collage**, **Cyanotype Mac**,
-**Doodle Mascot**, **Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**, **Dither Serif**,
-**Life Timeline**, **Storybook Lantern**, and **Felt Feed** (9:16).
+**Neon Terminal**, **Noir Quote**, **Data Story**, **Mono Changelog**, **Paper Marker**, **Bauhaus Grid** (1:1),
+**Dot Matrix**, **Red Band Title**, **Midnight Launch**, **Cream Serif Launch**, **Agent UI Demo**,
+**Dot Field Showreel**, **Blueprint Explainer**, **Topo Credits**, **Parchment Epic**, **Case File**, **Ink Wash**,
+**Acid Chrome**, **Recipe Steps**, **Split Flap**, **Label Collage**, **Cyanotype Mac**, **Doodle Mascot**,
+**Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**, **Dither Serif**, **Life Timeline** and
+**Storybook Lantern**. More styles, including vertical 9:16 ones, are in the
+[Prompt Warrior community](https://www.skool.com/promptwarrior).
 
 Many were studied from the Skillry Opus 5.5 gallery, What Ships launch films and Opus 5.5 videos shared on X, with
 original copy and no brand assets. Every one passes `hyperframes lint` with no errors.
@@ -261,6 +264,10 @@ presets/neon-terminal/
   preview.mp4         # rendered with `npx hyperframes render`
   poster.jpg
 ```
+
+The npm package leaves out the built-in `preview.mp4` files to stay small; the Styles page streams them from
+`https://www.framejam.ai/presets/<id>/preview.mp4` (override with `FRAMEJAM_PREVIEW_URL`). To add a style pack, unzip
+it into `~/.framejam/presets/`.
 
 To re-render the previews:
 
@@ -381,7 +388,8 @@ npm run lint
 | `videos/framejam-landing/` | Hyperframes source for the FrameJam landing video (sources only; renders aren't committed). |
 
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
-`--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), and `FRAMEJAM_PUBLIC_URL` (the base URL used in links).
+`--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), `FRAMEJAM_PUBLIC_URL` (the base URL used in links), and
+`FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from).
 
 </details>
 
