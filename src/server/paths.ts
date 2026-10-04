@@ -36,10 +36,14 @@ export function setupInfo() {
   return {
     cliPath,
     mcpCommand: installed ? ["npx", "-y", "framejam", "--stdio"] : ["node", cliPath, "--stdio"],
+    startCommand: installed ? ["npx", "-y", "framejam", "start"] : ["node", cliPath, "start"],
+    /** What `npx skills add` installs the skill from: the GitHub repo, or this checkout. */
+    skillSource: installed ? SKILL_REPO : packageRoot,
     skillPath: path.join(packageRoot, "skills", "framejam", "SKILL.md"),
   };
 }
 
+export const SKILL_REPO = "moritzkremb/framejam";
 export const builtinPresetsDir = path.join(packageRoot, "presets");
 export const webDistDir = path.join(packageRoot, "dist", "web");
 export const DEFAULT_PORT = 2400;

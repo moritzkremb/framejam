@@ -26,7 +26,7 @@ export function Offline() {
       <div className="fc-h3">FrameJam isn't running</div>
       <p>Start it again in your terminal, and this page reconnects by itself.</p>
       <div style={{ marginTop: 8, width: "100%", maxWidth: 320 }}>
-        <CodeBlock code="npx framejam" />
+        <CodeBlock code="npx -y framejam start" />
       </div>
     </div>
   );
