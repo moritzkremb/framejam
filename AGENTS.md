@@ -1,8 +1,18 @@
 # FrameJam
 
 A local app (Node server + React UI) that lets coding agents open videos and storyboards for review and pick style
-presets, over MCP. Published to npm as `framejam`; source on GitHub at `moritzkremb/framejam`. The website
-(framejam.ai, with docs) is a separate repo: `../framejam-site`.
+presets, over MCP. Published to npm as `framejam`; source on GitHub at `moritzkremb/framejam`.
+
+## The website
+
+https://www.framejam.ai (landing page, Styles gallery, docs) is a separate repo:
+
+- Local: `/Users/moritzkremb/Coding Projects/framejam-site` (`../framejam-site` from here)
+- GitHub: `moritzkremb/framejam-site`
+- Next.js 16 on Vercel. **Every push to its `main` deploys to production**; other branches get preview deploys.
+- Where things are: `app/page.tsx` (landing page), `app/docs/` (install, review, storyboards, custom styles, MCP tools,
+  troubleshooting), `lib/site.ts` (install prompt and commands), `public/presets/` (preview videos the app streams).
+- Check with `npx tsc --noEmit`, `npm run lint` and `npm run build` before pushing.
 
 ## Commands
 
