@@ -63,7 +63,7 @@ Push to `main` only after the npm release is live if the README or website alrea
 - **Commands and options:** if you change CLI commands, MCP tools, env vars or install steps, update `README.md` and
   the website docs (`../framejam-site/app/docs/`) too.
 - **Styles:** adding or removing a built-in preset also means adding or removing its folder in
-  `../framejam-site/public/presets` (preview.mp4 and poster.jpg) and updating the counts and lists in `README.md`.
+  `../framejam-site/public/presets` (preview.mp4, poster.jpg and style.json) and updating the counts and lists in `README.md`.
 
 ## Writing
 
