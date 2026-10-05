@@ -36,7 +36,7 @@ export function setupInfo() {
   return {
     cliPath,
     mcpCommand: installed ? ["npx", "-y", "framejam", "--stdio"] : ["node", cliPath, "--stdio"],
-    startCommand: installed ? ["npx", "-y", "framejam", "start"] : ["node", cliPath, "start"],
+    installCommand: installed ? ["npx", "-y", "framejam", "install"] : ["node", cliPath, "install"],
     /** What `npx skills add` installs the skill from: the GitHub repo, or this checkout. */
     skillSource: installed ? SKILL_REPO : packageRoot,
     skillPath: path.join(packageRoot, "skills", "framejam", "SKILL.md"),

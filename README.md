@@ -59,30 +59,20 @@ Not ready to animate yet? Ask for a **storyboard** first: one still per shot, wh
 ## Quick start
 
 You need **Node 22+** and **ffmpeg** (`brew install ffmpeg` on macOS). Paste this into your agent (shown for Cursor;
-the setup page in the app has the Claude Code and Codex versions):
+use `claude` or `codex` for the other apps):
 
-> Install FrameJam for me: first run `npx -y framejam start` (it downloads FrameJam and starts its UI), then add an
-> MCP server named "framejam" to ~/.cursor/mcp.json (command "npx", args ["-y","framejam","--stdio"]), run
-> `npx -y skills add moritzkremb/framejam -g -a cursor -y` to install the FrameJam skill, and open
-> http://localhost:2400/?installed=cursor in your built-in browser.
+> Run `npx -y framejam install cursor` and open the link it prints in your built-in browser.
 
-Your agent starts the app in the background, adds the MCP server and installs the skill with the
-[skills CLI](https://github.com/vercel-labs/skills). After that, typing `/framejam` in your agent is all it takes: the
-agent opens FrameJam and picks up where you are (a video you're already editing, feedback waiting, or a new video).
-Or start the app yourself:
+Or run `npx -y framejam install` in a terminal yourself; without an app name it sets up every app it finds. It adds
+the FrameJam MCP server to each app, installs the skill with the [skills CLI](https://github.com/vercel-labs/skills),
+checks Node and ffmpeg, and starts the app in the background at `http://localhost:2400`. Restart your agent app once
+so it loads the new tools (Cursor: reload the window or turn framejam on in Settings → MCP; Codex: Settings → MCP
+servers → Restart).
 
-```bash
-npx -y framejam start     # starts the UI in the background and prints http://localhost:2400
-```
-
-Open `http://localhost:2400`. Until an agent has connected, the start page shows a short setup checklist with three
-messages to paste into your agent chat (it stays available at `/setup`). After that, the start page lists your
-projects and shows whose turn it is on each one.
-
-**The framejam tools don't show up?** Claude Code and Codex load MCP servers when they start, so restart them after
-the install (Codex: Settings → MCP servers → Restart). Desktop apps launched from the Dock may not see the `PATH` from
-your shell (nvm, fnm, Homebrew): if the server fails to start because `npx` isn't found, use the full path from
-`which npx` as the command.
+After that, typing `/framejam` in your agent is all it takes: the agent opens FrameJam and picks up where you are (a
+video you're already editing, feedback waiting, or a new video). Until an agent has connected, the start page shows a
+short setup checklist (it stays available at `/setup`). After that, it lists your projects and shows whose turn it is
+on each one.
 
 To run from a clone instead:
 
@@ -92,36 +82,15 @@ cd framejam
 npm install
 npm run build
 npm start                 # http://localhost:2400  (MCP at http://localhost:2400/mcp)
+node dist/server/cli.js install   # points your apps at this clone instead of npm
 ```
-
-## Join the community
-
-<table>
-<tr>
-<td>
-
-### Get great at making videos with AI
-
-FrameJam is free and open source. If you want to get really good with it, join
-**[Prompt Warrior](https://www.skool.com/promptwarrior)**, the community from the maker of FrameJam:
-
-- **Learn the workflow.** Training for making videos with FrameJam in Claude Code and Cursor.
-- **New styles first.** Get new presets before anyone else.
-- **Early access.** Try new FrameJam features before they ship.
-- **Weekly calls.** Bring your videos, get feedback, and see what others are making.
-
-**[Join Prompt Warrior →](https://www.skool.com/promptwarrior)**
-
-Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for new styles and releases. No spam.
-
-</td>
-</tr>
-</table>
 
 ## Connect your agent
 
-Manual setup, if you'd rather not have the agent do it. Each app needs the MCP server and the skill; then run
-`npx -y framejam start` to start the UI. When running from a clone, replace `npx -y framejam` with
+`npx -y framejam install` does all of this for you. To set it up by hand, each app needs the MCP server and the
+skill; then run `npx -y framejam start` to start the UI. Desktop apps launched from the Dock may not see the `PATH`
+from your shell (nvm, fnm): if the server fails to start because `npx` isn't found, use the full path from
+`which npx` as the command. When running from a clone, replace `npx -y framejam` with
 `node /absolute/path/to/framejam/dist/server/cli.js` and `moritzkremb/framejam` with the clone's path.
 
 <details open>
@@ -156,7 +125,7 @@ Open `http://localhost:2400` in Cursor's built-in browser so the review sits bes
 <br>
 
 ```bash
-claude mcp add framejam -- npx -y framejam --stdio
+claude mcp add -s user framejam -- npx -y framejam --stdio
 npx -y skills add moritzkremb/framejam -g -a claude-code -y
 ```
 
@@ -378,7 +347,7 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` sets up the MCP server and skill for each app (`src/server/install.ts`) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/server/mcp.ts` | MCP tool definitions. |
 | `src/server/store.ts` | JSON file store. Every call re-reads from disk, so several processes can share `~/.framejam`. |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, composition serving, `/mcp`. |
@@ -410,6 +379,30 @@ Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_H
 - **No MCP Apps embedding yet.** The UI is a plain web page, ready to be embedded later.
 
 </details>
+
+## Join the community
+
+<table>
+<tr>
+<td>
+
+### Get great at making videos with AI
+
+FrameJam is free and open source. If you want to get really good with it, join
+**[Prompt Warrior](https://www.skool.com/promptwarrior)**, the community from the maker of FrameJam:
+
+- **Learn the workflow.** Training for making videos with FrameJam in Claude Code and Cursor.
+- **New styles first.** Get new presets before anyone else.
+- **Early access.** Try new FrameJam features before they ship.
+- **Weekly calls.** Bring your videos, get feedback, and see what others are making.
+
+**[Join Prompt Warrior →](https://www.skool.com/promptwarrior)**
+
+Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for new styles and releases. No spam.
+
+</td>
+</tr>
+</table>
 
 <br>
 

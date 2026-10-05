@@ -28,8 +28,9 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
   `http://localhost:2400` (Projects) until you know.
 - If the page doesn't load, nothing is hosting the UI. Run `npx -y framejam start` (it starts the UI in the background,
   or reuses a running one, and prints the URL), then open that URL. Never ask the user to start it.
-- If the framejam tools themselves aren't available (FrameJam was just installed), still run `npx -y framejam start`
-  and open the page, then tell the user to restart their agent app once so the tools load.
+- If the framejam tools themselves aren't available, run `npx -y framejam install <app>` with the app you're running
+  in (`cursor`, `claude` or `codex`). It adds the MCP server and the skill (or confirms them) and starts the UI. Open
+  the link it prints, then tell the user the last step it prints (restarting the app once so the tools load).
 
 ## 1. Work out what the user is doing (before asking anything)
 

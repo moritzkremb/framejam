@@ -9,18 +9,11 @@ import { cn } from "@/lib/utils";
 const shellQuote = (s: string) => (/[\s"']/.test(s) ? `"${s.replace(/"/g, '\\"')}"` : s);
 
 type Harness = "cursor" | "claude" | "codex";
-const HARNESSES: { id: Harness; label: string; skillsAgent: string }[] = [
-  { id: "cursor", label: "Cursor", skillsAgent: "cursor" },
-  { id: "claude", label: "Claude Code", skillsAgent: "claude-code" },
-  { id: "codex", label: "Codex", skillsAgent: "codex" },
+const HARNESSES: { id: Harness; label: string }[] = [
+  { id: "cursor", label: "Cursor" },
+  { id: "claude", label: "Claude Code" },
+  { id: "codex", label: "Codex" },
 ];
-
-/** What the agent tells the user when the framejam tools don't show up right after install. */
-const RESTART_PROMPT: Record<Harness, string> = {
-  cursor: "If the framejam tools don't show up, tell me to turn framejam on in Cursor Settings → MCP or reload the window.",
-  claude: "When you're done, tell me to restart Claude Code so the framejam tools load.",
-  codex: "When you're done, tell me to restart the MCP servers (Settings → MCP servers → Restart) so the framejam tools load.",
-};
 
 /** Shown under step 1 while the setup checklist waits for the first MCP connection. */
 const RESTART_HINT: Record<Harness, string> = {
@@ -30,31 +23,15 @@ const RESTART_HINT: Record<Harness, string> = {
 };
 
 /**
- * The message per agent app that makes the agent install FrameJam itself: the MCP server, the skill (via the
- * `skills` CLI) and the background UI. Worded like the install prompts on framejam.ai; a source checkout swaps in
- * its own commands and skill folder.
+ * The message per agent app that makes the agent install FrameJam: `framejam install <app>` sets up the MCP server
+ * and skill and starts the UI. Worded like the install prompts on framejam.ai; a source checkout swaps in its own
+ * command.
  */
 export function setupPrompt(harness: Harness, setup?: Health["setup"]) {
-  const cmd = setup?.mcpCommand ?? ["npx", "-y", "framejam", "--stdio"];
-  const startCmd = setup?.startCommand ?? ["npx", "-y", "framejam", "start"];
-  const skillSource = setup?.skillSource ?? "moritzkremb/framejam";
-  const fromNpm = cmd[0] === "npx";
-  const cmdLine = cmd.map(shellQuote).join(" ");
-  const add =
-    harness === "cursor"
-      ? `add an MCP server named "framejam" to ~/.cursor/mcp.json (command "${cmd[0]}", args ${JSON.stringify(cmd.slice(1))})`
-      : `run \`${harness} mcp add framejam -- ${cmdLine}\``;
-  const skillsAgent = HARNESSES.find((h) => h.id === harness)!.skillsAgent;
-  const skills = `run \`npx -y skills add ${shellQuote(skillSource)} -g -a ${skillsAgent} -y\` to install the FrameJam skill`;
-  const start = `run \`${startCmd.map(shellQuote).join(" ")}\` (it downloads FrameJam and starts its UI)`;
-  const open = `open ${origin}/?installed=${harness} in your built-in browser (or give me the link if you don't have one)`;
-  const needs =
-    "FrameJam needs Node 22+ and ffmpeg: check `node -v` and `ffmpeg -version` and tell me how to install anything that's missing." +
-    (fromNpm ? " If the MCP server can't start because npx isn't found, use the full path from `which npx` as the command." : "");
-  return `Install FrameJam for me: first ${start}, then ${add}, ${skills}, and ${open}. ${needs} ${RESTART_PROMPT[harness]}`;
+  const cmd = [...(setup?.installCommand ?? ["npx", "-y", "framejam", "install"]), harness].map(shellQuote).join(" ");
+  return `Run \`${cmd}\` and open the link it prints in your built-in browser.`;
 }
 
-const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:2400";
 const isHarness = (s: string | null): s is Harness => HARNESSES.some((h) => h.id === s);
 
 /** Which tab to show first: the agent that already connected, if we know it. */

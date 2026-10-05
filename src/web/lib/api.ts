@@ -25,7 +25,7 @@ export interface Health {
   dataDir: string;
   baseUrl: string;
   agent: AgentInfo | null;
-  setup?: { mcpCommand: string[]; startCommand?: string[]; skillSource?: string; skillPath: string };
+  setup?: { mcpCommand: string[]; installCommand?: string[]; skillPath: string };
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
