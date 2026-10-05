@@ -30,10 +30,10 @@ recipe: palette, fonts, easing, transitions, text animations, pacing and a worki
 
 **Give feedback like you would to a person.** Pause and type, click the thing that's off, or drag across the
 timeline to mark a range. Press **Finish review** and your agent gets every comment with its timestamp, a frame
-thumbnail and, for live Hyperframes compositions, the exact element and GSAP tween you pointed at.
+thumbnail of the render.
 
-**Works with any video tool.** Anything that renders an mp4 can be reviewed. Hyperframes is the upgrade: its
-compositions play live in the review page, so a click lands on the exact element.
+**Works with any video tool.** Anything that renders an mp4 can be reviewed, and you always review the render.
+*Beta:* for Hyperframes, ask your agent for the live player, where a click lands on the exact element and GSAP tween.
 
 **Go round by round.** Each new version from the agent is a fresh round. Old versions keep their comments, so
 you can always see what changed and why.
@@ -173,7 +173,7 @@ it hands out are reachable.
 [`skills/framejam/SKILL.md`](skills/framejam/SKILL.md) is the skill. `npx skills add moritzkremb/framejam` installs it
 for most agents; you can also drop it into `AGENTS.md`. It walks the agent through: ask what to make → pick a preset →
 build with the project's tool → render → `open_review` → `wait_for_feedback` (and call it again while the result is
-`pending`) → edit → `add_version` with a note, until you say it's done. `.cursor/rules/framejam.mdc` is the same text
+`pending`, up to 12 times in a row, about 10 minutes) → edit → `add_version` with a note, until you say it's done. `.cursor/rules/framejam.mdc` is the same text
 as a Cursor rule; regenerate it with `npm run sync:rule` after editing the skill.
 
 </details>
@@ -271,10 +271,10 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
   seconds between its calls). That only happens while the agent's turn is still running: once it ends its turn, nobody
   is listening, and after you finish the page shows one line to paste into the chat ("Apply my FrameJam feedback for
   rev_…"). It switches to "Your agent is making version N" once the agent picks the comments up.
-- **What plays.** For Hyperframes, the latest version plays the live composition (with the official Hyperframes runtime
-  injected from `@hyperframes/core`), so clicks can target elements. If the live composition can't be loaded, the page
-  plays the version's render instead. Videos from other tools play their render. Older versions play their mp4
-  snapshot, so they look as they did then.
+- **What plays.** The render (mp4). *Beta:* if the agent opened the project with a Hyperframes `compositionDir`, the
+  latest version plays the live composition instead (with the official Hyperframes runtime injected from
+  `@hyperframes/core`), so clicks can target elements. The live view can differ from the render. If it can't be loaded,
+  the page plays the render. Older versions play their mp4 snapshot, so they look as they did then.
 - **Keys.** `Space` play/pause, `←/→` step one frame, `Shift+←/→` step one second, `C` focus the comment box,
   `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
@@ -316,8 +316,8 @@ for v2 and v1 still shows what it was.
 
 | Tool | What it does |
 | --- | --- |
-| `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool; `compositionDir` (Hyperframes only) adds the live player. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
-| `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again. Sends progress notifications while waiting. |
+| `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool; `compositionDir` (Hyperframes only, beta) adds the live player. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
+| `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again, up to 12 times in a row, then stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. |
 | `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
 | `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
 | `add_version({ reviewId, videoPath?, compositionDir?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |

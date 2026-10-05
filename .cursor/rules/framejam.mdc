@@ -8,11 +8,12 @@ alwaysApply: false
 
 FrameJam runs next to your chat at http://localhost:2400. It gives you two things the chat is bad at:
 **choosing a style** (a structured `style.json`, plus a working Hyperframes template) and **precise feedback**
-(timestamped, pinned comments with a frame image, and for live Hyperframes compositions the clicked DOM element and its
-active GSAP tween).
+(timestamped, pinned comments with a frame image of the render).
 
-FrameJam works with whatever makes the video. Hyperframes is the upgrade path (live player, click-to-element), not a
-requirement.
+FrameJam works with whatever makes the video. **The user reviews the rendered video**, so what they see is exactly
+what you rendered. Hyperframes is the default way to build, but you always review the render (`videoPath` only).
+A live player that lets the user click a DOM element is a **beta** feature: use it only if the user asks for it (see
+"Live player (beta)" below).
 
 **Words to use with the user:** FrameJam calls each review a **project** (the start page is "Projects"). Say
 "I opened the project in FrameJam", not "I opened a review". Tool and field names (`open_review`, `reviewId`) stay as
@@ -40,8 +41,8 @@ you want to make?" if any of them answers it.
 
 1. **What they typed.** "/framejam make a 10s teaser for X" → do that. A style check is only needed for a new video.
 2. **This conversation.** If you've been making or editing a video in this chat, keep going with it: render the current
-   state to the next `renders/vN.mp4`, then `open_review` with the same `compositionDir` (or title) as before so it
-   becomes a new version of the same project, and wait for feedback.
+   state to the next `renders/vN.mp4`, then add it to the same project (`add_version` with its `reviewId`, or
+   `open_review` with the same `title`), and wait for feedback.
 3. **Feedback waiting.** Call `list_reviews()`. If a project is `sent_not_delivered` or `user_commenting`, call
    `get_feedback({ reviewId })` and apply it.
 4. **A FrameJam project for this folder:** one whose `compositionDir`, `videoPath` or `panelsDir` is inside the
@@ -70,15 +71,18 @@ If several projects could match, ask one short question that lists them.
      rather than starting from a blank file. With any other tool, don't copy it; read it as a reference for the look.
 2. **Build** the video with the project's tool (Hyperframes details below, other tools further down).
 3. **Render** to a *new file per version*, e.g. `renders/v1.mp4`, `renders/v2.mp4`, so earlier versions stay comparable.
-4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`, plus
-   `compositionDir: "<abs project dir>"` for Hyperframes. Use absolute paths.
+4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`. Use an absolute path, and the same
+   `title` every time so later renders become new versions of this project. Pass `compositionDir` only if the user
+   asked for the live player (beta, below).
    Open the returned `url` in the built-in browser (step 0) and tell the user in one line:
    "Click the video to point at something (or pause and type), then press **Finish review**."
 5. **Wait, in the same turn:** call `wait_for_feedback({ reviewId })` right after opening the review. Don't end your turn
-   first — the review page shows "Agent listening" only while you're in this loop, and feedback that arrives while you're
-   not waiting sits there until the user pastes a line into the chat.
-   - `status: "pending"` means nothing arrived in the last ~50s. **Call it again immediately**, without asking the
-     user. Keep looping. Only stop if the user tells you to in chat.
+   first — the review page shows "Agent listening" only while you're in this loop.
+   - `status: "pending"` means nothing arrived in the last ~50s. Call it again right away, without asking the user.
+   - **Stop after 12 `pending` results in a row (about 10 minutes).** Don't wait forever. End your turn with one short
+     message: the project's `url`, "Press **Finish review** when you're done, then paste the line the page shows (or
+     say `apply my FrameJam feedback`) and I'll pick it up." The comments are saved, so nothing is lost. When the user
+     comes back, call `get_feedback` (step 1.3). Stop earlier if the user tells you to in chat.
    - `status: "feedback"` returns `comments[]`, a markdown summary, and frame images.
    - `revised: true` means the user reopened their review after you got it and changed the comments. The new list
      **replaces** the old one: drop changes from the old list that aren't in the new one.
@@ -88,11 +92,11 @@ If several projects could match, ask one short question that lists them.
    - `at` / `time` / `endTime` is where in the video. `position` is where in the frame.
    - `element.selector` is the DOM node that was clicked. `element.clip` is its Hyperframes clip. `element.tweens` are the
      GSAP tweens on it at that moment (`relation: "active" | "previous" | "next"`, with start, end, props and ease).
-     Edit those exact lines first. (Only live Hyperframes compositions have `element`; for other videos, use the time,
-     position and frame image to find the spot in the source.)
+     Edit those exact lines first. (Only the beta live player gives you `element`; normally use the time, position and
+     frame image to find the spot in the source.)
    - `wholeVideo: true` means a global note (pacing, colour, music, and so on).
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
-   `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `compositionDir`).
+   `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`).
    The `note` is a one-line summary of what you changed; the user sees it when the new version arrives and in the version menu.
    Each version is one round: the user's "Finish review" locked the previous version, and the new one starts with no
    comments. If you couldn't address a comment, say why in chat and in the note.
@@ -106,15 +110,25 @@ If several projects could match, ask one short question that lists them.
   `.clip` elements with `data-start`/`data-duration`/`data-track-index`, and a paused GSAP timeline registered in
   `window.__timelines["<id>"]`. Run `npx hyperframes lint` and fix errors.
 - **Render:** `npx hyperframes render -o renders/v1.mp4`.
-- **Open:** pass both `videoPath` and `compositionDir`. `compositionDir` enables the live player and element/tween
-  resolution. If the live player can't load the composition, the review page plays the mp4 instead.
+- **Open:** pass `videoPath` only, like any other tool. The user reviews the render.
+
+## Live player (beta, only if the user asks)
+
+If the user wants to click an element in the video and have you get its DOM node and GSAP tween, also pass
+`compositionDir` (Hyperframes only). The review page then plays the live composition instead of the mp4. It is beta:
+the live view can differ from the render, so tell the user the render is the source of truth. Rules for compositions
+that will be played live:
+
+- Don't show and hide root-level elements by animating `visibility`. The player adds `data-start` to them and
+  overrides `visibility` every frame, so every scene stays visible at once. Use `opacity`, or give the element
+  `data-start`/`data-duration`.
+- If the live view looks wrong, drop `compositionDir` from the next version; the review page then plays the mp4.
 
 ## Other tools (Remotion, Motion Canvas, ffmpeg, recordings, …)
 
 - Keep the project's own tool and render command (`npx remotion render`, the Motion Canvas exporter, an ffmpeg script,
   a screen recording). **Don't convert the project to Hyperframes.**
 - Render each version to a new mp4/webm/mov file and call `open_review({ title, videoPath })` with **`videoPath` only**.
-  Don't pass `compositionDir` (it's for Hyperframes compositions).
 - Use the preset's `style.guide`, `palette`, `fonts`, `easing` and pacing in the tool's own terms.
 - Comments come with time, position and a frame image, but no `element`/`tweens`.
 
@@ -133,7 +147,8 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
    caption: "Slow push in. VO: 'Every team ships faster now.' 2s" }, …] })`. `panels` is optional; without it every image
    in the folder is used in file-name order. Titles and captions are what the user reads under each panel, so put the
    shot name, the action or camera move, the voiceover line and the duration there.
-3. **Wait** with `wait_for_feedback`, exactly as for videos (open the URL in the built-in browser first).
+3. **Wait** with `wait_for_feedback`, exactly as for videos (open the URL in the built-in browser first, and stop
+   after 12 `pending` results in a row).
 4. **Read the comments by panel.** `at` is `"panel 3 (Cold open)"`, `panel` has the number, title, caption and the
    panel's `imagePath`, and `position` is where on the panel the user clicked. The attached image shows the panel with
    the pin drawn on it. `wholeVideo: true` means the whole storyboard (order, pacing, adding or cutting shots).
@@ -141,7 +156,7 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
    the same `panelsDir` and keeps titles and captions for files that are still there; pass `panels` again to change the
    order, titles or captions. Earlier versions keep their own copies of the images.
 6. When the user approves the storyboard, build the video shot by shot from the panels and captions, and open it as a
-   normal video review (a new `open_review` with the render, plus `compositionDir` for Hyperframes).
+   normal video review (a new `open_review` with the render as `videoPath`).
 
 ## Other ways in
 
@@ -154,7 +169,6 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
 ## Rules
 
 - Don't ask the user to describe timestamps in chat. Send them to the review page.
-- Never fake a render. If a Hyperframes render fails, open the review with `compositionDir` only; the live player still
-  works. With other tools, fix the render first.
+- Never fake a render. If a render fails, fix it before opening the review.
 - Keep the review URL stable: one project per video, with a new version for each render.
 - Call it a "project" when you talk to the user.

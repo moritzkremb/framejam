@@ -22,8 +22,8 @@ const MAX_IMAGES = 6;
 
 const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), and pick style presets.
 First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
-Loop: (optional) get_selected_preset / list_presets -> build the video with the project's own tool -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
-Hyperframes compositions: also pass compositionDir so the user can click elements in a live player. Other tools: pass videoPath only; don't convert the project to Hyperframes.
+Loop: (optional) get_selected_preset / list_presets -> build the video with the project's own tool -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending", but stop after 12 pending results in a row, about 10 minutes, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
+Pass videoPath (the render) for every tool, Hyperframes included; the user reviews the render. compositionDir (Hyperframes only) turns on a live player where the user can click elements. It is beta: only pass it if the user asks. Don't convert the project to Hyperframes.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
 When talking to the user, call a review a "project" (that's what the FrameJam UI calls it).
@@ -126,8 +126,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Open a video or storyboard review",
       description:
-        "Open a review page (the user calls it a project) for a rendered video from any tool, optionally with its live Hyperframes composition, or for a storyboard (panels / panelsDir). Returns { reviewId, url, version }. " +
-        "For Remotion, Motion Canvas, recordings and other non-Hyperframes videos pass videoPath only. " +
+        "Open a review page (the user calls it a project) for a rendered video from any tool, or for a storyboard (panels / panelsDir). Returns { reviewId, url, version }. " +
+        "Pass videoPath only; compositionDir is a beta live player for Hyperframes, to use only if the user asks. " +
         "Calling it again for the same compositionDir, panelsDir (or title) adds a new version to the existing review; each version starts with no comments. " +
         "Use absolute paths. Show the URL to the user, then call wait_for_feedback.",
       inputSchema: {
@@ -136,7 +136,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
         compositionDir: z
           .string()
           .optional()
-          .describe("Hyperframes only: absolute path to the composition folder (containing index.html), or to the composition HTML file. Enables the live player"),
+          .describe("Beta, Hyperframes only, and only if the user asks: absolute path to the composition folder (containing index.html), or to the composition HTML file. Enables the live player, where the user can click elements"),
         panels: panelsSchema,
         panelsDir: panelsDirSchema,
         reviewId: z.string().optional().describe("Force adding a version to this existing review"),
@@ -170,7 +170,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
       description:
         "Blocks until the user presses 'Finish review' in the review UI, then returns their comments (timestamp, pin position, " +
         "DOM element / GSAP tween when available, and frame thumbnails). Returns { status: 'pending' } after ~50s so clients don't time out: " +
-        "when that happens, call wait_for_feedback again immediately with the same reviewId.",
+        "when that happens, call wait_for_feedback again with the same reviewId. After 12 pending results in a row (about 10 minutes) stop and tell the user to press Finish review and say 'apply my FrameJam feedback'; their comments are saved.",
       inputSchema: {
         reviewId: z.string(),
         timeoutSeconds: z.number().min(1).max(300).optional().describe("Max seconds to block before returning pending (default 50)"),
@@ -242,7 +242,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
             status: "pending",
             reviewId,
             url: reviewUrl(ctx.baseUrl, reviewId),
-            next: "No feedback yet. Call wait_for_feedback again with the same reviewId (do not ask the user first).",
+            next: "No feedback yet. Call wait_for_feedback again with the same reviewId. After 12 pending results in a row (about 10 minutes), stop: tell the user to press Finish review and say \"apply my FrameJam feedback\" (their comments are saved).",
           }),
         ],
       };
