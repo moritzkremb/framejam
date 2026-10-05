@@ -10,10 +10,13 @@ import { createMcpServer, type McpContext } from "./mcp.ts";
 import { setupInfo, webDistDir } from "./paths.ts";
 import { StoreError, type NewCommentInput } from "./store.ts";
 import { extractFrame } from "./thumbs.ts";
+import { createUpdateChecker } from "./update.ts";
+import { VERSION } from "./version.ts";
 
 export function createApp(ctx: McpContext) {
   const { store, presets } = ctx;
   const app = new Hono();
+  const checkUpdate = createUpdateChecker(ctx.fetchLatestVersion);
 
   app.onError((err, c) => {
     if (err instanceof StoreError) return c.json({ error: err.message }, err.status);
@@ -25,6 +28,7 @@ export function createApp(ctx: McpContext) {
     c.json({
       ok: true,
       app: "framejam",
+      version: VERSION,
       pid: process.pid,
       dataDir: store.root,
       baseUrl: ctx.baseUrl,
@@ -32,6 +36,8 @@ export function createApp(ctx: McpContext) {
       setup: setupInfo(),
     }),
   );
+
+  app.get("/api/update", async (c) => c.json(await checkUpdate()));
 
   // --- Reviews -------------------------------------------------------------
   app.get("/api/reviews", (c) =>

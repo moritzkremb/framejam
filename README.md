@@ -69,6 +69,11 @@ checks Node and ffmpeg, and starts the app in the background at `http://localhos
 so it loads the new tools (Cursor: reload the window or turn framejam on in Settings → MCP; Codex: Settings → MCP
 servers → Restart).
 
+**Updating.** Run `npx -y framejam@latest install` any time: it refreshes the skill and the MCP entry, and replaces an
+older FrameJam UI that is still running in the background with the new one. The Projects page shows a notice with
+this command when a newer version is on npm (it asks the npm registry at most every 6 hours; set
+`FRAMEJAM_NO_UPDATE_CHECK=1` to turn that off). Restart your agent app afterwards so it loads the new version.
+
 After that, typing `/framejam` in your agent is all it takes: the agent opens FrameJam and picks up where you are (a
 video you're already editing, feedback waiting, or a new video). Until an agent has connected, the start page shows a
 short setup checklist (it stays available at `/setup`). After that, it lists your projects and shows whose turn it is
@@ -358,7 +363,8 @@ npm run lint
 
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), `FRAMEJAM_PUBLIC_URL` (the base URL used in links), and
-`FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from).
+`FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't
+look for a newer version on npm).
 
 </details>
 

@@ -14,6 +14,8 @@ export interface McpContext {
   baseUrl: string;
   /** Upper bound for one wait_for_feedback call before it returns `pending`. */
   waitSeconds?: number;
+  /** Replaces the npm registry lookup behind the UI's "new version" notice (tests). */
+  fetchLatestVersion?: () => Promise<string | null>;
   pollMs?: number;
   progressEveryMs?: number;
 }

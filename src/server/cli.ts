@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -10,6 +10,7 @@ import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install
 import { DEFAULT_PORT, dataDir, env, setupInfo } from "./paths.ts";
 import { PresetLibrary } from "./presets.ts";
 import { Store } from "./store.ts";
+import { VERSION, compareVersions } from "./version.ts";
 
 const HELP = `framejam — review videos and storyboards from your coding agent, and pick style presets, over MCP
 
@@ -53,13 +54,55 @@ const host = values.host ?? env("HOST") ?? "127.0.0.1";
 if (values["data-dir"]) process.env.FRAMEJAM_HOME = values["data-dir"];
 const baseUrl = (env("PUBLIC_URL") ?? `http://localhost:${port}`).replace(/\/$/, "");
 
-async function existingFrameJam(): Promise<boolean> {
+interface RunningHealth {
+  app?: string;
+  pid?: number;
+  version?: string;
+  dataDir?: string;
+}
+
+async function runningHealth(): Promise<RunningHealth | undefined> {
   try {
     const res = await fetch(`http://127.0.0.1:${port}/api/health`, { signal: AbortSignal.timeout(1500) });
-    return res.ok && (await res.json()).app === "framejam";
+    if (!res.ok) return undefined;
+    const body = (await res.json()) as RunningHealth;
+    return body.app === "framejam" ? body : undefined;
   } catch {
-    return false;
+    return undefined;
   }
+}
+
+async function existingFrameJam(): Promise<boolean> {
+  return Boolean(await runningHealth());
+}
+
+/** True for a background `framejam serve` process, never for an agent's own `--stdio` process, which we must not stop. */
+function isDetachedServe(pid: number): boolean {
+  if (process.platform === "win32") return false;
+  const res = spawnSync("ps", ["-p", String(pid), "-o", "command="], { encoding: "utf8" });
+  const cmd = res.stdout ?? "";
+  return res.status === 0 && /framejam|cli\.js/.test(cmd) && /\sserve(\s|$)/.test(cmd) && !cmd.includes("--stdio");
+}
+
+/**
+ * A UI left running by an older version keeps serving old code, and `start` would happily reuse it. When the one on
+ * the port is older than this copy, belongs to the same data dir and is a background `serve`, stop it so a fresh one
+ * can start. Returns a note when it did.
+ */
+async function replaceOlderUI(): Promise<string | undefined> {
+  const running = await runningHealth();
+  if (!running?.pid) return undefined;
+  if (running.version && compareVersions(running.version, VERSION) >= 0) return undefined;
+  if (running.dataDir && path.resolve(running.dataDir) !== path.resolve(dataDir())) return undefined;
+  if (!isDetachedServe(running.pid)) return undefined;
+  try {
+    process.kill(running.pid, "SIGTERM");
+  } catch {
+    return undefined;
+  }
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline && (await existingFrameJam())) await new Promise((r) => setTimeout(r, 150));
+  return `Updated the FrameJam UI${running.version ? ` from ${running.version}` : ""} to ${VERSION}.`;
 }
 
 function openBrowser(url: string) {
@@ -73,6 +116,8 @@ function openBrowser(url: string) {
  * agent's shell command.
  */
 async function ensureRunning(): Promise<{ ok: boolean; text: string }> {
+  const updated = await replaceOlderUI();
+  const note = updated ? `${updated}\n` : "";
   if (await existingFrameJam()) return { ok: true, text: `FrameJam is already running at ${baseUrl}` };
 
   const dir = dataDir();
@@ -88,10 +133,10 @@ async function ensureRunning(): Promise<{ ok: boolean; text: string }> {
 
   const deadline = Date.now() + 15_000;
   while (!exited && Date.now() < deadline) {
-    if (await existingFrameJam()) return { ok: true, text: `FrameJam is running at ${baseUrl}` };
+    if (await existingFrameJam()) return { ok: true, text: `${note}FrameJam is running at ${baseUrl}` };
     await new Promise((r) => setTimeout(r, 200));
   }
-  if (await existingFrameJam()) return { ok: true, text: `FrameJam is running at ${baseUrl}` };
+  if (await existingFrameJam()) return { ok: true, text: `${note}FrameJam is running at ${baseUrl}` };
   const tail = fs.readFileSync(logFile, "utf8").trim().split("\n").slice(-3).join("\n");
   return { ok: false, text: `FrameJam didn't start on port ${port}.${tail ? `\n${tail}` : ""}\nFull log: ${logFile}` };
 }
@@ -161,7 +206,11 @@ if (stdio) {
   const transport = new StdioServerTransport();
   await createMcpServer(ctx).connect(transport);
   if (!(await startHttp())) {
-    if (await existingFrameJam()) {
+    const updated = await replaceOlderUI();
+    if (updated) {
+      const ui = await ensureRunning();
+      log(`framejam: ${updated}\nframejam: ${ui.text}`);
+    } else if (await existingFrameJam()) {
       log(`framejam: reusing the web UI already running at ${baseUrl} (shared data dir ${store.root})`);
     } else {
       log(`framejam: port ${port} is taken by another program; set FRAMEJAM_PORT to use a different port`);

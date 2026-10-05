@@ -19,9 +19,17 @@ export interface ReviewListItem {
   panels: number;
 }
 
+export interface UpdateInfo {
+  current: string;
+  latest: string | null;
+  outdated: boolean;
+  command: string;
+}
+
 export interface Health {
   ok: boolean;
   app: string;
+  version?: string;
   dataDir: string;
   baseUrl: string;
   agent: AgentInfo | null;
@@ -49,6 +57,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   health: () => request<Health>("/api/health"),
+  update: () => request<UpdateInfo>("/api/update"),
   reviews: () => request<ReviewListItem[]>("/api/reviews"),
   review: (id: string) => request<Review>(`/api/reviews/${id}`),
   addComment: (

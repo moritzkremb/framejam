@@ -5,6 +5,7 @@ import { CommunityCard } from "@/components/community";
 import { HomeHeader } from "@/components/header";
 import { FIRST_VIDEO_PROMPT, PromptBlock, SetupSteps } from "@/components/setup-steps";
 import { isOffline, Offline } from "@/components/states";
+import { UpdateNotice } from "@/components/update-notice";
 import { agentLabel, api, posterUrl, relativeTime, type Health, type ReviewListItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { reviewStatus } from "../../shared/review-status";
@@ -93,6 +94,7 @@ export function ProjectsPage() {
     <div className="fc-screen">
       <HomeHeader />
       <main className="fc-main fc-narrow">
+        <UpdateNotice />
         <h1 className="fc-h1">Projects</h1>
         {error && !reviews ? (
           isOffline(error) ? (
