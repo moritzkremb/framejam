@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, Copy, Keyboard, MessageSquare, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Copy, Download, Keyboard, Loader2, MessageSquare, X } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -7,7 +7,7 @@ import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
 import { CommentList } from "@/components/review/comment-list";
 import { Handoff } from "@/components/review/dock";
 import type { ReviewState } from "@/components/review/use-review";
-import { api, copyText, relativeTime, type ReviewComment } from "@/lib/api";
+import { api, copyText, relativeTime, videoUrl, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 /** Below this width the sidebar slides over the stage instead of taking a column. */
@@ -87,6 +87,66 @@ function ShortcutsButton({ shortcuts }: { shortcuts: Shortcut[] }) {
   );
 }
 
+type SaveFilePicker = (options: {
+  suggestedName: string;
+  types: { description: string; accept: Record<string, string[]> }[];
+}) => Promise<FileSystemFileHandle>;
+
+/**
+ * Saves a copy of a version's render where the user picks. Chromium browsers (Chrome, Edge, Cursor's built-in
+ * browser) show their own save dialog; elsewhere the server opens the system's, or saves to Downloads without one.
+ */
+async function downloadVideo(review: Review, version: ReviewVersion) {
+  const ext = version.videoPath?.match(/\.\w+$/)?.[0] ?? ".mp4";
+  const suggestedName = `${review.title} v${version.number}`.replace(/[\\/:*?"<>|]+/g, "-").trim() || "video";
+  const picker = (window as { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker;
+  try {
+    if (picker) {
+      let handle: FileSystemFileHandle | undefined;
+      try {
+        handle = await picker({ suggestedName: suggestedName + ext, types: [{ description: "Video", accept: { "video/mp4": [ext] } }] });
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        // The picker exists but isn't allowed here: let the server ask instead.
+      }
+      if (handle) {
+        const res = await fetch(videoUrl(review.id, version.number));
+        if (!res.ok || !res.body) throw new Error("Couldn't read the video");
+        await res.body.pipeTo(await handle.createWritable());
+        toast.success("Video saved", { description: handle.name });
+        return;
+      }
+    }
+    const saved = await api.downloadVideo(review.id, version.number);
+    if ("cancelled" in saved) return;
+    toast.success(saved.chosen ? "Video saved" : "Saved to Downloads", { description: saved.path });
+  } catch (e) {
+    toast.error((e as Error).message);
+  }
+}
+
+/** Icon button beside Finish review that saves a copy of the version's video. */
+export function DownloadButton({ review, version }: { review: Review; version: ReviewVersion }) {
+  const [saving, setSaving] = useState(false);
+  return (
+    <button
+      type="button"
+      className="fc-btn outline icon"
+      aria-label="Download video"
+      title="Download this version's video"
+      disabled={saving}
+      onClick={async () => {
+        setSaving(true);
+        await downloadVideo(review, version);
+        setSaving(false);
+      }}
+      data-testid="download-video"
+    >
+      {saving ? <Loader2 className="fc-i sm fc-spin" /> : <Download className="fc-i sm" />}
+    </button>
+  );
+}
+
 export function ReviewHeader({
   r,
   subline,
@@ -137,6 +197,11 @@ export function ReviewHeader({
         >
           Copy comments as text
         </MenuItem>
+        {version.videoPath && (
+          <MenuItem icon={<Download className="fc-i sm" />} onSelect={() => void downloadVideo(review, version)}>
+            Download video
+          </MenuItem>
+        )}
       </Menu>
     </BackHeader>
   );

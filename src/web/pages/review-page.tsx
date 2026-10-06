@@ -4,14 +4,14 @@ import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { BackHeader } from "@/components/header";
 import { FeedbackDock, type Anchor } from "@/components/review/dock";
-import { Filmstrip, type Marker } from "@/components/review/filmstrip";
+import { Filmstrip, useTimelineZoom, ZoomControls, type Marker } from "@/components/review/filmstrip";
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
-import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
+import { CommentsRail, DownloadButton, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
 import { api, compositionUrl, formatTime, videoUrl, type ReviewComment } from "@/lib/api";
-import { cn, FINISH_KEYS, SHIFT_KEY } from "@/lib/utils";
+import { cn, FINISH_KEYS, MOD_KEY, SHIFT_KEY } from "@/lib/utils";
 
 const FPS = 30;
 const SHORTCUTS: Shortcut[] = [
@@ -23,6 +23,7 @@ const SHORTCUTS: Shortcut[] = [
   ["Add comment", ["↩"]],
   ["New line in a comment", [SHIFT_KEY, "↩"]],
   ["Finish review", [FINISH_KEYS]],
+  ["Zoom the timeline (or pinch)", [MOD_KEY, "Scroll"]],
   ["Clear the selection", ["Esc"]],
   ["Show shortcuts", ["?"]],
 ];
@@ -153,6 +154,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
     : undefined;
 
   const duration = ctrl?.duration || 0;
+  const zoom = useTimelineZoom(duration);
 
   const here = comments.filter((c) => isAt(c, time));
   const pins: Pin[] = here
@@ -324,6 +326,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       }}
       onAdd={() => void addComment()}
       onFinish={() => void finish()}
+      beforeFinish={version.videoPath ? <DownloadButton review={review} version={version} /> : undefined}
     />
   );
 
@@ -375,6 +378,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
                 {formatTime(time)} <span>/ {formatTime(duration)}</span>
               </span>
               <span className="fc-grow" />
+              <ZoomControls zoom={zoom} time={time} />
               <button type="button" className="fc-btn ghost icon sm round" aria-label="Previous frame" onClick={() => step(-1)}>
                 <ChevronLeft className="fc-i sm" />
               </button>
@@ -385,6 +389,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
             <Filmstrip
               duration={duration}
               time={time}
+              zoom={zoom}
               markers={markers}
               range={isOpen && !whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
               selectedId={selectedId}

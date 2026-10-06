@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import { formatTime } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, MOD_KEY } from "@/lib/utils";
 
 export interface Marker {
   id: string;
@@ -58,9 +59,81 @@ function useFrames(url: string | undefined, count: number) {
   return frames;
 }
 
+/** Narrowest window (seconds) the timeline zooms into. */
+const MIN_SPAN = 1;
+
+type View = { zoom: number; start: number };
+
+function fitView(v: View, d: number): View {
+  const zoom = Math.max(1, Math.min(Math.max(1, d / MIN_SPAN), v.zoom));
+  return { zoom, start: Math.max(0, Math.min(d - d / zoom, v.start)) };
+}
+
+/** The part of the video the timeline shows: zoom 1 is the whole video, zoom 4 a quarter starting at `start`. */
+export function useTimelineZoom(duration: number) {
+  const d = duration || 1;
+  // Tagged with the duration it was set for, so a different video starts fully zoomed out.
+  const [raw, setRaw] = useState<View & { d: number }>({ d, zoom: 1, start: 0 });
+  const view = fitView(raw.d === d ? raw : { zoom: 1, start: 0 }, d);
+  const update = useCallback(
+    (next: (cur: View) => View) =>
+      setRaw((v) => {
+        const n = fitView(next(fitView(v.d === d ? v : { zoom: 1, start: 0 }, d)), d);
+        return v.d === d && n.zoom === v.zoom && n.start === v.start ? v : { ...n, d };
+      }),
+    [d],
+  );
+  /** Zooms by `factor`, keeping the time at `frac` (0 = left edge, 1 = right edge) where it is on screen. */
+  const zoomAt = useCallback(
+    (factor: number, frac: number) =>
+      update((cur) => {
+        const at = cur.start + frac * (d / cur.zoom);
+        const zoom = fitView({ zoom: cur.zoom * factor, start: 0 }, d).zoom;
+        return { zoom, start: at - frac * (d / zoom) };
+      }),
+    [d, update],
+  );
+  const panBy = useCallback((dt: number) => update((cur) => ({ ...cur, start: cur.start + dt })), [update]);
+  const panTo = useCallback((start: number) => update((cur) => ({ ...cur, start })), [update]);
+  /** Scrolls just far enough to bring `t` into view. */
+  const reveal = useCallback(
+    (t: number) =>
+      update((cur) => {
+        const s = d / cur.zoom;
+        return t < cur.start ? { ...cur, start: t } : t > cur.start + s ? { ...cur, start: t - s } : cur;
+      }),
+    [d, update],
+  );
+  return { zoom: view.zoom, start: view.start, span: d / view.zoom, maxZoom: Math.max(1, d / MIN_SPAN), zoomAt, panBy, panTo, reveal };
+}
+
+export type TimelineZoom = ReturnType<typeof useTimelineZoom>;
+
+/** Zoom out, the zoom level (click to fit the whole video), zoom in. Buttons zoom around the playhead when it's in view. */
+export function ZoomControls({ zoom, time }: { zoom: TimelineZoom; time: number }) {
+  const frac = time >= zoom.start && time <= zoom.start + zoom.span ? (time - zoom.start) / zoom.span : 0.5;
+  const hint = `pinch or ${MOD_KEY} + scroll on the timeline`;
+  return (
+    <div className="fc-zoom" role="group" aria-label="Timeline zoom">
+      <button type="button" className="fc-btn ghost icon sm round" aria-label="Zoom out" title={`Zoom out (${hint})`} disabled={zoom.zoom <= 1} onClick={() => zoom.zoomAt(0.5, frac)}>
+        <ZoomOut className="fc-i sm" />
+      </button>
+      {zoom.zoom > 1 && (
+        <button type="button" className="fc-btn ghost sm lvl" title="Show the whole video" onClick={() => zoom.zoomAt(1 / zoom.zoom, 0)}>
+          {zoom.zoom < 10 ? zoom.zoom.toFixed(1).replace(/\.0$/, "") : Math.round(zoom.zoom)}×
+        </button>
+      )}
+      <button type="button" className="fc-btn ghost icon sm round" aria-label="Zoom in" title={`Zoom in (${hint})`} disabled={zoom.zoom >= zoom.maxZoom} onClick={() => zoom.zoomAt(2, frac)}>
+        <ZoomIn className="fc-i sm" />
+      </button>
+    </div>
+  );
+}
+
 interface FilmstripProps {
   duration: number;
   time: number;
+  zoom: TimelineZoom;
   markers: Marker[];
   /** Range currently attached to the comment box. */
   range: { start: number; end: number } | null;
@@ -107,11 +180,67 @@ const ZONE_CURSOR: Record<Zone, string> = { start: "ew-resize", end: "ew-resize"
 /**
  * A filmstrip timeline. Click to jump; drag the strip to pick a range; drag a range's edges to
  * resize it or its middle to move it; drag the playhead's knob to scrub. The playhead follows whatever is dragged.
+ * Zoomed in, it shows `zoom.start` to `zoom.start + zoom.span`: horizontal scrolling and the bar underneath pan,
+ * and the view follows the playhead.
  */
-export function Filmstrip({ duration, time, markers, range, selectedId, frameSource, canSelectRange, wholeActive, onSeek, onScrubStart, onRange, onClearRange, onSelect }: FilmstripProps) {
+export function Filmstrip({ duration, time, zoom, markers, range, selectedId, frameSource, canSelectRange, wholeActive, onSeek, onScrubStart, onRange, onClearRange, onSelect }: FilmstripProps) {
   const timed = markers.filter((m) => !m.whole);
   const whole = markers.filter((m) => m.whole);
+  const rootRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
+  const barGrab = useRef<number | null>(null);
+  const zoomRef = useRef(zoom);
+  useLayoutEffect(() => {
+    zoomRef.current = zoom;
+  });
+  const { reveal } = zoom;
+  useEffect(() => reveal(time), [time, reveal]);
+
+  // Pinch (a ctrl+wheel in Chromium, gesture events in Safari) and Cmd/Ctrl+scroll zoom; sideways scrolling pans.
+  // Listeners are non-passive so the page itself doesn't zoom or swipe back.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const fracAt = (clientX: number) => {
+      const r = stripRef.current!.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+    };
+    const onWheel = (e: WheelEvent) => {
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientWidth : 1;
+      const dx = e.deltaX * unit;
+      const dy = e.deltaY * unit;
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        zoomRef.current.zoomAt(Math.exp(-Math.max(-60, Math.min(60, dy)) * 0.01), fracAt(e.clientX));
+        return;
+      }
+      const z = zoomRef.current;
+      const sideways = Math.abs(dx) > Math.abs(dy) ? dx : e.shiftKey ? dy : 0;
+      if (z.zoom <= 1 || !sideways) return;
+      e.preventDefault();
+      z.panBy((sideways / stripRef.current!.clientWidth) * z.span);
+    };
+    let lastScale = 1;
+    const onGestureStart = (e: Event) => {
+      e.preventDefault();
+      lastScale = 1;
+    };
+    const onGestureChange = (e: Event) => {
+      e.preventDefault();
+      const g = e as Event & { scale: number; clientX: number };
+      zoomRef.current.zoomAt(g.scale / lastScale, fracAt(g.clientX));
+      lastScale = g.scale;
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("gesturestart", onGestureStart);
+    el.addEventListener("gesturechange", onGestureChange);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("gesturestart", onGestureStart);
+      el.removeEventListener("gesturechange", onGestureChange);
+    };
+  }, []);
   const [stripWidth, setStripWidth] = useState(0);
   useLayoutEffect(() => {
     const el = stripRef.current;
@@ -124,13 +253,26 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
   const [hover, setHover] = useState<{ t: number; zone: Zone } | null>(null);
   const frames = useFrames(frameSource, COUNT);
   const d = duration || 1;
+  const { start: viewStart, span } = zoom;
+  const zoomed = zoom.zoom > 1;
   const clamp = (t: number) => Math.max(0, Math.min(d, t));
-  const pct = (t: number) => `${Math.max(0, Math.min(1, t / d)) * 100}%`;
+  /** Where `t` sits in the visible window: 0 at the left edge, 1 at the right. */
+  const rel = (t: number) => (t - viewStart) / span;
+  const inView = (t: number) => rel(t) >= -1e-6 && rel(t) <= 1 + 1e-6;
+  const pct = (t: number) => `${Math.max(0, Math.min(1, rel(t))) * 100}%`;
+  /** A span clipped to the window, or null when none of it is in view. */
+  const clip = (a: number, b: number) => {
+    const l = Math.max(0, rel(a));
+    const r = Math.min(1, rel(b));
+    if (r < l || (r === l && b > a)) return null;
+    return { style: { left: `${l * 100}%`, width: `${(r - l) * 100}%` }, cutStart: rel(a) < 0, cutEnd: rel(b) > 1 };
+  };
+  // Not clamped to the window: dragging past an edge scrolls the view along (the playhead is kept in view).
   const timeAt = (clientX: number) => {
     const r = stripRef.current!.getBoundingClientRect();
-    return clamp(((clientX - r.left) / r.width) * d);
+    return clamp(viewStart + ((clientX - r.left) / r.width) * span);
   };
-  const px = (t: number) => (t / d) * (stripRef.current?.clientWidth ?? stripWidth);
+  const px = (t: number) => rel(t) * (stripRef.current?.clientWidth ?? stripWidth);
 
   const zoneAt = (t: number): Zone => {
     const x = px(t);
@@ -191,18 +333,38 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
   // Markers closer than one marker's width are nudged right so each stays readable and clickable.
   const nudge = new Map<string, number>();
   let lastX = -Infinity;
-  for (const m of [...timed].sort((a, b) => a.time - b.time || a.index - b.index)) {
-    const x = (m.time / d) * stripWidth;
+  const shownMarks = timed.filter((m) => inView(m.time));
+  for (const m of [...shownMarks].sort((a, b) => a.time - b.time || a.index - b.index)) {
+    const x = rel(m.time) * stripWidth;
     const placed = Math.max(x, lastX + MARKER_GAP);
     nudge.set(m.id, placed - x);
     lastX = placed;
   }
 
+  // The overview bar under a zoomed strip: drag the window, or click to center it there.
+  const barTime = (clientX: number) => {
+    const r = barRef.current!.getBoundingClientRect();
+    return ((clientX - r.left) / r.width) * d;
+  };
+  const onBarDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const t = barTime(e.clientX);
+    const onThumb = t >= viewStart && t <= viewStart + span;
+    barGrab.current = onThumb ? t - viewStart : span / 2;
+    if (!onThumb) zoom.panTo(t - span / 2);
+  };
+  const onBarMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (barGrab.current !== null) zoom.panTo(barTime(e.clientX) - barGrab.current);
+  };
+
+  const rangeBox = shownRange && clip(shownRange.start, shownRange.end);
+
   return (
-    <div className="fc-timeline" style={{ userSelect: "none" }}>
+    <div ref={rootRef} className="fc-timeline" style={{ userSelect: "none" }}>
       <div
         ref={stripRef}
-        className="fc-strip"
+        className={cn("fc-strip", zoomed && "zoomed")}
         data-testid="timeline-scrub"
         style={{ cursor }}
         onPointerDown={onDown}
@@ -211,28 +373,45 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
         onPointerUp={onUp}
         onPointerCancel={() => setDrag(null)}
       >
-        {Array.from({ length: COUNT }, (_, i) => (
-          <div key={i} className="f" style={frames?.[i] ? { backgroundImage: `url(${frames[i]})` } : undefined} />
-        ))}
+        <div className="track" style={{ left: `${rel(0) * 100}%`, width: `${zoom.zoom * 100}%` }}>
+          {Array.from({ length: COUNT }, (_, i) => (
+            <div key={i} className="f" style={frames?.[i] ? { backgroundImage: `url(${frames[i]})` } : undefined} />
+          ))}
+        </div>
         <div className="played" style={{ width: pct(time) }} />
-        {shownRange && <div className={cn("fc-range in-strip", drag?.live && "is-dragging")} style={{ left: pct(shownRange.start), width: pct(shownRange.end - shownRange.start) }} />}
+        {rangeBox && (
+          <div
+            className={cn("fc-range in-strip", drag?.live && "is-dragging", rangeBox.cutStart && "cut-start", rangeBox.cutEnd && "cut-end")}
+            style={rangeBox.style}
+          />
+        )}
         {!shownRange && (wholeActive || whole.some((m) => m.id === selectedId)) && <div className="fc-whole-outline" />}
       </div>
-      {tip !== null && (
+      {zoomed && (
+        <div
+          ref={barRef}
+          className="fc-zoom-bar"
+          title="Drag to move along the video"
+          onPointerDown={onBarDown}
+          onPointerMove={onBarMove}
+          onPointerUp={() => (barGrab.current = null)}
+          onPointerCancel={() => (barGrab.current = null)}
+        >
+          <div className="thumb" style={{ left: `${(viewStart / d) * 100}%`, width: `${(span / d) * 100}%` }} />
+        </div>
+      )}
+      {tip !== null && inView(tip) && (
         <span className="fc-hover-time" style={{ left: pct(tip) }}>
           {formatTime(tip)}
         </span>
       )}
       {timed
         .filter((m) => m.endTime !== undefined)
-        .map((m) => (
-          <span
-            key={`${m.id}-span`}
-            className={cn("fc-mark-span", m.sent ? "sent" : "draft")}
-            style={{ left: pct(m.time), width: pct(m.endTime! - m.time) }}
-          />
-        ))}
-      {timed.map((m) => (
+        .map((m) => {
+          const box = clip(m.time, m.endTime!);
+          return box && <span key={`${m.id}-span`} className={cn("fc-mark-span", m.sent ? "sent" : "draft")} style={box.style} />;
+        })}
+      {shownMarks.map((m) => (
         <button
           key={m.id}
           data-marker
@@ -245,11 +424,13 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
           {m.index}
         </button>
       ))}
-      <div className={cn("fc-head", drag?.mode === "scrub" && "is-dragging")} style={{ left: pct(time) }}>
-        <span className="grip" data-head title="Drag to scrub" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={() => setDrag(null)} />
-      </div>
+      {inView(time) && (
+        <div className={cn("fc-head", drag?.mode === "scrub" && "is-dragging")} style={{ left: pct(time) }}>
+          <span className="grip" data-head title="Drag to scrub" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={() => setDrag(null)} />
+        </div>
+      )}
       <div className="fc-scale">
-        <span>{formatTime(0, false)}</span>
+        <span>{formatTime(viewStart, false)}</span>
         <span className="fc-scale-mid">
           {whole.length > 0 && (
             <span className="fc-whole-marks">
@@ -274,7 +455,7 @@ export function Filmstrip({ duration, time, markers, range, selectedId, frameSou
             <span className="fc-t3">Drag across to comment on a range</span>
           )}
         </span>
-        <span>{formatTime(duration, false)}</span>
+        <span>{formatTime(zoomed ? viewStart + span : duration, false)}</span>
       </div>
     </div>
   );

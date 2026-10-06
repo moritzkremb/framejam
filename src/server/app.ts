@@ -7,7 +7,8 @@ import { streamSSE } from "hono/streaming";
 import { feedbackPrompt, latestComments, versionComments } from "./feedback.ts";
 import { sendCompositionFile, sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
-import { setupInfo, webDistDir } from "./paths.ts";
+import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
+import { chooseSavePath } from "./save-dialog.ts";
 import { StoreError, type NewCommentInput } from "./store.ts";
 import { extractFrame } from "./thumbs.ts";
 import { createUpdateChecker } from "./update.ts";
@@ -178,6 +179,37 @@ export function createApp(ctx: McpContext) {
     const file = version && store.videoFileFor(id, version);
     if (!file) return c.text("This version has no rendered video", 404);
     return sendFile(file, c.req.raw);
+  });
+
+  /**
+   * Saves a copy of a version's render where the user picks in the system's save dialog (which asks before
+   * replacing a file). With no dialog available it goes to Downloads as "<title> v<n>.mp4", never overwriting.
+   */
+  app.post("/api/reviews/:id/versions/:n/download", async (c) => {
+    const id = c.req.param("id");
+    const review = store.getReview(id);
+    const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
+    const file = version && store.videoFileFor(id, version);
+    if (!version || !file) return c.json({ error: "This version has no rendered video" }, 404);
+    const dir = ctx.downloadsDir ?? downloadsDir();
+    fs.mkdirSync(dir, { recursive: true });
+    const ext = path.extname(file) || ".mp4";
+    const name = `${review.title} v${version.number}`.replace(/[\\/:*?"<>|]+/g, "-").trim() || "video";
+    const chosen = await (ctx.chooseSavePath ?? chooseSavePath)(`${name}${ext}`, dir);
+    if (chosen === null) return c.json({ cancelled: true });
+    if (chosen) {
+      fs.copyFileSync(file, chosen);
+      return c.json({ path: chosen, chosen: true });
+    }
+    for (let i = 1; ; i++) {
+      const target = path.join(dir, `${name}${i > 1 ? ` (${i})` : ""}${ext}`);
+      try {
+        fs.copyFileSync(file, target, fs.constants.COPYFILE_EXCL);
+        return c.json({ path: target, chosen: false });
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+      }
+    }
   });
 
   app.get("/api/reviews/:id/versions/:n/panels/:panel", (c) => {

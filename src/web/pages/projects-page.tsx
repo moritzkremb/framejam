@@ -1,7 +1,7 @@
 import { ChevronRight, Film, Inbox, LayoutGrid } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CommunityCard } from "@/components/community";
+import { CommunityCard, MadeBy } from "@/components/community";
 import { HomeHeader } from "@/components/header";
 import { FIRST_VIDEO_PROMPT, PromptBlock, SetupSteps } from "@/components/setup-steps";
 import { isOffline, Offline } from "@/components/states";
@@ -171,6 +171,7 @@ export function ProjectsPage() {
             )}
           </>
         )}
+        <MadeBy />
       </main>
     </div>
   );

@@ -8,7 +8,7 @@ Pick a style, let the agent build the video, then click the frame that's wrong a
 <br>
 Your agent gets the exact timestamp, the element you clicked and the animation behind it.
 
-[Website](https://www.framejam.ai) · [Join the community](https://www.skool.com/promptwarrior) · [Get updates](https://www.framejam.ai/#updates) · [Report an issue](https://github.com/moritzkremb/framejam/issues)
+[Website](https://www.framejam.ai) · [Join the Discord](https://discord.gg/7bW9tP2ySK) · [Get updates](https://www.framejam.ai/#updates) · [Report an issue](https://github.com/moritzkremb/framejam/issues)
 
 <br>
 
@@ -218,8 +218,8 @@ FrameJam ships with 30 styles:
 **Dot Field Showreel**, **Blueprint Explainer**, **Topo Credits**, **Parchment Epic**, **Case File**, **Ink Wash**,
 **Acid Chrome**, **Recipe Steps**, **Split Flap**, **Label Collage**, **Cyanotype Mac**, **Doodle Mascot**,
 **Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**, **Dither Serif**, **Life Timeline** and
-**Storybook Lantern**. More styles, including vertical 9:16 ones, are in the
-[Prompt Warrior community](https://www.skool.com/promptwarrior).
+**Storybook Lantern**. Want a style that isn't here? Ask for it in the
+[FrameJam Discord](https://discord.gg/7bW9tP2ySK).
 
 Many were studied from the Skillry Opus 5.5 gallery, What Ships launch films and Opus 5.5 videos shared on X, with
 original copy and no brand assets. Every one passes `hyperframes lint` with no errors.
@@ -392,17 +392,16 @@ look for a newer version on npm).
 <tr>
 <td>
 
-### Get great at making videos with AI
+### Join the FrameJam Discord
 
-FrameJam is free and open source. If you want to get really good with it, join
-**[Prompt Warrior](https://www.skool.com/promptwarrior)**, the community from the maker of FrameJam:
+FrameJam is free and open source, and so is the community. Join the
+**[FrameJam Discord](https://discord.gg/7bW9tP2ySK)**:
 
-- **Learn the workflow.** Training for making videos with FrameJam in Claude Code and Cursor.
-- **New styles first.** Get new presets before anyone else.
-- **Early access.** Try new FrameJam features before they ship.
-- **Weekly calls.** Bring your videos, get feedback, and see what others are making.
+- **Get help.** Ask questions and get unstuck on your videos.
+- **Share what you make.** Show your videos and see what others are making.
+- **Shape what's next.** Ask for styles and features, and hear about new ones first.
 
-**[Join Prompt Warrior →](https://www.skool.com/promptwarrior)**
+**[Join the Discord →](https://discord.gg/7bW9tP2ySK)**
 
 Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for new styles and releases. No spam.
 
@@ -414,7 +413,7 @@ Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for 
 
 <div align="center">
 
-Built by the maker of [Prompt Warrior](https://www.skool.com/promptwarrior).
+Created by [@moritzkremb](https://x.com/moritzkremb).
 Questions, ideas or bugs? Use the **Feedback** button in the app or [open an issue](https://github.com/moritzkremb/framejam/issues).
 
 </div>

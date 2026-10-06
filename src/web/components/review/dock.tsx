@@ -64,6 +64,8 @@ interface DockProps {
   wholeLabel?: string;
   /** Shortcut that switches to the whole video or storyboard. */
   wholeKey?: string;
+  /** Shown just before Finish review (the video's download button). */
+  beforeFinish?: ReactNode;
 }
 
 /** The comment box under the timeline, with Finish review beside the agent status. */
@@ -87,6 +89,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     placeholder: customPlaceholder,
     wholeLabel = "Whole video",
     wholeKey,
+    beforeFinish,
   },
   ref,
 ) {
@@ -183,6 +186,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
       </div>
       <div className="send">
         <AgentLine listening={agentListening} outdated={agentOutdated} />
+        {beforeFinish}
         <button
           type="button"
           data-testid="send-to-agent"

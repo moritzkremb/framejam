@@ -59,6 +59,28 @@ describe("REST API used by the review UI", () => {
     expect((await res.arrayBuffer()).byteLength).toBe(100);
   });
 
+  it("saves a version's video where the save dialog says, or into downloads without one", async () => {
+    const downloads = path.join(fx.root, "downloads");
+    const { review } = fx.store.openReview({ title: "Launch: teaser", videoPath: fx.video });
+    const download = () => app.request(`/api/reviews/${review.id}/versions/1/download`, { method: "POST" });
+
+    const picked = path.join(fx.root, "picked.mp4");
+    const asked: string[][] = [];
+    app = createApp({ ...fx.ctx, downloadsDir: downloads, chooseSavePath: async (name, dir) => (asked.push([name, dir]), picked) });
+    expect(await (await download()).json()).toEqual({ path: picked, chosen: true });
+    expect(asked).toEqual([["Launch- teaser v1.mp4", downloads]]);
+    expect(fs.readFileSync(picked).equals(fs.readFileSync(fx.video))).toBe(true);
+
+    app = createApp({ ...fx.ctx, downloadsDir: downloads, chooseSavePath: async () => null });
+    expect(await (await download()).json()).toEqual({ cancelled: true });
+
+    app = createApp({ ...fx.ctx, downloadsDir: downloads, chooseSavePath: async () => undefined });
+    expect((await (await download()).json()).path).toBe(path.join(downloads, "Launch- teaser v1.mp4"));
+    expect((await (await download()).json()).path).toBe(path.join(downloads, "Launch- teaser v1 (2).mp4"));
+    const missing = await app.request(`/api/reviews/${review.id}/versions/9/download`, { method: "POST" });
+    expect(missing.status).toBe(404);
+  });
+
   it("serves the composition with the Hyperframes runtime injected and GSAP served locally", async () => {
     const { review } = fx.store.openReview({ compositionDir: fx.compositionDir });
     const html = await (await app.request(`/api/reviews/${review.id}/versions/1/composition/`)).text();

@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { FeedbackBatch, Review, ReviewComment } from "../shared/types.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
 import type { PresetLibrary } from "./presets.ts";
+import type { ChooseSavePath } from "./save-dialog.ts";
 import { LISTEN_HEARTBEAT_MS, type Store } from "./store.ts";
 
 export interface McpContext {
@@ -16,6 +17,10 @@ export interface McpContext {
   waitSeconds?: number;
   /** Replaces the npm registry lookup behind the UI's "new version" notice (tests). */
   fetchLatestVersion?: () => Promise<string | null>;
+  /** Where the save dialog for "Download video" starts, and where it saves without one. Defaults to Downloads (tests). */
+  downloadsDir?: string;
+  /** Replaces the system save dialog behind "Download video" (tests). */
+  chooseSavePath?: ChooseSavePath;
   pollMs?: number;
   progressEveryMs?: number;
 }

@@ -27,6 +27,22 @@ export function dataDir(): string {
   return dir;
 }
 
+/** The user's Downloads folder: XDG_DOWNLOAD_DIR from user-dirs.dirs on Linux, ~/Downloads everywhere else. */
+export function downloadsDir(): string {
+  const home = os.homedir();
+  if (process.platform === "linux") {
+    try {
+      const config = process.env.XDG_CONFIG_HOME || path.join(home, ".config");
+      const dirs = fs.readFileSync(path.join(config, "user-dirs.dirs"), "utf8");
+      const dir = dirs.match(/^XDG_DOWNLOAD_DIR="(.+)"$/m)?.[1];
+      if (dir) return dir.replace(/^\$HOME/, home);
+    } catch {
+      // No user-dirs.dirs: use the default below.
+    }
+  }
+  return path.join(home, "Downloads");
+}
+
 /** How an agent should launch this copy of FrameJam, for the setup prompt in the UI. */
 export function setupInfo() {
   // Installed copies (npx cache, global or project install) get the portable npx command; only a source checkout,

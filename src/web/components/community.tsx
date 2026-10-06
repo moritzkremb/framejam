@@ -1,7 +1,8 @@
 import { ArrowUpRight, Check, Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-export const COMMUNITY_URL = "https://www.skool.com/promptwarrior";
+export const COMMUNITY_URL = "https://discord.gg/7bW9tP2ySK";
+export const X_URL = "https://x.com/moritzkremb";
 const UPDATES_ENDPOINT = "https://www.framejam.ai/api/waitlist";
 const SUBSCRIBED_KEY = "framejam:updates-email";
 function readStorage(key: string) {
@@ -94,6 +95,18 @@ export function UpdatesForm({ source }: { source: string }) {
   );
 }
 
+/** Bottom line of the top-level pages: who made FrameJam. */
+export function MadeBy() {
+  return (
+    <p className="fc-made-by">
+      Created by{" "}
+      <a href={X_URL} target="_blank" rel="noreferrer">
+        @moritzkremb
+      </a>
+    </p>
+  );
+}
+
 /** The community pitch, with the email signup as the lighter option underneath. */
 export function CommunityCard({ source }: { source: string }) {
   return (
@@ -101,15 +114,15 @@ export function CommunityCard({ source }: { source: string }) {
       <div className="part">
         <div className="copy">
           <h2 id="community-title" className="fc-h3">
-            Level up your AI videos
+            Join the FrameJam Discord
           </h2>
           <p className="fc-caption">
-            FrameJam is free. If you want to level up faster, join Prompt Warrior, the community from the maker of
-            FrameJam: weekly calls, new styles first, and early features.
+            A free community for people making videos with FrameJam. Get help, share what you make, and hear about new
+            styles and features first.
           </p>
         </div>
         <a href={COMMUNITY_URL} target="_blank" rel="noreferrer" className="fc-btn primary sm">
-          Join Prompt Warrior
+          Join the Discord
           <ArrowUpRight className="fc-i xs" />
         </a>
       </div>

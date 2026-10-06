@@ -1,7 +1,7 @@
 import { ArrowRight, Check, ChevronDown, Search, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CommunityCard } from "@/components/community";
+import { CommunityCard, MadeBy } from "@/components/community";
 import { HomeHeader } from "@/components/header";
 import { Menu, MenuItem } from "@/components/menu";
 import { isOffline, Offline } from "@/components/states";
@@ -253,6 +253,7 @@ export function StylesPage() {
             )}
           </>
         )}
+        <MadeBy />
       </main>
     </div>
   );

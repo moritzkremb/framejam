@@ -58,7 +58,11 @@ a { color: inherit; }
 .fc-prompt p { flex: 1; min-width: 0; margin: 0; font: 400 12.5px/19px var(--font-mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .fc-prompt .fc-btn { flex: none; }
 
-/* Header nav at half-screen widths: the style chip shrinks to its dots, then hides; Docs, then Community drop out; the nav never wraps. */
+.fc-made-by { margin: var(--space-4) 0 0; text-align: center; color: var(--text-3); font: 400 12px/18px var(--font-sans); }
+.fc-made-by a { color: var(--text-2); text-decoration: none; }
+.fc-made-by a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Header nav at half-screen widths: the style chip shrinks to its dots, then hides, and Docs drops out; the nav never wraps. */
 .fc-nav a.ext { gap: 3px; }
 .fc-nav a.ext .fc-i { color: var(--text-3); }
 .fc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -69,9 +73,6 @@ a { color: inherit; }
 @media (max-width: 800px) {
   .fc-style-chip .lbl { display: none; }
   .fc-nav a.docs { display: none; }
-}
-@media (max-width: 680px) {
-  .fc-nav a.community { display: none; }
 }
 @media (max-width: 560px) {
   .fc-nav { margin-left: 0; }
@@ -260,7 +261,19 @@ a { color: inherit; }
 /* Filmstrip */
 .fc-strip { touch-action: none; }
 .fc-strip .f { background-size: cover; background-position: center; }
+.fc-strip .track { position: absolute; top: 0; bottom: 0; display: flex; pointer-events: none; }
+/* Zoomed in, a frame's cell is wider than the frame: repeat it like a filmstrip instead of blowing it up. */
+.fc-strip.zoomed .f { background-size: auto 100%; background-repeat: repeat-x; background-position: left center; }
 .fc-range.in-strip { top: 0; height: 100%; }
+.fc-range.cut-start { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.fc-range.cut-start::before, .fc-range.cut-end::after { display: none; }
+.fc-range.cut-end { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.fc-zoom-bar { position: relative; height: 6px; margin-top: 6px; border-radius: var(--radius-full); background: var(--surface-2); cursor: pointer; touch-action: none; }
+.fc-zoom-bar .thumb { position: absolute; top: 0; bottom: 0; min-width: 12px; border-radius: inherit; background: var(--text-3); cursor: grab; }
+.fc-zoom-bar:active .thumb { cursor: grabbing; }
+.fc-zoom-bar:hover .thumb { background: var(--text-2); }
+.fc-zoom { display: flex; align-items: center; gap: 2px; }
+.fc-zoom .lvl { min-width: 36px; padding: 0 6px; font: 500 11px/1 var(--font-mono); color: var(--text-2); }
 .fc-hover-time { position: absolute; bottom: calc(100% + 4px); z-index: 4; transform: translateX(-50%); padding: 2px 6px; border-radius: 6px; background: var(--surface-3); color: var(--text); font: 500 11px/14px var(--font-mono); pointer-events: none; white-space: nowrap; }
 .fc-scale { gap: 8px; align-items: center; }
 .fc-scale-mid { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 4px; overflow: hidden; white-space: nowrap; }

@@ -73,6 +73,8 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
   reopen: (id: string) => request<{ wasDelivered: boolean; review: Review }>(`/api/reviews/${id}/reopen`, { method: "POST" }),
+  downloadVideo: (id: string, version: number) =>
+    request<{ path: string; chosen: boolean } | { cancelled: true }>(`/api/reviews/${id}/versions/${version}/download`, { method: "POST" }),
   prompt: (id: string, version?: number) => request<string>(`/api/reviews/${id}/prompt${version ? `?version=${version}` : ""}`),
   presets: () => request<{ selected: string | null; presets: PresetSummary[] }>("/api/presets"),
   preset: (id: string) =>
