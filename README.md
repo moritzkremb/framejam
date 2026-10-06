@@ -21,8 +21,9 @@ Your agent gets the exact timestamp and a frame image with your pin on the spot 
 ## Why FrameJam
 
 Coding agents are surprisingly good at making videos, with [Hyperframes](https://github.com/heygen-com/hyperframes),
-Remotion, Motion Canvas, ffmpeg or whatever your project already uses. The hard part is everything around it. Describing a look in words is slow, and "the thing at around three seconds
-should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
+[Remotion](https://www.remotion.dev), [Motion Canvas](https://motioncanvas.io), [ffmpeg](https://ffmpeg.org) or
+whatever your project already uses. The hard part is everything around it. Describing a look in words is slow, and
+"the thing at around three seconds should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
 (Cursor, Claude Code, ChatGPT desktop) and handles both.
 
 **Pick a style instead of describing one.** Browse 30 example videos and press *Use*. Your agent gets the full
