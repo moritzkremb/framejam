@@ -1,6 +1,6 @@
 {
   "name": "framejam",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Review videos from your coding agent: pick a style, then point at the frame and say what to change. Works with Hyperframes, Remotion and any other video tool, over MCP.",
   "keywords": [
     "mcp",
