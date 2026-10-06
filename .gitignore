@@ -30,6 +30,5 @@ dist-ssr
 /tmp/
 artifacts/
 
-# Video work that stays on this machine (renders, takes, snapshots, tool environments)
-videos/framejam-explainer/
-videos/framejam-landing/assets/stills/
+# Video projects (landing video, explainer) stay on this machine
+videos/

@@ -64,8 +64,8 @@ it. The only step the user has to do is `npm publish`, because it needs their 2F
 - `skills/framejam/SKILL.md`: the agent skill. `.cursor/rules/framejam.mdc` is generated from it.
 - `presets/`: the 30 built-in styles. Their `preview.mp4` files aren't in the npm package; the app streams them from
   `framejam.ai/presets/<id>/preview.mp4`, which the website serves from `../framejam-site/public/presets`.
-- `videos/framejam-landing/`, `design/`: the landing video and design system. Not shipped. The user often has
-  uncommitted work in `videos/`; never commit, stash or revert it unless asked.
+- `videos/`: the landing video and other video projects. Ignored by git and kept only on the user's machine; never
+  delete or rewrite them unless asked. `design/`: the design system. Neither is shipped.
 
 ## Releasing: what needs npm and what doesn't
 
@@ -78,7 +78,7 @@ messages), `presets/` (styles and templates), and `package.json` dependencies.
 - `skills/framejam/SKILL.md`: `framejam install` pulls the skill from GitHub `main`, so a push reaches new installs
   right away. Existing users get it by rerunning `npx -y framejam install` or `npx skills update`.
 - Preview videos and the website: they deploy from `../framejam-site`.
-- `README.md` (the npmjs.com copy only refreshes on the next release, which is fine), `videos/`, `design/`, `tests/`,
+- `README.md` (the npmjs.com copy only refreshes on the next release, which is fine), `design/`, `tests/`,
   `scripts/`.
 
 Release when a batch of user-facing changes is ready, not per commit. Version bumps: patch for fixes, minor for new
@@ -86,7 +86,7 @@ features, major for breaking changes.
 
 To release, the user runs one command (it needs their 2FA code for `npm publish`, which builds and tests first).
 Whenever a change needs a release, give the user this as a single line with the version filled in. `npm version`
-refuses while `videos/` has uncommitted work, hence `--no-git-tag-version` and the manual commit and tag. The last part
+refuses to commit when anything else is uncommitted, hence `--no-git-tag-version` and the manual commit and tag. The last part
 deploys the website, so it comes after the publish:
 
 ```bash
