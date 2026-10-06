@@ -29,3 +29,7 @@ dist-ssr
 .framejam-dev/
 /tmp/
 artifacts/
+
+# Video work that stays on this machine (renders, takes, snapshots, tool environments)
+videos/framejam-explainer/
+videos/framejam-landing/assets/stills/
