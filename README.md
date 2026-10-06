@@ -396,7 +396,7 @@ FrameJam is free and open source, and so is the community. Join the
 
 **[Join the Discord →](https://discord.gg/7bW9tP2ySK)**
 
-Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for new styles and releases. No spam.
+Just want the news? [Sign up for updates](https://www.framejam.ai/#updates) for new styles and releases.
 
 </td>
 </tr>

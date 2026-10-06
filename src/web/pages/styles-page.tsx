@@ -240,20 +240,25 @@ export function StylesPage() {
                 <CommunityCard source="app-styles" />
               </div>
             )}
-            {data && agent && (
-              <div className="fc-row fc-home-foot" style={{ justifyContent: "space-between" }}>
-                <span className="fc-agent connected">
-                  <span className="dot" />
-                  Connected to {agent}
-                </span>
-                <Link to="/setup" className="fc-btn ghost sm">
-                  Setup
-                </Link>
+            {data && (
+              <div className="fc-row fc-home-foot">
+                {agent && (
+                  <span className="fc-agent connected">
+                    <span className="dot" />
+                    Connected to {agent}
+                  </span>
+                )}
+                <span className="fc-grow" />
+                <MadeBy />
+                {agent && (
+                  <Link to="/setup" className="fc-btn ghost sm">
+                    Setup
+                  </Link>
+                )}
               </div>
             )}
           </>
         )}
-        <MadeBy />
       </main>
     </div>
   );

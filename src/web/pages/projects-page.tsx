@@ -158,20 +158,23 @@ export function ProjectsPage() {
 
             {agent && <CommunityCard source="app-projects" />}
 
-            {agent && (
-              <div className="fc-row fc-home-foot" style={{ justifyContent: "space-between" }} data-testid="setup-collapsed">
+            <div className="fc-row fc-home-foot" data-testid={agent ? "setup-collapsed" : undefined}>
+              {agent && (
                 <span className="fc-agent connected">
                   <span className="dot" />
                   Connected to {agent}
                 </span>
+              )}
+              <span className="fc-grow" />
+              <MadeBy />
+              {agent && (
                 <Link to="/setup" className="fc-btn ghost sm">
                   Setup
                 </Link>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
-        <MadeBy />
       </main>
     </div>
   );

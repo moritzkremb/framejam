@@ -49,11 +49,8 @@ Each version is one round. A version is either **open** (you're commenting on it
 Forgot something after sending? Write it on the next version. A sent version never reopens.
 ## What the player shows
 
-There is one player and no source choice. The app picks automatically:
-- **The latest version** plays the live composition, so clicking can target the exact word or shape and its animation.
-- **Older versions** play their exported video, so they look exactly as they did then.
-
-Never ask people to choose between "live" and "rendered", and never use those words in the interface.
+There is one player and no source choice: every version plays its rendered video, so it looks exactly as it did then.
+Clicking the picture pins a spot, and the agent gets that frame with the pin drawn on it.
 
 Keyboard: `Space` play/pause · `←`/`→` previous/next frame · `C` focus the box at the playhead · `Enter` add · `⌘Enter` send · `Esc` clear · `?` show all shortcuts.
 ## Voice and copy

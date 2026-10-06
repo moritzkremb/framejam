@@ -58,7 +58,7 @@ a { color: inherit; }
 .fc-prompt p { flex: 1; min-width: 0; margin: 0; font: 400 12.5px/19px var(--font-mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .fc-prompt .fc-btn { flex: none; }
 
-.fc-made-by { margin: var(--space-4) 0 0; text-align: center; color: var(--text-3); font: 400 12px/18px var(--font-sans); }
+.fc-made-by { margin: 0; color: var(--text-3); font: 400 12px/18px var(--font-sans); white-space: nowrap; }
 .fc-made-by a { color: var(--text-2); text-decoration: none; }
 .fc-made-by a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
 

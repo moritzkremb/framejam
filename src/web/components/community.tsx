@@ -95,15 +95,15 @@ export function UpdatesForm({ source }: { source: string }) {
   );
 }
 
-/** Bottom line of the top-level pages: who made FrameJam. */
+/** Who made FrameJam, in the footer row of the top-level pages. */
 export function MadeBy() {
   return (
-    <p className="fc-made-by">
+    <span className="fc-made-by">
       Created by{" "}
       <a href={X_URL} target="_blank" rel="noreferrer">
         @moritzkremb
       </a>
-    </p>
+    </span>
   );
 }
 
@@ -129,7 +129,7 @@ export function CommunityCard({ source }: { source: string }) {
       <div className="part news">
         <div className="copy">
           <div className="t">Stay in the loop</div>
-          <p className="fc-caption">New styles and updates when they ship. No spam.</p>
+          <p className="fc-caption">New styles and updates when they ship.</p>
         </div>
         <UpdatesForm source={source} />
       </div>
