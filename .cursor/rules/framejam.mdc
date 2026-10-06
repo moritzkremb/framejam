@@ -148,6 +148,13 @@ Use a storyboard review when the user wants to agree on the shots first, or asks
 - If MCP isn't connected, the user can use **Copy comments as text** in the review page's version menu and paste the
   result into chat.
 
+## Updating FrameJam
+
+If the user asks to update FrameJam, run `npx -y framejam@latest install <app>` with the app you're running in
+(`cursor`, `claude` or `codex`; without it, every app found on the computer is set up). It updates the skill, the MCP
+server entry and the FrameJam page that's running. Then tell the user to restart the app once: your FrameJam tools load
+the new version only after a restart.
+
 ## Rules
 
 - Don't ask the user to describe timestamps in chat. Send them to the review page.
