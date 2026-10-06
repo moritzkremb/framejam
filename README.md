@@ -6,7 +6,7 @@
 
 Pick a style, let the agent build the video, then click the frame that's wrong and say why.
 <br>
-Your agent gets the exact timestamp, the element you clicked and the animation behind it.
+Your agent gets the exact timestamp and a frame image with your pin on the spot you clicked.
 
 [Website](https://www.framejam.ai) · [Join the Discord](https://discord.gg/7bW9tP2ySK) · [Get updates](https://www.framejam.ai/#updates) · [Report an issue](https://github.com/moritzkremb/framejam/issues)
 
@@ -29,11 +29,10 @@ should be bigger" is a terrible way to give feedback. FrameJam is a small app th
 recipe: palette, fonts, easing, transitions, text animations, pacing and a working template.
 
 **Give feedback like you would to a person.** Pause and type, click the thing that's off, or drag across the
-timeline to mark a range. Press **Finish review** and your agent gets every comment with its timestamp, a frame
-thumbnail of the render.
+timeline to mark a range. Press **Finish review** and your agent gets every comment with its timestamp and a frame
+from the render, with your pin drawn where you clicked.
 
 **Works with any video tool.** Anything that renders an mp4 can be reviewed, and you always review the render.
-*Beta:* for Hyperframes, ask your agent for the live player, where a click lands on the exact element and GSAP tween.
 
 **Go round by round.** Each new version from the agent is a fresh round. Old versions keep their comments, so
 you can always see what changed and why.
@@ -234,7 +233,7 @@ Presets live in `presets/<id>/` (built-in) and `~/.framejam/presets/<id>/` (your
 ```
 presets/neon-terminal/
   style.json          # palette, fonts, easing, transitions, textAnimations, rhythm, guide, format, size
-  composition/        # Hyperframes source (index.html + assets)
+  composition/        # the style as a Hyperframes project (index.html + assets), a template for agents
   preview.mp4         # rendered with `npx hyperframes render`
   poster.jpg
 ```
@@ -268,18 +267,18 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
   that collapses to a rail. Clicking a comment anywhere (pin, timeline marker, corner note) opens the sidebar on it.
   Below 720px wide the sidebar slides over the video instead of taking a column.
 - **The comment box** sits under the timeline. It's attached to the current time by default; click the video to attach
-  a spot (in live compositions that records the CSS selector, the text, the owning clip and the active GSAP tween),
-  drag across the filmstrip to attach a range, or choose *Whole video*. Enter adds the comment.
+  a spot (the agent gets that frame with your pin drawn on it), drag across the filmstrip to attach a range, or choose *Whole video*. Enter adds the comment.
 - **On the video**, a comment shows up only while the playhead is at it: pinned comments as a bubble on their spot,
   time and range comments as a note in the top-left corner. The cursor over the video is a comment bubble.
 - **Agent listening.** The page says "Agent listening" while the agent is inside `wait_for_feedback` (and for 15
   seconds between its calls). That only happens while the agent's turn is still running: once it ends its turn, nobody
   is listening, and after you finish the page shows one line to paste into the chat ("Apply my FrameJam feedback for
   rev_…"). It switches to "Your agent is making version N" once the agent picks the comments up.
-- **What plays.** The render (mp4). *Beta:* if the agent opened the project with a Hyperframes `compositionDir`, the
-  latest version plays the live composition instead (with the official Hyperframes runtime injected from
-  `@hyperframes/core`), so clicks can target elements. The live view can differ from the render. If it can't be loaded,
-  the page plays the render. Older versions play their mp4 snapshot, so they look as they did then.
+- **What plays.** Always the render. Each version keeps a snapshot of its mp4, so older versions look as they did then.
+- **Timeline zoom.** Pinch on the timeline, `⌘`+scroll (`Ctrl`+scroll), or use the zoom buttons to pick ranges on long
+  videos. Scroll sideways or drag the bar under the filmstrip to move along.
+- **Download.** The download button next to **Finish review** (or *Download video* in the version menu) saves a copy of
+  the version's video wherever you choose.
 - **Keys.** `Space` play/pause, `←/→` step one frame, `Shift+←/→` step one second, `C` focus the comment box,
   `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
@@ -321,18 +320,18 @@ for v2 and v1 still shows what it was.
 
 | Tool | What it does |
 | --- | --- |
-| `open_review({ title?, videoPath?, compositionDir?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool; `compositionDir` (Hyperframes only, beta) adds the live player. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again on the same project adds v2, v3, and so on. |
+| `open_review({ title?, videoPath?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again with the same title adds v2, v3, and so on. |
 | `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again, up to 12 times in a row, then stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. |
 | `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
 | `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
-| `add_version({ reviewId, videoPath?, compositionDir?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
+| `add_version({ reviewId, videoPath?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id })` | Returns `style.json`, the guide, and the template source files. |
 | `get_selected_preset()` | Returns the preset the user picked with *Use this style*. |
 
-Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTime`, `position`, `element.selector`,
-`element.clip`, `element.tweens[]`, `thumbnailPath`), as a markdown prompt, and as inline JPEG frames.
+Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTime`, `position`, `thumbnailPath`), as a
+markdown prompt, and as inline JPEG frames with the pin drawn on them.
 
 </details>
 
@@ -355,8 +354,8 @@ npm run lint
 | `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` sets up the MCP server and skill for each app (`src/server/install.ts`) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/server/mcp.ts` | MCP tool definitions. |
 | `src/server/store.ts` | JSON file store. Every call re-reads from disk, so several processes can share `~/.framejam`. |
-| `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, composition serving, `/mcp`. |
-| `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). `lib/composition.ts` handles live playback and element/tween resolution. |
+| `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, `/mcp`. |
+| `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). |
 | `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
 | `skills/framejam/` | The agent skill (also mirrored as the Cursor rule in `.cursor/rules/framejam.mdc`). |
 | `videos/framejam-landing/` | Hyperframes source for the FrameJam landing video (sources only; renders aren't committed). |
@@ -376,12 +375,6 @@ look for a newer version on npm).
 - **One UI host per port.** If several harnesses each start `framejam --stdio`, the first one hosts the web UI and the
   others reuse it through the shared data directory. If the hosting process exits, restart one of them (or run
   `npx -y framejam start`).
-- **Live preview follows the files on disk.** The live composition always shows the files as they are now, which is
-  why older versions play their mp4 snapshot. A version without an mp4 falls back to the current files.
-- **Element resolution covers the top-level document.** Sub-compositions mounted with `data-composition-src` play
-  correctly, but a click resolves to the mount element, not to nodes inside the sub-composition.
-- **Frame thumbnails in live compositions come from the render.** A browser can't rasterise an iframe, so those
-  comments get their thumbnail (and the filmstrip its frames) from the version's mp4 when one exists.
 - **No MCP Apps embedding yet.** The UI is a plain web page, ready to be embedded later.
 
 </details>

@@ -1,11 +1,10 @@
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { feedbackPrompt, latestComments, versionComments } from "./feedback.ts";
-import { sendCompositionFile, sendFile, safeJoin } from "./files.ts";
+import { sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
 import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
 import { chooseSavePath } from "./save-dialog.ts";
@@ -58,7 +57,6 @@ export function createApp(ctx: McpContext) {
           draftComments: r.comments.filter((x) => x.version === latest.number && x.status === "draft").length,
           agentListening: store.agentListening(r.id),
           hasVideo: r.versions.some((v) => v.videoPath),
-          hasComposition: r.versions.some((v) => v.compositionDir),
           panels: latest.panels?.length ?? 0,
         };
       }),
@@ -221,15 +219,6 @@ export function createApp(ctx: McpContext) {
     return sendFile(file, c.req.raw);
   });
 
-  app.get("/api/reviews/:id/versions/:n/composition/*", (c) => {
-    const review = store.getReview(c.req.param("id"));
-    const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
-    if (!version?.compositionDir) return c.text("This version has no composition", 404);
-    const prefix = `/api/reviews/${review.id}/versions/${version.number}/composition/`;
-    const rel = c.req.path.slice(prefix.length) || version.compositionEntry || "index.html";
-    return sendCompositionFile(version.compositionDir, rel, c.req.raw);
-  });
-
   // --- Presets -------------------------------------------------------------
   app.get("/api/presets", (c) => {
     const { mood, pacing, format, q } = c.req.query();
@@ -248,9 +237,6 @@ export function createApp(ctx: McpContext) {
     const p = presets.get(c.req.param("id"));
     if (!p) return c.text("Preset not found", 404);
     const rel = c.req.path.slice(`/api/presets/${encodeURIComponent(p.style.id)}/files/`.length);
-    if (rel.startsWith("composition/")) {
-      return sendCompositionFile(path.join(p.dir, "composition"), rel.slice("composition/".length), c.req.raw);
-    }
     const file = safeJoin(p.dir, rel);
     return file ? sendFile(file, c.req.raw) : c.text("Forbidden", 403);
   });
@@ -261,11 +247,6 @@ export function createApp(ctx: McpContext) {
     const { id } = (await c.req.json()) as { id: string | null };
     if (id && !presets.get(id)) return c.json({ error: "Preset not found" }, 404);
     return c.json(store.setSelectedPreset(id).selectedPreset ?? null);
-  });
-
-  app.get("/vendor/gsap/:file", (c) => {
-    const file = safeJoin(gsapDistDir(), c.req.param("file"));
-    return file ? sendFile(file, c.req.raw) : c.text("Not found", 404);
   });
 
   // --- MCP over streamable HTTP (stateless: one server per request) --------
@@ -290,10 +271,4 @@ export function createApp(ctx: McpContext) {
   });
 
   return app;
-}
-
-let gsapDir: string | undefined;
-function gsapDistDir() {
-  gsapDir ??= path.join(path.dirname(createRequire(import.meta.url).resolve("gsap/package.json")), "dist");
-  return gsapDir;
 }

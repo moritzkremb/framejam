@@ -5,7 +5,6 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/server/app.ts";
-import { prepareCompositionHtml } from "../src/server/files.ts";
 import { BASE_URL, makeFixture, parse, type ToolResult } from "./helpers.ts";
 
 let fx: ReturnType<typeof makeFixture>;
@@ -24,7 +23,7 @@ const json = (body: unknown) => ({ method: "POST", headers: { "content-type": "a
 
 describe("REST API used by the review UI", () => {
   it("adds comments (with captured thumbnails), sends them, and renders the prompt", async () => {
-    const { review } = fx.store.openReview({ title: "Teaser", videoPath: fx.video, compositionDir: fx.compositionDir });
+    const { review } = fx.store.openReview({ title: "Teaser", videoPath: fx.video });
     const tinyJpeg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]).toString("base64");
     const res = await app.request(
       `/api/reviews/${review.id}/comments`,
@@ -81,27 +80,21 @@ describe("REST API used by the review UI", () => {
     expect(missing.status).toBe(404);
   });
 
-  it("serves the composition with the Hyperframes runtime injected and GSAP served locally", async () => {
-    const { review } = fx.store.openReview({ compositionDir: fx.compositionDir });
-    const html = await (await app.request(`/api/reviews/${review.id}/versions/1/composition/`)).text();
-    expect(html).toContain('data-framejam="hyperframes-runtime"');
-    expect(html).toContain('src="/vendor/gsap/gsap.min.js"');
-    expect(html).not.toContain("cdn.jsdelivr.net/npm/gsap");
-    const gsap = await app.request("/vendor/gsap/gsap.min.js");
-    expect(gsap.status).toBe(200);
-    const escape = await app.request(`/api/reviews/${review.id}/versions/1/composition/..%2F..%2Fsecret`);
-    expect([403, 404]).toContain(escape.status);
-  });
+  it("adds the next render to a project from before videos were mp4-only, matching it by title", async () => {
+    const { review } = fx.store.openReview({ title: "Teaser", videoPath: fx.video });
+    const file = path.join(fx.store.reviewsDir, `${review.id}.json`);
+    const legacy = JSON.parse(fs.readFileSync(file, "utf8"));
+    legacy.projectKey = fx.compositionDir;
+    legacy.versions[0].compositionDir = fx.compositionDir;
+    fs.writeFileSync(file, JSON.stringify(legacy));
 
-  it("injects the runtime ahead of the composition's own scripts", () => {
-    const html = prepareCompositionHtml(
-      `<html><head><title>x</title></head><body><script>window.__hf.buildReady.x = 1;</script></body></html>`,
-    );
-    const runtime = html.indexOf('data-framejam="hyperframes-runtime"');
-    expect(runtime).toBeGreaterThan(-1);
-    expect(runtime).toBeLessThan(html.indexOf("</head>"));
-    expect(runtime).toBeLessThan(html.indexOf("window.__hf.buildReady"));
-    expect(prepareCompositionHtml(`<div class="clip"></div><script>1</script>`).startsWith('<script data-framejam="hyperframes-runtime">')).toBe(true);
+    const v2 = path.join(fx.project, "renders", "v2.mp4");
+    fs.copyFileSync(fx.video, v2);
+    const next = fx.store.openReview({ title: "teaser", videoPath: v2 });
+    expect(next.review.id).toBe(review.id);
+    expect(next.version.number).toBe(2);
+    expect(next.version).not.toHaveProperty("compositionDir");
+    expect((await app.request(`/api/reviews/${review.id}/versions/1/video`)).status).toBe(200);
   });
 
   it("selects a preset for the agent", async () => {

@@ -1,6 +1,6 @@
-import type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel } from "../../shared/types";
+import type { AgentInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel } from "../../shared/types";
 
-export type { AgentInfo, ElementInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel };
+export type { AgentInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel };
 
 export interface ReviewListItem {
   id: string;
@@ -14,7 +14,6 @@ export interface ReviewListItem {
   draftComments: number;
   agentListening: boolean;
   hasVideo: boolean;
-  hasComposition: boolean;
   /** Panels in the latest version; 0 for videos. */
   panels: number;
 }
@@ -95,11 +94,6 @@ export function videoUrl(reviewId: string, version: number) {
 export function panelUrl(reviewId: string, version: number, panel: number) {
   return `/api/reviews/${reviewId}/versions/${version}/panels/${panel}`;
 }
-
-export function compositionUrl(reviewId: string, version: number) {
-  return `/api/reviews/${reviewId}/versions/${version}/composition/`;
-}
-
 export function posterUrl(reviewId: string, version: number) {
   return `/api/reviews/${reviewId}/poster?v=${version}`;
 }

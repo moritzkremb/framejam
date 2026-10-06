@@ -1,4 +1,4 @@
-import { Code2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Menu, MenuItem } from "@/components/menu";
 import { formatTime, type ReviewComment } from "@/lib/api";
@@ -7,19 +7,6 @@ import { cn } from "@/lib/utils";
 export function whenLabel(c: Pick<ReviewComment, "wholeVideo" | "time" | "endTime">) {
   if (c.wholeVideo) return "Whole video";
   return c.endTime !== undefined ? `${formatTime(c.time)} – ${formatTime(c.endTime)}` : formatTime(c.time);
-}
-
-function elementLine(c: ReviewComment) {
-  const el = c.element;
-  if (!el) return null;
-  const tween = el.tweens[0];
-  const props = tween
-    ? Object.entries(tween.props)
-        .slice(0, 2)
-        .map(([k, v]) => `${k} ${v}`)
-        .join(", ")
-    : "";
-  return [el.selector, props, tween?.ease].filter(Boolean).join(" · ");
 }
 
 function CommentItem({
@@ -47,8 +34,6 @@ function CommentItem({
   useEffect(() => {
     if (selected) ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [selected]);
-  const ctx = elementLine(comment);
-
   return (
     <li
       ref={ref}
@@ -107,11 +92,6 @@ function CommentItem({
           </div>
         ) : (
           <p className="body">{comment.text}</p>
-        )}
-        {ctx && (
-          <div className="ctx" title={ctx}>
-            <Code2 className="fc-i xs" /> <span className="fc-truncate">{ctx}</span>
-          </div>
         )}
       </div>
       {editable && !editing ? (

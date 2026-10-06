@@ -30,7 +30,7 @@ const MAX_IMAGES = 6;
 const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), and pick style presets.
 First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
 Loop: (optional) get_selected_preset / list_presets -> build the video with the project's own tool -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending", but stop after 12 pending results in a row, about 10 minutes, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
-Pass videoPath (the render) for every tool, Hyperframes included; the user reviews the render. compositionDir (Hyperframes only) turns on a live player where the user can click elements. It is beta: only pass it if the user asks. Don't convert the project to Hyperframes.
+Pass videoPath (the render) for every tool; the user always reviews the rendered file. Don't convert the project to another tool.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
 When talking to the user, call a review a "project" (that's what the FrameJam UI calls it).
@@ -48,7 +48,7 @@ const panelsSchema = z
     ]),
   )
   .optional()
-  .describe("Storyboard panels in order (png, jpg, webp, gif, svg). Use instead of videoPath/compositionDir.");
+  .describe("Storyboard panels in order (png, jpg, webp, gif, svg). Use instead of videoPath.");
 const panelsDirSchema = z
   .string()
   .optional()
@@ -112,7 +112,6 @@ export function createMcpServer(ctx: McpContext): McpServer {
         title: review.title,
         url: reviewUrl(ctx.baseUrl, review.id),
         currentVersion: latest.number,
-        compositionDir: latest.compositionDir,
         videoPath: latest.videoPath,
         panelsDir: latest.panelsDir,
         panels: latest.panels?.map((p, i) => ({ number: i + 1, path: p.sourcePath, title: p.title, caption: p.caption })),
@@ -122,7 +121,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
       { type: "text", text: feedbackPrompt(store, ctx.baseUrl, review, comments, { message }) },
     ];
     for (const c of agentComments.filter((c) => c.thumbnailPath).slice(0, MAX_IMAGES)) {
-      content.push({ type: "text", text: `${c.panel ? "Panel (pin marked)" : "Frame"} for comment ${c.id} at ${c.at}:` });
+      content.push({ type: "text", text: `${c.panel ? "Panel" : "Frame"}${c.position ? " (pin marked)" : ""} for comment ${c.id} at ${c.at}:` });
       content.push({ type: "image", mimeType: "image/jpeg", data: fs.readFileSync(c.thumbnailPath!).toString("base64") });
     }
     return content;
@@ -134,16 +133,11 @@ export function createMcpServer(ctx: McpContext): McpServer {
       title: "Open a video or storyboard review",
       description:
         "Open a review page (the user calls it a project) for a rendered video from any tool, or for a storyboard (panels / panelsDir). Returns { reviewId, url, version }. " +
-        "Pass videoPath only; compositionDir is a beta live player for Hyperframes, to use only if the user asks. " +
-        "Calling it again for the same compositionDir, panelsDir (or title) adds a new version to the existing review; each version starts with no comments. " +
+        "Calling it again with the same title (or panelsDir) adds a new version to the existing review; each version starts with no comments. " +
         "Use absolute paths. Show the URL to the user, then call wait_for_feedback.",
       inputSchema: {
         title: z.string().optional().describe("Human-readable title, e.g. 'Launch video'"),
         videoPath: z.string().optional().describe("Absolute path to the rendered video (mp4/webm/mov), from any tool"),
-        compositionDir: z
-          .string()
-          .optional()
-          .describe("Beta, Hyperframes only, and only if the user asks: absolute path to the composition folder (containing index.html), or to the composition HTML file. Enables the live player, where the user can click elements"),
         panels: panelsSchema,
         panelsDir: panelsDirSchema,
         reviewId: z.string().optional().describe("Force adding a version to this existing review"),
@@ -175,8 +169,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Wait for the user to send feedback",
       description:
-        "Blocks until the user presses 'Finish review' in the review UI, then returns their comments (timestamp, pin position, " +
-        "DOM element / GSAP tween when available, and frame thumbnails). Returns { status: 'pending' } after ~50s so clients don't time out: " +
+        "Blocks until the user presses 'Finish review' in the review UI, then returns their comments (timestamp or range, pin position, " +
+        "and a frame image with the pin drawn on it). Returns { status: 'pending' } after ~50s so clients don't time out: " +
         "when that happens, call wait_for_feedback again with the same reviewId. After 12 pending results in a row (about 10 minutes) stop and tell the user to press Finish review and say 'apply my FrameJam feedback'; their comments are saved.",
       inputSchema: {
         reviewId: z.string(),
@@ -337,7 +331,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "List reviews",
       description:
-        "List the user's video and storyboard reviews (shown to the user as projects), newest first, with their review page URL, the latest version's file paths (compositionDir / videoPath / panelsDir, to match a project to the current workspace) and where each round stands.",
+        "List the user's video and storyboard reviews (shown to the user as projects), newest first, with their review page URL, the latest version's file paths (videoPath / panelsDir, to match a project to the current workspace) and where each round stands.",
       inputSchema: {},
     },
     async () => {
@@ -352,7 +346,6 @@ export function createMcpServer(ctx: McpContext): McpServer {
           updatedAt: r.updatedAt,
           latestVersion: latest.number,
           kind: latest.panels?.length ? "storyboard" : "video",
-          compositionDir: latest.compositionDir,
           videoPath: latest.videoPath,
           panelsDir: latest.panelsDir,
           state: !latest.sentAt
@@ -395,20 +388,19 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Add a new version to a review",
       description:
-        "Attach a new render (and/or composition), or new storyboard panels, to an existing review as v2, v3, ... The new version starts with an empty comment list. Pass a one-line note of what you changed; the user sees it when the version arrives. Prefer a new file name per render so earlier versions stay comparable. " +
+        "Attach a new render, or new storyboard panels, to an existing review as v2, v3, ... The new version starts with an empty comment list. Pass a one-line note of what you changed; the user sees it when the version arrives. Prefer a new file name per render so earlier versions stay comparable. " +
         "For a storyboard, passing no media re-reads the previous panelsDir (earlier versions keep their own copies of the images).",
       inputSchema: {
         reviewId: z.string(),
-        videoPath: z.string().optional(),
-        compositionDir: z.string().optional().describe("Defaults to the previous version's composition"),
+        videoPath: z.string().optional().describe("Absolute path to the new render. Required for a video"),
         panels: panelsSchema,
         panelsDir: panelsDirSchema,
         note: z.string().optional().describe("What changed"),
       },
     },
-    async ({ reviewId, videoPath, compositionDir, panels, panelsDir, note }) => {
+    async ({ reviewId, videoPath, panels, panelsDir, note }) => {
       try {
-        const review = store.addVersion(reviewId, { videoPath, compositionDir, panels, panelsDir, note });
+        const review = store.addVersion(reviewId, { videoPath, panels, panelsDir, note });
         const v = review.versions.at(-1)!;
         return {
           content: [json({ reviewId, version: v.number, url: reviewUrl(ctx.baseUrl, reviewId), next: "Tell the user the new version is ready, then call wait_for_feedback." })],
@@ -455,7 +447,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
       style: p.style,
       guide: p.style.guide,
       presetDir: p.dir,
-      compositionDir: path.join(p.dir, "composition"),
+      templateDir: path.join(p.dir, "composition"),
       previewVideo: fs.existsSync(path.join(p.dir, "preview.mp4")) ? path.join(p.dir, "preview.mp4") : undefined,
       galleryUrl: `${ctx.baseUrl}/styles/${id}`,
       templateFiles: presets.templateSource(p),

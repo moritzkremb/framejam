@@ -1,11 +1,9 @@
 import { Loader2, MessageSquarePlus, Plus, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import type { ElementInfo } from "@/lib/api";
-import { connectLive } from "@/lib/composition";
+import { drawPin } from "@/lib/pin";
 import { cn } from "@/lib/utils";
 
 export interface MediaController {
-  kind: "video" | "hyperframes" | "gsap";
   duration: number;
   width: number;
   height: number;
@@ -14,9 +12,8 @@ export interface MediaController {
   seek(t: number): void;
   getTime(): number;
   isPlaying(): boolean;
-  /** Live compositions only: the DOM element and tween under a normalized point. */
-  resolveAt?(x: number, y: number, time: number): ElementInfo | undefined;
-  captureFrame?(): string | undefined;
+  /** The current frame as a JPEG data URL, with a pin drawn at `pin` (normalized) when given. */
+  captureFrame(pin?: { x: number; y: number }): string | undefined;
 }
 
 export interface Pin {
@@ -38,12 +35,11 @@ export interface FloatingNote {
 
 interface PlayerProps {
   src: string;
-  source: "video" | "live";
   /** Pins for the comments at the current time; the page decides which ones are in view. */
   pins: Pin[];
   floating: FloatingNote[];
   /** The spot the comment box is attached to, if any. */
-  newPin?: { x: number; y: number; element?: ElementInfo } | null;
+  newPin?: { x: number; y: number } | null;
   selectedId: string | null;
   showHint: boolean;
   /** Clicking the picture comments on that spot. Off for sent versions. */
@@ -51,8 +47,6 @@ interface PlayerProps {
   className?: string;
   style?: CSSProperties;
   onController(ctrl: MediaController | null): void;
-  /** The live composition couldn't be driven. Without this the player shows the error. */
-  onLiveError?(message: string): void;
   onFrameClick(x: number, y: number): void;
   onPinClick(id: string): void;
   /** Width of the picture as laid out, so the controls under it can match. */
@@ -61,7 +55,6 @@ interface PlayerProps {
 
 function videoController(video: HTMLVideoElement): MediaController {
   return {
-    kind: "video",
     duration: video.duration || 0,
     width: video.videoWidth,
     height: video.videoHeight,
@@ -72,14 +65,15 @@ function videoController(video: HTMLVideoElement): MediaController {
     },
     getTime: () => video.currentTime,
     isPlaying: () => !video.paused && !video.ended,
-    captureFrame: () => {
+    captureFrame: (pin) => {
       try {
-        const scale = Math.min(1, 480 / (video.videoWidth || 480));
+        const scale = Math.min(1, 640 / (video.videoWidth || 640));
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(video.videoWidth * scale);
         canvas.height = Math.round(video.videoHeight * scale);
         canvas.getContext("2d")!.drawImage(video, 0, 0, canvas.width, canvas.height);
-        return canvas.toDataURL("image/jpeg", 0.82);
+        if (pin) drawPin(canvas, pin.x, pin.y);
+        return canvas.toDataURL("image/jpeg", 0.85);
       } catch {
         return undefined;
       }
@@ -108,41 +102,22 @@ function useFitBox(aspect: number) {
 }
 
 /** The video well: footage on black, comment pins on top. Clicking the picture is the main way to comment. */
-export function Player({
-  src,
-  source,
-  pins,
-  floating,
-  newPin,
-  selectedId,
-  showHint,
-  interactive,
-  className,
-  style,
-  onController,
-  onLiveError,
-  onFrameClick,
-  onPinClick,
-  onFrameWidth,
-}: PlayerProps) {
+export function Player({ src, pins, floating, newPin, selectedId, showHint, interactive, className, style, onController, onFrameClick, onPinClick, onFrameWidth }: PlayerProps) {
   const [native, setNative] = useState({ width: 1920, height: 1080 });
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
   const { ref, box } = useFitBox(native.width / native.height);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const onControllerRef = useRef(onController);
-  const onLiveErrorRef = useRef(onLiveError);
   useLayoutEffect(() => {
     onControllerRef.current = onController;
-    onLiveErrorRef.current = onLiveError;
   });
 
   useEffect(() => {
     setStatus("loading");
     setError(null);
     return () => onControllerRef.current(null);
-  }, [src, source]);
+  }, [src]);
 
   const handleVideoMeta = useCallback(() => {
     const v = videoRef.current;
@@ -152,69 +127,27 @@ export function Player({
     onControllerRef.current(videoController(v));
   }, []);
 
-  const handleIframeLoad = useCallback(async () => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-    try {
-      const live = await connectLive(iframe);
-      setNative({ width: live.width, height: live.height });
-      live.seek(0);
-      setStatus("ready");
-      onControllerRef.current({
-        kind: live.mode,
-        duration: live.duration,
-        width: live.width,
-        height: live.height,
-        play: live.play,
-        pause: live.pause,
-        seek: live.seek,
-        getTime: live.getTime,
-        isPlaying: live.isPlaying,
-        resolveAt: live.resolveAt,
-      });
-    } catch (e) {
-      if (onLiveErrorRef.current) return onLiveErrorRef.current((e as Error).message);
-      setStatus("error");
-      setError((e as Error).message);
-    }
-  }, []);
-
   useEffect(() => {
     if (box.width) onFrameWidth?.(box.width);
   }, [box.width, onFrameWidth]);
-
-  const scale = box.width / native.width;
-  const target = newPin?.element?.rect;
 
   return (
     <div className={cn("fc-player", className)} style={style}>
       <div ref={ref} className="fc-player-fit">
         <div className="frame" style={{ width: box.width || "100%", height: box.height || "100%" }}>
-          {source === "video" ? (
-            <video
-              key={src}
-              ref={videoRef}
-              src={src}
-              className="fc-media"
-              preload="auto"
-              playsInline
-              onLoadedMetadata={handleVideoMeta}
-              onError={() => {
-                setStatus("error");
-                setError("This video couldn't be loaded.");
-              }}
-            />
-          ) : (
-            <iframe
-              key={src}
-              ref={iframeRef}
-              src={src}
-              title="Video preview"
-              onLoad={handleIframeLoad}
-              className="fc-live"
-              style={{ width: native.width, height: native.height, transform: `scale(${scale || 0.0001})` }}
-            />
-          )}
+          <video
+            key={src}
+            ref={videoRef}
+            src={src}
+            className="fc-media"
+            preload="auto"
+            playsInline
+            onLoadedMetadata={handleVideoMeta}
+            onError={() => {
+              setStatus("error");
+              setError("This video couldn't be loaded. If the file was moved or deleted, ask your agent to add the render again.");
+            }}
+          />
 
           <div
             data-testid="frame-overlay"
@@ -226,12 +159,6 @@ export function Player({
               onFrameClick((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
             }}
           >
-            {target && (
-              <div
-                className="fc-target"
-                style={{ left: `${target.x * 100}%`, top: `${target.y * 100}%`, width: `${target.width * 100}%`, height: `${target.height * 100}%` }}
-              />
-            )}
             {pins.map((p) => (
               <button
                 key={p.id}

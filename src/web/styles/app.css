@@ -143,8 +143,8 @@ a { color: inherit; }
 .fc-style-media { display: flex; justify-content: center; border-radius: var(--radius-lg); background: var(--video); overflow: hidden; }
 .fc-style-media video { display: block; width: 100%; max-height: 60dvh; background: var(--video); }
 .fc-style-media.tall video { width: auto; max-width: 100%; height: 60dvh; }
-.fc-live-preview { position: relative; width: 100%; max-height: 60dvh; overflow: hidden; }
-.fc-live-preview iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: top left; }
+.fc-style-media img { display: block; width: 100%; max-height: 60dvh; object-fit: contain; }
+.fc-style-nopreview { display: grid; place-items: center; width: 100%; max-height: 60dvh; padding: 24px; color: var(--text-2); font: 400 13px/19px var(--font-sans); text-align: center; }
 /* Style detail: header with actions, then sections of tiles */
 .fc-style-page { max-width: 1040px; margin: 0 auto; }
 .fc-style-head { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
@@ -237,7 +237,6 @@ a { color: inherit; }
 .fc-player-fit { position: absolute; inset: 0; display: grid; place-items: center; }
 .fc-player .frame { position: relative; aspect-ratio: auto; height: auto; overflow: hidden; cursor: default; border-radius: var(--radius-lg); background: var(--video); box-shadow: 0 0 0 1px var(--border); }
 .fc-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--video); }
-.fc-live { position: absolute; left: 0; top: 0; border: 0; background: #000; transform-origin: top left; pointer-events: none; }
 .fc-overlay { position: absolute; inset: 0; }
 /* A comment bubble with a plus; the hotspot is the tail at the bottom left. */
 .fc-overlay.interactive {

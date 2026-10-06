@@ -9,10 +9,8 @@ FrameJam runs next to your chat at http://localhost:2400. It gives you two thing
 **choosing a style** (a structured `style.json`, plus a working Hyperframes template) and **precise feedback**
 (timestamped, pinned comments with a frame image of the render).
 
-FrameJam works with whatever makes the video. **The user reviews the rendered video**, so what they see is exactly
-what you rendered. Hyperframes is the default way to build, but you always review the render (`videoPath` only).
-A live player that lets the user click a DOM element is a **beta** feature: use it only if the user asks for it (see
-"Live player (beta)" below).
+FrameJam works with whatever makes the video. **The user reviews the rendered video** (`videoPath`), so what they see
+is exactly what you rendered. Hyperframes is the default way to build a new video.
 
 **Words to use with the user:** FrameJam calls each review a **project** (the start page is "Projects"). Say
 "I opened the project in FrameJam", not "I opened a review". Tool and field names (`open_review`, `reviewId`) stay as
@@ -44,7 +42,7 @@ you want to make?" if any of them answers it.
    `open_review` with the same `title`), and wait for feedback.
 3. **Feedback waiting.** Call `list_reviews()`. If a project is `sent_not_delivered` or `user_commenting`, call
    `get_feedback({ reviewId })` and apply it.
-4. **A FrameJam project for this folder:** one whose `compositionDir`, `videoPath` or `panelsDir` is inside the
+4. **A FrameJam project for this folder:** one whose `videoPath` or `panelsDir` is inside the
    current workspace.
    - `awaiting_user`: open its `url` and call `wait_for_feedback`.
    - `delivered_to_agent`: an earlier chat got the comments but never shipped the next version. Call `get_feedback` to
@@ -71,8 +69,7 @@ If several projects could match, ask one short question that lists them.
 2. **Build** the video with the project's tool (Hyperframes details below, other tools further down).
 3. **Render** to a *new file per version*, e.g. `renders/v1.mp4`, `renders/v2.mp4`, so earlier versions stay comparable.
 4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`. Use an absolute path, and the same
-   `title` every time so later renders become new versions of this project. Pass `compositionDir` only if the user
-   asked for the live player (beta, below).
+   `title` every time so later renders become new versions of this project.
    Open the returned `url` in the built-in browser (step 0) and tell the user in one line:
    "Click the video to point at something (or pause and type), then press **Finish review**."
 5. **Wait, in the same turn:** call `wait_for_feedback({ reviewId })` right after opening the review. Don't end your turn
@@ -89,10 +86,8 @@ If several projects could match, ask one short question that lists them.
      another version. Tell the user where the final file is and stop waiting.
 6. **Apply every comment.**
    - `at` / `time` / `endTime` is where in the video. `position` is where in the frame.
-   - `element.selector` is the DOM node that was clicked. `element.clip` is its Hyperframes clip. `element.tweens` are the
-     GSAP tweens on it at that moment (`relation: "active" | "previous" | "next"`, with start, end, props and ease).
-     Edit those exact lines first. (Only the beta live player gives you `element`; normally use the time, position and
-     frame image to find the spot in the source.)
+   - The frame image for a pinned comment has the pin drawn on it: look at what's under the pin, then find that element
+     in your source at that time.
    - `wholeVideo: true` means a global note (pacing, colour, music, and so on).
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
    `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`).
@@ -109,27 +104,14 @@ If several projects could match, ask one short question that lists them.
   `.clip` elements with `data-start`/`data-duration`/`data-track-index`, and a paused GSAP timeline registered in
   `window.__timelines["<id>"]`. Run `npx hyperframes lint` and fix errors.
 - **Render:** `npx hyperframes render -o renders/v1.mp4`.
-- **Open:** pass `videoPath` only, like any other tool. The user reviews the render.
-
-## Live player (beta, only if the user asks)
-
-If the user wants to click an element in the video and have you get its DOM node and GSAP tween, also pass
-`compositionDir` (Hyperframes only). The review page then plays the live composition instead of the mp4. It is beta:
-the live view can differ from the render, so tell the user the render is the source of truth. Rules for compositions
-that will be played live:
-
-- Don't show and hide root-level elements by animating `visibility`. The player adds `data-start` to them and
-  overrides `visibility` every frame, so every scene stays visible at once. Use `opacity`, or give the element
-  `data-start`/`data-duration`.
-- If the live view looks wrong, drop `compositionDir` from the next version; the review page then plays the mp4.
+- **Open:** pass `videoPath`, like any other tool. The user reviews the render.
 
 ## Other tools (Remotion, Motion Canvas, ffmpeg, recordings, …)
 
 - Keep the project's own tool and render command (`npx remotion render`, the Motion Canvas exporter, an ffmpeg script,
   a screen recording). **Don't convert the project to Hyperframes.**
-- Render each version to a new mp4/webm/mov file and call `open_review({ title, videoPath })` with **`videoPath` only**.
+- Render each version to a new mp4/webm/mov file and call `open_review({ title, videoPath })`.
 - Use the preset's `style.guide`, `palette`, `fonts`, `easing` and pacing in the tool's own terms.
-- Comments come with time, position and a frame image, but no `element`/`tweens`.
 
 ## Storyboards (before there's a video)
 

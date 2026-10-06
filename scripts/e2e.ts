@@ -50,7 +50,6 @@ const opened = firstJson(
   await call("open_review", {
     title: process.env.E2E_TITLE ?? "Q3 field report teaser",
     videoPath: v1,
-    compositionDir: path.join(project, "composition"),
     note: "First cut",
   }),
 );

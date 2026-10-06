@@ -82,7 +82,6 @@ export class PresetLibrary {
       hasPoster,
       previewUrl: localPreview ? `${base}/files/preview.mp4` : p.builtin ? `${PREVIEW_BASE_URL}/${id}/preview.mp4` : undefined,
       posterUrl: hasPoster ? `${base}/files/poster.jpg` : undefined,
-      compositionUrl: `${base}/files/composition/index.html`,
     };
   }
 

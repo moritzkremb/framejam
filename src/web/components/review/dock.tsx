@@ -1,19 +1,13 @@
 import { Check, CheckCheck, Clock, Copy, Loader2, MapPin, MoveHorizontal, Pencil, X } from "lucide-react";
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { copyText, formatTime, handoffMessage, type ElementInfo } from "@/lib/api";
+import { copyText, formatTime, handoffMessage } from "@/lib/api";
 import { cn, COPY_KEYS, FINISH_KEYS } from "@/lib/utils";
 
 export type Anchor =
   | { kind: "time" }
-  | { kind: "spot"; time: number; x: number; y: number; element?: ElementInfo; thumbnailDataUrl?: string }
+  | { kind: "spot"; time: number; x: number; y: number; thumbnailDataUrl?: string }
   | { kind: "range"; time: number; endTime: number };
-
-function elementName(el?: ElementInfo) {
-  if (!el) return "this spot";
-  if (el.text) return `“${el.text.length > 22 ? `${el.text.slice(0, 21)}…` : el.text}”`;
-  return el.selector.split(/\s*>\s*/).pop() ?? el.selector;
-}
 
 const OUTDATED_HELP =
   "Your agent is running FrameJam from before the last update, so this page can't tell whether it's listening. Restart the framejam MCP server in your agent (Cursor: Settings → MCP) to fix it.";
@@ -104,7 +98,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     customChip
   ) : anchor.kind === "spot" ? (
     <span className="fc-anchor">
-      <MapPin className="fc-i xs" /> {formatTime(anchor.time)} · on {elementName(anchor.element)}
+      <MapPin className="fc-i xs" /> {formatTime(anchor.time)} · on this spot
       <button type="button" className="x" aria-label="Remove spot" onClick={onClearAnchor}>
         <X className="fc-i xs" />
       </button>

@@ -10,7 +10,7 @@ import { CommentsRail, DownloadButton, ReviewBottom, ReviewHeader, ReviewSidebar
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
-import { api, compositionUrl, formatTime, videoUrl, type ReviewComment } from "@/lib/api";
+import { api, formatTime, videoUrl, type ReviewComment } from "@/lib/api";
 import { cn, FINISH_KEYS, MOD_KEY, SHIFT_KEY } from "@/lib/utils";
 
 const FPS = 30;
@@ -93,7 +93,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const review = r.review!;
   const version = r.version!;
   const latest = r.latest!;
-  const { isLatest, isOpen, load } = r;
+  const { isOpen, load } = r;
   const [ctrl, setCtrl] = useState<MediaController | null>(null);
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -139,19 +139,6 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
     [review, version],
   );
   const indexOf = useMemo(() => new Map(comments.map((c, i) => [c.id, i + 1])), [comments]);
-
-  // Latest version plays live (so clicks hit exact elements); older versions play their render as it was.
-  // A composition the player can't drive (not Hyperframes, or broken) falls back to the render.
-  const [liveFailed, setLiveFailed] = useState<string | null>(null);
-  const versionKey = `${review.id}@${version.number}`;
-  const wantsLive = isLatest ? Boolean(version.compositionDir) : !version.videoPath;
-  const source: "video" | "live" = wantsLive && !(liveFailed === versionKey && version.videoPath) ? "live" : "video";
-  const onLiveError = version.videoPath
-    ? () => {
-        setLiveFailed(versionKey);
-        toast("The live preview didn't load, so this plays the render instead.");
-      }
-    : undefined;
 
   const duration = ctrl?.duration || 0;
   const zoom = useTimelineZoom(duration);
@@ -207,8 +194,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       time: t,
       x,
       y,
-      element: ctrl.resolveAt?.(x, y, t),
-      thumbnailDataUrl: ctrl.kind === "video" ? ctrl.captureFrame?.() : undefined,
+      thumbnailDataUrl: ctrl.captureFrame({ x, y }),
     });
     setWhole(false);
     setSelectedId(null);
@@ -229,9 +215,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
         y: !whole && anchor.kind === "spot" ? anchor.y : undefined,
         wholeVideo: whole || undefined,
         text,
-        source,
-        element: !whole && anchor.kind === "spot" ? anchor.element : undefined,
-        thumbnailDataUrl: anchor.kind === "spot" ? anchor.thumbnailDataUrl : ctrl?.kind === "video" ? ctrl.captureFrame?.() : undefined,
+        thumbnailDataUrl: !whole && anchor.kind === "spot" ? anchor.thumbnailDataUrl : ctrl?.captureFrame(),
       });
       setText("");
       setAnchor({ kind: "time" });
@@ -284,7 +268,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const src = source === "video" ? videoUrl(review.id, version.number) : compositionUrl(review.id, version.number);
+  const src = videoUrl(review.id, version.number);
   const draftCount = comments.filter((c) => c.status === "draft").length;
   const subline = [
     review.versions.length > 1 ? `Version ${version.number} of ${review.versions.length}` : `Version ${version.number}`,
@@ -355,7 +339,6 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
         <div className="fc-stage" style={{ "--content-w": `${Math.max(frameWidth, 520)}px` } as CSSProperties}>
           <Player
             src={src}
-            source={source}
             pins={pins}
             floating={floating}
             newPin={isOpen && !whole && anchor.kind === "spot" ? anchor : null}
@@ -364,7 +347,6 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
             interactive={isOpen}
             style={{ flex: "0 1 auto", width: "100%", aspectRatio: `${ctrl ? ctrl.width / ctrl.height : 16 / 9}`, minHeight: 160 }}
             onController={handleController}
-            onLiveError={onLiveError}
             onFrameClick={onFrameClick}
             onPinClick={selectById}
             onFrameWidth={setFrameWidth}

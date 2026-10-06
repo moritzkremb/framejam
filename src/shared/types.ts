@@ -1,27 +1,6 @@
 export type CommentStatus = "draft" | "sent" | "resolved";
 /** `panel`: about one storyboard panel as a whole, without a pinned spot. */
 export type CommentKind = "pin" | "range" | "panel" | "general";
-export type PlayerSource = "video" | "live";
-
-export interface TweenInfo {
-  targets: string[];
-  start: number;
-  end: number;
-  ease?: string;
-  props: Record<string, string | number | boolean>;
-  relation: "active" | "previous" | "next";
-}
-
-export interface ElementInfo {
-  selector: string;
-  tagName: string;
-  text?: string;
-  /** Normalized (0-1) bounding box of the element inside the frame. */
-  rect?: { x: number; y: number; width: number; height: number };
-  /** Nearest Hyperframes clip (`[data-start]`) containing the element. */
-  clip?: { selector: string; start?: string; duration?: string; trackIndex?: string };
-  tweens: TweenInfo[];
-}
 
 export interface ReviewComment {
   id: string;
@@ -37,8 +16,6 @@ export interface ReviewComment {
   /** The whole video, or the whole storyboard. */
   wholeVideo?: boolean;
   text: string;
-  source?: PlayerSource;
-  element?: ElementInfo;
   thumbnail?: string;
   status: CommentStatus;
   createdAt: string;
@@ -64,8 +41,6 @@ export interface ReviewVersion {
   videoPath?: string;
   /** Copy of the render taken when the version was created (file name inside the review folder). */
   videoSnapshot?: string;
-  compositionDir?: string;
-  compositionEntry?: string;
   /** Storyboard versions have panels instead of a video. */
   panels?: StoryboardPanel[];
   /** Folder the panels came from; add_version re-reads it when given nothing new. */
@@ -150,5 +125,4 @@ export interface PresetSummary extends PresetStyle {
   hasPoster: boolean;
   previewUrl?: string;
   posterUrl?: string;
-  compositionUrl: string;
 }

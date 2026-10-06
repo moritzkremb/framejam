@@ -1,7 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { getHyperframeRuntimeScript } from "@hyperframes/core/runtime-script";
-
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -78,39 +76,4 @@ function toWebStream(stream: fs.ReadStream): ReadableStream<Uint8Array> {
       stream.destroy();
     },
   });
-}
-
-const GSAP_CDN = /https?:\/\/(?:cdn\.jsdelivr\.net\/npm|unpkg\.com)\/gsap@[^/"']+\/dist\/([\w.-]+\.js)/g;
-let runtimeScript: string | undefined;
-
-/**
- * Prepares a Hyperframes composition for the in-app player: serves GSAP from the
- * local install (works offline) and injects the Hyperframes runtime, which exposes
- * `window.__player` (play/pause/seek/getTime/getDuration) and manages clip visibility
- * and media sync exactly like the renderer.
- *
- * The runtime goes in `<head>`, ahead of the composition's own scripts, as the
- * Hyperframes renderer does: compositions may touch `window.__hf` while they run.
- */
-export function prepareCompositionHtml(html: string): string {
-  runtimeScript ??= getHyperframeRuntimeScript().replace(/<\/script/gi, "<\\/script");
-  const rewritten = html.replace(GSAP_CDN, (_m, file: string) => `/vendor/gsap/${file}`);
-  const inject = `<script data-framejam="hyperframes-runtime">${runtimeScript}</script>`;
-  if (/<\/head>/i.test(rewritten)) return rewritten.replace(/<\/head>/i, () => `${inject}</head>`);
-  const htmlOpen = rewritten.match(/<html\b[^>]*>/i);
-  if (htmlOpen?.index !== undefined) {
-    const at = htmlOpen.index + htmlOpen[0].length;
-    return `${rewritten.slice(0, at)}<head>${inject}</head>${rewritten.slice(at)}`;
-  }
-  return inject + rewritten;
-}
-
-export function sendCompositionFile(root: string, rel: string, req: Request): Response {
-  const file = safeJoin(root, rel || "index.html");
-  if (!file) return new Response("Forbidden", { status: 403 });
-  if (file.endsWith(".html") && fs.existsSync(file)) {
-    const html = prepareCompositionHtml(fs.readFileSync(file, "utf8"));
-    return new Response(html, { headers: { "content-type": MIME[".html"], "cache-control": "no-cache" } });
-  }
-  return sendFile(file, req);
 }

@@ -5,6 +5,7 @@ import { FeedbackDock } from "@/components/review/dock";
 import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
 import type { ReviewState } from "@/components/review/use-review";
 import { api, panelUrl, type ReviewComment, type StoryboardPanel } from "@/lib/api";
+import { drawPin } from "@/lib/pin";
 import { cn, FINISH_KEYS, SHIFT_KEY } from "@/lib/utils";
 
 const SHORTCUTS: Shortcut[] = [
@@ -28,18 +29,8 @@ function panelThumbnail(img: HTMLImageElement | null, spot: { x: number; y: numb
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(img.naturalWidth * scale);
     canvas.height = Math.round(img.naturalHeight * scale);
-    const g = canvas.getContext("2d")!;
-    g.drawImage(img, 0, 0, canvas.width, canvas.height);
-    if (spot) {
-      const r = Math.max(9, canvas.width / 45);
-      g.beginPath();
-      g.arc(spot.x * canvas.width, spot.y * canvas.height, r, 0, Math.PI * 2);
-      g.fillStyle = "#d4ff3a";
-      g.fill();
-      g.lineWidth = Math.max(2, r / 4);
-      g.strokeStyle = "#111";
-      g.stroke();
-    }
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    if (spot) drawPin(canvas, spot.x, spot.y);
     return canvas.toDataURL("image/jpeg", 0.85);
   } catch {
     return undefined;

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { ElementInfo, Review, ReviewComment } from "../shared/types.ts";
+import type { Review, ReviewComment } from "../shared/types.ts";
 import type { Store } from "./store.ts";
 
 export function formatTime(seconds: number): string {
@@ -27,7 +27,6 @@ export interface AgentComment {
   /** Storyboards: the panel the comment is on, with the image as it was when the user commented. */
   panel?: { number: number; title?: string; caption?: string; imagePath?: string };
   text: string;
-  element?: ElementInfo;
   thumbnailPath?: string;
   thumbnailUrl?: string;
   resolution?: ReviewComment["resolution"];
@@ -69,7 +68,6 @@ export function toAgentComment(store: Store, baseUrl: string, review: Review, c:
         ? { number: c.panel!, title: panel.title, caption: panel.caption, imagePath: store.panelFileFor(review.id, version, c.panel!) }
         : undefined,
     text: c.text,
-    element: c.element,
     thumbnailPath: thumbPath && fs.existsSync(thumbPath) ? thumbPath : undefined,
     thumbnailUrl: c.thumbnail ? `${baseUrl}/api/reviews/${review.id}/thumbs/${c.thumbnail}` : undefined,
     resolution: c.resolution,
@@ -81,28 +79,6 @@ export function describePosition(x: number, y: number, of = "frame"): string {
   const row = y < 0.33 ? "top" : y > 0.66 ? "bottom" : "middle";
   const where = row === "middle" && col === "center" ? "center" : `${row} ${col}`;
   return `${where} of ${of} (${Math.round(x * 100)}% from left, ${Math.round(y * 100)}% from top)`;
-}
-
-function describeElement(el: ElementInfo): string[] {
-  const lines = [`  - Element: \`${el.selector}\`${el.text ? ` — "${truncate(el.text, 80)}"` : ""}`];
-  if (el.clip) {
-    lines.push(
-      `  - Clip: \`${el.clip.selector}\`${el.clip.start !== undefined ? ` (data-start ${el.clip.start}${el.clip.duration ? `, duration ${el.clip.duration}` : ""})` : ""}`,
-    );
-  }
-  for (const t of el.tweens.slice(0, 3)) {
-    const props = Object.entries(t.props)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(", ");
-    lines.push(
-      `  - ${t.relation === "active" ? "Active" : t.relation === "previous" ? "Previous" : "Next"} tween: ${t.targets.join(", ")} { ${props} } ${t.start.toFixed(2)}s→${t.end.toFixed(2)}s${t.ease ? ` ease ${t.ease}` : ""}`,
-    );
-  }
-  return lines;
-}
-
-function truncate(s: string, n: number) {
-  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }
 
 /** Markdown used by the "Copy as prompt" button and returned to agents alongside JSON. */
@@ -122,7 +98,6 @@ export function feedbackPrompt(
     lines.push(`Storyboard: ${latest.panels!.length} panels${latest.panelsDir ? ` from \`${latest.panelsDir}\`` : ""}`);
     latest.panels!.forEach((p, i) => lines.push(`  ${i + 1}. \`${p.sourcePath}\`${p.title ? ` — ${p.title}` : ""}`));
   }
-  if (latest.compositionDir) lines.push(`Composition: \`${path.join(latest.compositionDir, latest.compositionEntry ?? "index.html")}\``);
   if (latest.videoPath) lines.push(`Render: \`${latest.videoPath}\``);
   lines.push(`Review: ${reviewUrl(baseUrl, review.id)}`);
   lines.push("");
@@ -143,8 +118,7 @@ export function feedbackPrompt(
     lines.push(`${i + 1}. **[${a.at}]**${ver} ${c.text}`);
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
     if (a.panel?.caption) lines.push(`  - Panel caption: ${a.panel.caption}`);
-    if (c.element) lines.push(...describeElement(c.element));
-    if (a.thumbnailPath) lines.push(`  - ${a.panel ? (a.position ? "Panel with pin" : "Panel") : "Frame"}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
+    if (a.thumbnailPath) lines.push(`  - ${a.panel ? "Panel" : "Frame"}${a.position ? " with pin" : ""}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
     lines.push(`  - Comment id: \`${c.id}\``);
   });
   lines.push("");

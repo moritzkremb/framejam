@@ -16,38 +16,6 @@ const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 /** "blobA" → "Blob A", "accentSoft" → "Accent soft". */
 const label = (s: string) => cap(s.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/ ([A-Z])([a-z])/g, (_, a, b) => ` ${a.toLowerCase()}${b}`));
 
-function LivePreview({ url, width, height }: { url: string; width: number; height: number }) {
-  const [box, setBox] = useState<HTMLDivElement | null>(null);
-  const [scale, setScale] = useState(0);
-  useEffect(() => {
-    if (!box) return;
-    const ro = new ResizeObserver(() => setScale(box.clientWidth / width));
-    ro.observe(box);
-    return () => ro.disconnect();
-  }, [box, width]);
-  return (
-    <div ref={setBox} className="fc-live-preview" style={{ aspectRatio: `${width} / ${height}` }}>
-      {scale > 0 && (
-        <iframe
-          title="Style preview"
-          src={url}
-          style={{ width, height, transform: `scale(${scale})` }}
-          onLoad={(e) => {
-            const win = e.currentTarget.contentWindow as (Window & { __player?: { play(): void }; __playerReady?: boolean }) | null;
-            const start = Date.now();
-            const t = setInterval(() => {
-              if (win?.__playerReady && win.__player) {
-                win.__player.play();
-                clearInterval(t);
-              } else if (Date.now() - start > 5000) clearInterval(t);
-            }, 100);
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
 async function copy(text: string, what: string) {
   try {
     await copyText(text);
@@ -179,7 +147,7 @@ export function StyleDetailPage() {
   const { preset } = data;
   const inUse = selection.selected === preset.id;
   const vertical = preset.height > preset.width;
-  const agentPrompt = `Use the FrameJam style "${preset.name}" (id: ${preset.id}). Call get_preset("${preset.id}") and follow its style guide, palette, fonts and easing when building the Hyperframes composition.`;
+  const agentPrompt = `Use the FrameJam style "${preset.name}" (id: ${preset.id}). Call get_preset("${preset.id}") and follow its style guide, palette, fonts and easing when you build the video.`;
   const guideLines = preset.guide
     .split("\n")
     .map((l) => l.replace(/^\s*[-*•]\s*/, "").trim())
@@ -215,8 +183,12 @@ export function StyleDetailPage() {
         <div className={cn("fc-style-media", vertical && "tall")}>
           {preset.previewUrl ? (
             <video key={replay} src={preset.previewUrl} poster={preset.posterUrl} autoPlay muted loop playsInline controls />
+          ) : preset.posterUrl ? (
+            <img src={preset.posterUrl} alt="" />
           ) : (
-            <LivePreview key={replay} url={preset.compositionUrl} width={preset.width} height={preset.height} />
+            <div className="fc-style-nopreview" style={{ aspectRatio: `${preset.width} / ${preset.height}` }}>
+              No preview video for this style yet. Add a preview.mp4 to its folder.
+            </div>
           )}
         </div>
 
@@ -380,7 +352,7 @@ export function StyleDetailPage() {
                 ))}
               </ol>
             </Section>
-            <Section title="Template files" hint="A working Hyperframes composition your agent starts from">
+            <Section title="Template files" hint="This style as a Hyperframes project. Agents using another tool follow the style guide instead">
               <div className="fc-col" style={{ gap: 8 }}>
                 {data.files.map((f) => (
                   <details key={f.path} className="fc-file">

@@ -4,9 +4,7 @@ import path from "node:path";
 import type {
   AgentInfo,
   CommentKind,
-  ElementInfo,
   FeedbackBatch,
-  PlayerSource,
   Review,
   ReviewComment,
   ReviewVersion,
@@ -76,7 +74,6 @@ export type PanelInput = string | { path: string; title?: string; caption?: stri
 
 export interface MediaInput {
   videoPath?: string;
-  compositionDir?: string;
   panels?: PanelInput[];
   panelsDir?: string;
 }
@@ -99,8 +96,6 @@ export interface NewCommentInput {
   panel?: number;
   wholeVideo?: boolean;
   text: string;
-  source?: PlayerSource;
-  element?: ElementInfo;
 }
 
 interface AppState {
@@ -182,24 +177,27 @@ export class Store {
   }
 
   /**
-   * Opens a review. Re-opening the same project (same compositionDir, or same
-   * title when there is no composition) appends a new version instead.
+   * Opens a review. Re-opening the same project (same panelsDir for a storyboard, otherwise the same title)
+   * appends a new version instead.
    */
   openReview(input: OpenReviewInput): { review: Review; version: ReviewVersion; created: boolean } {
     const media = resolveMedia(input);
-    const projectKey =
-      media.compositionDir ?? (media.panelsDir ? `panels:${media.panelsDir}` : `title:${(input.title ?? "").trim().toLowerCase()}`);
-    const keyed = Boolean(media.compositionDir || media.panelsDir || input.title);
+    const title = (input.title ?? "").trim().toLowerCase();
+    const projectKey = media.panelsDir ? `panels:${media.panelsDir}` : `title:${title}`;
+    const keyed = Boolean(media.panelsDir || title);
     let existing = input.reviewId ? this.getReview(input.reviewId) : undefined;
     if (!existing && keyed) {
-      existing = this.listReviews().find((r) => r.projectKey === projectKey);
+      const reviews = this.listReviews();
+      // Projects from before videos were mp4-only are keyed by their composition folder: match those by title.
+      existing =
+        reviews.find((r) => r.projectKey === projectKey) ??
+        (title && !media.panelsDir ? reviews.find((r) => path.isAbsolute(r.projectKey) && r.title.trim().toLowerCase() === title) : undefined);
     }
     if (existing) {
       const latest = existing.versions.at(-1);
       const unchanged =
         latest &&
         latest.videoPath === media.videoPath &&
-        latest.compositionDir === media.compositionDir &&
         panelsKey(latest.panels) === panelsKey(media.panels) &&
         !latest.sentAt;
       if (unchanged && latest) {
@@ -233,11 +231,11 @@ export class Store {
 
   /**
    * Adds the next version. With no media at all, a storyboard re-reads its panelsDir (keeping titles and
-   * captions for files that are still there) and a video falls back to the previous composition.
+   * captions for files that are still there); a video needs its new render.
    */
   addVersion(reviewId: string, input: MediaInput & { note?: string }): Review {
     const prev = this.getReview(reviewId).versions.at(-1);
-    const nothingNew = !input.videoPath && !input.compositionDir && !input.panels?.length && !input.panelsDir;
+    const nothingNew = !input.videoPath && !input.panels?.length && !input.panelsDir;
     let media: ResolvedMedia;
     if (nothingNew && prev?.panelsDir) {
       media = resolveMedia({ panelsDir: prev.panelsDir });
@@ -247,10 +245,7 @@ export class Store {
         p.caption ??= old.get(p.sourcePath)?.caption;
       }
     } else {
-      media = resolveMedia({
-        ...input,
-        compositionDir: input.compositionDir ?? (input.videoPath || nothingNew ? prev?.compositionDir : undefined),
-      });
+      media = resolveMedia(input);
     }
     return this.addResolvedVersion(reviewId, media, input.note);
   }
@@ -351,8 +346,6 @@ export class Store {
         panel,
         wholeVideo: input.wholeVideo || undefined,
         text,
-        source: input.source,
-        element: input.element,
         status: "draft",
         createdAt: now(),
       };
@@ -557,42 +550,19 @@ export class Store {
   }
 }
 
-type ResolvedMedia = Pick<ReviewVersion, "videoPath" | "compositionDir" | "compositionEntry" | "panels" | "panelsDir">;
+type ResolvedMedia = Pick<ReviewVersion, "videoPath" | "panels" | "panelsDir">;
 
 function resolveMedia(input: MediaInput): ResolvedMedia {
-  const out: ResolvedMedia = {};
   if (input.panels?.length || input.panelsDir) {
-    if (input.videoPath || input.compositionDir) {
-      throw new StoreError("A storyboard version takes panels (or panelsDir), not a video or composition");
-    }
+    if (input.videoPath) throw new StoreError("A storyboard version takes panels (or panelsDir), not a video");
     return resolvePanels(input.panels, input.panelsDir);
   }
-  if (input.videoPath) {
-    const p = path.resolve(input.videoPath);
-    if (!fs.existsSync(p) || !fs.statSync(p).isFile()) throw new StoreError(`videoPath does not exist: ${p}`);
-    out.videoPath = p;
+  if (!input.videoPath) {
+    throw new StoreError("Provide videoPath (the rendered video, from any tool) or panels/panelsDir (a storyboard)");
   }
-  if (input.compositionDir) {
-    let p = path.resolve(input.compositionDir);
-    let entry = "index.html";
-    if (fs.existsSync(p) && fs.statSync(p).isFile()) {
-      entry = path.basename(p);
-      p = path.dirname(p);
-    }
-    if (!fs.existsSync(path.join(p, entry))) {
-      throw new StoreError(
-        `compositionDir has no ${entry}: ${p}. compositionDir is for Hyperframes compositions; for a video made with another tool, pass videoPath only.`,
-      );
-    }
-    out.compositionDir = p;
-    out.compositionEntry = entry;
-  }
-  if (!out.videoPath && !out.compositionDir) {
-    throw new StoreError(
-      "Provide videoPath (a rendered video from any tool), compositionDir (a Hyperframes composition, for the live player), or panels/panelsDir (storyboard)",
-    );
-  }
-  return out;
+  const p = path.resolve(input.videoPath);
+  if (!fs.existsSync(p) || !fs.statSync(p).isFile()) throw new StoreError(`videoPath does not exist: ${p}`);
+  return { videoPath: p };
 }
 
 /** Panels in the given order, or every image in panelsDir sorted by file name (01.png, 02.png, … 10.png). */
@@ -627,7 +597,7 @@ function panelsKey(panels: StoryboardPanel[] | undefined) {
 }
 
 function defaultTitle(media: ResolvedMedia) {
-  return path.basename(media.compositionDir ?? media.panelsDir ?? media.videoPath ?? (media.panels ? "Untitled storyboard" : "Untitled video"));
+  return path.basename(media.panelsDir ?? media.videoPath ?? (media.panels ? "Untitled storyboard" : "Untitled video"));
 }
 
 function round(n: number) {

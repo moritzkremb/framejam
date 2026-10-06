@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 const open = async (extra: Record<string, unknown> = {}) =>
-  parse(await mcp.call("open_review", { title: "Launch teaser", videoPath: fx.video, compositionDir: fx.compositionDir, ...extra }));
+  parse(await mcp.call("open_review", { title: "Launch teaser", videoPath: fx.video, ...extra }));
 
 describe("tool registry", () => {
   it("exposes the review and preset tools", async () => {
@@ -41,8 +41,16 @@ describe("open_review", () => {
     expect(res.version).toBe(1);
     expect(res.created).toBe(true);
     const review = fx.store.getReview(res.reviewId);
-    expect(review.versions[0].compositionDir).toBe(fx.compositionDir);
     expect(review.versions[0].videoSnapshot).toBe("v1.mp4");
+  });
+
+  it("ignores compositionDir from agents with an older skill and plays the render", async () => {
+    const res = await open({ compositionDir: fx.compositionDir });
+    expect(res.version).toBe(1);
+    expect(fx.store.getReview(res.reviewId).versions[0]).not.toHaveProperty("compositionDir");
+    const only = await mcp.call("open_review", { title: "No render", compositionDir: fx.compositionDir });
+    expect(only.isError).toBe(true);
+    expect(only.content[0].text).toContain("videoPath");
   });
 
   it("is idempotent for identical media, and adds a version once feedback was sent", async () => {
@@ -81,20 +89,9 @@ describe("wait_for_feedback", () => {
     expect(fx.store.agentListening(reviewId)).toBe(true);
   });
 
-  it("unblocks as soon as the user presses Send, with comments, element info and frames", async () => {
+  it("unblocks as soon as the user presses Send, with comments, pins and frames", async () => {
     const { reviewId } = await open();
-    const pin = fx.store.addComment(reviewId, {
-      time: 2.23,
-      x: 0.85,
-      y: 0.42,
-      text: "Make this block a circle",
-      source: "live",
-      element: {
-        selector: "#red-block",
-        tagName: "div",
-        tweens: [{ targets: ["#red-block"], start: 2.1, end: 2.9, ease: "power2.inOut", props: { rotation: 90 }, relation: "active" }],
-      },
-    });
+    const pin = fx.store.addComment(reviewId, { time: 2.23, x: 0.85, y: 0.42, text: "Make this block a circle" });
     fx.store.saveThumbnail(reviewId, pin.id, Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
     fx.store.addComment(reviewId, { time: 3, endTime: 5.4, text: "Hold each column longer" });
 
@@ -110,7 +107,6 @@ describe("wait_for_feedback", () => {
     expect(payload.comments).toHaveLength(2);
     const circle = payload.comments.find((c: { text: string }) => c.text.startsWith("Make"));
     expect(circle.at).toBe("0:02.23");
-    expect(circle.element.selector).toBe("#red-block");
     expect(circle.position.description).toContain("right");
     expect(circle.thumbnailPath).toMatch(/\.jpg$/);
     const range = payload.comments.find((c: { kind: string }) => c.kind === "range");
@@ -118,7 +114,8 @@ describe("wait_for_feedback", () => {
     expect(result.content.some((c) => c.type === "image" && c.mimeType === "image/jpeg")).toBe(true);
     const prompt = result.content[1].text!;
     expect(prompt).toContain("**[0:02.23]** Make this block a circle");
-    expect(prompt).toContain("Active tween: #red-block { rotation: 90 }");
+    expect(prompt).toContain("  - Frame with pin: ");
+    expect(result.content.some((c) => c.type === "text" && c.text?.startsWith(`Frame (pin marked) for comment ${pin.id}`))).toBe(true);
 
     // Delivered batches are not returned twice.
     const next = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
@@ -248,7 +245,6 @@ describe("list_reviews", () => {
       reviewId,
       latestVersion: 1,
       state: "awaiting_user",
-      compositionDir: fx.compositionDir,
       videoPath: fx.video,
     });
     fx.store.addComment(reviewId, { time: 1, text: "x" });
@@ -267,7 +263,8 @@ describe("resolve_comments and add_version", () => {
 
     const v2 = parse(await mcp.call("add_version", { reviewId, videoPath: fx.video, note: "Fixes" }));
     expect(v2.version).toBe(2);
-    expect(fx.store.getReview(reviewId).versions[1].compositionDir).toBe(fx.compositionDir);
+    const noRender = await mcp.call("add_version", { reviewId, note: "Forgot the render" });
+    expect(noRender.isError).toBe(true);
 
     const r1 = parse(await mcp.call("resolve_comments", { reviewId, ids: [a.id, "c_missing"], note: "Bigger logo" }));
     expect(r1.resolved).toEqual([a.id]);
