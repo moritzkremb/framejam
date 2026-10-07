@@ -1,0 +1,32 @@
+{
+  "duration": 76.4,
+  "speaker": "assets/speech.mp4",
+  "narration": "assets/speech-norm.wav",
+  "speakerY": 42,
+  "roadmap": ["Pull the winning Meta ads", "Find why they worked", "Write 5 new angles", "Render the new images", "Upload a new ad set"],
+  "beats": [
+    {"start": 0, "layout": "title", "lines": ["How Claude Code", "runs my ads"], "sub": "5 steps, every week", "id": "b01"},
+    {"start": 3.12, "layout": "speaker", "zoom": 1.22, "origin": "50% 28%", "id": "b02"},
+    {"start": 5.28, "layout": "split", "visual": {"src": "assets/vis/overview.png", "fit": "contain", "bg": "#FFFFFF"}, "id": "b03"},
+    {"start": 9.35, "layout": "split", "visual": {"src": "assets/vis/generation.mp4", "fit": "contain", "bg": "#FFFFFF"}, "id": "b04"},
+    {"start": 12.35, "layout": "visual", "visual": {"src": "assets/vis/pipeboard.png", "fit": "cover", "pos": "50% 0%"}, "id": "b05", "cutout": "assets/cutouts/b05.webm"},
+    {"start": 18.95, "layout": "speaker", "zoom": 1.0, "id": "b06"},
+    {"start": 22.4, "layout": "split", "visual": {"src": "assets/vis/skill-detail.png", "fit": "contain", "bg": "#1B1B1F"}, "id": "b07"},
+    {"start": 24.2, "layout": "roadmap", "step": 0, "id": "b08"},
+    {"start": 26.9, "layout": "roadmap", "step": 1, "id": "b09"},
+    {"start": 28.3, "layout": "split", "visual": {"src": "assets/vis/adlibrary.png", "fit": "contain", "bg": "#F2F4F7"}, "id": "b10"},
+    {"start": 30.6, "layout": "roadmap", "step": 2, "id": "b11"},
+    {"start": 32.35, "layout": "speaker", "zoom": 1.22, "origin": "50% 28%", "id": "b12"},
+    {"start": 35.9, "layout": "words", "words": ["Pain.", "Desire."], "at": [36.84, 38.01], "id": "b13"},
+    {"start": 38.45, "layout": "roadmap", "step": 3, "id": "b14"},
+    {"start": 40.35, "layout": "speaker", "zoom": 1.0, "id": "b15"},
+    {"start": 44.5, "layout": "words", "words": ["Same desire.", "Fresh creative."], "at": [45.17, 46.85], "id": "b16"},
+    {"start": 48.2, "layout": "roadmap", "step": 4, "id": "b17"},
+    {"start": 50.7, "layout": "visual", "visual": {"src": "assets/vis/ad-example.png", "fit": "contain", "backdrop": true, "box": [60, 240, 960, 507], "bg": "#000000"}, "id": "b18", "cutout": "assets/cutouts/b18.webm"},
+    {"start": 58.5, "layout": "roadmap", "step": 5, "id": "b19"},
+    {"start": 60.2, "layout": "split", "visual": {"src": "assets/vis/publish.mp4", "fit": "contain", "bg": "#FFFFFF"}, "id": "b20"},
+    {"start": 63.45, "layout": "speaker", "zoom": 1.22, "origin": "50% 28%", "id": "b21"},
+    {"start": 68.8, "layout": "roadmap", "step": 0, "id": "b22"},
+    {"start": 73.1, "layout": "speaker", "zoom": 1.0, "id": "b23"}
+  ]
+}

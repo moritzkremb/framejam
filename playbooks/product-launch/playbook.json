@@ -1,0 +1,34 @@
+{
+  "id": "product-launch",
+  "name": "Product Launch",
+  "tagline": "Your product goes in, a polished launch video with the real app on screen comes out.",
+  "description": "The 20–60 second launch video SaaS teams post on X: a hook that names the pain, the name landing on the beat drop, your real app shown working in floating windows, proof, and a clean end card. Everything is cut to one music grid and reads with the sound off. Only real screens and real facts, never a mocked interface.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "Your product: a link, the app to record, or screenshots and recordings",
+    "Who it's for and where you'll post it",
+    "Optional: logo, brand colors, a music track or a voiceover script"
+  ],
+  "get": "A 20–60 s launch video (16:9, or 9:16 for Reels) with music and sound effects",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    { "name": "Launch music script and starter scene", "where": "included" },
+    { "name": "Hyperframes (or your project's video tool), Python 3 and ffmpeg", "where": "computer" },
+    { "name": "Music, if you want a real track", "where": "service", "cost": "free tier", "optional": true, "examples": ["the included music script (free)", "YouTube Audio Library", "Epidemic Sound (paid)", "Suno (paid)"] },
+    { "name": "A voiceover", "where": "service", "cost": "free", "optional": true, "examples": ["your own recording", "Kokoro (runs locally)", "ElevenLabs (paid)"] }
+  ],
+  "styles": "all",
+  "steps": [
+    "Collect real screens, recordings and facts from your product",
+    "Plan the frames on a music beat and agree on the story",
+    "Design each frame so every piece lands on a beat",
+    "Make the music and sound effects for this exact cut",
+    "Build and render the video",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["product launch", "saas", "promo", "feature announcement", "motion graphics", "ui demo", "landing page video"],
+  "skill": "SKILL.md"
+}

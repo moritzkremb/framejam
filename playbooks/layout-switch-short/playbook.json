@@ -1,0 +1,35 @@
+{
+  "id": "layout-switch-short",
+  "name": "Dynamic Layout Short",
+  "tagline": "A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out.",
+  "description": "A how-to short that never sits still: you alone for the big claims, split screen when you name something, the thing full-screen with you cut out in front when you show a process, and a step list that comes back at every new step. Pauses and earlier takes are cut out, and short captions sit where each layout leaves room.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@itsolelehmann", "url": "https://www.instagram.com/itsolelehmann/" }],
+  "license": "MIT",
+  "bring": [
+    "Your raw recording of you talking to camera, best with clear steps",
+    "Screen recordings, screenshots or photos of the things you talk about",
+    "Optional: the steps in a few words each"
+  ],
+  "get": "A 45–90 s vertical video that changes layout every few seconds, with captions",
+  "format": "9:16",
+  "project": "any",
+  "needs": [
+    { "name": "Layout template and helper scripts", "where": "included" },
+    { "name": "Python 3, ffmpeg and Node", "where": "computer" },
+    { "name": "Hyperframes, which also cuts you out of the background", "where": "computer" },
+    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "colors, fonts, captions and the title and step cards",
+  "steps": [
+    "Cut the pauses and keep the last take of every line",
+    "Give every few seconds of speech a layout",
+    "Prepare the pictures and cut you out for the full-screen parts",
+    "Build it from the template and add captions",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["talking head", "short", "reels", "split screen", "layouts", "how-to", "steps", "cut-out", "captions"],
+  "skill": "SKILL.md"
+}

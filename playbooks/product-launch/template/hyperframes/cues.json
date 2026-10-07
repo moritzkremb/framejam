@@ -1,0 +1,18 @@
+{
+  "bpm": 120,
+  "duration": 16,
+  "mood": "bright",
+  "sections": [
+    {"bars": [1, 2], "type": "intro"},
+    {"bars": [3, 7], "type": "groove"},
+    {"bars": [8, 8], "type": "outro"}
+  ],
+  "hits": [
+    {"t": 0.5, "sfx": "slam"}, {"t": 1.5, "sfx": "slam"}, {"t": 2.5, "sfx": "slam"},
+    {"t": 4.0, "sfx": "whoosh", "dur": 0.4},
+    {"t": 5.5, "sfx": "tick"}, {"t": 5.75, "sfx": "tick"}, {"t": 6.0, "sfx": "tick"}, {"t": 6.25, "sfx": "tick"},
+    {"t": 8.5, "sfx": "swoosh", "dur": 1.0},
+    {"t": 10.0, "sfx": "pop"},
+    {"t": 15.0, "sfx": "click"}
+  ]
+}

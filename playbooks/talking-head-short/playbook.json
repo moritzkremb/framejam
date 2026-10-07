@@ -1,0 +1,33 @@
+{
+  "id": "talking-head-short",
+  "name": "Talking Head Short",
+  "tagline": "Raw talking-head clips go in, a tight vertical short with captions and matching visuals comes out.",
+  "description": "A fast 9:16 short from a recording of you talking to camera. Pauses and earlier takes are cut out (the last take of every line stays), your screen recordings or images show up exactly when you talk about them, and a hook and readable captions sit where phones don't cover them.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "Your raw recording of you talking to camera",
+    "Optional: screen recordings, images or clips of what you talk about",
+    "Optional: where it will be posted and how long it should be"
+  ],
+  "get": "A 30–90 s vertical video with tight cuts, a hook, captions and matching visuals",
+  "format": "9:16",
+  "project": "any",
+  "needs": [
+    { "name": "Python 3 and ffmpeg", "where": "computer" },
+    { "name": "Hyperframes, or the video tool your project already uses", "where": "computer" },
+    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "captions, hook text and inserts",
+  "steps": [
+    "Turn your recording into text",
+    "Cut the pauses and keep the last take of every line",
+    "Pick which picture goes with which line",
+    "Add the hook, captions and visuals",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["talking head", "short", "reels", "tiktok", "youtube shorts", "captions", "b-roll", "screen recording"],
+  "skill": "SKILL.md"
+}

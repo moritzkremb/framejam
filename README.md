@@ -251,6 +251,52 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 
 </details>
 
+## Playbooks
+
+A style sets the look; a playbook sets how a kind of video gets made: what you bring, the steps, the tools it needs
+and the quality bar. Press *Use this playbook* on the Playbooks page and your agent follows it. FrameJam ships with 12:
+
+| Playbook | What goes in, what comes out |
+| --- | --- |
+| **Cartoon Music Video** | A song goes in, a cartoon music video with every lyric on the beat comes out. |
+| **Slopcore Music Video** | A song full of internet in-jokes goes in, a dense music video with one AI-made star comes out. |
+| **Talking Head Short** | Raw talking-head clips go in, a tight vertical short with captions and matching visuals comes out. |
+| **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. |
+| **Clean Cut** | A raw recording goes in, the same video without pauses, false starts and retakes comes out. |
+| **Product Launch** | Your product goes in, a polished launch video with the real app on screen comes out. |
+| **Founder Launch** | A founder talking to camera and screen recordings go in, a tight launch video comes out. |
+| **Launch Teaser** | A name, one promise and a few real clips go in, a 15-second teaser that lands the name on the beat comes out. |
+| **Explainer** | A topic, article or script goes in, a narrated animated explainer comes out. |
+| **Math Animation** | A math or science idea goes in, a calm animated explainer in the style of 3Blue1Brown comes out. |
+| **YouTube Intro** | Your intro script or recording goes in, a tight 20–60 second opening for a long video comes out. |
+| **Motion Design Showreel** | Your logo and a few things to show off go in, a short motion piece cut to the beat comes out. |
+
+Each playbook page says what you need (what's included, what runs free on your computer, and which accounts cost
+money), whether it starts a new project or works in the one you have, and how your style combines with it.
+
+<details>
+<summary><b>How playbooks are stored, and making your own</b></summary>
+
+<br>
+
+Playbooks live in `playbooks/<id>/` (built-in) and `~/.framejam/playbooks/<id>/` (yours). A playbook is an agent
+skill plus a `playbook.json` for the gallery:
+
+```
+playbooks/clean-cut/
+  playbook.json   # name, tagline, creator, bring, get, needs, project, styles, steps
+  SKILL.md        # the method the agent follows
+  references/     # read on demand
+  scripts/        # helpers the agent copies into the project
+  poster.jpg
+```
+
+Like styles, the npm package leaves out `preview.mp4`; the Playbooks page streams it from
+`https://www.framejam.ai/playbooks/<id>/preview.mp4`. The full format is on
+[framejam.ai/docs/playbooks](https://www.framejam.ai/docs/playbooks).
+
+</details>
+
 ## The review page
 
 <details>

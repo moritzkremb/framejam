@@ -1,0 +1,238 @@
+<!doctype html>
+<!--
+  Explainer starter (Hyperframes). Example: "Why the sky is blue", 4 scenes.
+  One <section class="scene clip"> per scene in script.json. Every reveal is placed on a cue from
+  script.json (C.<name>), never on a hand-typed second, so a new voice take re-times everything.
+  Build: python scripts/build_timing.py && python scripts/build_html.py -> index.html
+  The look (palette, fonts, paper, line boil) lives in :root and the first <style>; a FrameJam style replaces it.
+-->
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Gochi Hand"; src: url("assets/fonts/GochiHand-400.woff2") format("woff2"); font-weight: 400; }
+      @font-face { font-family: "Patrick Hand"; src: url("assets/fonts/PatrickHand-400.woff2") format("woff2"); font-weight: 400; }
+      :root {
+        --paper: #eeeae0; --card: #fbf9f2; --ink: #2b211c; --accent: #d97757;
+        --sky: #5aa9e6; --gold: #f2b53a; --red: #d8453b; --teal: #3fb8a8; --violet: #8a6cf0; --night: #0f0e26;
+        --display: "Gochi Hand", cursive; --body: "Patrick Hand", sans-serif;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--paper); }
+      #root { width: 100%; height: 100%; position: relative; overflow: hidden; font-family: var(--body); color: var(--ink); background: var(--paper); }
+      .layer, .scene { position: absolute; inset: 0; }
+      .abs { position: absolute; }
+      .paperbg { position: absolute; inset: 0; background: var(--paper);
+        background-image: radial-gradient(rgba(43, 33, 28, 0.07) 1.2px, transparent 1.6px); background-size: 26px 26px; }
+      .rough { filter: url(#rough); }
+      .hand { font-family: var(--display); }
+      /* chapter label, top left, with a drawn underline */
+      .ttl { position: absolute; left: 110px; top: 64px; font-family: var(--display); font-size: 66px; line-height: 1; }
+      .ttl svg { position: absolute; left: 0; top: 70px; width: 100%; height: 26px; overflow: visible; }
+      /* sketch card */
+      .sk { position: absolute; background: var(--card); border: 4px solid var(--ink); border-radius: 14px 18px 12px 20px; box-shadow: 7px 8px 0 rgba(43, 33, 28, 0.85); }
+      .label { position: absolute; font-size: 44px; line-height: 1.1; white-space: nowrap; }
+      /* captions: bottom band, one chunk at a time */
+      #caps { z-index: 50; }
+      .cap { position: absolute; left: 0; right: 0; bottom: 40px; display: flex; justify-content: center; opacity: 0; }
+      .cap span { background: var(--card); color: var(--ink); font-size: 44px; line-height: 1.15; padding: 6px 28px 8px; border: 3px solid var(--ink); border-radius: 12px 16px 10px 18px; max-width: 1500px; text-align: center; box-shadow: 4px 5px 0 rgba(43, 33, 28, 0.6); }
+      /* scene-change wipe */
+      .wipe { z-index: 40; overflow: hidden; }
+      .wipe-bar { position: absolute; top: 0; left: 0; width: 2600px; height: 1080px; background: var(--accent); border-left: 14px solid var(--ink); border-right: 14px solid var(--ink); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="{{TOTAL}}" data-width="1920" data-height="1080">
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <!-- line boil: the seed is swapped 8x per second on the timeline, like hand-drawn animation -->
+          <filter id="rough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence id="turb" type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="1" /><feDisplacementMap in="SourceGraphic" scale="4" /></filter>
+          <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><line x1="0" y1="0" x2="0" y2="8" stroke="#2b211c" stroke-width="1.6" stroke-opacity="0.3" /></pattern>
+        </defs>
+      </svg>
+
+      <!-- S1 hook: question first -->
+      <section id="s1" class="scene clip" data-start="{{start:01-hook}}" data-duration="{{dur:01-hook}}" data-track-index="1">
+        <div class="paperbg"></div>
+        <svg id="s1-sun" class="abs rough" viewBox="0 0 300 300" style="left: 170px; top: 170px; width: 300px; height: 300px">
+          <g stroke="#2b211c" stroke-width="7" stroke-linecap="round">
+            <path d="M150 10 V48 M150 252 V290 M10 150 H48 M252 150 H290 M51 51 L78 78 M222 222 L249 249 M51 249 L78 222 M222 78 L249 51" />
+          </g>
+          <circle cx="150" cy="150" r="80" fill="#f2b53a" stroke="#2b211c" stroke-width="7" />
+          <circle cx="150" cy="150" r="80" fill="url(#hatch)" />
+        </svg>
+        <svg id="s1-beam" class="abs rough" viewBox="0 0 700 300" style="left: 420px; top: 260px; width: 700px; height: 300px; overflow: visible">
+          <path class="drawp" pathLength="1" d="M10 60 C 220 90, 420 150, 680 230" fill="none" stroke="#fbf9f2" stroke-width="30" stroke-linecap="round" />
+          <path class="drawp" pathLength="1" d="M10 60 C 220 90, 420 150, 680 230" fill="none" stroke="#2b211c" stroke-width="5" stroke-linecap="round" />
+        </svg>
+        <div id="s1-white" class="label hand rough" style="left: 520px; top: 560px; font-size: 54px; transform: rotate(-3deg)">sunlight: <b style="font-weight: 400; background: #fbf9f2; padding: 0 12px; border: 3px solid #2b211c; border-radius: 8px">white</b></div>
+        <div id="s1-sky" class="sk rough" style="left: 1120px; top: 170px; width: 640px; height: 420px; background: #8ec5ef; overflow: hidden">
+          <svg viewBox="0 0 640 420" width="632" height="412"><g fill="#fbf9f2" stroke="#2b211c" stroke-width="5"><path d="M80 300 c-10 -50 60 -60 70 -30 c10 -40 80 -40 90 0 c40 -10 60 40 20 50 h-160 c-30 0 -40 -20 -20 -20z" /><path d="M380 160 c-8 -40 50 -48 56 -24 c8 -32 64 -32 72 0 c32 -8 48 32 16 40 h-128 c-24 0 -32 -16 -16 -16z" /></g></svg>
+        </div>
+        <div id="s1-blue" class="label hand rough" style="left: 1240px; top: 620px; font-size: 54px; transform: rotate(2deg)">the sky: <b style="font-weight: 400; color: #2f7fc4">blue</b></div>
+        <div id="s1-q" class="abs hand rough" style="left: 1330px; top: 210px; font-size: 300px; line-height: 1; color: var(--accent)">?</div>
+      </section>
+
+      <!-- S2 the light: white splits into colours; long vs short waves -->
+      <section id="s2" class="scene clip" data-start="{{start:02-light}}" data-duration="{{dur:02-light}}" data-track-index="1">
+        <div class="paperbg"></div>
+        <div id="s2-ttl" class="ttl rough">1 · the light<svg viewBox="0 0 300 26" preserveAspectRatio="none"><path class="drawp" d="M4 16 C 80 6, 180 24, 296 10" pathLength="1" fill="none" stroke="#d97757" stroke-width="7" stroke-linecap="round" /></svg></div>
+        <svg id="s2-fan" class="abs rough" viewBox="0 0 1700 420" style="left: 110px; top: 190px; width: 1700px; height: 420px">
+          <path class="drawp" pathLength="1" d="M0 210 H560" stroke="#fbf9f2" stroke-width="34" stroke-linecap="round" fill="none" />
+          <path class="drawp" pathLength="1" d="M0 210 H560" stroke="#2b211c" stroke-width="4" fill="none" />
+          <g class="rays" fill="none" stroke-width="16" stroke-linecap="round">
+            <path class="ray" pathLength="1" d="M560 210 L1650 40" stroke="#d8453b" />
+            <path class="ray" pathLength="1" d="M560 210 L1650 108" stroke="#f08a3e" />
+            <path class="ray" pathLength="1" d="M560 210 L1650 176" stroke="#f2b53a" />
+            <path class="ray" pathLength="1" d="M560 210 L1650 244" stroke="#3fb8a8" />
+            <path class="ray" pathLength="1" d="M560 210 L1650 312" stroke="#2f7fc4" />
+            <path class="ray" pathLength="1" d="M560 210 L1650 380" stroke="#8a6cf0" />
+          </g>
+          <circle cx="560" cy="210" r="16" fill="#2b211c" />
+        </svg>
+        <div id="s2-mix" class="label hand rough" style="left: 160px; top: 470px; font-size: 52px; transform: rotate(-2deg)">every colour, mixed</div>
+        <div id="s2-red" class="sk rough" style="left: 160px; top: 640px; width: 760px; height: 230px; padding: 18px 30px">
+          <div class="hand" style="font-size: 48px">red · <span style="color: #d8453b">long</span></div>
+          <svg viewBox="0 0 700 110" width="700" height="110"><path class="drawp" pathLength="1" d="M0 55 C 87 -20, 175 -20, 262 55 S 437 130, 525 55 S 700 -20, 700 55" fill="none" stroke="#d8453b" stroke-width="9" stroke-linecap="round" /></svg>
+        </div>
+        <div id="s2-blue" class="sk rough" style="left: 1000px; top: 640px; width: 760px; height: 230px; padding: 18px 30px">
+          <div class="hand" style="font-size: 48px">blue · <span style="color: #2f7fc4">short</span></div>
+          <svg viewBox="0 0 700 110" width="700" height="110"><path class="drawp" pathLength="1" d="M0 55 C 22 0, 44 0, 66 55 S 110 110, 132 55 S 176 0, 198 55 S 242 110, 264 55 S 308 0, 330 55 S 374 110, 396 55 S 440 0, 462 55 S 506 110, 528 55 S 572 0, 594 55 S 638 110, 660 55" fill="none" stroke="#2f7fc4" stroke-width="9" stroke-linecap="round" /></svg>
+        </div>
+      </section>
+
+      <!-- S3 the air: molecules scatter blue everywhere, red passes through -->
+      <section id="s3" class="scene clip" data-start="{{start:03-air}}" data-duration="{{dur:03-air}}" data-track-index="1">
+        <div class="paperbg"></div>
+        <div id="s3-tint" class="layer" style="background: #8ec5ef; opacity: 0"></div>
+        <div id="s3-ttl" class="ttl rough">2 · the air<svg viewBox="0 0 300 26" preserveAspectRatio="none"><path class="drawp" d="M4 16 C 80 6, 180 24, 296 10" pathLength="1" fill="none" stroke="#d97757" stroke-width="7" stroke-linecap="round" /></svg></div>
+        <svg id="s3-red" class="abs rough" viewBox="0 0 1920 1080" style="left: 0; top: 0; width: 1920px; height: 1080px">
+          <path class="drawp" pathLength="1" d="M60 520 H1780" stroke="#d8453b" stroke-width="12" stroke-linecap="round" fill="none" />
+          <path class="drawp" pathLength="1" d="M1750 495 L1785 520 L1750 545" stroke="#d8453b" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        </svg>
+        <svg id="s3-scatter" class="abs rough" viewBox="0 0 1920 1080" style="left: 0; top: 0; width: 1920px; height: 1080px"></svg>
+        <svg id="s3-mols" class="abs rough" viewBox="0 0 1920 1080" style="left: 0; top: 0; width: 1920px; height: 1080px"></svg>
+        <div id="s3-tiny" class="label hand rough" style="left: 110px; top: 640px; font-size: 48px; transform: rotate(-3deg)">air molecules ↗</div>
+        <div id="s3-thru" class="label hand rough" style="left: 1440px; top: 560px; font-size: 46px"><span style="color: #d8453b">red</span> passes through</div>
+        <div id="s3-eye" class="sk rough" style="left: 1560px; top: 660px; width: 250px; height: 200px; display: flex; align-items: center; justify-content: center">
+          <svg viewBox="0 0 200 120" width="190" height="114"><path d="M10 60 Q100 -10 190 60 Q100 130 10 60Z" fill="#fbf9f2" stroke="#2b211c" stroke-width="7" /><circle cx="100" cy="60" r="28" fill="#2f7fc4" stroke="#2b211c" stroke-width="6" /><circle cx="100" cy="60" r="11" fill="#2b211c" /></svg>
+        </div>
+      </section>
+
+      <!-- S4 landing: the one line -->
+      <section id="s4" class="scene clip" data-start="{{start:04-end}}" data-duration="{{dur:04-end}}" data-track-index="1">
+        <div class="paperbg"></div>
+        <div id="s4-sky" class="layer" style="background: #8ec5ef"></div>
+        <div id="s4-line" class="abs" style="left: 0; right: 0; top: 300px; text-align: center">
+          <div class="hand rough" style="font-size: 130px; line-height: 1.05">short waves scatter most</div>
+          <svg class="rough" viewBox="0 0 900 40" width="900" height="40" style="display: block; margin: 14px auto 0"><path class="drawp" d="M10 24 C 300 6, 600 36, 890 14" pathLength="1" fill="none" stroke="#d97757" stroke-width="12" stroke-linecap="round" /></svg>
+          <div class="hand rough" style="font-size: 96px; margin-top: 24px">so the sky is <span style="color: #fbf9f2; -webkit-text-stroke: 3px #2b211c">blue</span></div>
+        </div>
+      </section>
+
+      {{WIPES}}
+
+      <div id="caps" class="layer clip" data-start="0" data-duration="{{TOTAL}}" data-track-index="6"></div>
+      <audio id="soundtrack" src="assets/soundtrack.wav" data-start="0" data-duration="{{TOTAL}}" data-track-index="9"></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      (() => {
+        const T = {{TIMING}};
+        const C = T.cues;
+        const S = Object.fromEntries(T.scenes.map((s) => [s.id, s]));
+        const $ = (q) => document.querySelector(q);
+
+        // captions from timing.json
+        T.captions.forEach((c, i) => {
+          const d = document.createElement("div");
+          d.className = "cap";
+          d.id = "cap-" + i;
+          const s = document.createElement("span");
+          s.textContent = c.text;
+          d.appendChild(s);
+          $("#caps").appendChild(d);
+        });
+
+        // scene 3: molecules sit on the light beam; each sprays short blue waves outward (fixed angles, so every render is identical)
+        const mols = [[470, 520], [770, 520], [1070, 520], [1370, 520]];
+        $("#s3-mols").innerHTML = mols.map(([x, y], i) => `<circle class="mol" cx="${x}" cy="${y}" r="${24 + (i % 2) * 6}" fill="#fbf9f2" stroke="#2b211c" stroke-width="6"/>`).join("");
+        const wave = (x, y, deg, len) => {
+          const a = (deg * Math.PI) / 180, ux = Math.cos(a), uy = Math.sin(a), px = -uy, py = ux;
+          let d = `M${x + ux * 40} ${y + uy * 40}`;
+          for (let k = 1; k <= 8; k++) {
+            const r = 40 + (len * k) / 8, w = k % 2 ? 12 : -12;
+            d += ` L${(x + ux * r + px * w).toFixed(1)} ${(y + uy * r + py * w).toFixed(1)}`;
+          }
+          return `<path class="sc" pathLength="1" d="${d}" fill="none" stroke="#2f7fc4" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>`;
+        };
+        $("#s3-scatter").innerHTML = mols.map(([x, y], i) => [-120, -60, 60, 120, 180 - i * 10].map((deg, j) => wave(x, y, deg + i * 9, 150 + ((i + j) % 3) * 30)).join("")).join("");
+
+        function build() {
+          const tl = gsap.timeline({ paused: true });
+          // the motion vocabulary: smooth long-tail settles; a small pop only for "something appears"
+          const rise = (sel, t, o = {}) => tl.fromTo(sel, { opacity: 0, y: o.y0 ?? 40 }, { opacity: 1, y: 0, duration: o.d ?? 0.55, ease: "power3.out", stagger: o.st ?? 0 }, t);
+          const pop = (sel, t, o = {}) => tl.fromTo(sel, { opacity: 0, scale: o.s0 ?? 0.6 }, { opacity: 1, scale: 1, duration: o.d ?? 0.5, ease: o.ease ?? "back.out(1.6)", stagger: o.st ?? 0 }, t);
+          const draw = (sel, t, d = 0.6, st = 0) => tl.fromTo(sel, { strokeDasharray: "1 1", strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: d, ease: "power1.inOut", stagger: st }, t);
+          const title = (sel, t) => { rise(sel, t + 0.2); draw(sel + " .drawp", t + 0.45, 0.5); };
+          const shake = (sel, t, a = 8, n = 6) => { tl.to(sel, { x: a, duration: 0.05, yoyo: true, repeat: n, ease: "sine.inOut" }, t); tl.set(sel, { x: 0 }, t + 0.05 * (n + 1)); };
+
+          // line boil, 8x per second
+          for (let k = 0, t = 0; t < T.total; k++, t += 0.125) tl.set("#turb", { attr: { seed: (k % 4) + 1 } }, t);
+
+          // wipes at scene changes
+          T.scenes.slice(1).forEach((s, i) => tl.fromTo("#wb" + (i + 1), { x: -2640 }, { x: 1940, duration: 0.7, ease: "power2.inOut" }, s.start - 0.35));
+
+          // captions on/off
+          T.captions.forEach((c, i) => { tl.set("#cap-" + i, { opacity: 1 }, c.t0); tl.set("#cap-" + i, { opacity: 0 }, c.t1); });
+
+          // ===== S1 hook =====
+          const s1 = S["01-hook"];
+          pop("#s1-sun", s1.start + 0.2, { s0: 0.3, d: 0.7 });
+          tl.fromTo("#s1-sun", { rotation: 0 }, { rotation: 20, duration: s1.dur, ease: "none" }, s1.start);
+          pop("#s1-sky", C.h_blue - 0.15, { s0: 0.8 });
+          rise("#s1-blue", C.h_blue + 0.1);
+          draw("#s1-beam .drawp", C.h_white - 0.3, 0.7);
+          rise("#s1-white", C.h_white);
+          pop("#s1-q", C.h_where - 0.1, { s0: 0.3 });
+          shake("#s1-q", C.h_where + 0.5, 10, 6);
+
+          // ===== S2 the light =====
+          const s2 = S["02-light"];
+          title("#s2-ttl", s2.start);
+          draw("#s2-fan .drawp", s2.vo + 0.6, 0.6);
+          draw("#s2-fan .ray", C.l_every - 0.1, 0.7, 0.08);
+          rise("#s2-mix", C.l_every + 0.3);
+          rise("#s2-red", C.l_red - 0.2);
+          draw("#s2-red .drawp", C.l_red + 0.1, 0.9);
+          rise("#s2-blue", C.l_blue - 0.2);
+          draw("#s2-blue .drawp", C.l_blue + 0.1, 0.9);
+
+          // ===== S3 the air =====
+          const s3 = S["03-air"];
+          title("#s3-ttl", s3.start);
+          pop("#s3-mols .mol", C.a_tiny - 0.1, { s0: 0.2, st: 0.06 });
+          rise("#s3-tiny", C.a_tiny + 0.3);
+          draw("#s3-scatter .sc", C.a_bounce - 0.1, 0.45, 0.05);
+          draw("#s3-red .drawp", C.a_red - 0.2, 1.0);
+          rise("#s3-thru", C.a_red + 0.3);
+          rise("#s3-eye", C.a_look - 0.1);
+          tl.fromTo("#s3-tint", { opacity: 0 }, { opacity: 0.45, duration: 1.0, ease: "power2.out" }, C.a_comes - 0.2);
+
+          // ===== S4 landing =====
+          const s4 = S["04-end"];
+          tl.fromTo("#s4-sky", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, s4.start);
+          rise("#s4-line > div:first-child", s4.vo - 0.1);
+          draw("#s4-line .drawp", C.e_why - 0.2, 0.6);
+          rise("#s4-line > div:last-child", C.e_why);
+
+          window.__timelines["main"] = tl;
+        }
+        document.fonts.ready.then(build);
+      })();
+    </script>
+  </body>
+</html>

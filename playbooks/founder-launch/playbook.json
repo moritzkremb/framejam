@@ -1,0 +1,35 @@
+{
+  "id": "founder-launch",
+  "name": "Founder Launch",
+  "tagline": "A founder talking to camera and screen recordings go in, a tight launch video for X comes out.",
+  "description": "The launch video founders post when they ship: a cold open that makes people stay, why you built it, the product working on screen, proof or the offer, and one link. Your best takes are kept, the pauses and retakes go, and big words, captions and brand cards are added on top. It sounds like you on a good day.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@gabriel1", "url": "https://x.com/gabriel1/status/2085418582192841147" }],
+  "license": "MIT",
+  "bring": [
+    "A recording of you talking to camera (a phone is fine)",
+    "Screen recordings of your product",
+    "Your logo and link. Optional: an outline, numbers, customer quotes, music"
+  ],
+  "get": "A 45–90 s launch video with captions, callouts and music (16:9, or 9:16 on request)",
+  "format": "any",
+  "project": "any",
+  "needs": [
+    { "name": "Pause cutter and launch music scripts", "where": "included" },
+    { "name": "Hyperframes (or your video tool or editor), Python 3 and ffmpeg", "where": "computer" },
+    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "title cards, captions and callouts",
+  "steps": [
+    "Turn your recordings into text",
+    "Pick the best lines and agree on the story",
+    "Cut a rough version and check it",
+    "Add the product on screen, big words, captions and brand cards",
+    "Mix your voice with music",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["product launch", "founder", "talking head", "announcement", "startup", "captions", "demo"],
+  "skill": "SKILL.md"
+}

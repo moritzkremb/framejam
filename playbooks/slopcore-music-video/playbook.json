@@ -1,0 +1,38 @@
+{
+  "id": "slopcore-music-video",
+  "name": "Slopcore Music Video",
+  "tagline": "A song full of internet in-jokes goes in, a dense music video with one AI-made star comes out.",
+  "description": "A music video where one generated character walks through a season of looks, cut on every sung line, while sharp on-screen labels, charts, a countdown and a news ticker explain every joke. Made for songs about a scene's memes, like the AI timeline. Based on how @anabology's viral \"Escape Velocity\" was made with an agent, Midjourney and a moodboard.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@anabology", "url": "https://x.com/anabology/status/2103534482930491441" }],
+  "license": "MIT",
+  "bring": [
+    "A topic with its own slang (the AI timeline works great)",
+    "A song, or lyrics we write together and generate",
+    "A moodboard, or a few words about the look you want",
+    "Optional: a budget for image and video generation"
+  ],
+  "get": "A 16:9 music video, about 2–3 min, every lyric on screen on time",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    { "name": "Python 3, ffmpeg and Node", "where": "computer" },
+    { "name": "Hyperframes, or your project's video tool", "where": "computer" },
+    { "name": "An image generator that keeps a character consistent", "where": "service", "cost": "paid", "examples": ["Midjourney", "Higgsfield", "Nano Banana", "GPT Image"] },
+    { "name": "An image-to-video model", "where": "service", "cost": "paid", "optional": true, "examples": ["Midjourney Video", "Seedance", "Kling", "Veo"] },
+    { "name": "A music generator, unless you bring a song", "where": "service", "cost": "paid", "optional": true, "examples": ["Suno", "ElevenLabs Music", "Udio"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "on-screen type, colors and labels",
+  "steps": [
+    "Collect the jokes and write or bring the song",
+    "Plan one shot per sung line",
+    "Build a moodboard and a main character, then review the pictures as a storyboard",
+    "Turn the pictures into short clips and cut them to the song",
+    "Add the lyrics, labels, charts and countdown on top",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["music video", "lyric video", "ai art", "memes", "fashion film"],
+  "skill": "SKILL.md"
+}

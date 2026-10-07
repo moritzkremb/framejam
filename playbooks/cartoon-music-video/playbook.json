@@ -1,0 +1,33 @@
+{
+  "id": "cartoon-music-video",
+  "name": "Cartoon Music Video",
+  "tagline": "A song goes in, a cartoon music video with every lyric on the beat comes out.",
+  "description": "A 2-minute music video where illustrated characters, bold animated lyrics and real footage hit every beat and every sung word. Good for parody songs, brand anthems and launch videos. It needs no generated video: still drawings come alive as moving cut-outs.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "An idea for the video, and a reference video if you have one",
+    "A song, or lyrics we write together and generate",
+    "Optional: your logo, brand colors and screen recordings"
+  ],
+  "get": "A 1–2 min 16:9 music video at 1080p60, every lyric on screen on time",
+  "format": "16:9",
+  "project": "new",
+  "needs": [
+    { "name": "Music video engine", "where": "included" },
+    { "name": "Python 3, ffmpeg and Node", "where": "computer" },
+    { "name": "An image generator", "where": "service", "cost": "paid", "examples": ["Midjourney", "Higgsfield", "GPT Image", "Nano Banana"] },
+    { "name": "A music generator, unless you bring a song", "where": "service", "cost": "paid", "optional": true, "examples": ["Suno", "ElevenLabs Music", "Udio"] }
+  ],
+  "styles": "inspiration",
+  "steps": [
+    "Pick the idea and write the lyrics",
+    "Make or bring the song, then line up every word with the beat",
+    "Draw the characters and one picture per shot, and review them as a storyboard",
+    "Animate each part of the song",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["music video", "lyric video", "animation", "cartoon", "kinetic type"],
+  "skill": "SKILL.md"
+}

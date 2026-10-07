@@ -1,0 +1,25 @@
+{
+  "bpm": 120,
+  "duration": 18,
+  "mood": "bright",
+  "sections": [
+    {"bars": [1, 2], "type": "intro"},
+    {"bars": [3, 5], "type": "groove"},
+    {"bars": [6, 6], "type": "breakdown"},
+    {"bars": [7, 8], "type": "groove"},
+    {"bars": [9, 9], "type": "outro"}
+  ],
+  "hits": [
+    {"t": 0.25, "sfx": "tick"}, {"t": 0.5, "sfx": "tick"}, {"t": 0.75, "sfx": "tick"}, {"t": 1.0, "sfx": "tick"}, {"t": 1.25, "sfx": "tick"},
+    {"t": 2.0, "sfx": "slam"},
+    {"t": 3.0, "sfx": "pop", "freq": 1200},
+    {"t": 4.0, "sfx": "whoosh", "dur": 0.5},
+    {"t": 4.5, "sfx": "pop"}, {"t": 5.0, "sfx": "tick"}, {"t": 5.5, "sfx": "tick"}, {"t": 6.0, "sfx": "tick"},
+    {"t": 6.5, "sfx": "pop"}, {"t": 7.0, "sfx": "tick"}, {"t": 7.5, "sfx": "tick"},
+    {"t": 8.0, "sfx": "whoosh", "dur": 0.4}, {"t": 8.0, "sfx": "swoosh", "dur": 0.8},
+    {"t": 9.2, "sfx": "click"},
+    {"t": 10.25, "sfx": "tick"}, {"t": 10.75, "sfx": "tick"}, {"t": 11.25, "sfx": "tick"},
+    {"t": 13.0, "sfx": "tick"},
+    {"t": 16.0, "sfx": "click"}
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "title": "Why odd numbers add up to squares",
+  "insight": "Each odd number is exactly the L-shaped strip that grows an n by n square into an (n+1) by (n+1) square.",
+  "voice": { "provider": "kokoro", "voice": "am_michael", "speed": 1.0 },
+  "scenes": [
+    {
+      "id": "Pattern",
+      "lines": [
+        { "id": "sum", "text": "Add up the first few odd numbers." },
+        { "id": "totals", "text": "One. Four. Nine. Sixteen." },
+        { "id": "squares", "text": "Every total is a perfect square. But why?" }
+      ]
+    },
+    {
+      "id": "Proof",
+      "lines": [
+        { "id": "one", "text": "Draw each odd number as dots. Start with one." },
+        { "id": "three", "text": "Three dots bend around it, into an L." },
+        { "id": "more", "text": "Then five more. Then seven." },
+        { "id": "why", "text": "Each odd number is exactly the L that grows the square by one." },
+        { "id": "result", "text": "So the first n odd numbers always fill an n by n square." }
+      ]
+    }
+  ]
+}

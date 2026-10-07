@@ -1,0 +1,59 @@
+{
+  "title": "Which Frame?",
+  "chunks": [
+    {
+      "text": "[Intro]\n{spoken, flat, like a video call}\nCan you see my screen?\nOkay. Version one.",
+      "duration_ms": 8000,
+      "positive_styles": ["upbeat indie electro-pop", "punchy synth bass", "four-on-the-floor kick", "bright plucky synths", "female lead vocal", "male gang vocal shouts answering", "comedic call and response", "124 bpm", "great production quality", "intro starts with a short spoken line over a filtered beat"],
+      "negative_styles": ["ballad", "slow", "orchestral", "rap verse"]
+    },
+    {
+      "text": "[Verse 1]\nMake it pop\n{gang shout} Which frame?\nMake the logo bigger\n{gang shout} Which frame?\nSomething's off at like three seconds\n{gang shout} Which second?\nNo, the other thing\n{gang shout} Which thing?\nGive it more energy\nLike Apple, but fun\nCan we try it in blue?\n{gang shout} Which blue?\nI'll know it when I see it",
+      "duration_ms": 24000,
+      "positive_styles": ["female lead sings short sassy lines", "male gang vocal answers each line with a loud short shout", "tight bouncy groove", "handclaps", "playful", "great production quality"],
+      "negative_styles": ["long held notes", "slow"]
+    },
+    {
+      "text": "[Pre-Chorus]\nVersion two, version three\nFinal, final, final final\nVersion twelve, final final FINAL\nSomebody point at the frame!",
+      "duration_ms": 10000,
+      "positive_styles": ["rising build", "snare roll", "riser", "vocals getting more frantic", "tension"],
+      "negative_styles": ["drop out to silence"]
+    },
+    {
+      "text": "[Chorus]\nPoint at the frame\nTell it what to change\nClick it, drag it, type it in\nFinish review\nHere comes version two",
+      "duration_ms": 16000,
+      "positive_styles": ["huge catchy pop chorus", "anthemic", "full drums", "stacked vocal harmonies", "gang vocals doubling the hook", "euphoric", "great production quality"],
+      "negative_styles": ["quiet", "sad"]
+    },
+    {
+      "text": "[Verse 2]\nPick a style, press use\nEvery color, every font\nPause it, click the thing that's off\nDrag across the timeline\nEvery note gets a timestamp\nEvery note gets a frame\n{robotic male voice} Agent's listening\n{robotic male voice} Got three notes, making version two",
+      "duration_ms": 18000,
+      "positive_styles": ["groovy verse", "confident female lead vocal", "funky synth bass", "vocoder robotic male answer lines", "bouncy", "great production quality"],
+      "negative_styles": ["slow"]
+    },
+    {
+      "text": "[Chorus]\nPoint at the frame\nTell it what to change\nClick it, drag it, type it in\nFinish review\nHere comes version two",
+      "duration_ms": 16000,
+      "positive_styles": ["huge catchy pop chorus", "same melody as first chorus", "full drums", "stacked vocal harmonies", "gang vocals doubling the hook", "great production quality"],
+      "negative_styles": ["quiet"]
+    },
+    {
+      "text": "[Bridge]\n{fast, half spoken, question and answer}\nIs it in the cloud?\n{gang shout} It's on your machine\nWhat's it cost?\n{gang shout} Nothing, M I T\nDoes it need Hyperframes?\n{gang shout} Any M P four\nCursor, Claude, Codex?\n{gang shout} M C P!",
+      "duration_ms": 12000,
+      "positive_styles": ["stripped back bridge with kick and bass only", "fast rhythmic delivery", "comedic", "builds back up at the end"],
+      "negative_styles": ["ballad", "half-time"]
+    },
+    {
+      "text": "[Final Chorus]\nPoint at the frame\nTell it what to change\nClick it, drag it, type it in\nFinish review\nVersion three, approved!",
+      "duration_ms": 16000,
+      "positive_styles": ["biggest final chorus", "key lift energy", "full drums", "stacked vocal harmonies", "gang vocals", "euphoric", "great production quality"],
+      "negative_styles": ["quiet"]
+    },
+    {
+      "text": "[Outro]\n{spoken, flat, deadpan, music drops out}\nI'm not describing timestamps anymore.\nN P X Frame Jam install.",
+      "duration_ms": 8000,
+      "positive_styles": ["music stops, dry spoken female voice", "one last synth stab at the very end"],
+      "negative_styles": ["singing"]
+    }
+  ]
+}

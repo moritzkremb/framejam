@@ -1,0 +1,30 @@
+{
+  "id": "clean-cut",
+  "name": "Clean Cut",
+  "tagline": "A raw recording goes in, the same video without pauses, false starts and retakes comes out.",
+  "description": "The basic cleanup every recording needs. Dead air, false starts and earlier takes are removed and the last take of every line stays, so you sound like yourself on a good day. Nothing gets added, and you also get a cut list to keep editing in Resolve, Premiere or Final Cut.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "A raw recording of you talking: to camera, over a screen recording, a talk or a podcast",
+    "Optional: how tight it should feel"
+  ],
+  "get": "The same video, shorter and clean, plus a cut list for your editor",
+  "format": "any",
+  "project": "any",
+  "needs": [
+    { "name": "Python 3 and ffmpeg", "where": "computer" },
+    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+  ],
+  "styles": "none",
+  "steps": [
+    "Turn your recording into text",
+    "Find the pauses, false starts and repeated takes",
+    "Cut them out, keeping the last take of every line",
+    "Check every cut and export a cut list for your editor",
+    "Review it in FrameJam until it's right"
+  ],
+  "tags": ["cleanup", "silence removal", "retakes", "talking head", "podcast", "tutorial", "edl", "rough cut"],
+  "skill": "SKILL.md"
+}

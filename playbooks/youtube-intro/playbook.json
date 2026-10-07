@@ -1,0 +1,35 @@
+{
+  "id": "youtube-intro",
+  "name": "YouTube Intro",
+  "tagline": "Turn your intro script or recording into a tight 20–60 second opening for a long YouTube video.",
+  "description": "The opening that keeps people watching: what happened with the proof on screen, why it matters, the three things the video will show, then straight into the video. It follows the formula from Moritz Kremb's own channel, either as an edited talking head with captions, cards and a graphic, or as a framed screen recording with your camera beside it.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "The video's topic and title",
+    "Your intro as a script, a camera recording or a screen recording",
+    "Optional: screen recordings, posts or results to show",
+    "Optional: music you have the rights to"
+  ],
+  "get": "A 20–60 s 16:9 intro, edited and with graphics, ready to put at the start of your video",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    { "name": "Python 3 and ffmpeg", "where": "computer" },
+    { "name": "A transcription service", "where": "service", "cost": "free tier", "examples": ["local whisper.cpp (free)", "ElevenLabs Scribe", "OpenAI Whisper API"] },
+    { "name": "Hyperframes, or your project's video tool", "where": "computer", "optional": true },
+    { "name": "Intro scripts", "where": "included" }
+  ],
+  "styles": "parts",
+  "stylesNote": "captions, cards and graphics",
+  "steps": [
+    "Write the intro in four parts: hook, why it matters, three promises, let's dive in",
+    "Record it, or bring the recording you have",
+    "Cut the pauses and retakes",
+    "Add zooms, captions, cards and one graphic, or frame it next to your screen",
+    "Review it in FrameJam until it's right"
+  ],
+  "tags": ["youtube", "intro", "hook", "talking head", "long-form"],
+  "skill": "SKILL.md"
+}

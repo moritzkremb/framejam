@@ -1,0 +1,35 @@
+{
+  "id": "explainer",
+  "name": "Explainer",
+  "tagline": "A topic, article or script goes in, a narrated animated explainer comes out.",
+  "description": "A 1–3 minute faceless explainer: a voiceover walks through one idea while drawings, diagrams, big words and numbers appear exactly as they're named. It's for creators, teachers and teams who want to explain something clearly without filming anything. What makes it good: a sharp hook, one idea per scene, and every picture landing on its word.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "A topic, an article, notes or a finished script",
+    "Optional: your own voice recording",
+    "Optional: brand colours, a logo, facts you want on screen"
+  ],
+  "get": "A 1–3 min 16:9 explainer with voiceover, captions, music and sound effects",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    { "name": "Explainer scripts and starter scene", "where": "included" },
+    { "name": "Hyperframes (or your project's video tool), Python 3 and ffmpeg", "where": "computer" },
+    { "name": "whisper.cpp for word timing", "where": "computer", "optional": true },
+    { "name": "A voice for the narration", "where": "service", "cost": "free", "examples": ["Your own recording", "Kokoro (runs locally)", "Piper (runs locally)", "ElevenLabs (paid)", "OpenAI TTS (paid)"] },
+    { "name": "Background music", "where": "service", "cost": "free tier", "optional": true, "examples": ["YouTube Audio Library", "ElevenLabs Music", "Suno"] }
+  ],
+  "styles": "all",
+  "steps": [
+    "Turn the topic into one clear idea and a short script",
+    "Plan one picture per scene and review them as a storyboard",
+    "Record or generate the voice and time every word",
+    "Animate each scene so every picture lands on its word",
+    "Add captions, music and sound effects",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["explainer", "faceless", "voiceover", "education", "animation", "diagrams"],
+  "skill": "SKILL.md"
+}

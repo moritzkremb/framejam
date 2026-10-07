@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Motion showreel starter</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Geist";
+        src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      @font-face {
+        font-family: "Geist Mono";
+        src: url("assets/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      :root {
+        --night: #0c0c0d;
+        --surface: #151517;
+        --surface-3: #26262a;
+        --paper: #f4f4f5;
+        --muted: #86868f;
+        --accent: #d4ff3a;
+        --ink: #121400;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--night); }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--night); font-family: "Geist", sans-serif; color: var(--paper); }
+      .layer { position: absolute; inset: 0; }
+      .center { position: absolute; left: 50%; top: 50%; }
+      .frame { position: absolute; left: 50%; top: 50%; background: var(--accent); }
+
+      /* HUD: the showreel's index, beat counter and timecode */
+      .hud { position: absolute; font-family: "Geist Mono", monospace; font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+      #hud-label { left: 72px; top: 60px; }
+      #hud-bpm { right: 72px; top: 60px; display: flex; gap: 14px; align-items: center; }
+      .dot { width: 12px; height: 12px; border-radius: 50%; background: currentColor; opacity: 0.25; }
+      #hud-name { left: 72px; bottom: 56px; }
+      #hud-tc { right: 72px; bottom: 56px; }
+
+      /* 01 send */
+      #s1-box { width: 980px; height: 120px; margin: -60px 0 0 -490px; border-radius: 28px; background: var(--surface); display: flex; align-items: center; padding: 0 40px; font-size: 44px; font-weight: 450; letter-spacing: -0.02em; }
+      #s1-text .ch { opacity: 0; }
+      #s1-caret { display: inline-block; width: 3px; height: 48px; background: var(--accent); margin-left: 4px; vertical-align: -8px; }
+      #cursor { position: absolute; left: 0; top: 0; width: 44px; height: 56px; }
+      #hero-label { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+
+      /* 03 timeline */
+      .thumb { position: absolute; left: 50%; top: 50%; width: 150px; height: 110px; margin: -55px 0 0 -75px; border-radius: 22px; background: var(--surface-3); }
+      #s3-line { position: absolute; left: 240px; right: 240px; top: 640px; height: 2px; background: var(--surface-3); }
+      .pin { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: var(--accent); color: var(--ink); font-weight: 700; font-size: 26px; display: grid; place-items: center; }
+      .chip { position: absolute; left: 50%; top: 50%; white-space: nowrap; font-family: "Geist Mono", monospace; font-size: 22px; color: var(--paper); background: var(--surface); padding: 10px 16px; border-radius: 12px; }
+
+      /* 04 flood words */
+      .word { position: absolute; left: 0; right: 0; top: 50%; margin-top: -170px; height: 340px; text-align: center; font-size: 300px; line-height: 340px; font-weight: 700; letter-spacing: -0.05em; color: var(--ink); }
+
+      /* 05 3D type ring */
+      #s5-stage { perspective: 1600px; }
+      #s5-ring { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+      .rch { position: absolute; left: 0; top: 0; width: 60px; height: 90px; margin: -45px 0 0 -30px; text-align: center; font-size: 76px; line-height: 90px; font-weight: 700; color: var(--paper); backface-visibility: visible; }
+
+      /* 06 grid */
+      .cell { position: absolute; left: 50%; top: 50%; width: 140px; height: 110px; margin: -55px 0 0 -70px; border-radius: 20px; }
+      #s6-title { position: absolute; left: 0; right: 0; top: 50%; margin-top: -130px; text-align: center; font-size: 220px; line-height: 260px; font-weight: 700; letter-spacing: -0.05em; }
+      #s6-title b { color: var(--accent); font-weight: 700; }
+
+      /* 07 lockup */
+      #s7-word { position: absolute; left: 750px; top: 50%; margin-top: -122px; height: 220px; font-size: 200px; line-height: 220px; font-weight: 600; letter-spacing: -0.035em; overflow: hidden; white-space: nowrap; }
+      #s7-word span { display: inline-block; }
+      #s7-tag { position: absolute; left: 0; right: 0; top: 720px; text-align: center; font-size: 46px; font-weight: 450; color: var(--muted); letter-spacing: -0.015em; }
+      #s7-url { position: absolute; left: 0; right: 0; top: 800px; text-align: center; font-family: "Geist Mono", monospace; font-size: 26px; color: var(--accent); letter-spacing: 0.08em; }
+      #fade { position: absolute; inset: 0; background: #000; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="17" data-fps="60">
+      <audio id="music" src="assets/music.wav" data-start="0" data-duration="17" data-track-index="1" data-volume="1"></audio>
+
+      <div id="stage" class="layer">
+        <div id="s1" class="layer">
+          <div id="s1-box" class="center"><span id="s1-text"></span><span id="s1-caret"></span></div>
+        </div>
+        <div id="s3" class="layer"><div id="s3-line"></div></div>
+        <div id="s4" class="layer"></div>
+        <div id="s5-stage" class="layer"><div id="s5-ring" data-layout-allow-overlap></div></div>
+        <div id="s6" class="layer"></div>
+
+        <!-- The hero object: one element that survives every shot and carries each transition. -->
+        <div id="ghost1" class="frame"></div>
+        <div id="ghost2" class="frame"></div>
+        <div id="hero" class="frame"><span id="hero-label">Send</span></div>
+
+        <div id="s6-title"><b>30</b> styles.</div>
+        <div id="s4-words" class="layer"></div>
+        <div id="s7" class="layer">
+          <div id="s7-word"></div>
+          <div id="s7-tag">Make videos with your agent.</div>
+          <div id="s7-url">framejam.ai</div>
+        </div>
+        <svg id="cursor" viewBox="0 0 44 56"><path d="M3 2 L3 46 L14 35 L22 53 L30 49 L22 32 L38 32 Z" fill="#f4f4f5" stroke="#0c0c0d" stroke-width="3" stroke-linejoin="round" /></svg>
+      </div>
+
+      <div id="hud" class="layer">
+        <div id="hud-label" class="hud">01 — send</div>
+        <div id="hud-bpm" class="hud"><span>120 bpm</span><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+        <div id="hud-name" class="hud">framejam — showreel</div>
+        <div id="hud-tc" class="hud">00:00</div>
+      </div>
+      <div id="fade"></div>
+    </div>
+
+    <script>
+      // ---- Grid: everything below is placed in beats. Change BPM/OFFSET to the measured track (beat_grid.py). ----
+      const BPM = 120;
+      const OFFSET = 0; // seconds to bar 1 beat 1
+      const FPS = 60;
+      const B = 60 / BPM;
+      const at = (beat) => OFFSET + beat * B;
+      const DURATION = 17;
+
+      // ---- Brand and copy (replace for another product) ----
+      const ACCENT = "#d4ff3a", NIGHT = "#0c0c0d", INK = "#121400", PAPER = "#f4f4f5";
+      const COMMENT = "make it pop";
+      const WORDS = ["Point.", "Comment.", "Send."];
+      const RING = "VIDEO REVIEW · STORYBOARDS · STYLES · ANY VIDEO TOOL · ";
+      const WORDMARK = "framejam";
+      const CELL_COLORS = ["#d4ff3a","#ff5a1f","#7cc4ff","#f4f4f5","#ff6bcb","#2bd9a6","#ffd23f","#8a7dff","#ff8f6b","#3a86ff","#e9e3d5","#1fd1f9","#ffb703","#c2f970","#ff477e","#d4ff3a","#06d6a0","#f7f052","#b388ff","#ff7f51","#90e0ef","#ffcad4","#fb5607","#caffbf","#9b5de5","#00f5d4","#fee440","#f15bb5","#4cc9f0","#fefae0"];
+      // Shot index shown in the HUD: [startBeat, label]
+      const SHOTS = [[0, "01 — send"], [4, "02 — onion skin"], [8, "03 — timeline"], [12, "04 — flood"], [16, "05 — 3d type"], [20, "06 — grid"], [24, ""]];
+
+      const $ = (s) => document.querySelector(s);
+      const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+      const center = { xPercent: -50, yPercent: -50 };
+      gsap.set(["#hero", "#ghost1", "#ghost2"], { ...center, width: 200, height: 72, borderRadius: 36, x: 366, y: 0 });
+      gsap.set(["#ghost1", "#ghost2"], { opacity: 0, background: PAPER });
+      gsap.set("#hero", { boxShadow: `0 0 0 10px ${NIGHT}` });
+      gsap.set("#ghost2", { boxShadow: `0 0 0 10px ${NIGHT}` });
+      gsap.set("#cursor", { x: 1560, y: 860 });
+      ["#s3", "#s4", "#s5-stage", "#s6", "#s6-title", "#s7"].forEach((s) => gsap.set(s, { autoAlpha: 0 }));
+
+      // ---- HUD: label per shot, a dot per beat, timecode ----
+      SHOTS.forEach(([b, label]) => tl.set("#hud-label", { textContent: label }, at(b)));
+      const dots = gsap.utils.toArray(".dot");
+      for (let b = 0; b < 32; b++) {
+        dots.forEach((d, i) => tl.set(d, { opacity: i === b % 4 ? 1 : 0.25 }, at(b)));
+      }
+      tl.set(dots, { opacity: 0.25 }, at(32));
+      const tc = $("#hud-tc");
+      tl.to({}, { duration: DURATION, ease: "none", onUpdate() {
+        const t = tl.time(); const s = Math.floor(t); const f = Math.floor((t - s) * FPS);
+        tc.textContent = `${String(s).padStart(2, "0")}:${String(f).padStart(2, "0")}`;
+      } }, 0);
+
+      // ---- 01 SEND (beats 0-4): a comment gets typed, the cursor presses Send, the button breaks free ----
+      const txt = $("#s1-text");
+      COMMENT.split("").forEach((c) => { const s = document.createElement("span"); s.className = "ch"; s.textContent = c === " " ? "\u00a0" : c; txt.appendChild(s); });
+      tl.fromTo("#s1-box", { scale: 0.94, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 0);
+      tl.fromTo("#hero", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, 0.1);
+      gsap.utils.toArray("#s1-text .ch").forEach((c, i) => tl.set(c, { opacity: 1 }, at(0.5) + i * 0.085));
+      tl.fromTo("#s1-caret", { opacity: 1 }, { opacity: 0, duration: 0.01, repeat: 7, yoyo: true, repeatDelay: 0.24 }, 0);
+      tl.to("#cursor", { x: 1318, y: 548, duration: at(2.9) - at(1.5), ease: "power3.inOut" }, at(1.5));
+      tl.to("#cursor", { scale: 0.82, duration: 0.07, yoyo: true, repeat: 1, ease: "power1.inOut" }, at(3) - 0.07);
+      tl.to("#hero", { scale: 0.86, duration: 0.07, ease: "power1.in" }, at(3) - 0.07);
+      tl.to("#hero", { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.35)" }, at(3));
+      tl.to("#s1-box", { y: 60, opacity: 0, filter: "blur(10px)", duration: 0.45, ease: "power2.in" }, at(3.5));
+      tl.to("#cursor", { opacity: 0, x: "+=60", y: "+=60", duration: 0.3, ease: "power2.in" }, at(3.5));
+      tl.to("#hero-label", { opacity: 0, duration: 0.15 }, at(3.5));
+      tl.to("#hero", { x: 0, duration: at(4) - at(3.5), ease: "power3.in" }, at(3.5));
+
+      // ---- 02 ONION SKIN (beats 4-8): the button becomes the frame; ghosts trail it like a flipbook ----
+      const frameBig = { width: 520, height: 420, borderRadius: 84, skewX: -12 };
+      tl.to("#hero", { ...frameBig, duration: 0.55, ease: "expo.out" }, at(4));
+      tl.set(["#ghost1", "#ghost2"], { ...frameBig, x: 0, opacity: 0 }, at(4.5));
+      tl.to("#ghost2", { x: -170, opacity: 0.56, duration: 0.45, ease: "back.out(1.6)" }, at(5));
+      tl.to("#ghost1", { x: -340, opacity: 0.26, duration: 0.45, ease: "back.out(1.6)" }, at(5.5));
+      [6, 6.5, 7].forEach((b, i) => {
+        const x = 150 * (i + 1);
+        tl.to("#hero", { x, duration: 0.16, ease: "power4.out" }, at(b));
+        tl.to("#ghost2", { x: x - 170, duration: 0.16, ease: "power4.out" }, at(b) + 0.06);
+        tl.to("#ghost1", { x: x - 340, duration: 0.16, ease: "power4.out" }, at(b) + 0.12);
+      });
+      tl.to(["#ghost1", "#ghost2"], { x: 450, opacity: 0, duration: 0.3, ease: "power3.in" }, at(7.5));
+
+      // ---- 03 TIMELINE (beats 8-12): the frame becomes a playhead running over a filmstrip; pins drop on beats ----
+      const thumbs = [];
+      for (let i = 0; i < 9; i++) {
+        const t = document.createElement("div"); t.className = "thumb"; $("#s3").appendChild(t); thumbs.push(t);
+        gsap.set(t, { x: (i - 4) * 180, y: 0, skewX: -12 });
+      }
+      const pins = [[2, "0:04 · bigger logo"], [4, "0:09 · slower here"], [6, "0:12 · cut this"]].map(([i, label], n) => {
+        const p = document.createElement("div"); p.className = "pin"; p.textContent = n + 1; $("#s3").appendChild(p);
+        const c = document.createElement("div"); c.className = "chip"; c.textContent = label; $("#s3").appendChild(c);
+        gsap.set(p, { x: (i - 4) * 180, y: -130, scale: 0 });
+        gsap.set(c, { x: (i - 4) * 180 - 20, y: -230, opacity: 0 });
+        return [p, c];
+      });
+      tl.set("#s3", { autoAlpha: 1 }, at(8));
+      tl.to("#hero", { width: 150, height: 110, borderRadius: 22, skewX: -12, x: -720, duration: 0.5, ease: "expo.inOut" }, at(7.75));
+      tl.from(thumbs, { y: 120, opacity: 0, duration: 0.4, stagger: 0.04, ease: "back.out(1.7)" }, at(8));
+      tl.from("#s3-line", { scaleX: 0, duration: 0.6, ease: "expo.out" }, at(8));
+      tl.to("#hero", { x: 720, duration: at(11) - at(8.5), ease: "power2.inOut" }, at(8.5));
+      pins.forEach(([p, c], n) => {
+        tl.to(p, { scale: 1, duration: 0.5, ease: "back.out(3)" }, at(9 + n * 0.5));
+        tl.fromTo(p, { y: -230 }, { y: -130, duration: 0.35, ease: "bounce.out" }, at(9 + n * 0.5));
+        tl.to(c, { opacity: 1, y: -210, duration: 0.3 }, at(9.25 + n * 0.5));
+      });
+      tl.to([...thumbs, ...pins.flat(), "#s3-line"], { y: "+=420", opacity: 0, duration: 0.45, stagger: 0.015, ease: "power3.in" }, at(11));
+      tl.to("#hero", { x: 0, width: 200, height: 160, borderRadius: 34, duration: 0.4, ease: "power3.inOut" }, at(11));
+      tl.to("#hero", { scaleX: 1.25, scaleY: 0.78, duration: 0.2, ease: "power2.out" }, at(11.6));
+
+      // ---- 04 FLOOD (beats 12-16): the frame floods the screen on the hit; one word per beat ----
+      tl.set("#s3", { autoAlpha: 0 }, at(12));
+      tl.to("#hero", { width: 2600, height: 1700, borderRadius: 0, skewX: 0, scaleX: 1, scaleY: 1, duration: 0.42, ease: "expo.out" }, at(12));
+      tl.set("#hero", { boxShadow: "0 0 0 0px #0c0c0d" }, at(12));
+      tl.to(".hud", { color: INK, duration: 0.1 }, at(12));
+      const words = WORDS.map((w) => { const el = document.createElement("div"); el.className = "word"; el.textContent = w; $("#s4-words").appendChild(el); gsap.set(el, { opacity: 0 }); return el; });
+      words.forEach((el, i) => {
+        const b = 12.5 + i;
+        tl.fromTo(el, { opacity: 1, y: 160, scale: 0.9 }, { y: 0, scale: 1, duration: 0.35, ease: "expo.out", immediateRender: false }, at(b));
+        tl.to(el, { y: -160, opacity: 0, duration: 0.2, ease: "power3.in" }, at(b + 0.75));
+      });
+      tl.to("#hero", { width: 300, height: 240, borderRadius: 48, skewX: -12, duration: 0.5, ease: "expo.inOut" }, at(15.5));
+      tl.set("#hero", { boxShadow: `0 0 0 10px ${NIGHT}` }, at(15.9));
+      tl.to(".hud", { color: "#86868f", duration: 0.1 }, at(15.75));
+
+      // ---- 05 3D TYPE (beats 16-20): a ring of words orbits the spinning frame ----
+      const ring = $("#s5-ring"); const chars = RING.split("");
+      const rch = chars.map((c) => { const el = document.createElement("div"); el.className = "rch"; el.textContent = c; el.setAttribute("data-layout-allow-overlap", ""); ring.appendChild(el); return el; });
+      const R = 620, step = 360 / chars.length, spin = { a: 0 };
+      const placeRing = () => rch.forEach((el, i) => {
+        const a = i * step + spin.a; const front = Math.cos((a * Math.PI) / 180);
+        el.style.transform = `rotateY(${a}deg) translateZ(${R}px)`;
+        el.style.opacity = front > 0 ? 0.35 + 0.65 * front : 0.22;
+      });
+      gsap.set(ring, { rotateX: -14, y: 20 });
+      placeRing();
+      // Opacity or filter on the ring itself would flatten preserve-3d, so fade and blur its parent.
+      tl.set("#s5-stage", { autoAlpha: 1 }, at(16));
+      tl.fromTo("#s5-stage", { opacity: 0, filter: "blur(16px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out", immediateRender: false }, at(16));
+      tl.fromTo(ring, { scale: 0.4 }, { scale: 1, duration: 0.6, ease: "expo.out", immediateRender: false }, at(16));
+      tl.to(spin, { a: -300, duration: at(20) - at(16), ease: "power1.inOut", onUpdate: placeRing }, at(16));
+      tl.to("#hero", { rotateY: 360, transformPerspective: 1600, duration: at(18) - at(16), ease: "power3.inOut" }, at(16));
+      tl.to(ring, { scale: 1.8, duration: 0.35, ease: "power3.in" }, at(19.6));
+      tl.to("#s5-stage", { opacity: 0, filter: "blur(20px)", duration: 0.35, ease: "power3.in" }, at(19.6));
+
+      // ---- 06 GRID (beats 20-24): the frame drops into a grid of 30 looks that ripple from the centre ----
+      const cells = CELL_COLORS.map((col, i) => {
+        const el = document.createElement("div"); el.className = "cell"; $("#s6").appendChild(el);
+        const cx = (i % 10) - 4.5, cy = Math.floor(i / 10) - 1;
+        gsap.set(el, { background: col, x: cx * 176, y: cy * 146, skewX: -12, scale: 0 });
+        return el;
+      });
+      tl.set("#s5-stage", { autoAlpha: 0 }, at(20));
+      tl.set("#s6", { autoAlpha: 1 }, at(20));
+      tl.to("#hero", { width: 140, height: 110, borderRadius: 20, x: -88, y: 0, rotateY: 0, duration: 0.4, ease: "expo.inOut" }, at(19.8));
+      tl.to(cells, { scale: 1, duration: 0.5, ease: "back.out(2.2)", stagger: { grid: [3, 10], from: 14, amount: 0.7 } }, at(20.25));
+      tl.to(cells, { y: "-=26", duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out", stagger: { grid: [3, 10], from: 14, amount: 0.5 } }, at(21.5));
+      tl.to([...cells, "#hero"], { opacity: 0.18, duration: 0.25 }, at(22));
+      tl.set("#s6-title", { autoAlpha: 1 }, at(22));
+      tl.fromTo("#s6-title", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2)" }, at(22));
+      tl.to("#s6-title", { scale: 1.15, opacity: 0, filter: "blur(12px)", duration: 0.3, ease: "power2.in" }, at(23.25));
+      tl.to(cells, { x: -88, y: 0, scale: 0.2, opacity: 0, duration: 0.45, ease: "power3.in", stagger: { grid: [3, 10], from: "edges", amount: 0.25 } }, at(23.2));
+      tl.to("#hero", { opacity: 1, duration: 0.2 }, at(23.5));
+
+      // ---- 07 LOCKUP (beats 24-34): the frame lands as the logo mark, the ghosts slam in, the name writes on ----
+      const markX = -400, markW = 250, markH = 202;
+      tl.set("#s6", { autoAlpha: 0 }, at(24));
+      tl.set("#s7", { autoAlpha: 1 }, at(24));
+      tl.to("#hero", { width: markW, height: markH, borderRadius: 40, x: markX, y: -10, skewX: -12, duration: 0.45, ease: "expo.out" }, at(23.75));
+      tl.set(["#ghost1", "#ghost2"], { width: markW, height: markH, borderRadius: 40, skewX: -12, y: -10, x: markX + 400, opacity: 0 }, at(23.9));
+      tl.to("#ghost2", { x: markX - 72, opacity: 0.56, duration: 0.4, ease: "expo.out" }, at(24));
+      tl.to("#ghost1", { x: markX - 144, opacity: 0.26, duration: 0.4, ease: "expo.out" }, at(24.08));
+      tl.to(["#hero", "#ghost1", "#ghost2"], { x: "-=40", duration: 0.12, yoyo: true, repeat: 1, ease: "power2.out" }, at(24));
+      const wm = $("#s7-word");
+      const letters = WORDMARK.split("").map((c) => { const s = document.createElement("span"); s.textContent = c; wm.appendChild(s); return s; });
+      tl.from(letters, { yPercent: 110, duration: 0.5, stagger: 0.045, ease: "expo.out" }, at(24.5));
+      tl.from("#s7-tag", { y: 30, opacity: 0, duration: 0.6 }, at(26));
+      tl.from("#s7-url", { opacity: 0, duration: 0.4 }, at(27));
+      tl.to(["#hud-label", "#hud-bpm"], { opacity: 0, duration: 0.3 }, at(24));
+      tl.fromTo("#stage", { scale: 1 }, { scale: 1.035, duration: DURATION - at(24), ease: "none" }, at(24));
+      tl.to("#fade", { opacity: 1, duration: 0.5, ease: "power1.in" }, DURATION - 0.5);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

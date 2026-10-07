@@ -1,0 +1,33 @@
+{
+  "id": "launch-teaser",
+  "name": "Launch Teaser",
+  "tagline": "A name, one promise and a few real clips go in, a 15-second teaser that lands the name on the beat comes out.",
+  "description": "A short teaser for launch day or the week before: a few big words, fast glimpses of the real product, a beat drop on the name, and the date, link or install command. It makes people curious instead of explaining everything. Good as a post on its own or at the end of a thread.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "The name and one line about what it does",
+    "A few short clips or screenshots of the real product",
+    "The date, link or install command to end on"
+  ],
+  "get": "A 10–20 s teaser with music and sound effects (16:9, or 9:16 on request)",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    { "name": "Teaser starter scene and music script", "where": "included" },
+    { "name": "Hyperframes (or your project's video tool), Python 3 and ffmpeg", "where": "computer" },
+    { "name": "Music, if you want a real track", "where": "service", "cost": "free tier", "optional": true, "examples": ["the included music script (free)", "YouTube Audio Library", "Epidemic Sound (paid)"] }
+  ],
+  "styles": "all",
+  "steps": [
+    "Write the few words and pick the one visual idea",
+    "Lay everything out on a music beat",
+    "Cut the best moments from your clips",
+    "Make the music and sound effects for this exact cut",
+    "Build and render the teaser",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["teaser", "product launch", "coming soon", "announcement", "kinetic type", "motion graphics"],
+  "skill": "SKILL.md"
+}

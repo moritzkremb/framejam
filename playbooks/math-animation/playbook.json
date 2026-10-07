@@ -1,0 +1,37 @@
+{
+  "id": "math-animation",
+  "name": "Math Animation",
+  "tagline": "A math or science idea goes in, a calm animated explainer in the style of 3Blue1Brown comes out.",
+  "description": "A narrated video where equations morph, graphs draw themselves and shapes rearrange until the idea clicks. It's for teachers, students and anyone explaining something technical. What makes it good: one clear insight, shown as a picture before the formula, with the voice paced to every move.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "3Blue1Brown", "url": "https://www.youtube.com/@3blue1brown" }],
+  "license": "MIT",
+  "bring": [
+    "The idea you want to explain: a proof, a formula, a concept",
+    "Optional: notes, a textbook page or a script",
+    "Optional: your own voice recording"
+  ],
+  "get": "A 1–5 min 16:9 animated explainer at 1080p60 with narration",
+  "format": "16:9",
+  "project": "new",
+  "needs": [
+    { "name": "Starter Manim project", "where": "included" },
+    { "name": "Manim, Python 3 and ffmpeg", "where": "computer" },
+    { "name": "LaTeX for typeset equations", "where": "computer", "optional": true },
+    { "name": "A narration voice", "where": "service", "cost": "free", "examples": ["Your own recording", "Kokoro (runs locally)", "macOS say", "ElevenLabs (paid)", "OpenAI TTS (paid)"] },
+    { "name": "Background music", "where": "service", "cost": "free tier", "optional": true, "examples": ["YouTube Audio Library", "ElevenLabs Music", "Suno"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "colours and fonts",
+  "steps": [
+    "Find the one idea the video should make click",
+    "Plan the picture that proves it and review it as a storyboard",
+    "Write the narration and make the voice",
+    "Animate each scene, paced to the voice",
+    "Join the scenes and add the voice and music",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["math", "explainer", "education", "manim", "animation", "3blue1brown"],
+  "skill": "SKILL.md"
+}

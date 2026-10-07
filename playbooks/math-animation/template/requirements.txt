@@ -1,0 +1,4 @@
+manim>=0.19
+# free local narration (optional; scripts/tts.py --provider kokoro)
+kokoro-onnx>=0.4
+soundfile

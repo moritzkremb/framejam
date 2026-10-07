@@ -1,0 +1,48 @@
+{
+  "title": "Why the sky is blue",
+  "thesis": "Air scatters short blue waves all over the sky far more than long red ones, so blue reaches your eye from every direction.",
+  "voice": {
+    "provider": "kokoro",
+    "voice": "am_michael",
+    "speed": 1.0,
+    "instructions": "Warm, curious storyteller explaining something delightful to a smart friend. Brisk but relaxed, small pauses between steps."
+  },
+  "timing": { "first_lead": 0.6, "lead": 0.3, "tail": 0.5, "end_hold": 2.5 },
+  "scenes": [
+    {
+      "id": "01-hook",
+      "text": "The sky is blue. But sunlight is white. So where does all that blue come from?",
+      "cues": { "h_blue": "blue", "h_white": "white", "h_where": "where" }
+    },
+    {
+      "id": "02-light",
+      "chapter": "1 · the light",
+      "text": "Step one: the light. White light is every color mixed together. Red waves are long. Blue waves are short.",
+      "cues": { "l_every": "every", "l_red": "Red", "l_blue": ["Blue", 1] }
+    },
+    {
+      "id": "03-air",
+      "chapter": "2 · the air",
+      "text": "Step two: the air. Tiny air molecules bounce the short blue waves all over the sky. The long red ones mostly pass straight through. So whichever way you look, blue light comes at you.",
+      "cues": { "a_tiny": "Tiny", "a_bounce": "bounce", "a_red": "red", "a_look": "look", "a_comes": "comes" }
+    },
+    {
+      "id": "04-end",
+      "text": "That's why the sky is blue.",
+      "cues": { "e_why": "why" }
+    }
+  ],
+  "scene_sfx": "whoosh",
+  "sfx": [
+    { "at": "h_blue", "sound": "pop", "offset": -0.05 },
+    { "at": "h_white", "sound": "whoosh", "offset": -0.2, "gain": -16 },
+    { "at": "h_where", "sound": "pop", "offset": -0.05 },
+    { "at": "l_every", "sound": "sparkle", "gain": -18 },
+    { "at": "l_red", "sound": "tick" },
+    { "at": "l_blue", "sound": "tick" },
+    { "at": "a_bounce", "sound": "pop", "gain": -16 },
+    { "at": "a_comes", "sound": "ding", "gain": -18 },
+    { "at": "e_why", "sound": "sparkle", "gain": -14 }
+  ],
+  "music": null
+}

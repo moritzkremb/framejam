@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <!-- Vendor GSAP to assets/vendor/gsap.min.js for offline renders. -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      /* Brand tokens: replace with the product's own (or the FrameJam style's). */
+      :root {
+        --ground: #f7f6f3; --ink: #191918; --muted: #615d59; --hairline: #e6e3df; --accent: #0075de;
+        --dark: #191918; --radius: 18px;
+        --display: "Inter", system-ui, sans-serif; --mono: ui-monospace, "SF Mono", monospace;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); color: var(--ink); font-family: var(--display); }
+      .layer { position: absolute; inset: 0; }
+      .dark { background: var(--dark); color: #fff; }
+      .accent { color: var(--accent); }
+      .kicker { position: absolute; font-family: var(--mono); font-size: 26px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+      .display { position: absolute; font-weight: 700; font-size: 120px; line-height: 1.02; letter-spacing: -0.045em; white-space: nowrap; }
+      .w { display: inline-block; }
+      .window { position: absolute; border-radius: var(--radius); overflow: hidden; background: #fff; border: 1.5px solid var(--hairline); box-shadow: 0 2px 6px rgba(0,0,0,.04), 0 24px 60px rgba(0,0,0,.10), 0 60px 140px rgba(0,0,0,.12); }
+      .window .bar { height: 44px; border-bottom: 1.5px solid var(--hairline); display: flex; gap: 10px; align-items: center; padding-left: 20px; }
+      .window .bar i { width: 12px; height: 12px; border-radius: 50%; background: var(--hairline); }
+      .window .cam { position: absolute; left: 0; top: 44px; transform-origin: 0 0; }
+      .window .cam img, .window .cam video { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+      .chip { position: absolute; display: flex; align-items: center; gap: 14px; padding: 16px 26px; border-radius: 999px; background: #fff; border: 1.5px solid var(--hairline); box-shadow: 0 16px 40px rgba(0,0,0,.12); font-size: 28px; font-weight: 600; white-space: nowrap; }
+      .chip .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+      .cta { position: absolute; padding: 26px 56px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 38px; font-weight: 600; white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Starter for a product launch. One layer per frame; frame-local times are added to the frame's start.
+      Beat grid: 120 BPM, so B = 0.5 s per beat and every frame is whole bars (2 s). Replace copy and assets,
+      add frames by copying a layer, and keep every reveal on a beat.
+    -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="16" data-width="1920" data-height="1080">
+
+      <!-- Frame 1: hook (bars 1-2, 0-4 s). Pain in three beats on dark. -->
+      <div id="f1" class="layer dark clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="kicker" id="f1-k" style="left: 120px; top: 120px; color: #a39e98">Your work, today</div>
+        <div class="display" id="f1-a" style="left: 120px; top: 330px">Docs here.</div>
+        <div class="display" id="f1-b" style="left: 120px; top: 460px">Chats there.</div>
+        <div class="display" id="f1-c" style="left: 120px; top: 590px">Tasks <span class="accent">everywhere.</span></div>
+      </div>
+
+      <!-- Frame 2: name on the drop (bars 3-4, 4-8 s). -->
+      <div id="f2" class="layer clip" data-start="4" data-duration="4" data-track-index="1">
+        <div class="display" id="f2-name" style="left: 0; right: 0; top: 300px; text-align: center; font-size: 220px">Product</div>
+        <div class="display" id="f2-line" style="left: 0; right: 0; top: 600px; text-align: center; font-size: 84px"><span class="w">Where</span> <span class="w">work</span> <span class="w accent">ships</span> <span class="w">itself.</span></div>
+      </div>
+
+      <!-- Frame 3: one feature in a floating window (bars 5-7, 8-14 s). -->
+      <div id="f3" class="layer clip" data-start="8" data-duration="6" data-track-index="1">
+        <div class="kicker" id="f3-k" style="left: 96px; top: 300px"><span style="color: var(--accent)">●</span> Capture knowledge</div>
+        <div class="display" id="f3-h" style="left: 96px; top: 360px; font-size: 92px; white-space: normal; width: 700px">Bring everything into <span class="accent">one place.</span></div>
+        <div class="window" id="f3-win" style="left: 860px; top: 150px; width: 960px; height: 780px">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="cam" id="f3-cam" style="width: 960px; height: 736px">
+            <!-- A real screenshot of the feature. For a recording use a timed video with an id:
+                 <video id="v-f3" class="clip" src="assets/ui/feature.mp4" data-start="10" data-duration="4" data-track-index="5" muted playsinline></video> -->
+            <img src="assets/ui/feature.png" alt="" />
+          </div>
+        </div>
+        <div class="chip" id="f3-chip" style="left: 820px; top: 860px"><span class="dot"></span>Notes captured</div>
+      </div>
+
+      <!-- Frame 4: CTA (bars 8-9, 14-16 s, final hit at 14.0). -->
+      <div id="f4" class="layer clip" data-start="14" data-duration="2" data-track-index="1">
+        <div class="display" id="f4-name" style="left: 0; right: 0; top: 300px; text-align: center; font-size: 160px">Product</div>
+        <div class="display" id="f4-line" style="left: 0; right: 0; top: 500px; text-align: center; font-size: 56px; font-weight: 500; color: var(--muted)">The one-line promise.</div>
+        <div class="cta" id="f4-cta" style="left: 50%; top: 640px">Try it free</div>
+      </div>
+
+      <audio id="bed" class="clip" src="assets/music/bed.wav" data-start="0" data-duration="16" data-track-index="20" data-volume="1"></audio>
+    </div>
+
+    <script>
+      (function () {
+        const B = 0.5; // one beat at 120 BPM
+        const tl = gsap.timeline({ paused: true });
+        gsap.set("#f4-cta", { xPercent: -50 });
+        const rise = (sel, at, stagger) =>
+          tl.fromTo(sel, { y: 40, opacity: 0, filter: "blur(10px)" }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out", stagger: stagger || 0 }, at);
+        const slam = (sel, at) =>
+          tl.fromTo(sel, { scale: 1.15, opacity: 0, filter: "blur(8px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.12, ease: "power2.out", transformOrigin: "0% 50%" }, at);
+
+        // Frame 1 (0 s): kicker, then one slam per two beats, then zoom-through into the drop
+        rise("#f1-k", 0);
+        slam("#f1-a", 1 * B);
+        slam("#f1-b", 3 * B);
+        slam("#f1-c", 5 * B);
+        tl.to("#f1 .display, #f1-k", { scale: 1.2, opacity: 0.15, filter: "blur(10px)", duration: 0.2, ease: "power3.in" }, 4 - 0.2);
+
+        // Frame 2 (4 s): name blooms on the drop, glides up, the line builds per word
+        const f2 = 4;
+        tl.set("#f2-line .w", { opacity: 0 }, f2);
+        tl.fromTo("#f2-name", { scale: 0.75, opacity: 0.15, filter: "blur(12px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, f2);
+        tl.to("#f2-name", { y: -60, scale: 0.8, duration: 0.6, ease: "power3.inOut" }, f2 + 2 * B);
+        rise("#f2-line .w", f2 + 3 * B, B / 2);
+
+        // Frame 3 (8 s): headline per line, window settles in 3D, chip pops, camera pushes to the detail
+        const f3 = 8;
+        rise("#f3-k", f3);
+        rise("#f3-h", f3 + B);
+        tl.fromTo("#f3-win", { y: 160, rotationY: -14, rotationX: 10, scale: 0.94, opacity: 0, filter: "blur(8px)", transformPerspective: 2200 },
+          { y: 0, rotationY: -6, rotationX: 0, scale: 1, opacity: 1, filter: "blur(0px)", duration: 1.2, ease: "expo.out" }, f3 + B);
+        tl.fromTo("#f3-chip", { y: 20, scale: 0.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.45, ease: "expo.out" }, f3 + 4 * B);
+        tl.fromTo("#f3-cam", { scale: 1, x: 0, y: 0 }, { scale: 1.4, x: -60, y: -80, duration: 0.8, ease: "power2.inOut" }, f3 + 6 * B);
+
+        // Frame 4 (14 s): lockup on the final hit, CTA, fade out
+        const f4 = 14;
+        tl.fromTo("#f4-name", { scale: 0.8, opacity: 0, filter: "blur(10px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, f4);
+        rise("#f4-line", f4 + B);
+        tl.fromTo("#f4-cta", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, f4 + 2 * B);
+        tl.to("#f4", { opacity: 0, duration: 0.4, ease: "power2.in" }, f4 + 2 - 0.4);
+
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

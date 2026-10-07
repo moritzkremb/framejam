@@ -1,0 +1,35 @@
+{
+  "id": "motion-showreel",
+  "name": "Motion Design Showreel",
+  "tagline": "Give it your logo and a few things to show off, get a short motion piece cut to the beat.",
+  "description": "A 12–25 second show-off video for a product, a brand or your own motion skills. One shape from your brand, like the logo mark, stays on screen and does a new trick every bar: clicks, trails, colour floods, words that land on the beat, 3D type and grids, then it lands as your logo. It comes with a ready project that's already timed to the music.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@uxmiles", "url": "https://x.com/uxmiles/status/2104618175803609305" }],
+  "license": "MIT",
+  "bring": [
+    "Your logo, brand colours and fonts",
+    "3–6 things to show off: features, values or skills",
+    "Optional: music you have the rights to",
+    "Optional: screenshots or screen recordings of the product"
+  ],
+  "get": "A 12–25 s 16:9 motion piece at 60 fps, timed to the music and ending on your logo",
+  "format": "16:9",
+  "project": "new",
+  "needs": [
+    { "name": "Hyperframes", "where": "computer" },
+    { "name": "Node, Python 3 and ffmpeg", "where": "computer" },
+    { "name": "Showreel starter and beat tools", "where": "included" },
+    { "name": "A music generator", "where": "service", "cost": "paid", "examples": ["Suno", "Udio", "ElevenLabs Music", "the included scratch beat (free)"], "optional": true }
+  ],
+  "styles": "inspiration",
+  "steps": [
+    "Pick the shape that stays on screen and the things to show off",
+    "Plan one trick per bar on the music",
+    "Check the key frames in FrameJam",
+    "Build it on the beat in the included project",
+    "Review the video in FrameJam until it's right"
+  ],
+  "tags": ["motion design", "showreel", "logo reveal", "launch teaser", "kinetic type", "beat sync"],
+  "skill": "SKILL.md"
+}

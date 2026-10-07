@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <!-- Vendor GSAP to assets/vendor/gsap.min.js for offline renders. -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Geist"; src: url("assets/fonts/geist-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+      @font-face { font-family: "Geist Mono"; src: url("assets/fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0c0c0d; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #0c0c0d; font-family: "Geist", sans-serif; color: #f4f4f5; }
+      .layer { position: absolute; inset: 0; }
+      .lime { color: #d4ff3a; }
+      .mono { font-family: "Geist Mono", monospace; }
+      .line { position: absolute; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 132px; letter-spacing: -0.045em; line-height: 1; white-space: nowrap; }
+      .w { display: inline-block; }
+      .label { position: absolute; left: 96px; top: 84px; font-size: 28px; color: #86868f; letter-spacing: 0.02em; }
+      .pin { position: absolute; width: 74px; height: 74px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: #d4ff3a; box-shadow: 0 10px 40px rgba(212, 255, 58, 0.35); }
+      .pin::after { content: ""; position: absolute; left: 25px; top: 25px; width: 24px; height: 24px; border-radius: 50%; background: #0c0c0d; }
+      .clipv { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; }
+      .cap { position: absolute; left: 50%; top: 50%; padding: 26px 50px 34px; border-radius: 30px; background: rgba(12, 12, 13, 0.94); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 30px 90px rgba(0, 0, 0, 0.55); font-weight: 700; font-size: 104px; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; }
+      .chip { position: absolute; display: flex; align-items: center; gap: 16px; padding: 16px 26px; border-radius: 18px; background: rgba(21, 21, 23, 0.96); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 20px 60px rgba(0, 0, 0, 0.5); font-size: 30px; font-weight: 550; white-space: nowrap; }
+      .chip .t { font-family: "Geist Mono", monospace; color: #d4ff3a; font-size: 26px; }
+      #win { position: absolute; left: 240px; top: 150px; width: 1440px; height: 900px; border-radius: 28px; overflow: hidden; background: #151517; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 40px 120px rgba(0, 0, 0, 0.6); transform-origin: 50% 40%; }
+      #win video { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; object-fit: cover; }
+      #wincap { position: absolute; left: 0; right: 0; top: 52px; text-align: center; font-weight: 700; font-size: 64px; letter-spacing: -0.035em; }
+      .tickline { position: absolute; left: 0; right: 0; text-align: center; font-family: "Geist Mono", monospace; font-size: 58px; color: #f4f4f5; letter-spacing: 0.01em; }
+      #glow { position: absolute; left: 260px; top: -200px; width: 1400px; height: 1400px; border-radius: 50%; background: radial-gradient(circle, rgba(212, 255, 58, 0.16), rgba(212, 255, 58, 0) 60%); }
+      #glow2 { position: absolute; left: 1100px; top: 420px; width: 1000px; height: 1000px; border-radius: 50%; background: radial-gradient(circle, rgba(124, 196, 255, 0.12), rgba(124, 196, 255, 0) 62%); }
+      #mark { position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-weight: 700; font-size: 250px; letter-spacing: -0.055em; line-height: 1; white-space: nowrap; }
+      .ch { display: inline-block; }
+      #sub { position: absolute; left: 0; right: 0; top: 640px; text-align: center; font-weight: 600; font-size: 66px; letter-spacing: -0.03em; white-space: nowrap; }
+      #pill { position: absolute; left: 50%; top: 780px; padding: 22px 46px 24px; border-radius: 999px; background: #d4ff3a; color: #0c0c0d; font-family: "Geist Mono", monospace; font-size: 40px; font-weight: 600; white-space: nowrap; box-shadow: 0 0 60px rgba(212, 255, 58, 0.28); }
+      #url { position: absolute; left: 0; right: 0; top: 900px; text-align: center; font-size: 34px; color: #a1a1aa; font-weight: 500; }
+      #flash { position: absolute; inset: 0; background: #f4f4f5; }
+    </style>
+  </head>
+  <body>
+    <!--
+      The FrameJam launch teaser (18 s, 120 BPM). Re-skin it: replace the copy, the colors (#0c0c0d ground,
+      #d4ff3a accent), the fonts, and the clips. Expected files:
+        assets/fonts/geist-latin-wght-normal.woff2, assets/fonts/geist-mono-latin-wght-normal.woff2 (or your fonts)
+        assets/clips/*.mp4  eight 1.3 s glimpses (1920x1080, -g 15) + review.mp4 (a 4 s product moment)
+        assets/bed.wav      from: uv run <playbook>/scripts/launch_bed.py cues.json --out assets/bed.wav
+      Sections: 0-4 problem, 4-8 glimpses with captions and pins, 8-10 product moment, 10-12 breakdown,
+      12-16 name, 16-18 call to action. Every reveal sits on a beat (0.5 s).
+    -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="18" data-width="1920" data-height="1080">
+      <!-- S1-S2: the problem, on black (0-4) -->
+      <div id="s12" class="layer clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="label mono" id="lv1">v1.mp4</div>
+        <div class="line" id="l1" style="top: 474px"><span class="w">Your</span> <span class="w">agent</span> <span class="w">made</span> <span class="w">a</span> <span class="w">video.</span></div>
+        <div class="line" id="l2" style="top: 474px"><span class="w">Now</span> <span class="w">say</span> <span class="w">what's</span> <span class="w lime" id="wrong">wrong.</span></div>
+        <div class="pin" id="pin0" style="left: 1356px; top: 330px"></div>
+      </div>
+
+      <!-- S3: montage of real FrameJam style previews (4-8) -->
+      <video id="v-doodle-mascot" class="clipv clip" src="assets/clips/doodle-mascot.mp4" data-start="4" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <video id="v-retro-pop" class="clipv clip" src="assets/clips/retro-pop.mp4" data-start="4.5" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <video id="v-label-collage" class="clipv clip" src="assets/clips/label-collage.mp4" data-start="5" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <video id="v-op-art" class="clipv clip" src="assets/clips/op-art.mp4" data-start="5.5" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <video id="v-window-seat" class="clipv clip" src="assets/clips/window-seat.mp4" data-start="6" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <video id="v-bauhaus-grid" class="clipv clip" src="assets/clips/bauhaus-grid.mp4" data-start="6.5" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <video id="v-cyanotype-mac" class="clipv clip" src="assets/clips/cyanotype-mac.mp4" data-start="7" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <video id="v-storybook-lantern" class="clipv clip" src="assets/clips/storybook-lantern.mp4" data-start="7.5" data-duration="0.5" data-track-index="2" muted playsinline></video>
+      <div id="s3" class="layer clip" data-start="4" data-duration="4" data-track-index="3">
+        <div class="pin" id="pin1" style="left: 300px; top: 190px"></div>
+        <div class="chip" id="chip1" style="left: 390px; top: 136px"><span class="t">0:04.2</span><span>warmer colours</span></div>
+        <div class="pin" id="pin2" style="left: 1380px; top: 780px"></div>
+        <div class="chip" id="chip2" style="left: 1470px; top: 726px"><span class="t">0:06.5</span><span>slower here</span></div>
+        <div class="cap" id="c1">Point.</div>
+        <div class="cap" id="c2">Comment.</div>
+        <div class="cap" id="c3"><span class="lime">Finish</span> review.</div>
+        <div class="cap" id="c4">Next version.</div>
+      </div>
+
+      <!-- S4-S5: the real app (8-12) -->
+      <div id="s45" class="layer clip" data-start="8" data-duration="4" data-track-index="4">
+        <div id="wincap">Notes land on the exact frame.</div>
+        <div id="win">
+          <div id="vwrap" style="position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0"><video id="v-review" class="clip" src="assets/clips/review.mp4" data-start="8" data-duration="4" data-track-index="5" muted playsinline></video></div>
+        </div>
+        <div class="tickline" id="k1" style="top: 380px">every timestamp</div>
+        <div class="tickline" id="k2" style="top: 480px">every pin</div>
+        <div class="tickline" id="k3" style="top: 580px">every version</div>
+      </div>
+      <div id="flash" class="clip" data-start="11.8" data-duration="0.2" data-track-index="9"></div>
+
+      <!-- S6-S7: name and call to action (12-18) -->
+      <div id="s67" class="layer clip" data-start="12" data-duration="6" data-track-index="6">
+        <div id="glow"></div>
+        <div id="glow2"></div>
+        <div id="mark"><span class="ch">F</span><span class="ch">r</span><span class="ch">a</span><span class="ch">m</span><span class="ch">e</span><span class="ch">&#160;</span><span class="ch lime">J</span><span class="ch lime">a</span><span class="ch lime">m</span></div>
+        <div id="sub"><span class="w">Review</span> <span class="w">your</span> <span class="w">agent's</span> <span class="w">videos.</span></div>
+        <div id="pill">npx -y framejam install</div>
+        <div id="url">Free. Local. framejam.ai</div>
+      </div>
+
+      <audio id="bed" class="clip" src="assets/bed.wav" data-start="0" data-duration="18" data-track-index="20" data-volume="1"></audio>
+    </div>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        gsap.set(".cap", { xPercent: -50, yPercent: -50 });
+        gsap.set("#pill", { xPercent: -50 });
+        const rise = (sel, at, stagger) =>
+          tl.fromTo(sel, { y: 50, opacity: 0, filter: "blur(10px)" }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.45, ease: "expo.out", stagger: stagger || 0 }, at);
+
+        // S1: one word per eighth note
+        tl.fromTo("#lv1", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0);
+        tl.set("#l2 .w, #pin0", { opacity: 0 }, 0);
+        rise("#l1 .w", 0.25, 0.25);
+        // S2: waterfall cut leftward into the second line
+        tl.to("#l1 .w", { x: -230, duration: 0.34, ease: "power4.in", stagger: 0.022 }, 1.62);
+        tl.to("#l1 .w", { opacity: 0, duration: 0.18, ease: "power1.in", stagger: 0.022 }, 1.62);
+        tl.fromTo("#l2 .w", { x: 230, opacity: 0.35 }, { x: 0, opacity: 1, duration: 0.3, ease: "power4.out", stagger: { each: 0.05, ease: "power1.in" } }, 2.0);
+        tl.fromTo("#pin0", { y: -140, opacity: 0, rotation: -45 }, { y: 0, opacity: 1, rotation: -45, duration: 0.42, ease: "expo.out" }, 3.0);
+        // zoom-through into the drop
+        tl.to("#s12 .line, #pin0, #lv1", { scale: 1.25, opacity: 0.15, filter: "blur(10px)", duration: 0.3, ease: "power3.in", transformOrigin: "50% 50%" }, 3.7);
+
+        // S3: captions hard-swap on the bar, pins pop on the off-bars
+        tl.set("#c2, #c3, #c4, #pin1, #chip1, #pin2, #chip2", { opacity: 0 }, 4);
+        tl.fromTo("#c1", { scale: 0.75, opacity: 0.15, filter: "blur(10px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 4.0);
+        [["#c1", "#c2", 5.0], ["#c2", "#c3", 6.0], ["#c3", "#c4", 7.0]].forEach(([a, b, t]) => {
+          tl.set(a, { opacity: 0 }, t);
+          tl.fromTo(b, { scale: 0.75, opacity: 0.15, filter: "blur(10px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, t);
+        });
+        tl.fromTo("#pin1", { y: -90, opacity: 0, rotation: -45 }, { y: 0, opacity: 1, rotation: -45, duration: 0.35, ease: "expo.out" }, 4.5);
+        tl.fromTo("#chip1", { x: -24, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease: "power3.out" }, 4.6);
+        tl.set("#pin1, #chip1", { opacity: 0 }, 5.5);
+        tl.fromTo("#pin2", { y: -90, opacity: 0, rotation: -45 }, { y: 0, opacity: 1, rotation: -45, duration: 0.35, ease: "expo.out" }, 6.5);
+        tl.fromTo("#chip2", { x: -24, opacity: 0 }, { x: 0, opacity: 1, duration: 0.35, ease: "power3.out" }, 6.6);
+        tl.set("#pin2, #chip2", { opacity: 0 }, 7.5);
+
+        // S4: the real review page rises in
+        tl.set("#k1, #k2, #k3", { opacity: 0 }, 8);
+        tl.fromTo("#win", { y: 220, rotationX: 18, scale: 0.9, opacity: 0, transformPerspective: 2200 }, { y: 0, rotationX: 0, scale: 1, opacity: 1, duration: 0.8, ease: "expo.out" }, 8.0);
+        rise("#wincap", 8.2);
+        tl.fromTo("#vwrap", { scale: 1, x: 0, y: 0 }, { scale: 1.6, x: -20, y: -540, duration: 0.7, ease: "power2.inOut" }, 8.9);
+        // S5: breakdown, the window recedes and the receipts tick in
+        tl.to("#win", { scale: 0.86, opacity: 0.08, filter: "blur(8px)", duration: 0.5, ease: "power3.inOut" }, 10.0);
+        tl.to("#wincap", { opacity: 0, y: -30, duration: 0.3, ease: "power2.in" }, 10.0);
+        rise("#k1", 10.25);
+        rise("#k2", 10.75);
+        rise("#k3", 11.25);
+        tl.fromTo("#flash", { opacity: 0 }, { opacity: 0.85, duration: 0.2, ease: "power2.in" }, 11.8);
+
+        // S6: the name on the drop
+        tl.set("#sub .w, #pill, #url", { opacity: 0 }, 12);
+        tl.fromTo("#mark .ch", { y: 120, opacity: 0, rotation: 4 }, { y: 0, opacity: 1, rotation: 0, duration: 0.6, ease: "expo.out", stagger: 0.035 }, 12.0);
+        tl.fromTo("#mark", { scale: 1.08 }, { scale: 1, duration: 1.1, ease: "expo.out" }, 12.0);
+        tl.fromTo("#glow", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 2.5, ease: "power2.out" }, 12.0);
+        tl.fromTo("#glow2", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 2.5, ease: "power2.out" }, 12.4);
+        rise("#sub .w", 13.0, 0.09);
+        // S7: call to action on the final hit
+        tl.fromTo("#pill", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "expo.out" }, 16.0);
+        rise("#url", 16.4);
+        tl.to("#s67", { opacity: 0, duration: 0.5, ease: "power2.in" }, 17.5);
+
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>
