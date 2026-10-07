@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
 import { NotFoundPage } from "@/pages/not-found-page";
+import { PlaybookDetailPage } from "@/pages/playbook-detail-page";
+import { PlaybooksPage } from "@/pages/playbooks-page";
 import { ReviewPage } from "@/pages/review-page";
 import { ProjectsPage } from "@/pages/projects-page";
 import { SetupPage } from "@/pages/setup-page";
@@ -38,6 +40,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/setup" element={<SetupPage />} />
         <Route path="/styles" element={<StylesPage />} />
         <Route path="/styles/:id" element={<StyleDetailPage />} />
+        <Route path="/playbooks" element={<PlaybooksPage />} />
+        <Route path="/playbooks/:id" element={<PlaybookDetailPage />} />
         <Route path="/review/:id" element={<ReviewPage />} />
         <Route path="/reviews" element={<Navigate to="/" replace />} />
         <Route path="/projects" element={<Navigate to="/" replace />} />

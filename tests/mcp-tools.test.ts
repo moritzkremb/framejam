@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { builtinPresetsDir } from "../src/server/paths.ts";
-import { connectClient, makeFixture, parse, type ToolResult } from "./helpers.ts";
+import { connectClient, makeFixture, parse, samplePlaybook, writePlaybook, type ToolResult } from "./helpers.ts";
 
 let fx: ReturnType<typeof makeFixture>;
 let mcp: Awaited<ReturnType<typeof connectClient>>;
@@ -24,7 +24,20 @@ describe("tool registry", () => {
   it("exposes the review and preset tools", async () => {
     const { tools } = await mcp.client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(
-      ["add_version", "get_feedback", "get_preset", "get_selected_preset", "list_presets", "list_reviews", "open_review", "resolve_comments", "wait_for_feedback"].sort(),
+      [
+        "add_version",
+        "get_feedback",
+        "get_playbook",
+        "get_preset",
+        "get_selected_playbook",
+        "get_selected_preset",
+        "list_playbooks",
+        "list_presets",
+        "list_reviews",
+        "open_review",
+        "resolve_comments",
+        "wait_for_feedback",
+      ].sort(),
     );
   });
 
@@ -403,5 +416,37 @@ describe("presets", () => {
     expect(sel.selected).toBe("bauhaus-grid");
     expect(sel.style.format).toBe("1:1");
     expect(sel.templateFiles.length).toBeGreaterThan(0);
+  });
+});
+
+describe("playbooks", () => {
+  beforeEach(() => {
+    writePlaybook(fx.store.userPlaybooksDir, samplePlaybook("test-cut", { name: "Test Cut", styles: "parts", stylesNote: "captions" }));
+  });
+
+  it("lists playbooks with their cost and project", async () => {
+    const all = parse(await mcp.call("list_playbooks"));
+    const mine = all.playbooks.find((p: { id: string }) => p.id === "test-cut");
+    expect(mine).toMatchObject({ name: "Test Cut", cost: "Free to run", selected: false, galleryUrl: "http://localhost:2400/playbooks/test-cut" });
+    expect(parse(await mcp.call("list_playbooks", { query: "zzz-nothing" })).count).toBe(0);
+  });
+
+  it("returns the method, the folder and how the selected style combines", async () => {
+    fx.store.setSelectedPreset("bauhaus-grid");
+    const res = parse(await mcp.call("get_playbook", { id: "test-cut" }));
+    expect(res.skill).toContain("Do the thing.");
+    expect(fs.existsSync(res.playbookDir)).toBe(true);
+    expect(res.files).toContain(path.join("scripts", "run.sh"));
+    expect(res.stylesSentence).toMatch(/sets the captions\.$/);
+    expect(res.selectedStyle.id).toBe("bauhaus-grid");
+    expect((await mcp.call("get_playbook", { id: "nope" })).isError).toBe(true);
+  });
+
+  it("get_selected_playbook reflects the gallery selection", async () => {
+    expect(parse(await mcp.call("get_selected_playbook")).selected).toBeNull();
+    fx.store.setSelectedPlaybook("test-cut");
+    const sel = parse(await mcp.call("get_selected_playbook"));
+    expect(sel.selected).toBe("test-cut");
+    expect(sel.playbook.name).toBe("Test Cut");
   });
 });

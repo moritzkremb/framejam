@@ -17,6 +17,10 @@ The core of the app, and what every change should be judged against:
   comment with its timestamp and a frame image (with the pin drawn on it), makes the next version, and the round
   repeats.
 - **Storyboards.** The same review loop on a set of still panels, one per shot, before anything is animated.
+- **Playbooks.** The method for one kind of video (a music video, a talking-head short, a product launch...): what the
+ user brings, the steps, the tools it needs and the quality bar. Styles set the look; playbooks set how it's made. The
+ user presses *Use this playbook* and the agent gets the method (`get_playbook`). Each playbook is an agent skill
+ folder plus a `playbook.json` with a creator, so outside creators can submit their own later.
 - **Any video tool.** FrameJam always reviews the rendered file. It doesn't care how the video was made.
 
 **Videos are mp4-only.** The review page always plays the rendered file. There used to be a beta live Hyperframes
@@ -62,6 +66,10 @@ it. The only step the user has to do is `npm publish`, because it needs their 2F
 - `src/server/mcp.ts`: MCP tools. `src/server/store.ts`: JSON store in `~/.framejam`. `src/server/app.ts`: HTTP routes.
 - `src/web/`: the UI. `src/web/components/setup-steps.tsx` has the setup prompt.
 - `skills/framejam/SKILL.md`: the agent skill. `.cursor/rules/framejam.mdc` is generated from it.
+- `playbooks/`: the built-in playbooks, one folder each: `playbook.json` (schema in `src/shared/types.ts`, checked by
+ `validatePlaybook` in `src/shared/playbooks.ts`), `SKILL.md` (the method), optional `references/`, `scripts/`,
+ `engine/` or `template/`, and `poster.jpg`. Like styles, their `preview.mp4` lives only on the website
+ (`../framejam-site/public/playbooks/<id>/`). Users' own playbooks go in `~/.framejam/playbooks/`.
 - `presets/`: the 30 built-in styles. Their `preview.mp4` files aren't in the npm package; the app streams them from
   `framejam.ai/presets/<id>/preview.mp4`, which the website serves from `../framejam-site/public/presets`.
 - `videos/`: the landing video and other video projects. Ignored by git and kept only on the user's machine; never
@@ -72,7 +80,7 @@ it. The only step the user has to do is `npm publish`, because it needs their 2F
 A push to GitHub doesn't reach users of the npm package. When you finish a change, tell the user which of these it is.
 
 **Needs an npm release** (users only get it after publishing): anything in `src/` (UI, MCP tools, CLI, install
-messages), `presets/` (styles and templates), and `package.json` dependencies.
+messages), `presets/` (styles and templates), `playbooks/`, and `package.json` dependencies.
 
 **Doesn't need one:**
 - `skills/framejam/SKILL.md`: `framejam install` pulls the skill from GitHub `main`, so a push reaches new installs
@@ -106,7 +114,10 @@ Push to `main` only after the npm release is live if the README or website alrea
 - **Commands and options:** if you change CLI commands, MCP tools, env vars or install steps, update `README.md` and
   the website docs (`../framejam-site/app/docs/`) too.
 - **Styles:** adding or removing a built-in preset also means adding or removing its folder in
-  `../framejam-site/public/presets` (preview.mp4, poster.jpg and style.json) and updating the counts and lists in `README.md`.
+ `../framejam-site/public/presets` (preview.mp4, poster.jpg and style.json) and updating the counts and lists in `README.md`.
+- **Playbooks:** the same for `../framejam-site/public/playbooks` (preview.mp4, poster.jpg and an identical
+ playbook.json) and the list in `README.md`. The display helpers in `src/shared/playbooks.ts` (needs groups, cost badge,
+ styles sentence, copy prompt) have a copy in `../framejam-site/lib/playbooks.ts`; change both together.
 
 ## Writing
 

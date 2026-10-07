@@ -33,7 +33,7 @@ describe("stdio transport (how Cursor and Claude Code launch framejam)", () => {
 
   it("serves MCP on stdio and hosts the review UI on the HTTP port", async () => {
     const { tools } = await client.listTools();
-    expect(tools).toHaveLength(9);
+    expect(tools).toHaveLength(12);
 
     const opened = parse(
       (await client.callTool({

@@ -1,6 +1,6 @@
-import type { AgentInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel } from "../../shared/types";
+import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel } from "../../shared/types";
 
-export type { AgentInfo, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel };
+export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel };
 
 export interface ReviewListItem {
   id: string;
@@ -82,6 +82,13 @@ export const api = {
     ),
   selectPreset: (id: string | null) =>
     request<{ id: string; selectedAt: string } | null>("/api/selected-preset", {
+      method: "PUT",
+      body: JSON.stringify({ id }),
+    }),
+  playbooks: () => request<{ selected: string | null; playbooks: PlaybookSummary[] }>("/api/playbooks"),
+  playbook: (id: string) => request<{ playbook: PlaybookSummary; selected: string | null }>(`/api/playbooks/${id}`),
+  selectPlaybook: (id: string | null) =>
+    request<{ id: string; selectedAt: string } | null>("/api/selected-playbook", {
       method: "PUT",
       body: JSON.stringify({ id }),
     }),

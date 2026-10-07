@@ -14,7 +14,7 @@ import { createUpdateChecker } from "./update.ts";
 import { VERSION } from "./version.ts";
 
 export function createApp(ctx: McpContext) {
-  const { store, presets } = ctx;
+  const { store, presets, playbooks } = ctx;
   const app = new Hono();
   const checkUpdate = createUpdateChecker(ctx.fetchLatestVersion);
 
@@ -247,6 +247,35 @@ export function createApp(ctx: McpContext) {
     const { id } = (await c.req.json()) as { id: string | null };
     if (id && !presets.get(id)) return c.json({ error: "Preset not found" }, 404);
     return c.json(store.setSelectedPreset(id).selectedPreset ?? null);
+  });
+
+  // --- Playbooks -----------------------------------------------------------
+  app.get("/api/playbooks", (c) => {
+    const selected = store.getState().selectedPlaybook?.id ?? null;
+    return c.json({ selected, playbooks: playbooks.list(c.req.query("q")).map((p) => playbooks.summary(p)) });
+  });
+
+  app.get("/api/playbooks/:id", (c) => {
+    const p = playbooks.get(c.req.param("id"));
+    if (!p) return c.json({ error: "Playbook not found" }, 404);
+    const selected = store.getState().selectedPlaybook?.id ?? null;
+    return c.json({ playbook: playbooks.summary(p), selected });
+  });
+
+  app.get("/api/playbooks/:id/files/*", (c) => {
+    const p = playbooks.get(c.req.param("id"));
+    if (!p) return c.text("Playbook not found", 404);
+    const rel = c.req.path.slice(`/api/playbooks/${encodeURIComponent(p.playbook.id)}/files/`.length);
+    const file = safeJoin(p.dir, rel);
+    return file ? sendFile(file, c.req.raw) : c.text("Forbidden", 403);
+  });
+
+  app.get("/api/selected-playbook", (c) => c.json(store.getState().selectedPlaybook ?? null));
+
+  app.put("/api/selected-playbook", async (c) => {
+    const { id } = (await c.req.json()) as { id: string | null };
+    if (id && !playbooks.get(id)) return c.json({ error: "Playbook not found" }, 404);
+    return c.json(store.setSelectedPlaybook(id).selectedPlaybook ?? null);
   });
 
   // --- MCP over streamable HTTP (stateless: one server per request) --------

@@ -34,6 +34,8 @@
     "!dist/**/*.map",
     "presets",
     "!presets/*/preview.mp4",
+    "playbooks",
+    "!playbooks/*/preview.mp4",
     "skills",
     "README.md",
     "LICENSE"

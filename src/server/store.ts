@@ -100,6 +100,7 @@ export interface NewCommentInput {
 
 interface AppState {
   selectedPreset?: { id: string; selectedAt: string };
+  selectedPlaybook?: { id: string; selectedAt: string };
   agent?: AgentInfo;
 }
 
@@ -121,6 +122,10 @@ export class Store {
 
   get userPresetsDir() {
     return path.join(this.root, "presets");
+  }
+
+  get userPlaybooksDir() {
+    return path.join(this.root, "playbooks");
   }
 
   private reviewFile(id: string) {
@@ -545,6 +550,14 @@ export class Store {
     const state = this.getState();
     if (id) state.selectedPreset = { id, selectedAt: now() };
     else delete state.selectedPreset;
+    writeJsonAtomic(this.stateFile, state);
+    return state;
+  }
+
+  setSelectedPlaybook(id: string | null) {
+    const state = this.getState();
+    if (id) state.selectedPlaybook = { id, selectedAt: now() };
+    else delete state.selectedPlaybook;
     writeJsonAtomic(this.stateFile, state);
     return state;
   }

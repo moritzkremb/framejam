@@ -5,8 +5,10 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createMcpServer, type McpContext } from "../src/server/mcp.ts";
 import { builtinPresetsDir } from "../src/server/paths.ts";
+import { PlaybookLibrary } from "../src/server/playbooks.ts";
 import { PresetLibrary } from "../src/server/presets.ts";
 import { Store } from "../src/server/store.ts";
+import type { Playbook } from "../src/shared/types.ts";
 
 export const BASE_URL = "http://localhost:2400";
 export const fixturePreset = path.join(builtinPresetsDir, "data-story");
@@ -32,12 +34,41 @@ export function makeFixture() {
   const ctx: McpContext = {
     store,
     presets: PresetLibrary.forStore(store.userPresetsDir),
+    playbooks: PlaybookLibrary.forStore(store.userPlaybooksDir),
     baseUrl: BASE_URL,
     waitSeconds: 2,
     pollMs: 20,
     progressEveryMs: 100,
   };
   return { root, store, project, video, compositionDir: path.join(project, "composition"), ctx };
+}
+
+export const samplePlaybook = (id: string, extra: Partial<Playbook> = {}): Playbook => ({
+  id,
+  name: id,
+  tagline: "In, out.",
+  description: "A test playbook.",
+  version: "1.0.0",
+  creator: { id: "test", name: "Test" },
+  bring: ["A clip"],
+  get: "A video",
+  format: "16:9",
+  project: "any",
+  needs: [{ name: "ffmpeg", where: "computer" }],
+  styles: "all",
+  steps: ["Cut it"],
+  skill: "SKILL.md",
+  ...extra,
+});
+
+export function writePlaybook(dir: string, p: Playbook | Record<string, unknown>, opts: { preview?: boolean } = {}) {
+  const folder = path.join(dir, String(p.id));
+  fs.mkdirSync(folder, { recursive: true });
+  fs.writeFileSync(path.join(folder, "playbook.json"), JSON.stringify(p));
+  fs.writeFileSync(path.join(folder, "SKILL.md"), `# ${String(p.id)}\n\nDo the thing.\n`);
+  fs.mkdirSync(path.join(folder, "scripts"), { recursive: true });
+  fs.writeFileSync(path.join(folder, "scripts", "run.sh"), "echo hi\n");
+  if (opts.preview) fs.writeFileSync(path.join(folder, "preview.mp4"), "");
 }
 
 export async function connectClient(ctx: McpContext) {

@@ -2,9 +2,10 @@ import { ArrowUpRight, ChevronLeft } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { FeedbackButton } from "@/components/feedback";
-import { api, type PresetSummary } from "@/lib/api";
+import { api, type PlaybookSummary, type PresetSummary } from "@/lib/api";
 
 export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
+export const PLAYBOOK_SELECTED_EVENT = "framejam:playbook-selected";
 export const DOCS_URL = "https://www.framejam.ai/docs";
 
 export function Wordmark() {
@@ -36,6 +37,25 @@ function useSelectedStyle() {
   return style;
 }
 
+function useSelectedPlaybook() {
+  const [playbook, setPlaybook] = useState<PlaybookSummary | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () =>
+      api
+        .playbooks()
+        .then(({ selected, playbooks }) => !cancelled && setPlaybook(playbooks.find((p) => p.id === selected) ?? null))
+        .catch(() => !cancelled && setPlaybook(null));
+    void refresh();
+    window.addEventListener(PLAYBOOK_SELECTED_EVENT, refresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(PLAYBOOK_SELECTED_EVENT, refresh);
+    };
+  }, []);
+  return playbook;
+}
+
 export function Dots({ colors, size }: { colors: string[]; size?: number }) {
   return (
     <span className="sw">
@@ -48,12 +68,14 @@ export function Dots({ colors, size }: { colors: string[]; size?: number }) {
 
 const NAV = [
   { to: "/styles", label: "Styles", end: false },
+  { to: "/playbooks", label: "Playbooks", end: false },
   { to: "/", label: "Projects", end: true },
 ];
 
-/** App header on every top-level page: wordmark, the main pages, Docs, and the style in use. */
+/** App header on every top-level page: wordmark, the main pages, Docs, and the style and playbook in use. */
 export function HomeHeader() {
   const style = useSelectedStyle();
+  const playbook = useSelectedPlaybook();
   return (
     <header className="fc-header">
       <Wordmark />
@@ -71,6 +93,17 @@ export function HomeHeader() {
       </nav>
       <span className="fc-grow" />
       <FeedbackButton />
+      {playbook && (
+        <Link
+          to={`/playbooks/${playbook.id}`}
+          className="fc-style-chip"
+          title="Your selected playbook. Your agent follows it for the next video."
+          aria-label={`Selected playbook: ${playbook.name}`}
+        >
+          <span className="lbl">Playbook</span>
+          <span className="fc-truncate">{playbook.name}</span>
+        </Link>
+      )}
       {style ? (
         <Link
           to={`/styles/${style.id}`}

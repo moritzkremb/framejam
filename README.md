@@ -39,12 +39,12 @@ from the render, with your pin drawn where you clicked.
 you can always see what changed and why.
 
 **Runs on your machine.** One local Node process, no account, no upload. Your projects are plain JSON files in
-`~/.framejam`. Your videos and comments never leave your machine. The Styles page streams its example videos from
-framejam.ai, and the **Feedback** button sends the note you write; nothing else goes out.
+`~/.framejam`. Your videos and comments never leave your machine. The Styles and Playbooks pages stream their example
+videos from framejam.ai, and the **Feedback** button sends the note you write; nothing else goes out.
 
 ## How it works
 
-1. **Pick a look** on the Styles page.
+1. **Pick a look** on the Styles page, and if you like, a kind of video on the Playbooks page.
 2. **Ask your agent** for a video, for example *"make a 7-second launch teaser with FrameJam and open it for review"*.
 3. **Review it** in the browser pane next to your chat: click, type, drag, then press **Finish review**.
 4. **Get version 2.** The agent applies your notes and the page switches to the new version on its own. Repeat
@@ -330,6 +330,9 @@ for v2 and v1 still shows what it was.
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id })` | Returns `style.json`, the guide, and the template source files. |
 | `get_selected_preset()` | Returns the preset the user picked with *Use this style*. |
+| `list_playbooks({ query? })` | Lists the playbooks with what to bring, what you get, the cost and the creator. |
+| `get_playbook({ id })` | Returns `playbook.json`, the full `SKILL.md` method, the playbook's local folder and file list, and how the selected style combines with it. |
+| `get_selected_playbook()` | Returns the playbook the user picked with *Use this playbook*. |
 
 Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTime`, `position`, `thumbnailPath`), as a
 markdown prompt, and as inline JPEG frames with the pin drawn on them.
@@ -362,7 +365,8 @@ npm run lint
 
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), `FRAMEJAM_PUBLIC_URL` (the base URL used in links), and
-`FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't
+`FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), `FRAMEJAM_PLAYBOOK_PREVIEW_URL` (the
+same for the Playbooks page), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't
 look for a newer version on npm).
 
 </details>

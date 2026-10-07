@@ -5,6 +5,8 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { FeedbackBatch, Review, ReviewComment } from "../shared/types.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
+import { costBadge, projectLabel, stylesSentence } from "../shared/playbooks.ts";
+import type { PlaybookLibrary } from "./playbooks.ts";
 import type { PresetLibrary } from "./presets.ts";
 import type { ChooseSavePath } from "./save-dialog.ts";
 import { LISTEN_HEARTBEAT_MS, type Store } from "./store.ts";
@@ -12,6 +14,7 @@ import { LISTEN_HEARTBEAT_MS, type Store } from "./store.ts";
 export interface McpContext {
   store: Store;
   presets: PresetLibrary;
+  playbooks: PlaybookLibrary;
   baseUrl: string;
   /** Upper bound for one wait_for_feedback call before it returns `pending`. */
   waitSeconds?: number;
@@ -27,8 +30,9 @@ export interface McpContext {
 
 const MAX_IMAGES = 6;
 
-const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), and pick style presets.
+const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), pick style presets, and pick playbooks (a method for one kind of video, e.g. a music video or a talking-head short).
 First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
+Before building, call get_selected_playbook and get_selected_preset. If a playbook is selected (or the user names one), follow its SKILL.md; the style, if any, combines with it as the playbook's stylesSentence says.
 Loop: (optional) get_selected_preset / list_presets -> build the video with the project's own tool -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending", but stop after 12 pending results in a row, about 10 minutes, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
 Pass videoPath (the render) for every tool; the user always reviews the rendered file. Don't convert the project to another tool.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
@@ -92,7 +96,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
   });
 
 export function createMcpServer(ctx: McpContext): McpServer {
-  const { store, presets } = ctx;
+  const { store, presets, playbooks } = ctx;
   const server = new McpServer(
     { name: "framejam", version: "0.1.0" },
     { instructions: serverInstructions(ctx.baseUrl), capabilities: { logging: {} } },
@@ -485,6 +489,92 @@ export function createMcpServer(ctx: McpContext): McpServer {
               selected: null,
               galleryUrl: `${ctx.baseUrl}/styles`,
               next: "No preset selected. Ask the user to pick one in the gallery, or choose one yourself with list_presets.",
+            }),
+          ],
+        };
+      }
+      return { content: [json({ selected: sel.id, selectedAt: sel.selectedAt, ...payload })] };
+    },
+  );
+
+  server.registerTool(
+    "list_playbooks",
+    {
+      title: "List playbooks",
+      description:
+        "List the playbooks in the library. A playbook is the method for one kind of video (what the user brings, the steps, the tools it needs, the quality bar), for example a music video, a talking-head short or a product launch. Styles set the look; playbooks set how the video is made. Optional free-text query.",
+      inputSchema: { query: z.string().optional() },
+    },
+    async ({ query }) => {
+      const selected = store.getState().selectedPlaybook?.id;
+      const list = playbooks.list(query).map(({ playbook: p }) => ({
+        id: p.id,
+        name: p.name,
+        tagline: p.tagline,
+        bring: p.bring,
+        get: p.get,
+        format: p.format,
+        cost: costBadge(p.needs),
+        project: projectLabel(p.project),
+        creator: p.creator.name,
+        selected: p.id === selected,
+        galleryUrl: `${ctx.baseUrl}/playbooks/${p.id}`,
+      }));
+      return { content: [json({ count: list.length, playbooks: list })] };
+    },
+  );
+
+  const playbookPayload = (id: string) => {
+    const p = playbooks.get(id);
+    if (!p) return undefined;
+    const presetId = store.getState().selectedPreset?.id;
+    const style = presetId ? presets.get(presetId)?.style : undefined;
+    return {
+      playbook: p.playbook,
+      playbookDir: p.dir,
+      files: playbooks.files(p),
+      project: projectLabel(p.playbook.project),
+      stylesSentence: stylesSentence(p.playbook, style?.name),
+      selectedStyle: style ? { id: style.id, name: style.name } : null,
+      galleryUrl: `${ctx.baseUrl}/playbooks/${id}`,
+      next:
+        "Follow skill (the playbook's SKILL.md) step by step. Read files under playbookDir/references when the method points to them, and copy scripts, engine or template folders into the user's project before using them; never edit playbookDir itself. If the project already uses another tool, keep that tool and follow the method with it. Review every render in FrameJam (open_review, wait_for_feedback, add_version).",
+      skill: playbooks.skillText(p),
+    };
+  };
+
+  server.registerTool(
+    "get_playbook",
+    {
+      title: "Get a playbook",
+      description:
+        "Return a playbook: its playbook.json (what to bring, needs, steps), the full SKILL.md method to follow, the local folder with its references, scripts and engine or template, and how the selected style combines with it.",
+      inputSchema: { id: z.string() },
+    },
+    async ({ id }) => {
+      const payload = playbookPayload(id);
+      if (!payload) return errorResult(new Error(`Unknown playbook: ${id}. Call list_playbooks to see ids.`));
+      return { content: [json(payload)] };
+    },
+  );
+
+  server.registerTool(
+    "get_selected_playbook",
+    {
+      title: "Get the playbook the user picked",
+      description: "Return the playbook the user marked with 'Use this playbook' (same as get_playbook), or null if none is selected.",
+      inputSchema: {},
+    },
+    async () => {
+      const sel = store.getState().selectedPlaybook;
+      const payload = sel ? playbookPayload(sel.id) : undefined;
+      if (!sel || !payload) {
+        return {
+          content: [
+            json({
+              selected: null,
+              galleryUrl: `${ctx.baseUrl}/playbooks`,
+              next: "No playbook selected. That's fine: build the video the user asked for. If one in list_playbooks clearly matches the request, offer it.",
             }),
           ],
         };

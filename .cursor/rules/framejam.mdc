@@ -1,14 +1,15 @@
 ---
-description: Make and review videos and storyboards with the user in the loop, with any video tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings). Use when the user wants to make or edit a video, motion graphic or animation, wants a storyboard or shot list reviewed before animating, wants to pick a visual style, or wants to review a render and send timestamped feedback. Requires the framejam MCP server.
+description: Make and review videos and storyboards with the user in the loop, with any video tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings). Use when the user wants to make or edit a video, motion graphic or animation, wants a storyboard or shot list reviewed before animating, wants to pick a visual style or a playbook (a method for one kind of video, like a music video, a talking-head short or a product launch), or wants to review a render and send timestamped feedback. Requires the framejam MCP server.
 globs:
 alwaysApply: false
 ---
 
-# FrameJam: style presets + one-click video and storyboard review
+# FrameJam: styles, playbooks + one-click video and storyboard review
 
-FrameJam runs next to your chat at http://localhost:2400. It gives you two things the chat is bad at:
-**choosing a style** (a structured `style.json`, plus a working Hyperframes template) and **precise feedback**
-(timestamped, pinned comments with a frame image of the render).
+FrameJam runs next to your chat at http://localhost:2400. It gives you three things the chat is bad at:
+**choosing a style** (a structured `style.json`, plus a working Hyperframes template), **following a playbook**
+(the full method for one kind of video: what the user brings, the steps, the tools, the quality bar) and **precise
+feedback** (timestamped, pinned comments with a frame image of the render).
 
 FrameJam works with whatever makes the video. **The user reviews the rendered video** (`videoPath`), so what they see
 is exactly what you rendered. Hyperframes is the default way to build a new video.
@@ -55,12 +56,19 @@ you want to make?" if any of them answers it.
    pass `videoPath` only.
 6. **Nothing relevant** (empty folder, unrelated code repo): open the Styles page and ask what video to make: what it's
    about, roughly how long, the format (16:9, 9:16, 1:1), and any copy, footage or brand assets. Mention they can pick a
-   look on the Styles page. Don't start building from a style alone. New videos default to Hyperframes.
+   look on the Styles page and a kind of video on the Playbooks page. Don't start building from a style alone. New
+   videos default to Hyperframes unless a playbook says otherwise.
 
 If several projects could match, ask one short question that lists them.
 
 ## The loop
 
+0. **Playbook.** Call `get_selected_playbook` (or `get_playbook(id)` when the user names one, e.g. from a pasted
+   prompt). If one is set, its `skill` is the method for this video: follow it step by step, and use the loop below for
+   every render it asks for. Read files in `playbookDir` when the method points to them, and copy its scripts, engine
+   or template into the project before using them; never edit `playbookDir`. `stylesSentence` says how the selected
+   style combines with it. If `selected` is null, carry on; if a playbook in `list_playbooks` clearly matches the
+   request, offer it in one line.
 1. **Style.** Call `get_selected_preset`. If it returns `selected: null`, ask the user to pick one on the Styles page you
    just opened (then call it again), or pick one yourself with `list_presets({ mood, pacing, format })` and `get_preset(id)`.
    - Follow `style.guide` literally, whatever the tool. Use the exact `palette` hex values, `fonts`, `easing` names,

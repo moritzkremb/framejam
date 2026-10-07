@@ -126,3 +126,49 @@ export interface PresetSummary extends PresetStyle {
   previewUrl?: string;
   posterUrl?: string;
 }
+
+export interface PlaybookCreator {
+  id: string;
+  name: string;
+  url?: string;
+}
+
+export interface PlaybookNeed {
+  name: string;
+  /** included: ships with the playbook. computer: installed locally, free. service: an outside account. */
+  where: "included" | "computer" | "service";
+  cost?: "free" | "free tier" | "paid";
+  examples?: string[];
+  optional?: boolean;
+}
+
+export interface Playbook {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  version: string;
+  creator: PlaybookCreator;
+  inspiredBy?: { name: string; url?: string }[];
+  license?: string;
+  source?: string;
+  bring: string[];
+  get: string;
+  format: "16:9" | "9:16" | "1:1" | "any";
+  /** new: starts its own project. any: works in the project's existing tool. */
+  project: "new" | "any";
+  needs: PlaybookNeed[];
+  /** How a selected style combines with this playbook. */
+  styles: "all" | "parts" | "inspiration" | "none";
+  stylesNote?: string;
+  steps: string[];
+  tags?: string[];
+  skill: string;
+}
+
+export interface PlaybookSummary extends Playbook {
+  builtin: boolean;
+  hasPreview: boolean;
+  previewUrl?: string;
+  posterUrl?: string;
+}
