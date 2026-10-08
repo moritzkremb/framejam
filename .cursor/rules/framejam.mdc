@@ -84,7 +84,9 @@ If several projects could match, ask one short question that lists them.
 3. **Render** to a *new file per version*, e.g. `renders/v1.mp4`, `renders/v2.mp4`, so earlier versions stay comparable.
 4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`. Use an absolute path, and the same
    `title` every time so later renders become new versions of this project.
-   Open the returned `url` in the built-in browser (step 0) and tell the user in one line:
+   Open the returned `url` in the built-in browser (step 0), and **always post it in chat as a clickable markdown link**,
+   for example `[Open v1 in FrameJam](http://localhost:2400/review/rev_…)`, so the user can open it from the chat if the
+   browser isn't showing it. Then tell them in one line:
    "Click the video to point at something (or pause and type), then press **Finish review**."
 5. **Wait, in the same turn:** call `wait_for_feedback({ reviewId })` right after opening the review. Don't end your turn
    first — the review page shows "Agent listening" only while you're in this loop.
@@ -97,7 +99,7 @@ If several projects could match, ask one short question that lists them.
    - `revised: true` means the user reopened their review after you got it and changed the comments. The new list
      **replaces** the old one: drop changes from the old list that aren't in the new one.
    - **Done?** If the comments only say the video is done, approved or good to go, with nothing to change, don't make
-     another version. Tell the user where the final file is and stop waiting.
+     another version. Tell the user where the final file is, with the project link, and stop waiting.
 6. **Apply every comment.**
    - `at` / `time` / `endTime` is where in the video. `position` is where in the frame.
    - The frame image for a pinned comment has the pin drawn on it: look at what's under the pin, then find that element
@@ -106,6 +108,8 @@ If several projects could match, ask one short question that lists them.
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
    `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`).
    The `note` is a one-line summary of what you changed; the user sees it when the new version arrives and in the version menu.
+   In chat, say the version is ready and **post the returned `url` as a clickable link** again, e.g.
+   `[Open v2 in FrameJam](http://localhost:2400/review/rev_…)`, with the same one-line summary.
    Each version is one round: the user's "Finish review" locked the previous version, and the new one starts with no
    comments. If you couldn't address a comment, say why in chat and in the note.
 8. Go back to step 5.

@@ -162,7 +162,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
               url: reviewUrl(ctx.baseUrl, review.id),
               version: version.number,
               created,
-              next: "Open the url in the harness's built-in browser (or share it), then call wait_for_feedback with this reviewId right away — don't end your turn first, or the user's feedback has nobody to go to.",
+              next: "Open the url in the harness's built-in browser and post it in chat as a clickable markdown link (e.g. [Open the video in FrameJam](url)), then call wait_for_feedback with this reviewId right away — don't end your turn first, or the user's feedback has nobody to go to.",
             }),
           ],
         };
@@ -411,7 +411,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
         const review = store.addVersion(reviewId, { videoPath, panels, panelsDir, note });
         const v = review.versions.at(-1)!;
         return {
-          content: [json({ reviewId, version: v.number, url: reviewUrl(ctx.baseUrl, reviewId), next: "Tell the user the new version is ready, then call wait_for_feedback." })],
+          content: [json({ reviewId, version: v.number, url: reviewUrl(ctx.baseUrl, reviewId), next: `Tell the user version ${v.number} is ready, with the url as a clickable markdown link (e.g. [Open v${v.number} in FrameJam](url)) and a one-line summary of what changed, then call wait_for_feedback.` })],
         };
       } catch (err) {
         return errorResult(err);
