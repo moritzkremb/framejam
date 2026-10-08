@@ -1,25 +1,28 @@
 ---
 name: layout-switch-short
-description: Turn a raw talking-head recording into a vertical short that switches layout with the speech every few seconds - speaker alone, split screen with the thing being described, full-screen visual with the speaker cut out in front, and a step roadmap that returns at every new step. Includes the cut (pauses and earlier takes removed), short captions placed per layout, and a Hyperframes starter template. Works with the project's own video tool too.
+description: Turn a raw talking-head recording into a fast-cut vertical short that switches layout with the speech every two seconds or so - speaker alone with punch-ins, split screen with the thing being described, full-screen visual with the speaker cut out in front, and a step roadmap that returns at every new step. Includes the cut (pauses and earlier takes removed), short captions placed per layout, and a Hyperframes starter template. Works with the project's own video tool too.
 ---
 
 # Dynamic Layout Short
 
 **In:** a raw recording of someone talking to camera (best: a how-to or list with clear steps), plus screen
 recordings, screenshots, product photos or footage of what they talk about.
-**Out:** a 1080×1920 short where every beat of the speech gets the layout that fits it, hard-cut every ~3 s:
+**Out:** a 1080×1920 short where every beat of the speech gets the layout that fits it and something on screen
+changes every 1.5–2.5 s:
 
 | Layout | When |
 | --- | --- |
 | **speaker**: the speaker alone, wide or punched in | claims, numbers, opinions, the payoff, the call to action |
-| **split**: the thing on top, the speaker below | a concrete thing is named (a site, a product, a document) |
-| **visual**: the thing full-screen, the speaker cut out in front | a process or a tool doing something, in motion |
-| **roadmap** (split): the step list, current step boxed | every new step ("Step two...") and a recap at the end |
-| **title** (split): the hook headline | from frame 0 until the first idea lands |
-| **words** (split): 1–3 big words landing as spoken | an abstract idea with no picture |
+| **split**: the thing on top in a framed card, the speaker below | a concrete thing is named (a site, a product, a document) |
+| **visual**: the thing in a big card, the speaker cut out in front | a process or a tool doing something, in motion |
+| **roadmap** (split): the step list, a highlight sliding to the current step | every new step ("Step two...") and a recap at the end |
+| **title** (split): the hook headline with one phrase highlighted | from frame 0 until the first idea lands |
+| **words** (split): 1–3 big words landing as spoken | an abstract idea with no picture, the CTA keyword |
 
-Short captions (1–3 words) sit where each layout leaves room. The pattern comes from a reel by @itsolelehmann;
-`references/reference-breakdown.md` has its full timeline and the rules derived from it.
+The look: a slowly drifting colour-field background with grain, screenshots in rounded cards with a soft shadow and
+a small label chip, a bold display font with a mono label font, and big 1–3 word captions on a dark pill where the
+word being spoken turns the accent colour. The pattern comes from a reel by @itsolelehmann (cut faster here);
+`references/reference-breakdown.md` has its timeline and the rules derived from it.
 
 ## Before you start
 
@@ -34,8 +37,10 @@ Decide once, write it in `BRIEF.md`, ask only what can't be worked out:
 - **Tool.** If the project already renders with another tool, follow this method there, using the geometry in
   `references/layouts.md`; never convert the project. Say what the bundled template would have added (the
   data-driven build and checks). For a fresh project, use Hyperframes with the template in `template/`.
-- **Look.** If the user picked a FrameJam style (`get_selected_preset`), map it onto `theme` in edit.json: gradient
-  colors, fonts, accent, caption pill and card look. Layouts, timing and caption positions stay as described.
+- **Look.** The template's default look is ready to use. If the user picked a FrameJam style
+  (`get_selected_preset`), map it onto `theme` in edit.json (fields in `references/layouts.md`, "Look"): background
+  colours, ink and accent, fonts (bundle the files and their license), caption pill, card radius. Layouts, timing and
+  caption positions stay as described.
 - **Transcription.** Free and local by default (`references/transcription.md`); paid only with the user's OK.
 - **Music.** None unless asked. If asked: licensed or generated, 18–24 dB under the voice.
 - **Rights.** Only the user's own footage and media they may use. Don't reuse the reference reel's footage, titles or
@@ -48,7 +53,7 @@ Requirements: Python 3 with NumPy, ffmpeg, Node 22 (for `npx hyperframes`).
 
 ```bash
 npx -y hyperframes init my-short --example blank --resolution portrait --non-interactive
-cp -R <playbook>/template/. my-short/          # build.py, edit.example.json, assets/fonts
+cp -R <playbook>/template/. my-short/          # build.py, edit.example.json, assets/fonts, assets/grain.png
 cp -R <playbook>/scripts my-short/scripts
 mkdir -p my-short/{source,transcripts,working,assets/vis,renders}
 ```
@@ -84,18 +89,33 @@ Same as a clean talking-head edit (details in `references/clean-cuts.md`):
 Read the edited transcript and split it into beats at phrase boundaries. Give each beat a layout using the table above
 and these rules (`references/reference-breakdown.md` shows them in a real reel):
 
-- Open with **title** (the promise, with a number if the speech has one) from 0 s to the end of the first sentence.
-- Every "step N" → **roadmap** with that step boxed, 1.5–3 s, then the beat that explains it.
-- Named thing → **split**; process in motion → **visual**; claim, number, joke, payoff → **speaker** (punch-in 1.2–1.3
-  for weight; alternate punch-in and wide when two speaker beats are close).
-- Beats 1.5–5 s; switch on the first word of the phrase that motivates the change; never the same layout with the
-  same content twice in a row; roughly 40–50% split/roadmap, 25–35% speaker, 15–25% visual.
-- End with **roadmap** `"step": 0` (recap) and then **speaker** for the call to action.
+- **Pace: something changes every 1.5–2.5 s** (about 30–40 beats a minute); nothing static longer than ~2.5 s. A
+  beat may run to ~4 s only if something moves inside it: a `focus` zoom, a second word landing, gallery cards
+  landing, a screen recording playing. A long sentence about one thing gets two pictures (the overview, then the
+  detail) or a picture with a focus zoom on the word that names the detail.
+- **Switch on the first word** of the phrase that motivates the change (its start time in the edited transcript).
+- Open with **title** (the promise, with a number if the speech has one) from 0 s to the end of the first sentence;
+  set `mark` to the key phrase and `markAt` to when it's spoken.
+- Every "step N" → **roadmap** with that step (1.3–2.5 s), then the beat that explains it.
+- Named thing → **split**; process in motion → **visual**; several results ("five new ads") → split with a
+  `gallery`; claim, number, joke, payoff → **speaker**.
+- **Punch-ins:** speaker beats alternate wide (`"zoom": 1.0`) and punched in (1.12–1.18), so two speaker beats in a
+  row never share a framing. A speaker stretch over ~2.5 s gets `"punches"` on sentence or clause starts. Hard cuts,
+  face always fully in frame.
+- Never the same layout with the same picture twice in a row; roughly 40–50% split/roadmap/words, 25–30% speaker,
+  15–25% visual.
+- End with **roadmap** `"step": 0, "check": true` (recap), then the CTA (a **words** beat with the keyword works
+  well) and **speaker** to finish.
 
 Write the plan as `edit.json` (start from `template/edit.example.json`; every beat has `start` in edited seconds,
-`layout` and its fields). Then prepare each visual: crop screenshots to the part that matters (`ffmpeg -ss T -i
-screen.mp4 -frames:v 1 -vf crop=w:h:x:y assets/vis/name.png`), trim clips to the beat length plus a little, mute
-them. A visual beat wants portrait-ish media (crop ~9:16) or `"fit": "contain"` + `"box"` + `"backdrop": true`.
+`layout` and its fields; visual options are listed at the top of `build.py`). Check it:
+`python3 scripts/check_pacing.py edit.json` lists every hold over 2.5 s; fix them before building.
+
+Then prepare each visual. Cards take the media's own shape, so crop each screenshot to the one panel or section
+that's being talked about (`ffmpeg -ss T -i screen.mp4 -frames:v 1 -vf crop=w:h:x:y assets/vis/name.png`): text
+should end up at least ~22 px tall in the 960 px wide card, and wide crops (1.3:1 to 2:1) read best. Remove stray
+mouse cursors and anything private (account IDs, tokens, emails). Trim clips to the beat length plus a little and
+mute them. Give cards a 2–3 word `label` and the UI's own `bg` colour.
 
 If more than ~5 visuals had to be found or made, show the plan first: one still per beat in
 `working/storyboard/01-....png` (a snapshot or the picture with the layout name written on it), `open_review` with
@@ -110,7 +130,8 @@ python3 scripts/make_captions.py --words transcripts/edited.words.json --breaks 
 ```
 
 `make_cutouts.py` writes `assets/cutouts/<beat>.webm` and fills in each beat's `cutout`. Re-run it with `--force`
-after a beat's start or end changes. Captions are 1–3 words, never across a beat start.
+after a beat's start or end changes. Captions are 1–3 words, never across a beat start, and keep each word's start
+time so the spoken word lights up in the accent colour.
 
 ### 5. Build and check
 
@@ -120,9 +141,11 @@ npx hyperframes check           # must show 0 errors; fix contrast and overlap w
 npx hyperframes snapshot --at <one time inside every beat> --describe false
 ```
 
-Look at every snapshot: face fully visible and not cut by the seam in split beats (tune `speakerY`), caption clear of
-the mouth and the cut-out's hair, visuals readable on a phone, roadmap text sharp on the current step, nothing
-important in the right 120 px between y 1100 and 1700.
+Snapshot one time inside every beat, plus a moment after each `focus` zoom. Look at every snapshot: face fully
+visible and not cut by the seam in split beats (tune `speakerY`), punched-in faces not cropped, caption clear of the
+mouth and the cut-out's hair, card text readable on a phone (crop tighter if not), label chips not covering content,
+zooms not cutting text lines on both sides, roadmap highlight on the right step, nothing important in the top
+220 px, the bottom 380 px or the right 120 px between y 1100 and 1700.
 
 ### 6. Render and review
 
@@ -132,7 +155,9 @@ npx hyperframes render -o renders/draft-01.mp4
 
 Check the file: duration equals the cut; audio and video lengths agree; no black frames
 (`ffmpeg -i r.mp4 -vf blackdetect=d=0.1 -an -f null -`); loudness -14 to -16 LUFS integrated
-(`ffmpeg -i r.mp4 -af ebur128=framelog=quiet -f null -`). Then `open_review` with `videoPath`, `wait_for_feedback`,
+(`ffmpeg -i r.mp4 -af ebur128=framelog=quiet -f null -`). Read contact sheets at 2 frames a second
+(`ffmpeg -i r.mp4 -vf "fps=2,scale=180:-1,tile=10x6" sheet-%02d.jpg`): the picture should visibly change every few
+frames, with no run of identical frames longer than ~5 (2.5 s) unless footage is playing. Then `open_review` with `videoPath`, `wait_for_feedback`,
 change `edit.json` / captions / visuals, rebuild, render `draft-02.mp4` and send it with `add_version` and a note.
 Comments about the cut itself go back to step 2 (new removals, new edit folder), after which every beat time has to be
 moved through the new `final.edl.json`, the cut-outs re-made and the captions regenerated.
@@ -140,21 +165,27 @@ moved through the new `final.edl.json`, the cut-outs re-made and the captions re
 ## Quality bar
 
 - The layout always fits the words: the named thing is on screen while it's named, the step card appears on "step N".
-- A change every 1.5–5 s; hard cuts only; nothing stays still longer than ~5 s.
+- A change every 1.5–2.5 s on average; hard cuts only between layouts; nothing static longer than ~2.5 s unless
+  footage is playing; consecutive speaker beats alternate framing.
+- It looks designed: every screenshot in a card (cropped to what matters, readable on a phone), the background
+  moving, one accent colour used for the highlighter, the spoken caption word and the current step.
 - The speaker's face is never cut by the seam or covered; cut-outs have clean edges (no room showing around the hair).
-- Captions match the words heard, 1–3 words, never stale across a cut, readable on every layout.
+- Captions match the words heard, 1–3 words, never stale across a cut, readable on every layout, spoken word lit.
 - Speech: no dead air, no doubled phrase, last take of every line, -14 to -16 LUFS.
 - `VERIFY.md` lists the beat plan, removed takes with reasons, checks run and anything not verified (e.g. no listening).
 
 ## Files in this playbook
 
 - `template/build.py`: builds a Hyperframes `index.html` from `edit.json` + `captions.json` (all six layouts,
-  gradient, roadmap, captions per layout, deterministic GSAP timeline). `python3 build.py --help`.
-- `template/edit.example.json`: the beat plan of the preview video (76 s, 23 beats) to copy from.
-- `template/assets/fonts/`: Geist (SIL Open Font License, text included).
+  background, cards, focus zooms, galleries, roadmap slab, punch-ins, captions with the spoken word lit, theme,
+  deterministic GSAP timeline). `python3 build.py --help`.
+- `template/edit.example.json`: the beat plan of the preview video (76 s, 36 beats) to copy from.
+- `template/assets/fonts/`: Bricolage Grotesque and Geist Mono (SIL Open Font License, texts included);
+  `template/assets/grain.png`: the grain texture.
 - `scripts/prepare_edit.py`: the cut (silence pass, removals, frame-accurate render, retimed transcripts).
-- `scripts/make_captions.py`: edited-time words to 1–3 word captions (`captions.json`, `captions.srt`).
+- `scripts/check_pacing.py`: beats, changes per second and every hold over 2.5 s in a plan.
+- `scripts/make_captions.py`: edited-time words to 1–3 word captions with word times (`captions.json`, `.srt`).
 - `scripts/make_cutouts.py`: speaker cut-outs for visual beats with `npx hyperframes remove-background`.
-- `references/layouts.md`: exact geometry of every layout, transitions, captions, theme fields.
+- `references/layouts.md`: pacing, exact geometry of every layout, transitions, captions, theme fields.
 - `references/reference-breakdown.md`: second-by-second breakdown of the reference reel and the switching rules.
 - `references/clean-cuts.md`, `references/transcription.md`: cutting and transcription details.

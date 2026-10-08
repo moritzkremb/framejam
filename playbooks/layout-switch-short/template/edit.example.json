@@ -1,32 +1,371 @@
 {
-  "duration": 76.4,
-  "speaker": "assets/speech.mp4",
-  "narration": "assets/speech-norm.wav",
-  "speakerY": 42,
-  "roadmap": ["Pull the winning Meta ads", "Find why they worked", "Write 5 new angles", "Render the new images", "Upload a new ad set"],
-  "beats": [
-    {"start": 0, "layout": "title", "lines": ["How Claude Code", "runs my ads"], "sub": "5 steps, every week", "id": "b01"},
-    {"start": 3.12, "layout": "speaker", "zoom": 1.22, "origin": "50% 28%", "id": "b02"},
-    {"start": 5.28, "layout": "split", "visual": {"src": "assets/vis/overview.png", "fit": "contain", "bg": "#FFFFFF"}, "id": "b03"},
-    {"start": 9.35, "layout": "split", "visual": {"src": "assets/vis/generation.mp4", "fit": "contain", "bg": "#FFFFFF"}, "id": "b04"},
-    {"start": 12.35, "layout": "visual", "visual": {"src": "assets/vis/pipeboard.png", "fit": "cover", "pos": "50% 0%"}, "id": "b05", "cutout": "assets/cutouts/b05.webm"},
-    {"start": 18.95, "layout": "speaker", "zoom": 1.0, "id": "b06"},
-    {"start": 22.4, "layout": "split", "visual": {"src": "assets/vis/skill-detail.png", "fit": "contain", "bg": "#1B1B1F"}, "id": "b07"},
-    {"start": 24.2, "layout": "roadmap", "step": 0, "id": "b08"},
-    {"start": 26.9, "layout": "roadmap", "step": 1, "id": "b09"},
-    {"start": 28.3, "layout": "split", "visual": {"src": "assets/vis/adlibrary.png", "fit": "contain", "bg": "#F2F4F7"}, "id": "b10"},
-    {"start": 30.6, "layout": "roadmap", "step": 2, "id": "b11"},
-    {"start": 32.35, "layout": "speaker", "zoom": 1.22, "origin": "50% 28%", "id": "b12"},
-    {"start": 35.9, "layout": "words", "words": ["Pain.", "Desire."], "at": [36.84, 38.01], "id": "b13"},
-    {"start": 38.45, "layout": "roadmap", "step": 3, "id": "b14"},
-    {"start": 40.35, "layout": "speaker", "zoom": 1.0, "id": "b15"},
-    {"start": 44.5, "layout": "words", "words": ["Same desire.", "Fresh creative."], "at": [45.17, 46.85], "id": "b16"},
-    {"start": 48.2, "layout": "roadmap", "step": 4, "id": "b17"},
-    {"start": 50.7, "layout": "visual", "visual": {"src": "assets/vis/ad-example.png", "fit": "contain", "backdrop": true, "box": [60, 240, 960, 507], "bg": "#000000"}, "id": "b18", "cutout": "assets/cutouts/b18.webm"},
-    {"start": 58.5, "layout": "roadmap", "step": 5, "id": "b19"},
-    {"start": 60.2, "layout": "split", "visual": {"src": "assets/vis/publish.mp4", "fit": "contain", "bg": "#FFFFFF"}, "id": "b20"},
-    {"start": 63.45, "layout": "speaker", "zoom": 1.22, "origin": "50% 28%", "id": "b21"},
-    {"start": 68.8, "layout": "roadmap", "step": 0, "id": "b22"},
-    {"start": 73.1, "layout": "speaker", "zoom": 1.0, "id": "b23"}
-  ]
+ "duration": 76.4,
+ "speaker": "assets/speech.mp4",
+ "narration": "assets/speech-norm.wav",
+ "speakerY": 42,
+ "theme": {},
+ "roadmap": [
+  "Pull the winning Meta ads",
+  "Find why they worked",
+  "Write 5 new angles",
+  "Render the new images",
+  "Upload a new ad set"
+ ],
+ "beats": [
+  {
+   "id": "b01",
+   "start": 0,
+   "layout": "title",
+   "lines": [
+    "How Claude Code",
+    "runs my ads"
+   ],
+   "mark": "my ads",
+   "markAt": 2.45,
+   "sub": "5 steps \u00b7 every week"
+  },
+  {
+   "id": "b02",
+   "start": 3.12,
+   "layout": "speaker",
+   "zoom": 1.15
+  },
+  {
+   "id": "b03",
+   "start": 5.28,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/overview.png",
+    "label": "My ads system",
+    "focus": [
+     {
+      "at": 7.71,
+      "x": 0.47,
+      "y": 0.42,
+      "zoom": 1.9
+     }
+    ]
+   }
+  },
+  {
+   "id": "b04",
+   "start": 9.41,
+   "layout": "visual",
+   "visual": {
+    "src": "assets/vis/higgsfield.mp4",
+    "label": "Higgsfield",
+    "bg": "#000000"
+   },
+   "cutout": "assets/cutouts/b04.webm"
+  },
+  {
+   "id": "b05",
+   "start": 11.12,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/generation.mp4",
+    "label": "Images + video"
+   }
+  },
+  {
+   "id": "b06",
+   "start": 12.4,
+   "layout": "speaker",
+   "zoom": 1.0
+  },
+  {
+   "id": "b07",
+   "start": 14.72,
+   "layout": "visual",
+   "visual": {
+    "src": "assets/vis/pipeboard-connected.png",
+    "label": "Meta Ads Manager",
+    "bg": "#0B0D14",
+    "focus": [
+     {
+      "at": 16.32,
+      "x": 0.3,
+      "y": 0.32,
+      "zoom": 1.6
+     }
+    ]
+   },
+   "cutout": "assets/cutouts/b07.webm"
+  },
+  {
+   "id": "b08",
+   "start": 17.6,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/pipeboard-site.png",
+    "label": "Pipeboard MCP",
+    "bg": "#0B0D14"
+   }
+  },
+  {
+   "id": "b09",
+   "start": 19.01,
+   "layout": "speaker",
+   "zoom": 1.15
+  },
+  {
+   "id": "b10",
+   "start": 20.76,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/claude-skills.png",
+    "label": "One skill",
+    "bg": "#1F1F1E"
+   }
+  },
+  {
+   "id": "b11",
+   "start": 22.47,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/skill-file.png",
+    "label": "SKILL.md",
+    "bg": "#1E1E1E"
+   }
+  },
+  {
+   "id": "b12",
+   "start": 24.24,
+   "layout": "speaker",
+   "zoom": 1.0
+  },
+  {
+   "id": "b13",
+   "start": 25.42,
+   "layout": "roadmap",
+   "step": 0
+  },
+  {
+   "id": "b14",
+   "start": 26.95,
+   "layout": "roadmap",
+   "step": 1
+  },
+  {
+   "id": "b15",
+   "start": 28.37,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/adlibrary-page.png",
+    "label": "Meta Ad Library",
+    "focus": [
+     {
+      "at": 29.71,
+      "x": 0.3,
+      "y": 0.78,
+      "zoom": 1.7
+     }
+    ]
+   }
+  },
+  {
+   "id": "b16",
+   "start": 30.69,
+   "layout": "roadmap",
+   "step": 2
+  },
+  {
+   "id": "b17",
+   "start": 32.4,
+   "layout": "speaker",
+   "zoom": 1.15
+  },
+  {
+   "id": "b18",
+   "start": 34.3,
+   "layout": "speaker",
+   "zoom": 1.0
+  },
+  {
+   "id": "b19",
+   "start": 35.97,
+   "layout": "words",
+   "words": [
+    "Pain.",
+    "Desire."
+   ],
+   "at": [
+    36.84,
+    38.01
+   ]
+  },
+  {
+   "id": "b20",
+   "start": 38.48,
+   "layout": "roadmap",
+   "step": 3
+  },
+  {
+   "id": "b21",
+   "start": 39.93,
+   "layout": "split",
+   "visual": {
+    "gallery": [
+     "assets/vis/ad-leadgen.png",
+     "assets/vis/ad-unscalable.png",
+     "assets/vis/ad-coach.png"
+    ],
+    "at": [
+     40.0,
+     40.41,
+     40.79
+    ]
+   }
+  },
+  {
+   "id": "b22",
+   "start": 43.09,
+   "layout": "speaker",
+   "zoom": 1.15
+  },
+  {
+   "id": "b23",
+   "start": 44.55,
+   "layout": "words",
+   "words": [
+    "Same desire.",
+    "Fresh creative."
+   ],
+   "at": [
+    45.17,
+    46.85
+   ]
+  },
+  {
+   "id": "b24",
+   "start": 48.29,
+   "layout": "roadmap",
+   "step": 4
+  },
+  {
+   "id": "b25",
+   "start": 50.72,
+   "layout": "visual",
+   "visual": {
+    "src": "assets/vis/ad-example.png",
+    "label": "Image ad",
+    "bg": "#111111",
+    "focus": [
+     {
+      "at": 52.14,
+      "x": 0.75,
+      "y": 0.55,
+      "zoom": 1.5
+     }
+    ]
+   },
+   "cutout": "assets/cutouts/b25.webm"
+  },
+  {
+   "id": "b26",
+   "start": 53.33,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/skill-templates.png",
+    "label": "Templates",
+    "bg": "#1E1E1E",
+    "focus": [
+     {
+      "at": 54.67,
+      "x": 0.5,
+      "y": 0.68,
+      "zoom": 1.45
+     }
+    ]
+   }
+  },
+  {
+   "id": "b27",
+   "start": 56.37,
+   "layout": "speaker",
+   "zoom": 1.0
+  },
+  {
+   "id": "b28",
+   "start": 58.61,
+   "layout": "roadmap",
+   "step": 5
+  },
+  {
+   "id": "b29",
+   "start": 60.26,
+   "layout": "visual",
+   "visual": {
+    "src": "assets/vis/publish.mp4",
+    "label": "New ad set"
+   },
+   "cutout": "assets/cutouts/b29.webm"
+  },
+  {
+   "id": "b30",
+   "start": 62.85,
+   "layout": "split",
+   "visual": {
+    "src": "assets/vis/skill-step6.png",
+    "label": "Duplicate + upload",
+    "bg": "#1E1E1E"
+   }
+  },
+  {
+   "id": "b31",
+   "start": 64.48,
+   "layout": "visual",
+   "visual": {
+    "src": "assets/vis/adlibrary-page.png",
+    "label": "All live",
+    "focus": [
+     {
+      "at": 65.11,
+      "x": 0.12,
+      "y": 0.6,
+      "zoom": 2.0
+     }
+    ]
+   },
+   "cutout": "assets/cutouts/b31.webm"
+  },
+  {
+   "id": "b32",
+   "start": 66.96,
+   "layout": "speaker",
+   "zoom": 1.15
+  },
+  {
+   "id": "b33",
+   "start": 68.86,
+   "layout": "roadmap",
+   "step": 0,
+   "check": true
+  },
+  {
+   "id": "b34",
+   "start": 71.68,
+   "layout": "speaker",
+   "zoom": 1.0
+  },
+  {
+   "id": "b35",
+   "start": 73.26,
+   "layout": "words",
+   "words": [
+    "Comment",
+    "AgentOS"
+   ],
+   "at": [
+    73.3,
+    73.55
+   ]
+  },
+  {
+   "id": "b36",
+   "start": 74.72,
+   "layout": "speaker",
+   "zoom": 1.18
+  }
+ ]
 }

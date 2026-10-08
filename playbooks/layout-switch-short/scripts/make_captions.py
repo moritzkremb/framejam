@@ -6,7 +6,8 @@ Input is the transcript of the FINAL edited audio (not the raw recording). Accep
 
 Rules: at most --max-words words and --max-chars characters per caption; a caption never runs past the end of a
 sentence or across a --breaks time (pass edit.json to break at every beat start); start and end snap to the --fps
-frame grid; captions never overlap and short gaps are closed so text doesn't flicker.
+frame grid; captions never overlap and short gaps are closed so text doesn't flicker. Each caption keeps its words
+with their start times, so build.py can colour the word being spoken.
 Fix recognised names with --fix "cloud code=Claude Code" (case-insensitive, repeatable).
 """
 import argparse, json, math, re
@@ -97,7 +98,8 @@ def main():
     for g in groups:
         s = math.floor(g[0]["start"] * f) / f
         e = math.ceil(max(g[-1]["end"], g[0]["start"] + 0.2) * f) / f
-        caps.append({"start": s, "end": e, "text": " ".join(x["text"] for x in g).rstrip(".,;:")})
+        ws = [{"text": re.sub(r"[.,;:]+$", "", x["text"]), "start": round(max(s, x["start"]), 4)} for x in g]
+        caps.append({"start": s, "end": e, "text": " ".join(x["text"] for x in g).rstrip(".,;:"), "words": ws})
     for i in range(len(caps) - 1):
         nxt = caps[i + 1]["start"]
         if caps[i]["end"] > nxt or nxt - caps[i]["end"] < 0.25:

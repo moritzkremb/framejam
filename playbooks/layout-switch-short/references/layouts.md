@@ -1,99 +1,135 @@
-# Layout catalogue (1080×1920)
+# Layouts, look and pacing (1080×1920)
 
 All numbers are pixels on a 1080×1920 canvas, origin top-left. `template/build.py` implements every layout with
 these values; in another tool (Remotion, Motion Canvas, ffmpeg) build the same boxes. Scale linearly for 2160×3840.
 
-The seam between top and bottom halves is at **y = 960**.
+The seam between top and bottom halves is at **y = 960**. Platform UI covers roughly the top 220 px, the bottom
+380 px and the right 120 px between y 1100 and 1700: no captions, faces or key text there.
+
+## Pacing
+
+- Something changes every **1.5–2.5 s** (average beat ~2 s, about 30–40 beats a minute). A change is a layout
+  switch, a new picture, a punch-in on the speaker, a zoom inside a card or a word landing.
+- **Nothing static longer than ~2.5 s.** A beat may run to ~4 s only if something moves or changes inside it: a focus
+  zoom, a second word landing, a gallery card landing, the roadmap highlight moving, a screen recording playing.
+- Every switch lands on the **first word of the phrase that motivates it** (word start time from the edited
+  transcript, not a round number). Never switch in the middle of a word.
+- Rough mix: 40–50% split/roadmap/words, 25–30% speaker alone, 15–25% visual with the cut-out.
 
 ## speaker
 
 The speaker fills the frame.
 
 - Video: 1080×1920, `object-fit: cover`.
-- Framing: `zoom` 1.0 (wide) or 1.2–1.3 (punch-in), scaled around `origin` ≈ "50% 28%" so the eyes stay at
-  ~y 600–700 and the chin above the caption. Two speaker beats near each other alternate wide and punched in.
-- Caption centre: y = 1215 (chest / mic height). Check it doesn't sit on the mouth after a punch-in.
+- Framing: `zoom` 1.0 (wide) or 1.12–1.18 (punched in), scaled around `origin` "50% 30%" so the eyes stay at
+  ~y 600–750 and the whole face stays in frame. **Alternate wide and punched in** on consecutive speaker beats; a long
+  speaker beat gets `"punches": [{"at": t, "zoom": z}]` on sentence boundaries (hard cut, no zoom animation).
+- Caption centre: y = 1410 (chest), clear of the mouth even when punched in.
 - Use for: claims, numbers, opinions, the payoff, the call to action.
 
 ## split
 
-A visual on top, the speaker below.
+A visual on top on the animated background, the speaker below.
 
-- Top panel: x 0–1080, y 0–960. The visual is `cover` when it's portrait-ish or full of detail you can crop, or
-  `contain` on a matching background color (white for white UIs, the UI's own dark color for dark ones) when it must
-  be seen whole. Crop source screenshots to the part that matters before placing them; aim for at least 60% of the
-  panel width filled with readable content.
-- Bottom: the speaker video in a 1080×960 box, `object-fit: cover`, `object-position: 50% Y%`. Y (≈ 35–45 for a
-  typical desk shot) puts the eyes ~300–380 px below the seam and keeps the chin inside the frame. Tune once per
-  recording (`speakerY` in edit.json) and check with a snapshot.
+- Media box: x 60–1020, y 205–895. The card takes the media's own aspect ratio, as large as fits, centred
+  (`"fit": "cover"` fills the whole box and crops instead). Crop source screenshots to the part that matters first:
+  aim for text that is at least ~22 px tall after scaling. Wide crops (≥ 1.3:1) of one panel or section read best.
+- Card: radius 30, a 1.5 px light ring, a deep soft shadow (`0 50px 90px -30px` + `0 18px 36px -12px`), `bg` behind
+  any letterbox (use the UI's own colour: white, or `#1E1E1E` for a dark editor).
+- Label chip (optional `"label"`): mono, uppercase, 24 px, ink pill, sitting 58 px above the card's top-left corner.
+  2–3 words naming the thing ("Meta Ad Library", "SKILL.md").
+- Speaker: a 1080×960 box, `object-fit: cover`, `object-position: 50% Y%`; Y ≈ 38–45 puts the eyes ~250–350 px below
+  the seam. Tune once per recording (`speakerY`) and check a snapshot. A soft 30 px shadow falls from the seam.
 - Caption centre: y = 960, straddling the seam.
-- Motion: still images push in 1.00→1.06 over the beat; tall screenshots can scroll (`"motion": "scroll"`);
-  videos play.
+- Motion: images push in 1.00→1.04 over the beat (`"motion": "push"`, default); tall images can `"scroll"`; videos
+  play. `"focus": [{"at": t, "x": 0–1, "y": 0–1, "zoom": 1.4–2.0}]` zooms into a point of the card in 0.5 s
+  (`power3.inOut`) at a spoken word: the way a long screenshot beat keeps moving. Don't zoom text documents so far
+  that lines get cut on both sides; crop tighter instead.
+- Gallery (`"gallery": [a, b, c]`, `"at": [t1, t2, t3]`): 2–3 images as fanned cards (−8°, 0°, 8°; the middle one
+  on top and largest), each landing at a spoken word with a short overshoot. For "five new versions", "these ads".
 - Use for: a named, concrete thing (website, product, document, result) shown while it's described.
 
 ### split + roadmap
 
-The step list on the animated gradient.
+The step list on the background.
 
-- Panel padding 40 / 120 / 80 px (top / sides / bottom); steps stacked and centred, 18 px apart. Each step:
-  "Step N" at 30 px / 700 over the step text at 40 px / 700, line-height 1.15, centred, padding 14×34 px.
-- Current step: 2 px border `rgba(255,255,255,.75)`, fill `rgba(255,255,255,.10)`, radius 22 px, full opacity,
-  no blur. Other steps: opacity 0.42, `blur(5px)`. `"step": 0` shows every step sharp (overview and recap).
-- Entrance at each roadmap beat: every line fades in from `blur(14px)` / opacity 0, 0.32 s, 0.05 s apart.
-- Keep step texts to 2–5 words; at most 6 steps (more do not fit legibly; group them).
+- Rows: x 70–1010, 118 px tall (less for 6 steps), 14 px apart, centred in y 205–895. Each row: translucent white
+  card (`stepBg`, light ring) with a round ink badge "01" (mono) and the step text (50 px / 700, one line).
+- Current step: an ink slab **slides** from the previous step to the current one (0.4 s, `power3.inOut`); its text
+  turns white and the badge turns accent. Other rows: 55% (card) / 50% (text) opacity, text blurred 2.5 px.
+- Entrance at each roadmap beat: rows rise 18 px and un-blur, 0.3 s, 0.04 s apart.
+- `"step": 0` shows every step sharp (overview). `"check": true` adds the recap: badges flip to accent check marks
+  one after another (0.22 s apart).
+- Keep step texts to 2–5 words; at most 6 steps.
 
 ### split + title
 
-The hook, on screen from frame 0, static.
+The hook, on screen from frame 0.
 
-- Up to 3 lines, 84 px, weight 900, uppercase, line-height 1.02, centred, padding 0 70 px; a dark drop shadow.
-  A sub-line at 38 px / 700 in the accent color with the concrete numbers ("5 steps, every week").
-- Optional stickers: 3–5 transparent cut-outs of things from the video pop in around the speaker at ~1.5–2.5 s
-  (scale 0→1 with `back.out`, 0.1 s apart), sized 140–220 px, kept off the face.
+- A mono chip (30 px, uppercase, ink pill) with the concrete numbers ("5 steps · every week"), then up to 3 lines at
+  ≤ 128 px / 800, line-height 0.98, tracking −0.035 em, never wrapping (the size shrinks to the longest line).
+- `"mark"`: a phrase that gets an accent highlighter bar swiping in at `"markAt"` (the moment it's spoken).
+- No entrance on the text: frame 0 must already read as a cover.
 
 ### split + words
 
 One to three big words that land as they're spoken.
 
-- 120 px / 900, letter-spacing -3 px, centred, 10 px apart; the last word in the accent color.
-- Each word appears at its spoken time (`"at": [...]` from the edited transcript) with a 0.22 s `back.out` scale-in.
-- Use for: an abstract idea with no picture ("pain / desire", "same desire, fresh creative").
+- ≤ 150 px / 800, tracking −0.04 em, centred; the last word gets the highlighter after it lands.
+- Each word appears at its spoken time (`"at"`, edited transcript) with a 0.26 s `back.out` scale-in.
+- Use for: an abstract idea with no picture ("pain / desire", "same desire, fresh creative") and the CTA keyword
+  ("Comment / AgentOS").
 
 ## visual
 
-A visual fills the frame; the speaker is cut out of the background and stands in front of it.
+The visual in a big card on the background; the speaker is cut out and stands in front of it.
 
-- Visual: 1080×1920, `cover`. For landscape media use `"fit": "contain"` with `"box": [x, y, w, h]` (e.g.
-  [60, 240, 960, 507] for a 16:9-ish image) and `"backdrop": true` (the same media, blurred 40 px and darkened, behind
-  it), so it fills the frame without being cropped.
-- Cut-out speaker: the full 1080×1920 frame with the background removed, scaled 0.62 (670×1190), centred
-  horizontally (x = 205), top at y = 900, so the head sits at about y 1150–1250 and the chest leaves the frame at the
-  bottom. Soft shadow `drop-shadow(0 24px 40px rgba(0,0,0,.35))`.
-- Caption centre: y = 1130, just above the head; check it doesn't overlap the hair in a snapshot.
-- Cut-outs come from `scripts/make_cutouts.py` (`npx hyperframes remove-background`, local and free, ~7 frames/s on a
-  laptop, about 1 minute per 10 s of cut-outs). Only the visual beats need them.
-- Use for: a process or a tool doing something, shown in motion (screen recording, footage).
+- Media box: x 40–1040, y 225–925, card fitted like in split (`"backdrop": true` instead puts a blurred, darkened
+  copy of the media behind it, full frame).
+- Cut-out speaker: the full 1080×1920 frame with the background removed, scaled 0.70 (756×1344), centred
+  (x = 162), top at y = 640, so the head starts around y 1050 and the body leaves the frame at the bottom. Soft drop
+  shadow. Tune with `cutoutScale` / `cutoutTop`; `cutoutStart` offsets into the file.
+- Caption centre: y = 1010, between the card and the head; check it doesn't touch the hair in a snapshot.
+- Cut-outs come from `scripts/make_cutouts.py` (`npx hyperframes remove-background`, local and free, about 20 s per
+  2 s beat on a laptop). Only visual beats need them.
+- Use for: a process or a tool doing something, best a screen recording in motion.
 
 ## Transitions
 
 Hard cuts between layouts, on the first frame of the phrase that motivates the change. No wipes, slides or zoom
-transitions. All motion lives inside a layout (gradient drift, roadmap blur-in, word landings, image push-in,
-scrolling, footage).
+transitions between layouts. All motion lives inside a layout (background drift, card push and focus zooms, roadmap
+slab, word landings, gallery landings, scrolling, footage).
 
 ## Captions
 
 - One to three words, balanced (`scripts/make_captions.py --max-words 3 --max-chars 18 --breaks edit.json`), never
   across a beat start, no trailing punctuation, names fixed.
-- 44 px / 650, white, on a pill `rgba(12,12,16,.62)`, radius 14 px, padding 8×20 px, `white-space: nowrap`,
-  slight text shadow. Highest layer.
-- Position by the layout under the caption's midpoint: split 960, speaker 1215, visual 1130.
-- Platform safe zone: keep text inside x 60–1020 and above y 1650; nothing important in the right 120 px between
-  y 1100 and 1700 (like/comment buttons).
+- 62 px / 800, white on an ink pill (92% opacity), radius 24, padding 12×28 px, `white-space: nowrap`, soft shadow,
+  a 0.12 s pop on entry. **The word being spoken turns accent** (per-word start times in `captions.json`).
+- Position by the layout under the caption's midpoint: split 960, speaker 1410, visual 1010 (override per beat with
+  `"captionY"`).
+- Keep text inside x 60–1020 and above y 1540.
 
-## Color and type (the part a FrameJam style replaces)
+## Look (the part a FrameJam style replaces)
 
-Default theme in `build.py`: gradient base `#11143A` with blobs `#3B44D6`, `#7E36D9`, `#1484B8`; title white; accent
-`#FFD84D`; caption pill `rgba(12,12,16,.62)`; font Geist (bundled, OFL). A style sets `theme` in edit.json:
-`base`, `blobs` (three colors), `title`, `accent`, `text`, `panelBg`, `captionBg`, `captionText`, `font`, `fontFile`.
-Keep white text on the gradient readable: blobs dark enough for 4.5:1 against white (`npx hyperframes check` reports
-contrast).
+Default theme in `build.py`, all overridable in `edit.json` → `theme`:
+
+| Field | Default | What it is |
+| --- | --- | --- |
+| `base` | `#EEE6DA` | paper colour under the background |
+| `blobs` | coral `#FF7A59`, mint `#4FD8B0`, periwinkle `#7D8CFF`, pink `#FFB0D0` | 2–5 colour fields that drift slowly (radial gradients, 8.5–12 s cycles) |
+| `grain` | `1.0` | opacity of the bundled grain texture (`assets/grain.png`), 0 turns it off |
+| `ink` | `#121317` | text on the background, badges, slab, chips |
+| `onInk` | `#FFFFFF` | text on ink surfaces (chips, labels, the current step) |
+| `accent` / `accentInk` | `#FFDD3C` / `#121317` | highlighter, active caption word, current badge, check marks |
+| `card`, `radius` | `#FFFFFF`, `30` | card fill behind contained media, corner radius |
+| `stepBg` | `rgba(255,255,255,.62)` | roadmap row cards |
+| `captionBg`, `captionText`, `captionActive`, `captionSize` | ink 92%, white, accent, 62 | caption pill |
+| `font`, `fontFile` | Bricolage Grotesque (bundled, OFL) | titles, words, steps, captions |
+| `labelFont`, `labelFontFile` | Geist Mono (bundled, OFL) | chips, labels, step numbers |
+| `progress` | `false` | thin accent progress bar at the top |
+
+Old field names still work (`text`, `title` → `ink`; `panelBg` → `card`). Mapping a style: its background colours →
+`blobs` + `base` (light, airy fields read best with dark `ink`; for a dark style use a dark `base`, deep `blobs`,
+a light `ink` and a dark `onInk`), its accent → `accent`, its fonts → `font` / `labelFont` (bundle the files with their license).
+Keep ink on the background at 4.5:1 or better; `npx hyperframes check` reports contrast.

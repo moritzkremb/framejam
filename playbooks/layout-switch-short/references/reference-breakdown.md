@@ -3,7 +3,8 @@
 Reference: a 68 s, 1080×1920, 60 fps Instagram reel by Ole Lehmann (@itsolelehmann), posted 21 Sep 2026:
 "you can now use AI to build your own hardware product for $250" (https://www.instagram.com/p/Ddjx8SLocgR/).
 A how-to in five steps, talking to camera, with the layout changing about every 3 seconds. Use this breakdown to
-learn the pattern; never copy its footage, title text or exact colors.
+learn the pattern; never copy its footage, title text or exact colors. The playbook's own look (background, cards,
+captions) is in `references/layouts.md` and deliberately differs from the reel's.
 
 ## Timeline (seconds, layout, what is said)
 
@@ -31,8 +32,13 @@ learn the pattern; never copy its footage, title text or exact colors.
 | 60.0–63.4 | split + roadmap | all five steps (recap) | "Five. Use it for a week, fix what annoys you" |
 | 63.4–68.2 | speaker | – | the call to action ("comment prototype and I'll send it over") |
 
-21 layout segments in 68 s: average 3.2 s, shortest ~0.8 s (a shot change inside one layout), longest ~5 s. About
-45% of the time is split screen, 30% the speaker alone, 25% a full visual with the speaker cut out.
+21 layout segments in 68 s: average 3.2 s, shortest ~0.8 s (a shot change inside one layout), longest ~5 s. Scene
+detection finds 23 hard cuts (one every ~2.8 s), and most segments also move inside (a second shot, a reframe, a
+scroll, footage). About 45% of the time is split screen, 30% the speaker alone, 25% a full visual with the speaker
+cut out.
+
+This playbook keeps the reference's layouts and switching rules but cuts faster by default: a change every
+1.5–2.5 s and nothing static for more than ~2.5 s (`references/layouts.md`, "Pacing").
 
 ## What it does
 
@@ -63,6 +69,6 @@ learn the pattern; never copy its footage, title text or exact colors.
    speaker cut out at the bottom.
 4. A claim, a number, an opinion, a joke, the payoff, the call to action → the speaker alone, punched in when it
    needs weight.
-5. Nothing holds longer than ~5 s; two speaker-alone beats in a row alternate between punched-in and wide; the same
-   visual is never shown twice in a row.
+5. Nothing holds longer than ~5 s in the reference (this playbook: ~2.5 s unless something moves); two speaker-alone
+   beats in a row alternate between punched-in and wide; the same visual is never shown twice in a row.
 6. Open on split + title (the promise) from frame 0. End on the roadmap recap, then the speaker alone for the CTA.
