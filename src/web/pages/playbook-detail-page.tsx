@@ -73,7 +73,7 @@ function ExampleVideo({ p }: { p: PlaybookSummary }) {
           <Loader2 className="fc-i sm fc-spin" /> Loading the example
         </div>
       )}
-      {state === "error" && p.previewUrl && <div className="fc-pb-loading">The example video couldn&apos;t load. Check your connection.</div>}
+      {state === "error" && p.previewUrl && <div className="fc-pb-novideo">Example video unavailable</div>}
     </div>
   );
 }
