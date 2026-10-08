@@ -53,6 +53,7 @@
     "render:presets": "tsx scripts/render-presets.ts",
     "e2e": "tsx scripts/e2e.ts",
     "sync:rule": "tsx scripts/sync-rule.ts",
+    "version": "tsx scripts/sync-rule.ts --release && git add skills/framejam/versions.json .cursor/rules/framejam.mdc",
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {

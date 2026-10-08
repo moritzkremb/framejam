@@ -59,6 +59,10 @@ npm run sync:rule   # after editing skills/framejam/SKILL.md (a test fails if yo
 
 Run typecheck, lint and tests before every commit.
 
+The skill has a `Skill version: N` line. Raise N whenever the skill changes after a release: `npm version` records each
+released skill's fingerprint in `skills/framejam/versions.json` and fails if a released version's text changed. The app
+and the MCP server tell users when an installed copy of the skill is older than the one FrameJam ships.
+
 Work and commit directly on `main`. This is a solo project, so don't create feature branches or pull requests unless
 asked. Push to GitHub yourself without asking (in both repos), once the checks pass and the release order below allows
 it. The only step the user has to do is `npm publish`, because it needs their 2FA code.

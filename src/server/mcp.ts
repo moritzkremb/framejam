@@ -7,6 +7,8 @@ import type { FeedbackBatch, Review, ReviewComment } from "../shared/types.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
 import { costBadge, projectLabel, stylesSentence } from "../shared/playbooks.ts";
 import type { PlaybookLibrary } from "./playbooks.ts";
+import { currentSkillVersion } from "./skill.ts";
+import { UPDATE_COMMAND } from "./update.ts";
 import type { PresetLibrary } from "./presets.ts";
 import type { ChooseSavePath } from "./save-dialog.ts";
 import { LISTEN_HEARTBEAT_MS, type Store } from "./store.ts";
@@ -26,9 +28,18 @@ export interface McpContext {
   chooseSavePath?: ChooseSavePath;
   pollMs?: number;
   progressEveryMs?: number;
+  /** Folders checked for installed copies of the skill. Defaults to the global skill folders (tests). */
+  skillDirs?: string[];
 }
 
 const MAX_IMAGES = 6;
+
+const skillLine = () => {
+  const v = currentSkillVersion();
+  return v === null
+    ? ""
+    : `\nThe current FrameJam skill is version ${v}. If the FrameJam skill you loaded says a lower "Skill version", or has no version line, tell the user once: "Your FrameJam skill is out of date. Run \`${UPDATE_COMMAND}\` and restart your agent."`;
+};
 
 const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), pick style presets, and pick playbooks (a method for one kind of video, e.g. a music video or a talking-head short).
 First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
@@ -39,7 +50,7 @@ Pass videoPath (the render) for every tool; the user always reviews the rendered
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
 When talking to the user, call a review a "project" (that's what the FrameJam UI calls it).
-If the user says "apply my FrameJam feedback" (with or without a review id), call get_feedback.`;
+If the user says "apply my FrameJam feedback" (with or without a review id), call get_feedback.${skillLine()}`;
 
 const STYLE_USE =
   "A style is a look, not a starting video. Plan the video from the user's request, then build that subject in this look: palette, textures and backgrounds, type, motion feel, transitions and pacing from guide. Don't reuse the example's subject, props, layout or story (see example) unless the user asks for them. The example composition (templateDir) is only a reference for how a technique is built, such as a texture or a title reveal; don't start from it or reskin it.";

@@ -5,6 +5,8 @@ description: Make and review videos and storyboards with the user in the loop, w
 
 # FrameJam: styles, playbooks + one-click video and storyboard review
 
+Skill version: 3
+
 FrameJam runs next to your chat at http://localhost:2400. It gives you three things the chat is bad at:
 **choosing a style** (a structured `style.json` that describes a look, plus an example video), **following a playbook**
 (the full method for one kind of video: what the user brings, the steps, the tools, the quality bar) and **precise

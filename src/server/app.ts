@@ -10,6 +10,7 @@ import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
 import { chooseSavePath } from "./save-dialog.ts";
 import { StoreError, type NewCommentInput } from "./store.ts";
 import { extractFrame } from "./thumbs.ts";
+import { skillStatus } from "./skill.ts";
 import { createUpdateChecker } from "./update.ts";
 import { VERSION } from "./version.ts";
 
@@ -38,6 +39,8 @@ export function createApp(ctx: McpContext) {
   );
 
   app.get("/api/update", async (c) => c.json(await checkUpdate()));
+
+  app.get("/api/skill-status", (c) => c.json(skillStatus(ctx.skillDirs)));
 
   // --- Reviews -------------------------------------------------------------
   app.get("/api/reviews", (c) =>

@@ -25,6 +25,13 @@ export interface UpdateInfo {
   command: string;
 }
 
+export interface SkillStatus {
+  current: number | null;
+  copies: { path: string; version: number | null }[];
+  outdated: boolean;
+  command: string;
+}
+
 export interface Health {
   ok: boolean;
   app: string;
@@ -57,6 +64,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 export const api = {
   health: () => request<Health>("/api/health"),
   update: () => request<UpdateInfo>("/api/update"),
+  skillStatus: () => request<SkillStatus>("/api/skill-status"),
   reviews: () => request<ReviewListItem[]>("/api/reviews"),
   review: (id: string) => request<Review>(`/api/reviews/${id}`),
   addComment: (
