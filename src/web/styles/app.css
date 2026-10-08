@@ -160,6 +160,7 @@ a { color: inherit; }
 /* Playbook detail: example video, head, then a main column and a side panel */
 .fc-pb-media { position: relative; }
 .fc-pb-media.tall { min-height: 40dvh; }
+.fc-pb-novideo { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); padding: 5px 12px; border-radius: var(--radius-full); background: rgb(0 0 0 / .6); color: var(--on-video); font: 500 12px/16px var(--font-sans); white-space: nowrap; pointer-events: none; }
 .fc-pb-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--on-video); font: 500 13px/1 var(--font-sans); background: rgb(0 0 0 / .35); pointer-events: none; }
 .fc-pb-body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: start; padding-bottom: 48px; }
 .fc-pb-main { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
