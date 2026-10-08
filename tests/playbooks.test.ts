@@ -96,6 +96,14 @@ describe("built-in playbooks", () => {
     ? fs.readdirSync(builtinPlaybooksDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
     : [];
 
+  it("reads the preview's shape from the poster, not the format", () => {
+    const shape = (id: string) => lib.summary(lib.get(id)!).previewShape;
+    expect(lib.get("clean-cut")!.playbook.format).toBe("any");
+    expect(shape("clean-cut")).toBe("tall");
+    expect(shape("founder-launch")).toBe("wide");
+    expect(shape("cartoon-music-video")).toBe("wide");
+  });
+
   it.each(dirs)("%s is valid, has its method and a poster", (dir) => {
     const raw = JSON.parse(fs.readFileSync(path.join(builtinPlaybooksDir, dir, "playbook.json"), "utf8")) as Playbook;
     expect(validatePlaybook(raw)).toEqual([]);

@@ -41,7 +41,7 @@ function PlaybookCard({ playbook, inUse, busy, onUse }: { playbook: PlaybookSumm
             loop
             playsInline
             preload="metadata"
-            className={playbook.format === "16:9" ? "cover" : "contain"}
+            className={playbook.previewShape === "wide" ? "cover" : "contain"}
           />
         ) : playbook.posterUrl ? (
           <img src={playbook.posterUrl} alt="" className="contain" />

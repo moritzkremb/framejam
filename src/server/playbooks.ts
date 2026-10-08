@@ -12,6 +12,32 @@ export interface LoadedPlaybook {
 
 const MAX_FILES = 400;
 
+/** Width and height from a JPEG's frame header, without decoding it. */
+export function jpegSize(buf: Buffer): { width: number; height: number } | undefined {
+  if (buf[0] !== 0xff || buf[1] !== 0xd8) return undefined;
+  let i = 2;
+  while (i + 9 < buf.length) {
+    if (buf[i] !== 0xff) return undefined;
+    const marker = buf[i + 1];
+    const len = buf.readUInt16BE(i + 2);
+    if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+      return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7) };
+    }
+    i += 2 + len;
+  }
+  return undefined;
+}
+
+function previewShape(poster: string, format: Playbook["format"]): PlaybookSummary["previewShape"] {
+  try {
+    const size = jpegSize(fs.readFileSync(poster));
+    if (size) return size.height > size.width * 1.05 ? "tall" : size.width > size.height * 1.05 ? "wide" : "square";
+  } catch {
+    // No poster: fall back to the playbook's format.
+  }
+  return format === "9:16" ? "tall" : format === "1:1" ? "square" : "wide";
+}
+
 export class PlaybookLibrary {
   constructor(private readonly dirs: { dir: string; builtin: boolean }[]) {}
 
@@ -65,6 +91,7 @@ export class PlaybookLibrary {
     return {
       ...p.playbook,
       builtin: p.builtin,
+      previewShape: previewShape(path.join(p.dir, "poster.jpg"), p.playbook.format),
       hasPreview: localPreview || p.builtin,
       previewUrl: localPreview ? `${base}/files/preview.mp4` : p.builtin ? `${PLAYBOOK_PREVIEW_BASE_URL}/${id}/preview.mp4` : undefined,
       posterUrl: fs.existsSync(path.join(p.dir, "poster.jpg")) ? `${base}/files/poster.jpg` : undefined,

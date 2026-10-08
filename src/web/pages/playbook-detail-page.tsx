@@ -85,7 +85,7 @@ export function PlaybookDetailPage() {
     <div className="fc-screen">
       <BackHeader to="/playbooks" title={p.name} sub={`Playbook · by ${p.creator.name}`} />
       <main className="fc-main fc-style-page">
-        <div className={cn("fc-style-media", p.format === "9:16" && "tall")}>
+        <div className={cn("fc-style-media", p.previewShape !== "wide" && "tall")}>
           {p.previewUrl ? (
             <video src={p.previewUrl} poster={p.posterUrl} autoPlay muted loop playsInline controls />
           ) : p.posterUrl ? (

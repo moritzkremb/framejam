@@ -168,6 +168,8 @@ export interface Playbook {
 
 export interface PlaybookSummary extends Playbook {
   builtin: boolean;
+  /** The example video's shape, read from its poster. */
+  previewShape: "wide" | "tall" | "square";
   hasPreview: boolean;
   previewUrl?: string;
   posterUrl?: string;
