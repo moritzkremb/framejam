@@ -1,8 +1,8 @@
 {
   "id": "dither-serif",
   "name": "Dither Serif",
-  "tagline": "A stippled 3D mascot, big serif headlines with one cobalt script word, floating UI and a skewed stamp that slams.",
-  "description": "Product-launch style for a booking or payments tool. A black-and-white dithered 3D mascot (shaded per pixel with an ordered Bayer threshold) walks through clean white, vivid cobalt and black scenes. Headlines are a large elegant serif with ONE word swapped to a cobalt handwritten script, white product cards float on blue, a phone shows the storefront, a desktop checkout with a pricing slider and subtotal panel builds up, then a big skewed cobalt stamp slams across the UI. Cuts use an iris from the mascot or a halftone dot wipe; it ends on a white card with wordmark, tagline, cobalt button and URL.",
+  "tagline": "Bayer-dithered 3D forms, big serif headlines with one cobalt script word, floating UI and a skewed stamp that slams.",
+  "description": "Crisp, playful launch style. Black-and-white 3D forms are shaded per pixel with an ordered Bayer threshold and shown as chunky pixels across clean white, vivid cobalt and black scenes. Headlines are a large elegant serif with ONE word swapped to a cobalt handwritten script, white UI cards float on blue, a big skewed cobalt stamp slams across the frame, and cuts use an iris or a halftone dot wipe. The preview follows a dithered mascot through a booking tool's storefront and checkout, ending on a white card with wordmark, tagline, cobalt button and URL.",
   "mood": [
     "crisp",
     "playful",
@@ -60,7 +60,7 @@
     "float": "sine.inOut"
   },
   "transitions": [
-    "iris: a clip-path circle opens from the mascot into the next colour scene (0.55s power2.in)",
+    "iris: a clip-path circle opens from the main subject into the next colour scene (0.55s power2.in)",
     "halftone wipe: a 30x17 dot grid grows to cover the frame then shrinks away in reverse order (0.62s), drawn on a canvas from the timeline",
     "hard cut from white UI to black right after the stamp lands"
   ],
@@ -68,7 +68,7 @@
     "serif lines slam up 80–110px with opacity 0 → 1, expo.out 0.5s, 0.12s stagger",
     "script accent is revealed by clip-path inset left → right in 0.4s, then a cobalt squiggle underline draws on (pathLength 1 → 0)",
     "stamp: scale 3.4 → 1 in 0.16s power3.in, then 1.04 bounce and a 4-step screen shake",
-    "numbers count: slider price tweens $18 → $34 while the knob and fill travel"
+    "numbers count while a slider knob or bar fill travels (e.g. $18 → $34)"
   ],
   "rhythm": {
     "averageShotSeconds": 1.4,
@@ -81,5 +81,6 @@
     "serif",
     "mascot"
   ],
-  "guide": "- Palette: white #ffffff, cobalt #0f4cff, black #07080c, ink #0b0d14, UI grey #f1f4fa. Alternate white, cobalt and black scenes; the same 3D mascot appears in every scene and always faces the thing it talks about.\n- Make the mascot with real dithering, not a texture: shade a surface of revolution per pixel (light from the top left, rim darkening, one specular), then threshold against an 8x8 Bayer matrix on a low-res canvas (about 110x123 or 170x190) shown with image-rendering: pixelated at 3x. Draw the face on separate canvases (open, happy, blink) so you can swap or slide it. The same renderer makes icons (vase, bowl, mug) for cards and list rows.\n- Headlines: DM Serif Display 104–170px, ONE word swapped to a cobalt handwritten script (Covered By Your Grace, 1.35–2.1x size) that is revealed left to right and underlined with a hand-drawn squiggle. Write original copy such as 'Got a class to sell?' and 'in minutes.'\n- UI: white cards with 34–36px radius and soft shadows, an icon well in #eef2fc, serif prices in cobalt, phone with a 14px black bezel, desktop panels with a black wallet button, cobalt pay button, pricing slider and line-item subtotal. Add a cursor that ticks an upsell box and presses pay before the stamp.\n- The stamp: a cobalt slab 1380x420, rotation -5deg, skewX -9deg, double white inner border, serif 330px white word ('Handled.'). Scale 3.4 → 1 in 0.16s power3.in, small bounce, then shake the UI beneath it by 8–16px in four quick steps.\n- Cuts: iris from the mascot into cobalt, a canvas halftone dot wipe into white scenes, and a hard cut to black. Fill the cobalt and black backgrounds with a dithered dot gradient from one corner or behind the mascot, never a smooth glow.\n- Avoid: glossy 3D renders, drop-shadow glow on UI, gradients, more than one script word per headline, centred title cards that only fade in."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Palette: white #ffffff, cobalt #0f4cff (light #5b86ff, tint #e5ecff), black #07080c, ink #0b0d14, UI grey #f1f4fa, muted #6b7385. Alternate white, cobalt and black scenes about every 1.4s.\n- Render the subject and any icons with real ordered dithering, not a texture: shade each form per pixel on a low-res canvas (~110–190px wide; light from the top left, rim darkening, one specular), threshold against an 8×8 Bayer matrix to pure black and white, and show it at 3x with image-rendering: pixelated. Keep the same treatment in every scene.\n- Headlines: DM Serif Display 104–170px, tracking -0.01em, at most three lines, slamming up 80–110px (expo.out 0.5s, 0.12s stagger). ONE word per headline swaps to Covered By Your Grace in cobalt (#5b86ff on black, white on cobalt) at 1.35–2.1x size, revealed left to right with clip-path in 0.4s and underlined by a hand-drawn squiggle that draws on.\n- UI pieces are white cards with 34–36px radius and soft shadows, icon wells #eef2fc, Inter 400–600 text at 17–38px, and serif numbers in cobalt; values count up while sliders or bars travel.\n- Optional motif: a cobalt stamp slab (~1380×420, -5° rotation, skewX -9°, double white inner border, one 330px white serif word) that drops from scale 3.4 → 1 in 0.16s power3.in, bounces to 1.04 and shakes everything beneath it 8–16px in four quick steps.\n- Cuts: a clip-path iris opening from the subject into the next colour (0.55s power2.in), a canvas halftone wipe (a 30×17 dot grid grows to cover the frame, then shrinks away, 0.62s), or a hard cut to black. Fill cobalt and black backgrounds with a dithered dot gradient from a corner or behind the subject, never a smooth glow.\n- Pacing: something new lands every ~0.5s and nothing sits still longer than 1s; idle elements float with sine.inOut, pops use back.out(1.6).\n- Avoid glossy 3D renders, glow on UI, smooth gradients, more than one script word per headline, and centred title cards that only fade in.",
+  "example": "The preview follows a dithered 3D mascot through a booking tool launch: product cards on cobalt, a phone storefront, a desktop checkout stamped 'Handled.', a black statement and a white end card. Don't copy this scene unless asked."
 }

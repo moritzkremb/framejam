@@ -26,8 +26,9 @@ whatever your project already uses. The hard part is everything around it. Descr
 "the thing at around three seconds should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
 (Cursor, Claude Code, ChatGPT desktop) and handles both.
 
-**Pick a style instead of describing one.** Browse 30 example videos and press *Use*. Your agent gets the full
-recipe: palette, fonts, easing, transitions, text animations, pacing and a working template.
+**Pick a style instead of describing one.** Browse 30 example videos and press *Use*. Your agent gets the look:
+palette, textures, fonts, easing, transitions, text animations and pacing, and builds whatever your video is about in
+it.
 
 **Give feedback like you would to a person.** Pause and type, click the thing that's off, or drag across the
 timeline to mark a range. Press **Finish review** and your agent gets every comment with its timestamp and a frame
@@ -233,8 +234,8 @@ Presets live in `presets/<id>/` (built-in) and `~/.framejam/presets/<id>/` (your
 
 ```
 presets/neon-terminal/
-  style.json          # palette, fonts, easing, transitions, textAnimations, rhythm, guide, format, size
-  composition/        # the style as a Hyperframes project (index.html + assets), a template for agents
+  style.json          # the look: palette, fonts, easing, transitions, textAnimations, rhythm, guide, plus example (what the preview shows)
+  composition/        # the example video as a Hyperframes project; agents look here for techniques, not a starting point
   preview.mp4         # rendered with `npx hyperframes render`
   poster.jpg
 ```
@@ -374,7 +375,7 @@ for v2 and v1 still shows what it was.
 | `add_version({ reviewId, videoPath?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
-| `get_preset({ id })` | Returns `style.json`, the guide, and the template source files. |
+| `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
 | `get_selected_preset()` | Returns the preset the user picked with *Use this style*. |
 | `list_playbooks({ query? })` | Lists the playbooks with what to bring, what you get, the cost and the creator. |
 | `get_playbook({ id })` | Returns `playbook.json`, the full `SKILL.md` method, the playbook's local folder and file list, and how the selected style combines with it. |

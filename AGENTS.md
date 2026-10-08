@@ -10,8 +10,10 @@ GitHub at `moritzkremb/framejam`.
 
 The core of the app, and what every change should be judged against:
 
-- **Styles.** 30 built-in style presets with example videos. The user presses *Use* and the agent gets the recipe
-  (palette, fonts, easing, transitions, pacing, a template). Users can add their own.
+- **Styles.** 30 built-in style presets with example videos. A style is a look, not a starting video: the user
+  presses *Use*, asks for any video, and the agent builds that subject in the style's palette, textures, fonts, motion
+  and pacing. The `guide` holds look rules that work for any subject; `example` says what the preview shows so agents
+  don't copy that scene. Users can add their own.
 - **Video review.** The agent renders an mp4 and opens it as a project. The user comments at a time, on a spot in the
   frame, on a range of the timeline or on the whole video, then presses **Finish review**. The agent gets every
   comment with its timestamp and a frame image (with the pin drawn on it), makes the next version, and the round
@@ -27,7 +29,8 @@ The core of the app, and what every change should be judged against:
 player (`compositionDir`) that resolved clicks to DOM elements; it was removed because it could show something other
 than the render. Don't bring back composition playback. A pinned comment's frame image has the pin drawn on it, which
 is how the agent sees what was clicked. MCP tools still accept and ignore `compositionDir` from older skills. Style
-presets ship a Hyperframes template as plain files for agents to copy; the app itself doesn't run Hyperframes. Don't
+presets ship their example as a Hyperframes project, as plain files agents can look at for techniques (not copy as a
+starting point); the app itself doesn't run Hyperframes. Don't
 present FrameJam as a Hyperframes tool, and never tell agents to convert a project to another tool.
 
 ## The website

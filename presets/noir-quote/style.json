@@ -2,7 +2,7 @@
   "id": "noir-quote",
   "name": "Noir Quote",
   "tagline": "Letterboxed, grainy and slow. Italic serif words drift in out of the dark.",
-  "description": "Cinematic title-card style for quotes, trailers and brand films. Letterbox bars, animated film grain, a slowly rotating shaft of light, and words that fade in one at a time from a soft blur before a widely tracked title.",
+  "description": "Cinematic noir look for trailers, quotes and brand films: letterbox bars, animated film grain, a slowly drifting warm light in the dark, and italic serif words that fade in one at a time from a soft blur. The preview is a quote card with an attribution and a tracked title.",
   "mood": [
     "cinematic",
     "moody",
@@ -64,5 +64,6 @@
     "film",
     "brand"
   ],
-  "guide": "- Always keep the 130px black letterbox bars and the grain layer (SVG turbulence, ~16% opacity, stepped drift) on top.\n- Words fade in individually: opacity 0, y 14, blur 6px → sharp, 1.1s, 0.22s stagger, power1.inOut.\n- Quotes are italic Playfair at ~82px, centered, max two lines. Attribution sits under a thin 140px rule in tracked uppercase Cormorant.\n- Nothing faster than 1s, no bounces, no saturated color. The only light source is a soft warm beam drifting a few degrees.\n- Transition with a 1s fade to black, then reveal the title with a slow scale settle from 1.08 (transforms only; letter-spacing tweens stutter in frame-by-frame renders)."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Always keep 130px black letterbox bars and a film-grain layer (SVG turbulence, ~16% opacity, stepped drift) on top of everything.\n- Near-monochrome: deep blacks, smoky greys and one soft warm light source, a beam or glow drifting a few degrees. Show the subject in silhouette or low-key light emerging from the dark.\n- Words fade in individually: opacity 0, y 14, blur 6px → sharp, 1.1s, 0.22s stagger, power1.inOut.\n- Type: italic Playfair Display at ~82px, centred, at most two lines; small attributions or labels under a thin 140px rule in tracked uppercase Cormorant Garamond.\n- Everything is slow: nothing faster than 1s, slow cross-fades (1s) or fades through black, slow scale settles (1.08–1.12 → 1) on titles and images.\n- Animate transforms only for titles; letter-spacing tweens stutter in frame-by-frame renders.\n- Avoid bounces, saturated colour, hard graphic shapes and busy layouts.",
+  "example": "The preview is a cinematic quote card: an italic quote drifts in word by word under a light beam, then an attribution and a widely tracked title. Don't copy this scene unless asked."
 }

@@ -2,7 +2,7 @@
   "id": "neon-terminal",
   "name": "Neon Terminal",
   "tagline": "Typed commands, green phosphor glow, a glitch cut to the logo.",
-  "description": "Developer-tool launch style. A terminal window types a real command, output lines pop in with check marks, then a glitch transition reveals the product name with a glowing install chip.",
+  "description": "Green-phosphor terminal look: black screen, glowing mono type that types itself with a block cursor, line-by-line readouts with check marks, scanlines over everything and glitch cuts. The preview is a developer-tool launch that types a real command and ends on an install chip.",
   "mood": [
     "technical",
     "energetic",
@@ -49,7 +49,7 @@
     "typewriter via width + steps()",
     "blinking block cursor",
     "line-by-line output reveal",
-    "horizontal squeeze-in on logo (scaleX 1.6 → 1)"
+    "horizontal squeeze-in on the title (scaleX 1.6 → 1)"
   ],
   "rhythm": {
     "averageShotSeconds": 3.7,
@@ -61,5 +61,6 @@
     "cli",
     "terminal"
   ],
-  "guide": "- Use real commands and believable output (timings, counts, URLs). Never lorem ipsum.\n- Type commands with a width tween and ease steps(<characters>), ~22 chars per second. Keep the block cursor blinking (0.01s opacity yoyo, 0.25s repeatDelay).\n- Output: muted (#4f7a5d) for progress, green check marks (#3dff8f) for success, yellow ▲ for highlights.\n- Keep the scanline overlay (repeating 2px lines, 22% black) above everything.\n- Transition out with 3–4 quick skewX jitters (0.05s) then fade; reveal the product name by squeezing scaleX from 1.6 to 1 with expo.out (animate transforms, not letter-spacing).\n- End on a pill-shaped install command chip in the primary green."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Black #050806 screen with green phosphor: primary #3dff8f with a soft glow (text-shadow), muted #4f7a5d for secondary text, yellow ▲ for highlights. A scanline overlay (repeating 2px lines, 22% black) stays above everything.\n- Everything is monospace (JetBrains Mono-like): the subject is told through typed lines, ASCII or line-drawn diagrams in green strokes, progress readouts, counters and status lists with check marks.\n- Type text with a width tween and steps(<characters>), ~22 chars per second, with a blinking block cursor (0.01s opacity yoyo, 0.25s repeatDelay). Output lines reveal one by one.\n- Content should feel real and specific: believable numbers, timings, names and labels, never lorem ipsum.\n- Transition out with 3–4 quick skewX jitters (0.05s) then fade; reveal a title by squeezing scaleX from 1.6 to 1 with expo.out (animate transforms, not letter-spacing).\n- Optional motif: a terminal window with a title bar, and a pill-shaped command chip in the primary green.\n- Avoid other colours, photos, rounded friendly UI and smooth decorative motion.",
+  "example": "The preview is a developer-tool launch: a terminal types a real command, output lines pop in with check marks, then a glitch reveals the product name and an install chip. Don't copy this scene unless asked."
 }

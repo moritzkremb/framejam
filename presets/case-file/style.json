@@ -63,14 +63,14 @@
     "resolve": "power3.out"
   },
   "transitions": [
-    "hard cuts between file, corkboard, evidence number, stamped file and product card",
+    "hard cuts between beats (typed sheet, corkboard, big number, stamp, clean reveal)",
     "slow 2–6% push on every evidence shot",
-    "stamp impact shakes the sheet for 0.2s"
+    "stamp impact shakes the paper for 0.2s"
   ],
   "textAnimations": [
     "captions type out character by character (≈0.025s per char) in a dark bar",
     "black redaction bars wipe left→right over key facts, 0.24s each, 0.17s apart",
-    "evidence number counts 0→N with power2.out while scaling down from 1.12",
+    "the big number counts 0→N with power2.out while scaling down from 1.12",
     "stamp drops from scale 2.4 at -9° with power4.in in 0.2s"
   ],
   "rhythm": {
@@ -84,5 +84,6 @@
     "typewriter",
     "problem-solution"
   ],
-  "guide": "- Ground is grey-green paper (#c4c7b0 → #8f937c radial) with a multiply feTurbulence grain; evidence boards are dark cork #2a2820. No pure white until the final product card (#fbfbf7).\n- Case notes are Courier Prime 40px on a #e2e0cd sheet with a tracked uppercase header and rule. Redact key facts with #121310 bars that wipe scaleX 0→1 (power3.inOut, 0.24s, 0.17s stagger) after the line is readable.\n- Corkboard: 4–6 index cards (#e6e3d2, slight -4° to 3° rotations, heavy drop shadow) drop in with back.out(1.6); glossy red pins pop, then #c2241f 3px strings with a slight sag draw from the hero card to each pin.\n- One huge Playfair Display 900 number per piece (≈500px) counting up, circled by a hand-drawn red loop.\n- Stamp: Inter 900 uppercase inside a 12px rounded border, green #2f7d4a (or red for 'unsolved'), rotated about -9°, with an feTurbulence alpha mask plus displacement for ink texture. Slam from scale 2.4 with power4.in in 0.2s and shake the sheet.\n- Every beat gets one typed Courier Prime 700 caption (32px) in a #17180f bar centred at y≈950. End on a clean resolved product card plus wordmark; never show a mascot or real brand."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Ground is grey-green paper (#c4c7b0 → #8f937c radial) with a multiply feTurbulence grain and soft vignette; darker scenes sit on cork #2a2820. Ink #161712, sheets #e2e0cd, cards #e6e3d2. No pure white until the final clean reveal (#fbfbf7).\n- Story text is typed: Courier Prime 40px on a #e2e0cd sheet under a tracked uppercase header (15–22px, 0.24em) and a rule. Black #121310 redaction bars wipe over key words (scaleX 0→1, power3.inOut, 0.24s, 0.17s stagger) only after the line is readable.\n- Present the subject as evidence: photos, sketches or facts on index cards (-4° to 3° rotations, heavy drop shadow) that drop in with back.out(1.6), held by glossy red pins and joined by 3px #c2241f strings with a slight sag that draw on (power2.inOut).\n- Optional motif: one huge Playfair Display 900 number (≈500px) that counts up with power2.out while scaling down from 1.12, circled by a hand-drawn red loop.\n- Optional motif: a rubber stamp in Inter 900 uppercase (~110px) inside a 12px rounded border, green #2f7d4a (red for open or unsolved), rotated about -9°, inked with an feTurbulence alpha mask plus displacement. It slams from scale 2.4 with power4.in in 0.2s and shakes the paper for 0.2s.\n- Every beat gets one caption typed at ~0.025s per character in Courier Prime 700, 32px, inside a #17180f bar centred near y≈950.\n- Hard cuts between beats of ~1.6s, with a slow 2–6% push on every shot. Resolve on something clean on #fbfbf7 and a Playfair Display 900 wordmark (170px).\n- Avoid glossy UI, gradients, bright colours beyond string red and stamp green, mascots and real brand logos.",
+  "example": "The preview tells a docs-tool launch as a case: typed notes about an outdated help article with redacted facts, support tickets on a corkboard linked by red string, a counting ticket number, a 'CASE CLOSED' stamp and a clean help page. Don't copy this scene unless asked."
 }

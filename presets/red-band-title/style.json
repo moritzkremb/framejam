@@ -1,8 +1,8 @@
 {
   "id": "red-band-title",
   "name": "Red Band Title",
-  "tagline": "A kanji slam, a spinning sunburst and an RGB-split title that lands on a skewed red band.",
-  "description": "Anime-opening title style for launches, series intros and brand names. A one-word English slam, a giant kanji crashing onto a vignetted cream card with a shake, then a dark sunburst where the title drops in letter by letter with chromatic red/cyan split, a skewed crimson band slides in behind it, and small letterspaced corner labels lock it up.",
+  "tagline": "Anime-opening title: hard slams, a spinning sunburst and an RGB-split title that lands on a skewed red band.",
+  "description": "Anime-opening title style for launches, series intros and brand names. Charcoal, crimson and off-white, a giant word or glyph slamming onto a vignetted cream card with a shake, then a dark sunburst where the title drops in letter by letter with a red/cyan chromatic split, a skewed crimson band slides in behind it, and small letterspaced corner labels lock it up. The preview opens on a kanji.",
   "mood": [
     "dramatic",
     "hype",
@@ -49,7 +49,7 @@
     "burst": "none"
   },
   "transitions": [
-    "hard cuts: black word → cream kanji card → dark sunburst",
+    "hard cuts: dark word card → cream glyph card → dark sunburst",
     "camera-shake on impact (6 × 40ms jitter)",
     "glitch hit: band and split layers jump 14–22px then settle"
   ],
@@ -70,5 +70,6 @@
     "glitch",
     "intro"
   ],
-  "guide": "- Charcoal #1b1b1d, crimson #e5173f and off-white only; red/cyan appear just as split layers.\n- Open with two hard hits: one English word, then one kanji on a cream vignette that slams from scale 2.1 with power4.in and shakes.\n- Build the title as three stacked layers (red, cyan, white) of the same spans, animate characters by index across all layers, and converge the offsets to 0.\n- The band is a full-width crimson bar, skewY -4° and rotated -2°, sliding in behind the title with power4.out. Dim the sunburst to ~35% when it lands.\n- Keep a slowly rotating conic-gradient sunburst behind everything.\n- Lock up with a letterspaced Oswald subline, a thin rule and tiny corner labels (system name, report/year)."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Charcoal #1b1b1d, crimson #e5173f and off-white #f7f5f2 only; red #ff2a55 and cyan #27e3ff appear just as chromatic split layers. Hit cards are cream with a vignette (radial #f4f3ee → #e4e2da → #9e9c94) and ink #141414 type.\n- Open with very short hard-cut hits (~0.8s each): one huge word or glyph per card (Oswald 700 uppercase 230px, or Dela Gothic One up to 560px) that slams from scale 2.1 with power4.in, then a camera shake (6 × 40ms jitter). A slammed word can widen scaleX 1 → 1.12 after impact.\n- Build the title as three stacked layers (red, cyan, white) of the same spans in Dela Gothic One ~180px; drop characters by index across all layers with back.out(2.5), 80ms apart, and converge the red/cyan offsets from ±18px to 0 with power2.out.\n- The band is a full-width crimson bar (~290px tall), skewY -4° and rotated -2°, sliding in behind the title with power4.out about 1.4s after the title starts. Dim the sunburst to ~35% when it lands.\n- Keep a slowly rotating (linear) repeating-conic sunburst behind the title: crimson at 22% opacity, 4° rays with 8° gaps on charcoal.\n- Lock up with an Oswald 500 subline (42px, tracking 0.34em) rising under the band, a thin white rule drawing beneath, and tiny 22px corner labels tracked 0.24em in #bdbab3.\n- One glitch hit near the end: the band and split layers jump 14–22px, then settle. Pacing is two quick hits, then one long title hold.\n- Optional motif: a single kanji or other bold glyph that echoes the subject as one of the opening hits. Avoid gradients beyond the sunburst, soft fades and extra colours.",
+  "example": "The preview is an anime-style opener for a slide-deck tool: the word SLIDES slams in, a giant 新 crashes onto a cream card, then a Japanese title drops in with red/cyan split onto a skewed crimson band. Don't copy this scene unless asked."
 }

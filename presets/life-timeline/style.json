@@ -2,7 +2,7 @@
   "id": "life-timeline",
   "name": "Life Timeline",
   "tagline": "A biography in flat-vector scenes: a new colour wipes in per milestone, springy shapes, and a year bar that advances along the bottom.",
-  "description": "Minimal flat-vector biographical film. A black opener sets the turn, then each milestone gets its own solid colour field, a huge year with an AGE label, a short bold headline, one caption and a flat illustration built from circles, rectangles and simple geometric people. A thin year-tick bar runs along the bottom with a marker that advances and arcs that link each milestone, ending on a quote card.",
+  "description": "Flat-vector look: a new solid colour wipes in for every beat, a huge number and a short bold headline sit beside a springy illustration built from circles, rectangles and simple people, and a thin progress bar can advance along the bottom. The preview tells one person's life milestone by milestone.",
   "mood": [
     "warm",
     "narrative",
@@ -53,13 +53,13 @@
   "transitions": [
     "solid background colour wipes in from the right in 0.42s, led by a darker band 0.08s ahead",
     "the previous scene is hidden only after the wipe covers it",
-    "timeline marker travels to the new year in the same 0.6s while an arc draws behind it"
+    "progress marker travels to the next point in the same 0.6s while an arc draws behind it"
   ],
   "textAnimations": [
-    "year rises 80px with expo.out, 0.45s, 0.3s after the wipe starts",
-    "AGE pill slides in from the left with back.out(2)",
+    "big number rises 80px with expo.out, 0.45s, 0.3s after the wipe starts",
+    "label pill slides in from the left with back.out(2)",
     "headline then caption rise 40px then 24px, staggered 0.12s",
-    "illustration parts pop from scale 0.15 at the feet (transform-origin 50% 100%) with back.out(1.8), 0.06s stagger"
+    "illustration parts pop from scale 0.15 at the base (transform-origin 50% 100%) with back.out(1.8), 0.06s stagger"
   ],
   "rhythm": {
     "averageShotSeconds": 1.15,
@@ -72,5 +72,6 @@
     "storytelling",
     "illustrated"
   ],
-  "guide": "- One scene per milestone, ~1.15s each, each on its own solid colour (cream #f3e8cd, mustard #eab43a, sage #a8c69f, coral #f07d66, sky #80c4ea, charcoal #2a2d33). Open on black #0b0b0c with a single line and a white icon, close on a quote card.\n- Left column: year in Bricolage Grotesque 800 at 250px, an outlined 'AGE 17' pill (34px DM Sans 700, 0.16em tracking), an 84px headline of at most three lines, and one 38px caption. Right column: one flat illustration, 840x780, no strokes except tiny details.\n- Build illustrations from circles, rects and simple paths; people are a head circle, rounded torso, two leg bars and line arms. Group parts as `.pop` and spring them from scale 0.15 with transform-origin 50% 100%, back.out(1.8), 0.06s stagger.\n- Transition by wipe: darker band, then the next colour, x 1920→0 in 0.42s power3.inOut; keep the old scene visible underneath until the wipe finishes. Never crossfade.\n- Bottom bar at y≈955: thin 4px line from x=120 to 1800, a small tick for every year, taller ticks on milestones, a circle marker and linking arcs that advance in the same 0.6s as the wipe; year labels fade in as they are reached.\n- Write specific, humble facts for a single person (ages, prices, counts) and keep headlines under 6 words. Avoid gradients, shadows and photo textures; keep fills flat."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Each beat gets its own solid colour field: cream #f3e8cd, mustard #eab43a, sage #a8c69f, coral #f07d66, sky #80c4ea, charcoal #2a2d33; black #0b0b0c for openers. Flat fills only.\n- Transition by wipe: a darker band leads, then the next colour, x 1920→0 in 0.42s power3.inOut; keep the old scene underneath until the wipe finishes. Never crossfade.\n- Layout: text column on the left (a huge number or year in Bricolage Grotesque 800 ~250px, an outlined label pill in DM Sans 700 34px with 0.16em tracking, an 84px headline of at most three lines, one 38px caption), one flat illustration on the right (~840×780).\n- Illustrate the subject from circles, rects and simple paths, no strokes except tiny details; people are a head circle, rounded torso, two leg bars and line arms.\n- Motion is springy: illustration parts pop from scale 0.15 at their base (transform-origin 50% 100%) with back.out(1.8), 0.06s stagger; the big number rises 80px with expo.out 0.3s after the wipe starts; headline then caption rise 40px then 24px.\n- Optional motif: a thin progress bar along the bottom (4px line, ticks, a circle marker and linking arcs) that advances in the same 0.6s as each wipe.\n- Keep beats short (~1.15s) and copy specific: numbers, counts, headlines under six words. Avoid gradients, shadows and photo textures.",
+  "example": "The preview is a biography: one person's milestones by year, each on a new colour with an age label and a flat illustration, along a year bar, ending on a quote card. Don't copy this scene unless asked."
 }

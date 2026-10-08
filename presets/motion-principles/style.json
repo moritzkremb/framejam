@@ -2,7 +2,7 @@
   "id": "motion-principles",
   "name": "Motion Principles",
   "tagline": "A blue ball bounces, stretches and leaves ghost trails while handwritten notes name every animation principle.",
-  "description": "Motion-designer showreel that annotates its own craft. White and black scenes hard-cut against each other: a ball squashes and stretches over a thin floor line leaving onion-skin outlines, a giant word snaps on elastic, a position-vs-time curve draws above a square with ghosted frames showing spacing, a particle trail follows a curve, a progress ring winds up with anticipation, and a motion-blurred stagger resolves into a name card whose full stop is the ball.",
+  "description": "Clean motion-craft look: white and black scenes hard-cut against each other, one electric-blue element that squashes, stretches and leaves onion-skin ghosts, and handwritten notes with drawn arrows naming what's happening. The preview is a reel about animation principles starring a bouncing ball.",
   "mood": [
     "precise",
     "playful",
@@ -59,13 +59,13 @@
   },
   "transitions": [
     "hard cut between white and black scenes, no fades or wipes",
-    "the ball or its trail from one scene is never carried across a cut; each scene starts moving on its first frame"
+    "nothing is carried across a cut; each shot starts moving on its first frame"
   ],
   "textAnimations": [
     "handwriting write-on: clip-path inset 100% → 0 on the right edge, linear, 0.3–0.45s",
     "arrows: SVG path with pathLength=1000 and dasharray 1000, strokeDashoffset 1000 → 0 (GSAP rounds px values, so avoid pathLength=1), 0.15–0.3s, arrowhead drawn in the same path",
     "giant word: scaleX 2.6 / scaleY 0.3 → 1 / 1.7 on elastic.out, 0.55s",
-    "name rises from a clipped baseline on expo.out; the full stop drops as the ball and squashes on first contact"
+    "final name rises from a clipped baseline on expo.out"
   ],
   "rhythm": {
     "averageShotSeconds": 1.2,
@@ -78,5 +78,6 @@
     "hand-annotated",
     "white-black"
   ],
-  "guide": "- Palette: white #ffffff and ink #0a0a0a backgrounds that hard-cut against each other; one electric blue #2540ff (#6b82ff on black), a small red #ff3b30 only for corrections and emphasis.\n- Show the principle, then name it: a blue ball (112px) on a 4px floor line, fall power2.in, rise power2.out, squash to scale 1.6×0.5 for 0.09s, stretch to 0.84×1.28 in the air, and thin blue outline circles stamped every 0.06s so the spacing shows.\n- Annotations are Caveat 700 at 64–84px, rotated -4° to 3°, written on with a linear clip-path reveal and followed by a hand-drawn SVG arrow (pathLength 1000, dashoffset 1000→0, 0.2s). Use real terms: 'squash!', 'stretch', 'slow in, slow out', 'stagger: 45ms', 'follow-through'.\n- Tiny mono labels (22px, uppercase, tracking 0.16em, 50% opacity) carry the data: axis names, 'ease · back.out(1.6)', 'shutter 180°'.\n- Graph scene: clip-reveal the eased curve linearly while the marker's y and the square's x use the same ease, and stamp ghost squares at equal time steps so spacing is tight at the ends and wide in the middle.\n- Fake motion blur by stacking 10–15 copies of an object delayed by 5ms each with falling opacity, tweened on expo.out so the copies converge into a sharp shape.\n- End on a name in Inter Tight 900 around 290px where the full stop is the ball dropping with bounce.out; add one blue handwritten arrow with the call to action. Avoid gradients, glow, drop shadows, frames and decorative corner labels."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Palette: white #ffffff and ink #0a0a0a backgrounds that hard-cut against each other; one electric blue #2540ff (#6b82ff on black) for the moving element, a small red #ff3b30 only for corrections and emphasis.\n- Animate the subject (or a simple stand-in shape for it) with textbook principles you can see: fall power2.in, rise power2.out, squash to ~1.6×0.5 for 0.09s on contact, stretch ~0.84×1.28 in the air, and thin blue outline copies stamped every 0.06s so the spacing shows.\n- Annotate like a motion designer's notebook: Caveat 700 at 64–84px, rotated −4° to 3°, written on with a linear clip-path reveal and followed by a hand-drawn SVG arrow (pathLength 1000, dashoffset 1000→0, 0.2s). Use real terms ('anticipation', 'slow in, slow out', 'stagger: 45ms', 'follow-through').\n- Tiny mono labels (22px, uppercase, tracking 0.16em, 50% opacity) carry the data: axis names, ease names, durations.\n- Fake motion blur by stacking 10–15 copies delayed by 5ms with falling opacity, tweened on expo.out so they converge into a sharp shape; giant words snap in on elastic (scaleX 2.6 / scaleY 0.3 → 1).\n- Optional motifs: a position-vs-time curve that draws while an object follows the same ease with ghost frames; a final name in Inter Tight 900 whose full stop drops as a bouncing ball.\n- Hard cuts only, each shot moving from its first frame. Avoid gradients, glow, drop shadows, frames and decorative corner labels.",
+  "example": "The preview is a motion designer's reel about animation principles: a blue ball squashing with onion-skin trails, a spacing graph, a progress ring and a name card whose full stop is the ball. Don't copy this scene unless asked."
 }

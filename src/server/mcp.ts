@@ -33,12 +33,16 @@ const MAX_IMAGES = 6;
 const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), pick style presets, and pick playbooks (a method for one kind of video, e.g. a music video or a talking-head short).
 First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
 Before building, call get_selected_playbook and get_selected_preset. If a playbook is selected (or the user names one), follow its SKILL.md; the style, if any, combines with it as the playbook's stylesSentence says.
+A style is a look, not a starting video: plan the video from the user's request, then build that subject in the style's palette, textures, type, motion and pacing. Don't copy the style's example scene (its subject, props or layout) unless the user asks for it.
 Loop: (optional) get_selected_preset / list_presets -> build the video with the project's own tool -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending", but stop after 12 pending results in a row, about 10 minutes, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
 Pass videoPath (the render) for every tool; the user always reviews the rendered file. Don't convert the project to another tool.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
 When talking to the user, call a review a "project" (that's what the FrameJam UI calls it).
 If the user says "apply my FrameJam feedback" (with or without a review id), call get_feedback.`;
+
+const STYLE_USE =
+  "A style is a look, not a starting video. Plan the video from the user's request, then build that subject in this look: palette, textures and backgrounds, type, motion feel, transitions and pacing from guide. Don't reuse the example's subject, props, layout or story (see example) unless the user asks for them. The example composition (templateDir) is only a reference for how a technique is built, such as a texture or a title reveal; don't start from it or reskin it.";
 
 const panelsSchema = z
   .array(
@@ -444,17 +448,20 @@ export function createMcpServer(ctx: McpContext): McpServer {
     },
   );
 
-  const presetPayload = (id: string) => {
+  const presetPayload = (id: string, includeTemplate = false) => {
     const p = presets.get(id);
     if (!p) return undefined;
     return {
       style: p.style,
       guide: p.style.guide,
+      example: p.style.example,
+      howToUse: STYLE_USE,
       presetDir: p.dir,
       templateDir: path.join(p.dir, "composition"),
+      templateFiles: presets.templateFiles(p),
+      ...(includeTemplate ? { templateSource: presets.templateSource(p) } : {}),
       previewVideo: fs.existsSync(path.join(p.dir, "preview.mp4")) ? path.join(p.dir, "preview.mp4") : undefined,
       galleryUrl: `${ctx.baseUrl}/styles/${id}`,
-      templateFiles: presets.templateSource(p),
     };
   };
 
@@ -462,11 +469,15 @@ export function createMcpServer(ctx: McpContext): McpServer {
     "get_preset",
     {
       title: "Get a style preset",
-      description: "Return a preset's style.json (palette, fonts, easing, transitions, text animations, pacing), its agent-facing style guide, and the Hyperframes template source. The style applies to any video tool; copy the template files only into Hyperframes projects.",
-      inputSchema: { id: z.string() },
+      description:
+        "Return a style: its look (palette, fonts, easing, transitions, text animations, pacing), the guide of look rules, and what its example video shows. A style is a look, not a starting video: build the user's own subject in it, with any video tool. The example composition is listed in templateFiles; pass includeTemplate: true only to see how a technique is built.",
+      inputSchema: {
+        id: z.string(),
+        includeTemplate: z.boolean().optional().describe("Also return the example composition's source (a reference, not a starting point)"),
+      },
     },
-    async ({ id }) => {
-      const payload = presetPayload(id);
+    async ({ id, includeTemplate }) => {
+      const payload = presetPayload(id, includeTemplate);
       if (!payload) return errorResult(new Error(`Unknown preset: ${id}. Call list_presets to see ids.`));
       return { content: [json(payload)] };
     },
@@ -476,7 +487,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     "get_selected_preset",
     {
       title: "Get the preset the user picked",
-      description: "Return the preset the user marked with 'Use this style' in the gallery (style.json, guide, template source), or null if none is selected.",
+      description: "Return the style the user marked with 'Use this style' (same as get_preset), or null if none is selected. Use its look for the user's own subject; don't copy its example scene.",
       inputSchema: {},
     },
     async () => {

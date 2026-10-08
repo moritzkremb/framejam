@@ -50,13 +50,13 @@
   },
   "transitions": [
     "hard cut on the beat with a full background colour swap (black → lime → black → off-white → black → lime)",
-    "chrome object re-pops from scale 0 with a back-out overshoot on every cut",
-    "ghost outline copies of the word slide past in opposite directions"
+    "the chrome element re-pops from scale 0 with a back-out overshoot on every cut",
+    "ghost outline copies of the headline word slide past in opposite directions"
   ],
   "textAnimations": [
     "each line rises out of its own mask (yPercent 105 → 0, 0.42s expo.out, 0.07s stagger)",
     "mono sublines rise 24px and fade in 0.3s after the headline",
-    "percentage counter and progress bar tick up under the object",
+    "percentage counter and progress bar tick up under the main element",
     "CTA chip pops with back.out then flips to black with lime text"
   ],
   "rhythm": {
@@ -71,5 +71,6 @@
     "kinetic-type",
     "hud"
   ],
-  "guide": "- Cycle backgrounds #0b0b0a / #d4ff3a (radial-lit, #e6ff7a centre) / #efeee6 with a hard cut every ~1.25s; never crossfade.\n- Headlines: Inter Tight 900 uppercase, ~186px, line-height 0.9, tracking -0.03em, left at 90px, 2–3 short lines ending in a period. Second line is lime #d4ff3a on black, or a black box with lime text on lime; black only on off-white.\n- Reveal each line from its own overflow-hidden mask (yPercent 105, 0.42s expo.out, 0.07s stagger); mono sublines follow 0.3s later.\n- Right half holds one liquid-chrome object (~460px): a z-sorted SVG tube with stacked strokes (black edge, two reflected chrome gradients that slide over time, a lime reflection band offset down-right, a thin white specular offset up-left). Keep it rotating linearly and pop it in with back-out on every cut; morph between curves (knot → figure-eight) for variety.\n- Frame every scene with a JetBrains Mono HUD: brand top-left with a lime dot, '0N — 06' top-right, section label under a hairline rule, bottom rule with a running lime progress line, progress dashes centre, timecode right. Add an arrow glyph, a beat waveform or a % counter for detail.\n- End on lime with the studio name, a black-box tagline and a bordered CTA chip that flips to black.\n- Avoid soft gradients behind type, script fonts, or more than one accent colour."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Cycle full-frame backgrounds near-black #0b0b0a, acid lime #d4ff3a (radial-lit: #e6ff7a centre → #d4ff3a → #b6dc1c edge) and off-white #efeee6 with a hard cut every ~1.25s (one beat at 144 BPM); never crossfade. Lime is the only accent.\n- Headlines: Inter Tight 900 uppercase, ~186px (up to 280px for a single word), line-height 0.9, tracking -0.03em, left-aligned at 90px, 2–3 short lines ending in a period. The second line is lime on black, or a black box with lime text on lime; plain black text only on off-white.\n- Reveal each line from its own overflow-hidden mask (yPercent 105 → 0, 0.42s expo.out, 0.07s stagger); JetBrains Mono 500 uppercase sublines (26px, tracking 0.06em) rise 24px and fade in 0.3s later.\n- One glossy liquid-chrome element per scene, ~460px on the right half: the subject itself or an abstract form that stands for it. Build it in SVG from stacked strokes: a black edge, two chrome gradients (#efeee6 → #8d8e88 → #0e0e0e) that slide over time, a lime reflection band offset down-right and a thin white specular offset up-left. It never stops rotating or drifting (linear), re-pops from scale 0 with back.out(1.4) on every cut and morphs between shapes with power3.out.\n- Frame every scene with a JetBrains Mono HUD (19px, uppercase, tracking 0.08em): name top-left with a 10px lime dot, scene index '0N — 0M' top-right, section label under a hairline rule at 18% opacity, a bottom rule with a running 3px lime progress line, progress dashes and a timecode. Add one detail per scene: a diagonal arrow glyph, a pulsing bar waveform or a % counter.\n- For emphasis, ghost outline copies of the headline word (transparent fill, 2px stroke at 20% opacity, ~280px) slide past in opposite directions.\n- Pacing: one statement per ~1.25s shot; only the last card holds ~1.5s. The HUD progress line runs continuously. Close on lime with a name, a black-box line and a bordered chip that flips to black with lime text.\n- Avoid soft gradients behind type, script or serif fonts, crossfades, or a second accent colour.",
+  "example": "The preview is a studio brand reel: beat-cut statements like 'PRECISE.' beside a spinning chrome torus knot, figure-eight and lime star, ending on a 'Voltwerk' card. Don't copy this scene unless asked."
 }

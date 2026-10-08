@@ -6,7 +6,7 @@ description: Make and review videos and storyboards with the user in the loop, w
 # FrameJam: styles, playbooks + one-click video and storyboard review
 
 FrameJam runs next to your chat at http://localhost:2400. It gives you three things the chat is bad at:
-**choosing a style** (a structured `style.json`, plus a working Hyperframes template), **following a playbook**
+**choosing a style** (a structured `style.json` that describes a look, plus an example video), **following a playbook**
 (the full method for one kind of video: what the user brings, the steps, the tools, the quality bar) and **precise
 feedback** (timestamped, pinned comments with a frame image of the render).
 
@@ -70,10 +70,15 @@ If several projects could match, ask one short question that lists them.
    request, offer it in one line.
 1. **Style.** Call `get_selected_preset`. If it returns `selected: null`, ask the user to pick one on the Styles page you
    just opened (then call it again), or pick one yourself with `list_presets({ mood, pacing, format })` and `get_preset(id)`.
-   - Follow `style.guide` literally, whatever the tool. Use the exact `palette` hex values, `fonts`, `easing` names,
-     `transitions`, `textAnimations` and `rhythm.averageShotSeconds`.
-   - `templateFiles` is a working Hyperframes composition. In a Hyperframes project, copy it in and replace the copy
-     rather than starting from a blank file. With any other tool, don't copy it; read it as a reference for the look.
+   - **A style is a look, not a starting video.** First plan the video from what the user asked for (a rocket launch
+     is about the rocket), then build that subject in the style's visual language: the exact `palette` hex values,
+     textures and backgrounds, `fonts`, `easing` names, `transitions`, `textAnimations` and
+     `rhythm.averageShotSeconds`, following the look rules in `guide` whatever the tool.
+   - `example` says what the style's preview video shows. Don't reuse that scene (its subject, props, layout or story,
+     like the computer in Cyanotype Mac) unless the user asks for it.
+   - The example composition in `templateDir` is a reference, not a skeleton. Don't copy it in and swap the text.
+     Open a file from `templateFiles` (or call `get_preset({ id, includeTemplate: true })`) only to see how a technique
+     is built, such as a texture filter or a title reveal, and rebuild that technique in your own composition.
 2. **Build** the video with the project's tool (Hyperframes details below, other tools further down).
 3. **Render** to a *new file per version*, e.g. `renders/v1.mp4`, `renders/v2.mp4`, so earlier versions stay comparable.
 4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`. Use an absolute path, and the same
@@ -119,7 +124,8 @@ If several projects could match, ask one short question that lists them.
 - Keep the project's own tool and render command (`npx remotion render`, the Motion Canvas exporter, an ffmpeg script,
   a screen recording). **Don't convert the project to Hyperframes.**
 - Render each version to a new mp4/webm/mov file and call `open_review({ title, videoPath })`.
-- Use the preset's `style.guide`, `palette`, `fonts`, `easing` and pacing in the tool's own terms.
+- Use the style's look (`guide`, `palette`, `fonts`, `easing`, pacing) in the tool's own terms, for the user's own
+  subject.
 
 ## Storyboards (before there's a video)
 

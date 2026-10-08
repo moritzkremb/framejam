@@ -2,7 +2,7 @@
   "id": "label-collage",
   "name": "Label Collage",
   "tagline": "Label-maker tape, a hand-cut coral star and grainy night-sky paper, slapped together by hand.",
-  "description": "Tactile scrapbook style for journaling, notes and memory products. Warm cream paper alternates with speckled, halftoned indigo night-sky paper; dark navy Dymo tape strips with embossed monospace text slap on one by one and scatter; a big rough-cut coral asterisk spins; a sketched jar fills with tape; a coral hand-drawn ellipse circles a quote; words ride a wave or radiate on spokes; a few dots join into a constellation.",
+  "description": "Tactile scrapbook look: warm cream paper and speckled, halftoned indigo night paper, navy Dymo tape with embossed mono text slapped on by hand, rough coral cut-outs and hand-drawn circles, all under a film of grain. The preview is a journaling app with a spinning asterisk, a sketched jar and a circled quote.",
   "mood": [
     "tactile",
     "tender",
@@ -59,7 +59,7 @@
   "transitions": [
     "hard cut between cream paper and indigo night paper",
     "labels scatter outward and fade (0.42s power2.in) right before a cut",
-    "the asterisk scales up and fades as the scene leaves"
+    "the hero shape scales up and fades as the scene leaves"
   ],
   "textAnimations": [
     "tape slap: scale 1.4 → 1 with back.out(2.2) in 0.3s, 0.1s apart, each tape pre-rotated ±2–8°",
@@ -78,5 +78,6 @@
     "journaling",
     "tactile"
   ],
-  "guide": "- Two papers only: cream #ece3cd and indigo night #34497f with feTurbulence clouds, sparse white specks and a halftone dot gradient on the lower half. Hard-cut between them; keep a full-frame multiply grain (~0.7) on top of everything.\n- Labels are Dymo tape: #263a6c strip, Space Mono 700 in #e8ebf1 with an embossed text-shadow, slightly torn clip-path corners, a 5px halftone drop shadow offset 7/8px, and a fixed rotation between −8° and 8°. Never straight, never more than one line.\n- Tapes slap in with scale 1.4 → 1, back.out(2.2), 0.3s, 0.1s apart; before a cut they scatter outward from centre with power2.in and fade.\n- One hero shape per scene: a rough-cut coral #e5735b 12-arm asterisk (round-capped strokes + feDisplacementMap roughening) that spins slowly with ease \"none\"; reuse it small as a recurring motif.\n- Coral marks are hand-drawn: an overshooting ellipse around a quote, a label box on the jar; draw them with stroke-dashoffset in ~0.5s power2.inOut.\n- On night paper set lowercase Space Mono 400 sentences on a sine wave or as radiating spoke labels; add a 5–7 dot constellation with a Caveat date caption.\n- End on cream: big asterisk + the wordmark on a 140px tape + one sub-tape + a coral Caveat URL. Keep copy small, human and specific (\"found €5 in my coat\")."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Two papers only: cream #ece3cd and indigo night #34497f with feTurbulence clouds, sparse white specks and a halftone dot gradient on the lower half. Hard-cut between them; keep a full-frame multiply grain (~0.7) on top of everything.\n- Words are Dymo label tape: #263a6c strip, Space Mono 700 in #e8ebf1 with an embossed text-shadow, slightly torn clip-path corners, a 5px halftone drop shadow offset 7/8px, and a fixed rotation between −8° and 8°. Never straight, never more than one line.\n- Tapes slap in with scale 1.4 → 1, back.out(2.2), 0.3s, 0.1s apart; before a cut they scatter outward from the centre with power2.in and fade.\n- Draw the subject as rough paper cut-outs and simple hand sketches (round-capped strokes roughened with feDisplacementMap) in coral #e5735b, navy and cream; one hero shape per scene.\n- Coral marks are hand-drawn: overshooting ellipses, underlines, boxes, drawn with stroke-dashoffset in ~0.5s power2.inOut.\n- On night paper set lowercase Space Mono 400 sentences on a sine wave (per-character offset driven by a tweened phase) or as radiating spoke labels; Caveat for small handwritten notes.\n- Optional motif: a rough-cut coral 12-arm asterisk that spins slowly with ease \"none\", or a 5–7 dot constellation. Keep copy small, human and specific.",
+  "example": "The preview is a scrapbook for a journaling app: label tapes slap on, a coral asterisk spins, a sketched jar fills with tape, and a quote gets circled. Don't copy this scene unless asked."
 }

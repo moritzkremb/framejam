@@ -382,26 +382,34 @@ describe("presets", () => {
     expect(q.presets[0].id).toBe("neon-terminal");
   });
 
-  it("returns style.json, guide and template source", async () => {
+  it("returns the look and lists the example files without pasting them", async () => {
     const res = parse(await mcp.call("get_preset", { id: "noir-quote" }));
     expect(res.style.palette.text).toMatch(/^#/);
     expect(res.style.fonts.display.family).toBe("Playfair Display");
     expect(res.guide.length).toBeGreaterThan(100);
-    const index = res.templateFiles.find((f: { path: string }) => f.path === "index.html");
-    expect(index.content).toContain('window.__timelines["noir-quote"]');
+    expect(res.howToUse).toMatch(/look, not a starting video/);
+    expect(res.templateFiles).toContain("index.html");
+    expect(res.templateSource).toBeUndefined();
     expect(fs.existsSync(res.previewVideo)).toBe(true);
     const missing = await mcp.call("get_preset", { id: "nope" });
     expect(missing.isError).toBe(true);
   });
 
+  it("returns the example's source only when asked", async () => {
+    const res = parse(await mcp.call("get_preset", { id: "noir-quote", includeTemplate: true }));
+    const index = res.templateSource.find((f: { path: string }) => f.path === "index.html");
+    expect(index.content).toContain('window.__timelines["noir-quote"]');
+  });
+
   it("every seeded preset has a valid style.json and a Hyperframes composition", async () => {
     const all = parse(await mcp.call("list_presets"));
     for (const { id } of all.presets) {
-      const p = parse(await mcp.call("get_preset", { id }));
-      for (const key of ["name", "tagline", "description", "palette", "fonts", "easing", "transitions", "textAnimations", "rhythm", "guide"]) {
+      const p = parse(await mcp.call("get_preset", { id, includeTemplate: true }));
+      for (const key of ["name", "tagline", "description", "palette", "fonts", "easing", "transitions", "textAnimations", "rhythm", "guide", "example"]) {
         expect(p.style[key], `${id}.${key}`).toBeTruthy();
       }
-      const html = p.templateFiles.find((f: { path: string }) => f.path === "index.html").content as string;
+      expect(p.style.guide, id).toMatch(/^- Look only:/);
+      const html = p.templateSource.find((f: { path: string }) => f.path === "index.html").content as string;
       expect(html, id).toContain(`data-composition-id="${id}"`);
       expect(html, id).toContain(`window.__timelines["${id}"]`);
       expect(html, id).toContain(`data-width="${p.style.width}"`);

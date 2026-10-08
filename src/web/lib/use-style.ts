@@ -15,7 +15,7 @@ export function useStyleSelection(initial: string | null) {
       await api.selectPreset(next);
       setSelected(next);
       window.dispatchEvent(new Event(PRESET_SELECTED_EVENT));
-      if (next) toast.success(`Using ${preset.name}`, { description: "Your agent builds your next video in this style." });
+      if (next) toast.success(`Using ${preset.name}`, { description: "Your agent uses this look for your next video, whatever it's about." });
       else toast(`Stopped using ${preset.name}`);
     } catch (e) {
       toast.error((e as Error).message);

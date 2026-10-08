@@ -62,13 +62,13 @@
   },
   "transitions": [
     "hard cut between parchment plates; each plate redraws from blank",
-    "dark-to-parchment cut after the glowing cold open",
+    "dark-to-parchment cut after a glowing dark opener",
     "HUD frame and red progress rule persist across every parchment plate"
   ],
   "textAnimations": [
     "headline rises 26px while tracking tightens 0.16em → 0.08em, 0.9s power3.out, 0.22s line stagger",
     "glow title resolves from blur(14px) and scale 1.08",
-    "big year counter ticks between dates with power2.inOut",
+    "big red number ticks between values (years, counts) with power2.inOut",
     "kicker and italic captions fade up 10px"
   ],
   "rhythm": {
@@ -82,5 +82,6 @@
     "explainer",
     "parchment"
   ],
-  "guide": "- Parchment is a radial gradient #eee3c8 → #e2d1ad → #c9b28a with a brown vignette and an feTurbulence grain layer (multiply, ~0.3 opacity). Cold opens are #140d06 with a gold #f6d38a title and stacked orange text-shadows.\n- Headlines: Cinzel 700 uppercase, 74–150px, tracking 0.08em, one short line in ink #2a1d12 plus one accent word in red #a3221b. Rise 26px while tracking tightens, 0.9s power3.out.\n- Illustrations are inline SVG engravings in #3b2a1a, 1.2–2.4px strokes with pathLength=1; draw rings first, then detail, with power2.inOut over 0.9–1.6s and small staggers. Fill colour (red/blue) only after the strokes finish, at ~0.8 opacity.\n- Put a 96-ray sunburst (#6b4a26 at 0.13 opacity) behind the hero and rotate it linearly a few degrees per plate; keep hands, counters or rays moving so nothing is static.\n- Keep a HUD frame on every parchment plate: 30px corner brackets 40px in, IBM Plex Mono labels (chapter top-left, series top-right, era bottom-left, plate bottom-right) and a 640px red progress rule that fills linearly across the piece.\n- Use one big red Cinzel year (≈400px) that ticks between dates while an engraving draws over it. Avoid modern sans type, pure white and saturated colour beyond the single red."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Parchment plates are a radial gradient #eee3c8 → #e2d1ad → #c9b28a with a brown vignette and an feTurbulence grain layer (multiply, ~0.3 opacity). Dark beats are #140d06 with a gold #f6d38a title and stacked orange text-shadows that resolves from blur(14px) and scale 1.08.\n- Headlines: Cinzel 700 uppercase, 74–150px, tracking 0.08em, one short line in ink #2a1d12 plus one accent word in red #a3221b. They rise 26px while tracking tightens 0.16em → 0.08em, 0.9s power3.out, 0.22s line stagger. Narration is italic Cormorant Garamond 500, 34–40px, fading up 10px.\n- Draw the subject as an inline SVG engraving in #3b2a1a: 1.2–2.4px strokes with pathLength=1, outer structure first, then detail, power2.inOut over 0.9–1.6s with small staggers. Add flat red or blue fill (~0.8 opacity) only after the strokes finish.\n- Put a 96-ray sunburst (#6b4a26 at 0.13 opacity) behind the main element and rotate it linearly a few degrees per plate. Keep something moving slowly on every plate (rays, a counter, part of the drawing) so nothing is static.\n- Keep a HUD frame on every parchment plate: 30px corner brackets 40px in, IBM Plex Mono 11–26px uppercase labels tracked 0.3em in #5b4630 in the four corners (chapter, series, era or place, plate number) and a 640px red progress rule that fills linearly across the whole piece.\n- Hard cuts between plates; each plate redraws from blank, spends its first ~1s drawing, then holds while the slow motion continues.\n- Optional motif: one huge red Cinzel number (≈400px: a year, count or stat) that ticks between values with power2.inOut while an engraving draws over it.\n- Avoid modern sans type, pure white, photos and saturated colour beyond the single red.",
+  "example": "The preview is a documentary opener about the history of clocks: a glowing cold open, an engraved town clock drawing itself under sunburst rays, a red year counter, and a series title card. Don't copy this scene unless asked."
 }

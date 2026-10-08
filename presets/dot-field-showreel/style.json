@@ -2,7 +2,7 @@
   "id": "dot-field-showreel",
   "name": "Dot Field Showreel",
   "tagline": "Viewfinder HUD, one-second colour cuts, kinetic type and a dot field that ripples on cue.",
-  "description": "Motion-designer showreel style for portfolios, studio reels and 'what we can do' intros. A camera-viewfinder HUD (corner brackets, timecode, scene labels) frames rapid scenes: tumbling letters with a glitch slice, outline-stack type on electric blue, a frame counter on orange, a grid of dots rippling in orange and blue waves, and a lime end card.",
+  "description": "Fast, graphic showreel look: hard one-second cuts between near-black, electric blue, orange and lime, huge Archivo Black type with outline echoes and glitch slices, all framed by a camera-viewfinder HUD. The preview is a motion designer's reel with tumbling letters, a frame counter and a rippling dot field.",
   "mood": [
     "energetic",
     "crafted",
@@ -61,9 +61,9 @@
   "textAnimations": [
     "letters tumble in from above with alternating ±28° rotation",
     "outline rows slide in from opposite sides around one filled word",
-    "frame counter ticks 0240 → 0261 with a progress bar",
-    "dot field ripples via grid stagger from centre, then from a corner",
-    "end word expands from scaleY 0.1 with outline echoes"
+    "counters tick up with a thin progress bar",
+    "dot grid ripples via grid stagger from centre, then from a corner",
+    "final word expands from scaleY 0.1 with outline echoes"
   ],
   "rhythm": {
     "averageShotSeconds": 1.5,
@@ -76,5 +76,6 @@
     "dots",
     "portfolio"
   ],
-  "guide": "- Keep the viewfinder HUD on top of every scene: four corner brackets, reel label, frame timecode, scene name, author. Flip it from light to dark on light backgrounds.\n- Cut hard between near-black, electric blue #2b45ff, orange #ff5a1f and lime #d4ff3a; never two adjacent scenes in the same colour.\n- Each scene shows one technique and names it in the HUD (Type, Intent, Timing, Systems, Move).\n- Type: Archivo Black for the hero word, Instrument Serif italic for small connecting words, outline copies for echoes.\n- Dot fields are a fixed grid animated only with grid staggers (from centre, from a corner) so the motion reads as a system.\n- Drive counters and HUD text from one clock tween's onUpdate so seeking stays deterministic."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Frame everything in a camera-viewfinder HUD that stays on top: four thin corner brackets, a small label top-left, a frame timecode and a scene name in mono caps. Flip it from light to dark on light backgrounds.\n- Cut hard between near-black, electric blue #2b45ff, orange #ff5a1f and lime #d4ff3a every 1–2s; never two adjacent shots in the same colour, never a crossfade.\n- Each shot does one thing to the subject or one word about it and names that beat in the HUD in two or three caps words.\n- Type: Archivo Black for hero words, huge and tight; Instrument Serif italic for small connecting words; stacked outline copies of a word as echoes.\n- Motion is energetic and exact: letters tumble in with alternating ±28° rotation, outline rows slide in from opposite sides, glitch slices jump two clipped colour copies sideways for 4 frames, a final word expands from scaleY 0.1 with outline echoes.\n- Optional motif: a fixed grid of dots that ripples with grid staggers (from the centre, then a corner), so motion reads as a system; it can form or surround the subject.\n- Drive counters and HUD text from one clock tween's onUpdate so seeking stays deterministic. Avoid gradients, soft shadows and photos.",
+  "example": "The preview is a motion designer's showreel: tumbling letters, outline type on blue, a frame counter on orange, a rippling dot grid and a lime end card, all inside a viewfinder HUD. Don't copy this scene unless asked."
 }

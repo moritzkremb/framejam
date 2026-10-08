@@ -85,7 +85,12 @@ export class PresetLibrary {
     };
   }
 
-  /** Template source the agent can copy into its own Hyperframes project. */
+  /** Text files of the example composition, as paths relative to its folder. */
+  templateFiles(p: LoadedPreset): string[] {
+    return this.templateSource(p).map((f) => f.path);
+  }
+
+  /** Source of the example composition: a reference for how the look's techniques are built. */
   templateSource(p: LoadedPreset): { path: string; content: string }[] {
     const root = path.join(p.dir, "composition");
     const out: { path: string; content: string }[] = [];

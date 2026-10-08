@@ -62,13 +62,13 @@
   },
   "transitions": [
     "hard cuts only, every 1.2–1.6s, alternating cream paper / navy halftone / pink sunburst",
-    "persistent chip and LIVE stamp stay on top and update their value on each cut with a scale pop"
+    "optional persistent chip and LIVE stamp stay on top and update their value on each cut with a scale pop"
   ],
   "textAnimations": [
     "punch words: scale 1.3 + rotation -4° → rest in 0.3s expo.out, 0.1–0.18s stagger per word",
     "caption pill rises 40px in 0.22s right after the cut",
     "counter digits roll on vertical strips, each stopping 0.22s after the previous one",
-    "OUT NOW stamp slams from scale 1.8 with power4.in"
+    "rubber stamp slams from scale 1.8 with power4.in"
   ],
   "rhythm": {
     "averageShotSeconds": 1.35,
@@ -82,5 +82,6 @@
     "halftone",
     "countdown"
   ],
-  "guide": "- Alternate three grounds on hard cuts: cream paper #efe6d2, navy #34417a with a 9px halftone dot pattern and soft mottling, and a slowly rotating repeating-conic sunburst (#ff6fae / #f3e7d0, 9° rays). Lay a multiply feTurbulence grain over everything (~30%).\n- Punch words are Anton all caps, 150–340px, #ff4f9a with a 4px #2e3a6b outline (8 text-shadows) plus a 12px hard navy offset. One to three words per scene, each word punching in from scale 1.3 / -4°.\n- Keep two HUD cards on top the whole time: a cream 'P(SUCCESS)' chip top-left with an #f0582a Anton percentage that climbs each scene, and a 'LIVE' stamp top-right with a ticking clock and a date that changes per cut. Cards are cream #f3ead6 with a 3px navy border, a hard 7px shadow and a 1–2° tilt.\n- Captions live in a #232b52 pill bottom-left (Space Grotesk 600, 46px, cream), first word underlined in pink. One short sentence per scene.\n- Data moments are physical: a mechanical LCD counter (pink header bar, navy screen, cream Silkscreen digit windows that roll and stop left to right) or a dotted line chart (stroke-dasharray '0 28', round caps) revealed by a mask wipe with pink points popping.\n- Finish on a sunburst end card with the show title, a navy episode pill and a red rubber-stamp 'OUT NOW'. No fades, no gradients on type, no characters or photos."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Alternate three grounds on hard cuts every 1.2–1.6s: cream paper #efe6d2, navy #34417a with a 9px halftone dot pattern and soft mottling, and a slowly rotating repeating-conic sunburst (#ff6fae / #f3e7d0, 9° rays). Lay a multiply feTurbulence grain over everything (~30%).\n- Punch words are Anton all caps, 150–340px, #ff4f9a with a 4px #2e3a6b outline (8 text-shadows) plus a 12px hard navy offset. One to three words per scene, each punching in from scale 1.3 / -4° with expo.out in 0.3s, 0.1–0.18s apart.\n- Captions live in a #232b52 pill bottom-left (Space Grotesk 600, 46px, cream), first word underlined in pink, rising 40px in 0.22s right after the cut. One short sentence per scene; kickers are Space Grotesk 54px tracked 0.3em.\n- Cards and chips are cream #f3ead6 with a 3px navy border, a hard 7px shadow and a 1–2° tilt; they pop in with back.out(1.6–3). Mono details (dates, labels) are Share Tech Mono 28–56px.\n- Data moments are physical: a mechanical LCD counter (pink header bar, navy screen, cream Silkscreen digit windows that roll on vertical strips and stop left to right, 0.22s apart) or a dotted line chart (stroke-dasharray '0 28', round caps) revealed by a mask wipe with pink points popping.\n- Every shot gets a new ground, one punch phrase or one graphic, and a new caption; something rotates or rolls in every shot.\n- Optional motif: two persistent HUD cards on top, a stat chip top-left with an #f0582a Anton number that changes each scene and a 'LIVE' stamp top-right with a ticking clock and date, both updating on each cut with a scale pop.\n- Optional motif: a red #e8402f rubber stamp that slams from scale 1.8 with power4.in on the final sunburst card.\n- No fades, no gradients on type, no characters or photos.",
+  "example": "The preview is a podcast episode trailer about quitting a job for a long-shot idea: punch words, a pre-order counter, a growth chart and a P(SUCCESS) chip that climbs, ending on an OUT NOW card. Don't copy this scene unless asked."
 }

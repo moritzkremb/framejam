@@ -147,7 +147,7 @@ export function StyleDetailPage() {
   const { preset } = data;
   const inUse = selection.selected === preset.id;
   const vertical = preset.height > preset.width;
-  const agentPrompt = `Use the FrameJam style "${preset.name}" (id: ${preset.id}). Call get_preset("${preset.id}") and follow its style guide, palette, fonts and easing when you build the video.`;
+  const agentPrompt = `Use the look of the FrameJam style "${preset.name}" (id: ${preset.id}) for my video: call get_preset("${preset.id}") and use its colours, textures, type and motion. Build my own subject in it; don't copy the example scene. My video: `;
   const guideLines = preset.guide
     .split("\n")
     .map((l) => l.replace(/^\s*[-*•]\s*/, "").trim())
@@ -241,6 +241,12 @@ export function StyleDetailPage() {
         {tab === "overview" && (
           <div className="fc-sects">
             <p className="fc-style-desc">{preset.description}</p>
+            {preset.example && (
+              <p className="fc-sect-note">
+                <b>The example video:</b> {preset.example.replace(/\s*Don't copy this scene unless asked\.?$/, "")} Your agent uses the look, not this
+                scene.
+              </p>
+            )}
             <Section title="Palette" hint="Click a colour to copy it">
               <div className="fc-palette">
                 {Object.entries(preset.palette).map(([name, color]) => (
@@ -331,7 +337,7 @@ export function StyleDetailPage() {
 
         {tab === "agent" && (
           <div className="fc-sects">
-            <Section title="Prompt" hint="Paste into your agent chat to build with this style">
+            <Section title="Prompt" hint="Paste into your agent chat and say what your video is about">
               <PromptBlock text={agentPrompt} primary />
             </Section>
             <Section
@@ -352,7 +358,7 @@ export function StyleDetailPage() {
                 ))}
               </ol>
             </Section>
-            <Section title="Template files" hint="This style as a Hyperframes project. Agents using another tool follow the style guide instead">
+            <Section title="Example files" hint="The example video as a Hyperframes project. Your agent only looks here to see how a technique is built">
               <div className="fc-col" style={{ gap: 8 }}>
                 {data.files.map((f) => (
                   <details key={f.path} className="fc-file">

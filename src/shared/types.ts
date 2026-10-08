@@ -116,7 +116,10 @@ export interface PresetStyle {
   transitions: string[];
   textAnimations: string[];
   rhythm: { averageShotSeconds: number; holdAfterTextSeconds?: number; notes?: string };
+  /** Look rules that work for any subject. */
   guide: string;
+  /** What the preview video shows; agents don't copy this scene unless asked. */
+  example?: string;
   tags?: string[];
 }
 

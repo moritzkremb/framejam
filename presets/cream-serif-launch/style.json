@@ -64,9 +64,9 @@
   ],
   "textAnimations": [
     "headline de-blurs from blur(26px) + scale 1.08",
-    "query types character by character with a coral caret",
+    "input text types character by character with a coral caret",
     "result rows rise in sequence, the first gets a coral-tint highlighter sweep",
-    "stat slams in tilted -8° from scale 1.7; the old price is struck through"
+    "stat slams in tilted -8° from scale 1.7; the old value is struck through"
   ],
   "rhythm": {
     "averageShotSeconds": 2,
@@ -79,5 +79,6 @@
     "warm",
     "comparison"
   ],
-  "guide": "- Cream #f3ede2 with a soft centre lightening; cards are #fffaf2 with a warm, low shadow. No pure white or black backgrounds.\n- Headlines in Fraunces 800; exactly one word per headline in coral italic (Fraunces 700 italic).\n- Show the product doing one real thing (typed query → concrete file paths), not abstract UI.\n- Prove it with a before/after bar pair and one big coral percentage; always add a small muted methodology note (n, what was measured).\n- Resolve titles and logos from blur; use expo.out for cards and bars.\n- End on mark + wordmark, a two-part tagline with the second half in coral italic, and a dark mono install pill."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Cream ground #f3ede2 with a soft radial lightening (#f8f3ea centre → #ebe3d4 edge). Surfaces are #fffaf2 with 26px radius, a #e2d9c9 hairline and a warm low shadow (0 30px 80px rgba(90,60,30,0.14)). Ink #1d1b18, muted #8f877b. No pure white or black backgrounds.\n- Headlines in Fraunces 800, 76–150px, tracking -0.02em; exactly one word per headline in coral #ec5b3c Fraunces 700 italic.\n- Titles, logos and big words resolve from blur (blur 8–26px and scale 1.08 → sharp, power3.out, ~0.6–0.95s) instead of fading; after a hard cut the next headline rises 30px.\n- Show the subject doing one concrete thing rather than abstract decoration: e.g. input typing with a coral caret, results rising in sequence, the key one swept by a coral-tint #fbe3d9 highlighter (power2.inOut).\n- Prove a claim with one number: a before/after bar pair (ink vs coral, expo.out) and a big coral figure (~260px) that slams in tilted -8° from scale 1.7 with back.out(2.2) while the old value is struck through. Add a small muted note saying what was measured.\n- Inter 400–600 for UI text (24–34px); JetBrains Mono 500 (26–30px) for code, paths or commands, set in a dark #1d1b18 pill with cream text.\n- Four beats of ~2s with hard cuts. Close on mark + name and a two-part line whose second half is coral italic.\n- Avoid cold greys, neon, heavy gradients and more than one italic word per headline.",
+  "example": "The preview asks 'What are we shipping?', then a search card types a query and finds code files, two bars compare cost before and after with a coral −42%, and it ends on a logo with an install command. Don't copy this scene unless asked."
 }

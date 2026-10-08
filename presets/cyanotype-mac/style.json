@@ -1,8 +1,8 @@
 {
   "id": "cyanotype-mac",
   "name": "Cyanotype Mac",
-  "tagline": "A beige 1984 compact computer on a dithered cobalt sky, its 1-bit desktop clicking through your product.",
-  "description": "Retro-desktop product demo style for minimalist apps, browsers and writing tools. A CSS-drawn beige compact computer sits centred on a full-bleed ultramarine cyanotype backdrop of dithered clouds and two reaching hands; its tiny black-and-white screen plays a classic desktop: menu bar, striped title bars, zoom-rect window opens, a clicking arrow cursor, menus and dialog boxes in a pixel font. A dock of small blue icons sits at the bottom; the camera slowly pushes in, then rushes into the screen for a crisp pixel title card.",
+  "tagline": "Dithered cobalt cyanotype, crisp 1-bit pixel details and stepped, clicky motion.",
+  "description": "Retro, dreamy style for minimalist apps, tools and quiet launches. Everything sits on a full-bleed ultramarine cyanotype: cloud noise hard-thresholded into two dither tones, with shapes cut out as dithered prints that cast dark offset shadows. Details are strictly 1-bit black and white (pixel fonts, 2px borders, hard drop shadows, checker fills, striped title bars), changes snap with stepped eases and the camera creeps in slowly. The preview puts a beige 1984 compact computer on that sky, its tiny screen clicking through a writing app before rushing into a pixel title card.",
   "mood": [
     "nostalgic",
     "precise",
@@ -50,13 +50,13 @@
     "dock": "back.out(1.6)"
   },
   "transitions": [
-    "slow camera push-in toward the screen (scale 1 → 1.42 over ~5.5s), then a 1s power3.inOut rush until the screen fills the frame",
-    "on-screen changes are instant 1-bit swaps: dashed zoom-rects for window opens, inverted highlights for clicks",
-    "CRT boot: a black cover collapses with steps(4)"
+    "slow camera push-in toward the main subject (scale 1 → 1.42 over ~5.5s), then a 1s power3.inOut rush until it fills the frame",
+    "pixel changes are instant 1-bit swaps: dashed zoom-rects for panel opens, inverted highlights for clicks",
+    "boot-style open: a black cover collapses with steps(4)"
   ],
   "textAnimations": [
-    "document text types character by character at ~30 chars/s with a blinking block caret",
-    "menu items invert (black bg, white text) on hover and click",
+    "text types character by character at ~30 chars/s with a blinking block caret",
+    "labels and menu items invert (black bg, white text) on hover and click",
     "title card pieces appear with stepped eases (steps(3–7)), never smooth fades"
   ],
   "rhythm": {
@@ -70,5 +70,6 @@
     "dither",
     "desktop-ui"
   ],
-  "guide": "- Backdrop is a full-bleed cobalt #1d1dd3 cyanotype: feTurbulence cloud noise plus fine noise, hard-thresholded with feColorMatrix (alpha slope ~30) into two dither tones #7272ff and #dcdcff. Hands or other figures are masks over the same dithered texture with a #10109a offset shadow. Everything outside the screen is blue monochrome.\n- The computer is pure CSS: beige #e4dbc4 body with bevel shadows, recessed bezel, floppy slot, vents, a plain badge (never a real logo). It stays centred; only the camera moves.\n- Build the screen UI on a 2x canvas (580x436) scaled 0.5: strictly black and white, 2px borders, 4px hard drop shadows, 50% checker desktop, striped title bars, Pixelify Sans 17–23px and Silkscreen 12–15px for labels.\n- Script real UI beats 0.4–1s apart: dashed zoom-rect (steps(5), 0.25s) before a window opens, typing at ~0.035s/char, cursor moves with power2.inOut 0.2–0.45s, clicks invert the target, a modal dialog with a ringed default OK button.\n- Camera: slow push scale 1 → ~1.4 with power1.inOut, then a ~1s power3.inOut rush to ~3.85x so the screen fills the frame; fade the bottom dock away just before the rush.\n- End on the screen itself: white title card with a 104px bold pixel wordmark, a dotted rule, one tagline and a Silkscreen URL, each revealed with stepped eases. Avoid smooth fades, gradients or colour on the screen."
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- The world is a full-bleed cobalt cyanotype: a #2a2ae8 → #1414b8 radial base, then two layers of feTurbulence cloud noise (baseFrequency ~0.0014 0.0036, 5 octaves) mixed with fine noise (~0.32) and hard-thresholded with feColorMatrix (alpha slope ~30) into dither tones #7272ff and #dcdcff. Blue monochrome only; no other hues.\n- Draw the subject itself as a large cyanotype print, not as a picture on a screen or device: an SVG silhouette used as a mask, filled #3a3ae4 with its own thresholded noise speckle (#dcdcff), a #0c0c86 outline made with feMorphology dilate (~6px), a #10109a copy offset ~10×22px at 70% opacity as a hard shadow, and interior detail lines as 4px #1414b8 strokes. Let it fill a third to half of the frame.\n- Add 1-bit pixel accents in pure #000 and #fff on top: 2px borders, 4px hard drop shadows, a 4px 50% checker fill, striped title bars, dotted rules, an arrow cursor, instant inverted highlights. Use them for labels, readouts, small panels and icons around the subject, never as gradients or soft glows.\n- Type: Pixelify Sans 400/700 at 17–23px for labels and ~104px bold for titles; Silkscreen 12–15px caps with 0.1em tracking for tiny captions, clocks and URLs.\n- Motion is stepped and clicky: pixel elements appear with steps(3–7) eases, dashed zoom-rects (steps(5), 0.25s) open panels, highlights invert instantly, text types at ~0.035s per character with a blinking block caret. Only the subject and the camera move smoothly (power2.inOut, power1.inOut).\n- Camera: one continuous shot with a beat every 0.5–1s, slowly pushing in (scale 1 → ~1.4, power1.inOut), then a ~1s power3.inOut rush into the key element or a white 1-bit title card (bold pixel wordmark, dotted rule, one line, Silkscreen URL, each revealed with stepped eases).\n- Optional motifs: frame one detail in a small 1-bit window with a striped title bar; dithered reaching hands at the edges; a translucent blue dock of rounded icons along the bottom. Beige #e4dbc4 / #bcaf90 is at most a small warm accent.\n- Avoid putting the subject on a computer or phone screen unless asked, smooth fades, soft gradients beyond the base sky, colour inside 1-bit elements and real logos.",
+  "example": "The preview shows a beige 1984 compact computer on a cyanotype sky whose 1-bit screen clicks through a writing app, then rushes into a pixel title card. Don't copy this scene unless asked."
 }
