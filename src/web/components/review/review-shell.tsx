@@ -92,6 +92,24 @@ type SaveFilePicker = (options: {
   types: { description: string; accept: Record<string, string[]> }[];
 }) => Promise<FileSystemFileHandle>;
 
+const PICKER_BLOCKED_KEY = "framejam:save-picker-blocked";
+
+function pickerBlocked() {
+  try {
+    return localStorage.getItem(PICKER_BLOCKED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markPickerBlocked() {
+  try {
+    localStorage.setItem(PICKER_BLOCKED_KEY, "1");
+  } catch {
+    // Without storage the picker is simply tried again next time.
+  }
+}
+
 /**
  * Saves a copy of a version's render where the user picks. Chromium browsers (Chrome, Edge, Cursor's built-in
  * browser) show their own save dialog; elsewhere the server opens the system's, or saves to Downloads without one.
@@ -101,7 +119,7 @@ async function downloadVideo(review: Review, version: ReviewVersion) {
   const suggestedName = `${review.title} v${version.number}`.replace(/[\\/:*?"<>|]+/g, "-").trim() || "video";
   const picker = (window as { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker;
   try {
-    if (picker) {
+    if (picker && !pickerBlocked()) {
       let handle: FileSystemFileHandle | undefined;
       try {
         handle = await picker({ suggestedName: suggestedName + ext, types: [{ description: "Video", accept: { "video/mp4": [ext] } }] });
@@ -112,9 +130,20 @@ async function downloadVideo(review: Review, version: ReviewVersion) {
       if (handle) {
         const res = await fetch(videoUrl(review.id, version.number));
         if (!res.ok || !res.body) throw new Error("Couldn't read the video");
-        await res.body.pipeTo(await handle.createWritable());
-        toast.success("Video saved", { description: handle.name });
-        return;
+        let writable: FileSystemWritableFileStream | undefined;
+        try {
+          writable = await handle.createWritable();
+        } catch {
+          // Some embedded browsers show the picker but refuse to write. Use the system dialog from now on.
+          await res.body.cancel();
+          await (handle as FileSystemFileHandle & { remove?: () => Promise<void> }).remove?.().catch(() => {});
+          markPickerBlocked();
+        }
+        if (writable) {
+          await res.body.pipeTo(writable);
+          toast.success("Video saved", { description: handle.name });
+          return;
+        }
       }
     }
     const saved = await api.downloadVideo(review.id, version.number);
