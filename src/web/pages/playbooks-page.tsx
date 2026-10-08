@@ -101,7 +101,7 @@ export function PlaybooksPage() {
     const q = query.trim().toLowerCase();
     return (data?.playbooks ?? []).filter(
       (p) =>
-        (format === "All" || p.format === format || p.format === "any") &&
+        (format === "All" || (format === "9:16" ? p.previewShape === "tall" : p.previewShape === "wide")) &&
         (!q || [p.name, p.tagline, p.description, p.get, ...p.bring, ...(p.tags ?? [])].join(" ").toLowerCase().includes(q)),
     );
   }, [data, format, query]);

@@ -1,8 +1,10 @@
-import { ArrowUpRight, ChevronLeft } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChevronDown, ChevronLeft } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FeedbackButton } from "@/components/feedback";
+import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
 import { api, type PlaybookSummary, type PresetSummary } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
 export const PLAYBOOK_SELECTED_EVENT = "framejam:playbook-selected";
@@ -72,7 +74,38 @@ const NAV = [
   { to: "/", label: "Projects", end: true },
 ];
 
-/** App header on every top-level page: wordmark, the main pages, Docs, and the style and playbook in use. */
+/** The playbook and style your agent uses next, as one chip that opens a menu to see or change either. */
+function InUseChip({ style, playbook }: { style: PresetSummary | null; playbook: PlaybookSummary | null }) {
+  const navigate = useNavigate();
+  const names = [playbook?.name, style?.name].filter(Boolean).join(" · ");
+  return (
+    <Menu
+      label="Playbook and style in use"
+      trigger={
+        <button
+          type="button"
+          className={cn("fc-style-chip fc-inuse", !names && "empty")}
+          title="The playbook and style your agent uses for the next video"
+          aria-label={names ? `In use: ${names}` : "No playbook or style picked"}
+        >
+          {style ? <Dots colors={Object.values(style.palette)} /> : names ? <BookOpen className="fc-i xs" aria-hidden /> : null}
+          <span className="fc-truncate">{names || "Nothing picked"}</span>
+          <ChevronDown className="fc-i xs" aria-hidden />
+        </button>
+      }
+    >
+      <MenuLabel>Playbook</MenuLabel>
+      <MenuItem onSelect={() => navigate(playbook ? `/playbooks/${playbook.id}` : "/playbooks")}>
+        {playbook ? playbook.name : "Pick a playbook"}
+      </MenuItem>
+      <MenuSeparator />
+      <MenuLabel>Style</MenuLabel>
+      <MenuItem onSelect={() => navigate(style ? `/styles/${style.id}` : "/styles")}>{style ? style.name : "Pick a style"}</MenuItem>
+    </Menu>
+  );
+}
+
+/** App header on every top-level page: wordmark, the main pages, Docs, and the playbook and style in use. */
 export function HomeHeader() {
   const style = useSelectedStyle();
   const playbook = useSelectedPlaybook();
@@ -93,33 +126,7 @@ export function HomeHeader() {
       </nav>
       <span className="fc-grow" />
       <FeedbackButton />
-      {playbook && (
-        <Link
-          to={`/playbooks/${playbook.id}`}
-          className="fc-style-chip"
-          title="Your selected playbook. Your agent follows it for the next video."
-          aria-label={`Selected playbook: ${playbook.name}`}
-        >
-          <span className="lbl">Playbook</span>
-          <span className="fc-truncate">{playbook.name}</span>
-        </Link>
-      )}
-      {style ? (
-        <Link
-          to={`/styles/${style.id}`}
-          className="fc-style-chip"
-          title="Your selected style. Your agent uses it for the next video."
-          aria-label={`Selected style: ${style.name}`}
-        >
-          <Dots colors={Object.values(style.palette)} />
-          <span className="lbl">Selected style</span>
-          <span className="fc-truncate">{style.name}</span>
-        </Link>
-      ) : style === null ? (
-        <Link to="/styles" className="fc-style-chip empty">
-          No style picked
-        </Link>
-      ) : null}
+      {style !== undefined && <InUseChip style={style} playbook={playbook} />}
     </header>
   );
 }

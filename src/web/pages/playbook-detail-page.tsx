@@ -1,14 +1,15 @@
-import { ArrowUpRight, Check, Copy } from "lucide-react";
+import { ArrowUpRight, Check, ChevronRight, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { BackHeader } from "@/components/header";
+import { BackHeader, Dots } from "@/components/header";
 import { PromptBlock } from "@/components/setup-steps";
 import { NotHere } from "@/components/states";
-import { api, copyText, type PlaybookSummary } from "@/lib/api";
+import { api, copyText, type PlaybookSummary, type PresetSummary } from "@/lib/api";
 import { usePlaybookSelection } from "@/lib/use-playbook";
 import { cn } from "@/lib/utils";
-import { costBadge, groupNeeds, needLabel, playbookPrompt, projectLabel, stylesSentence } from "../../shared/playbooks";
+import type { PlaybookNeed } from "../../shared/types";
+import { costBadge, groupNeeds, playbookPrompt, projectLabel, stylesPredicate } from "../../shared/playbooks";
 
 async function copy(text: string, what: string) {
   try {
@@ -19,22 +20,68 @@ async function copy(text: string, what: string) {
   }
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+function SideBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="fc-sect">
-      <header>
-        <h2 className="fc-h2">{title}</h2>
-        {hint && <span className="fc-caption">{hint}</span>}
-      </header>
+    <div className="fc-pb-block">
+      <h2 className="fc-pb-label">{title}</h2>
       {children}
-    </section>
+    </div>
+  );
+}
+
+function NeedLine({ need }: { need: PlaybookNeed }) {
+  const cost = need.where === "service" ? need.cost : need.where === "computer" ? "free" : undefined;
+  return (
+    <li>
+      <span className="n">
+        {need.name}
+        {need.optional && <span className="opt"> · optional</span>}
+      </span>
+      {cost && <span className={cn("fc-pb-cost", cost === "paid" && "paid")}>{cost}</span>}
+      {need.examples?.length ? <span className="ex">{need.examples.slice(0, 3).join(", ")}</span> : null}
+    </li>
+  );
+}
+
+/** Plays the example, with a loading state until the first frame arrives and a message if it can't load. */
+function ExampleVideo({ p }: { p: PlaybookSummary }) {
+  const [state, setState] = useState<"loading" | "ready" | "error">(p.previewUrl ? "loading" : "error");
+  const tall = p.previewShape !== "wide";
+  return (
+    <div className={cn("fc-style-media fc-pb-media", tall && "tall")}>
+      {p.previewUrl && state !== "error" ? (
+        <video
+          src={p.previewUrl}
+          poster={p.posterUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          controls
+          onLoadedData={() => setState("ready")}
+          onError={() => setState("error")}
+        />
+      ) : p.posterUrl ? (
+        <img src={p.posterUrl} alt="" />
+      ) : (
+        <div className="fc-style-nopreview" style={{ aspectRatio: tall ? "9 / 16" : "16 / 9" }}>
+          No example video for this playbook yet.
+        </div>
+      )}
+      {state === "loading" && (
+        <div className="fc-pb-loading" role="status">
+          <Loader2 className="fc-i sm fc-spin" /> Loading the example
+        </div>
+      )}
+      {state === "error" && p.previewUrl && <div className="fc-pb-loading">The example video couldn&apos;t load. Check your connection.</div>}
+    </div>
   );
 }
 
 export function PlaybookDetailPage() {
   const { id = "" } = useParams();
   const [data, setData] = useState<{ playbook: PlaybookSummary; selected: string | null } | null>(null);
-  const [styleName, setStyleName] = useState<string>();
+  const [style, setStyle] = useState<PresetSummary | null>(null);
   const [missing, setMissing] = useState(false);
   const selection = usePlaybookSelection(null);
   const { setSelected } = selection;
@@ -50,7 +97,7 @@ export function PlaybookDetailPage() {
       .catch(() => setMissing(true));
     api
       .presets()
-      .then(({ selected, presets }) => setStyleName(presets.find((p) => p.id === selected)?.name))
+      .then(({ selected, presets }) => setStyle(presets.find((p) => p.id === selected) ?? null))
       .catch(() => {});
   }, [id, setSelected]);
 
@@ -80,22 +127,13 @@ export function PlaybookDetailPage() {
   const { playbook: p } = data;
   const inUse = selection.selected === p.id;
   const prompt = playbookPrompt(p);
+  const predicate = stylesPredicate(p);
 
   return (
     <div className="fc-screen">
       <BackHeader to="/playbooks" title={p.name} sub={`Playbook · by ${p.creator.name}`} />
       <main className="fc-main fc-style-page">
-        <div className={cn("fc-style-media", p.previewShape !== "wide" && "tall")}>
-          {p.previewUrl ? (
-            <video src={p.previewUrl} poster={p.posterUrl} autoPlay muted loop playsInline controls />
-          ) : p.posterUrl ? (
-            <img src={p.posterUrl} alt="" />
-          ) : (
-            <div className="fc-style-nopreview" style={{ aspectRatio: "16 / 9" }}>
-              No example video for this playbook yet. Add a preview.mp4 to its folder.
-            </div>
-          )}
-        </div>
+        <ExampleVideo key={p.id} p={p} />
 
         <div className="fc-style-head">
           <div className="fc-grow">
@@ -126,81 +164,109 @@ export function PlaybookDetailPage() {
           </div>
         </div>
 
-        <div className="fc-sects">
-          <p className="fc-style-desc">{p.description}</p>
-          <div className="fc-two">
-            <Section title="You bring">
-              <ul className="fc-list">
-                {p.bring.map((b) => (
-                  <li key={b}>{b}</li>
+        <div className="fc-pb-body">
+          <div className="fc-pb-main">
+            <p className="fc-style-desc">{p.description}</p>
+
+            <div className="fc-pb-io">
+              <div className="fc-pb-io-card">
+                <h2 className="fc-pb-label">You bring</h2>
+                <ul className="fc-pb-bullets">
+                  {p.bring.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="fc-pb-io-card">
+                <h2 className="fc-pb-label">You get</h2>
+                <p>{p.get}</p>
+              </div>
+            </div>
+
+            <section className="fc-pb-section">
+              <h2 className="fc-pb-label">What your agent does</h2>
+              <ol className="fc-pb-steps">
+                {p.steps.map((s) => (
+                  <li key={s}>{s}</li>
                 ))}
-              </ul>
-            </Section>
-            <Section title="You get">
-              <p className="fc-sect-note">{p.get}</p>
-            </Section>
+              </ol>
+            </section>
+
+            <section className="fc-pb-section">
+              <h2 className="fc-pb-label">Prompt</h2>
+              <p className="fc-sect-note">Paste it into your agent chat and add what you have.</p>
+              <PromptBlock text={prompt} primary />
+            </section>
           </div>
-          <Section title="What you need">
-            <div className="fc-col" style={{ gap: 12 }}>
+
+          <aside className="fc-pb-side">
+            <SideBlock title="What you need">
               {groupNeeds(p.needs).map((g) => (
-                <div key={g.where}>
-                  <div className="fc-caption" style={{ marginBottom: 4 }}>
-                    {g.label}
-                  </div>
-                  <ul className="fc-list">
+                <div key={g.where} className="fc-pb-group">
+                  <div className="fc-pb-sublabel">{g.label}</div>
+                  <ul className="fc-pb-needs">
                     {g.needs.map((n) => (
-                      <li key={n.name}>{needLabel(n)}</li>
+                      <NeedLine key={n.name} need={n} />
                     ))}
                   </ul>
                 </div>
               ))}
-              <p className="fc-sect-note">{projectLabel(p.project)}</p>
-            </div>
-          </Section>
-          <Section title="Styles">
-            <p className="fc-sect-note">{stylesSentence(p, styleName)}</p>
-          </Section>
-          <Section title="Steps" hint="What your agent does">
-            <ol className="fc-list">
-              {p.steps.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ol>
-          </Section>
-          <Section title="Prompt" hint="Paste into your agent chat and add what you have">
-            <PromptBlock text={prompt} primary />
-          </Section>
-          <Section title="Made by">
-            <div className="fc-col" style={{ gap: 6 }}>
-              <p className="fc-sect-note">
+              <p className="fc-pb-note">{projectLabel(p.project)}</p>
+            </SideBlock>
+
+            <SideBlock title="Style">
+              {predicate && style ? (
+                <p className="fc-pb-style">
+                  <Link to="/styles" className="fc-pb-var" title="Pick a different style">
+                    <Dots colors={Object.values(style.palette)} />
+                    <span className="fc-truncate">{style.name}</span>
+                    <ChevronRight className="fc-i xs" aria-hidden />
+                  </Link>{" "}
+                  {predicate}
+                </p>
+              ) : predicate ? (
+                <>
+                  <p className="fc-pb-style">Your style {predicate}</p>
+                  <Link to="/styles" className="fc-pb-var empty">
+                    Pick a style <ChevronRight className="fc-i xs" aria-hidden />
+                  </Link>
+                </>
+              ) : (
+                <p className="fc-pb-note">This playbook has its own look. Styles aren&apos;t used.</p>
+              )}
+            </SideBlock>
+
+            <SideBlock title="Made by">
+              <p className="fc-pb-made">
                 {p.creator.url ? (
                   <a href={p.creator.url} target="_blank" rel="noreferrer">
-                    {p.creator.name} <ArrowUpRight className="fc-i xs" aria-hidden />
+                    {p.creator.name}
+                    <ArrowUpRight className="fc-i xs" aria-hidden />
                   </a>
                 ) : (
-                  p.creator.name
+                  <span>{p.creator.name}</span>
                 )}
-                {p.license ? ` · ${p.license} license` : ""}
+                {p.inspiredBy?.length ? (
+                  <span className="muted">
+                    {" · Inspired by "}
+                    {p.inspiredBy.map((i, n) => (
+                      <span key={i.name}>
+                        {n > 0 && ", "}
+                        {i.url ? (
+                          <a href={i.url} target="_blank" rel="noreferrer">
+                            {i.name}
+                          </a>
+                        ) : (
+                          i.name
+                        )}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
+                {p.license && <span className="muted"> · {p.license} license</span>}
               </p>
-              {p.inspiredBy?.length ? (
-                <p className="fc-sect-note">
-                  Inspired by{" "}
-                  {p.inspiredBy.map((i, n) => (
-                    <span key={i.name}>
-                      {n > 0 && ", "}
-                      {i.url ? (
-                        <a href={i.url} target="_blank" rel="noreferrer">
-                          {i.name}
-                        </a>
-                      ) : (
-                        i.name
-                      )}
-                    </span>
-                  ))}
-                </p>
-              ) : null}
-            </div>
-          </Section>
+            </SideBlock>
+          </aside>
         </div>
       </main>
     </div>

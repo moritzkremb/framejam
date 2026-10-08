@@ -29,19 +29,24 @@ export function projectLabel(project: Playbook["project"]): string {
   return project === "new" ? "Starts a new project." : "Works in your existing project, with the tool it already uses.";
 }
 
-/** One plain sentence on how a style combines with the playbook. `styleName` is the selected style, if any. */
-export function stylesSentence(p: Pick<Playbook, "styles" | "stylesNote">, styleName?: string): string {
-  const subject = styleName ?? "Your style";
+/** What follows the style's name in the styles sentence, or null when the playbook doesn't use styles. */
+export function stylesPredicate(p: Pick<Playbook, "styles" | "stylesNote">): string | null {
   switch (p.styles) {
     case "all":
-      return `${subject} sets the whole look.`;
+      return "sets the whole look.";
     case "parts":
-      return `${subject} sets the ${p.stylesNote ?? "graphics"}.`;
+      return `sets the ${p.stylesNote ?? "graphics"}.`;
     case "inspiration":
-      return `${subject} is the starting point. The video gets its own look built from it.`;
+      return "is the starting point. The video gets its own look built from it.";
     default:
-      return "This playbook has its own look. Styles aren't used.";
+      return null;
   }
+}
+
+/** One plain sentence on how a style combines with the playbook. `styleName` is the selected style, if any. */
+export function stylesSentence(p: Pick<Playbook, "styles" | "stylesNote">, styleName?: string): string {
+  const rest = stylesPredicate(p);
+  return rest ? `${styleName ?? "Your style"} ${rest}` : "This playbook has its own look. Styles aren't used.";
 }
 
 /** What "Copy prompt" puts on the clipboard; the user adds their input after it. */
