@@ -66,15 +66,13 @@ function ProjectCard({ review }: { review: ReviewListItem }) {
 export function ProjectsPage() {
   const [reviews, setReviews] = useState<ReviewListItem[] | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
-  const [styleName, setStyleName] = useState<string | undefined>();
   const [error, setError] = useState<unknown>(null);
 
   const load = useCallback(() => {
-    Promise.all([api.reviews(), api.health(), api.presets()])
-      .then(([r, h, p]) => {
+    Promise.all([api.reviews(), api.health()])
+      .then(([r, h]) => {
         setReviews(r);
         setHealth(h);
-        setStyleName(p.presets.find((x) => x.id === p.selected)?.name);
         setError(null);
       })
       .catch(setError);
@@ -120,7 +118,7 @@ export function ProjectsPage() {
                     Three messages to paste into your agent chat. Each step ticks itself off, and this goes away once your agent connects.
                   </p>
                 </div>
-                <SetupSteps health={health} agentName={agent} styleName={styleName} hasReview={reviews.length > 0} />
+                <SetupSteps health={health} agentName={agent} hasReview={reviews.length > 0} />
               </section>
             )}
 

@@ -39,7 +39,7 @@ Resolve from the request and the files; ask only what's left, in one round:
   (outline, framing, audio, the screen takes to record). Never fake a founder with an avatar unless asked.
 - **The one-line promise** and the **CTA** (URL, waitlist, "free for the first N", install command).
 - **Length and format:** X 60–90 s 16:9 (default); 9:16 ≤ 60 s for Reels/TikTok.
-- **Style:** call `get_selected_preset`. A FrameJam style sets the title cards, captions and callout graphics;
+- **Style:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style sets the title cards, captions and callout graphics;
   the founder footage stays as shot. No style: use the product's brand colors and fonts.
 - **Transcription:** local whisper (free, default) or a service the user already has.
 - **Music:** `scripts/launch_bed.py` (free; use `mood: "night"` and low gain under speech), the user's track, or a

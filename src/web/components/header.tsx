@@ -1,13 +1,9 @@
-import { ArrowUpRight, BookOpen, ChevronDown, ChevronLeft } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { ArrowUpRight, ChevronLeft } from "lucide-react";
+import type { ReactNode } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { FeedbackButton } from "@/components/feedback";
-import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
-import { api, type PlaybookSummary, type PresetSummary } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { pickHref, useActivePick } from "@/lib/use-active-pick";
 
-export const PRESET_SELECTED_EVENT = "framejam:preset-selected";
-export const PLAYBOOK_SELECTED_EVENT = "framejam:playbook-selected";
 export const DOCS_URL = "https://www.framejam.ai/docs";
 
 export function Wordmark() {
@@ -17,45 +13,6 @@ export function Wordmark() {
       <img className="on-light" src="/brand/lockup-light.svg" alt="" />
     </Link>
   );
-}
-
-/** The style in use, as its colour dots and name. Updates when a style is picked anywhere in the app. */
-function useSelectedStyle() {
-  const [style, setStyle] = useState<PresetSummary | null | undefined>(undefined);
-  useEffect(() => {
-    let cancelled = false;
-    const refresh = () =>
-      api
-        .presets()
-        .then(({ selected, presets }) => !cancelled && setStyle(presets.find((p) => p.id === selected) ?? null))
-        .catch(() => !cancelled && setStyle(null));
-    void refresh();
-    window.addEventListener(PRESET_SELECTED_EVENT, refresh);
-    return () => {
-      cancelled = true;
-      window.removeEventListener(PRESET_SELECTED_EVENT, refresh);
-    };
-  }, []);
-  return style;
-}
-
-function useSelectedPlaybook() {
-  const [playbook, setPlaybook] = useState<PlaybookSummary | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    const refresh = () =>
-      api
-        .playbooks()
-        .then(({ selected, playbooks }) => !cancelled && setPlaybook(playbooks.find((p) => p.id === selected) ?? null))
-        .catch(() => !cancelled && setPlaybook(null));
-    void refresh();
-    window.addEventListener(PLAYBOOK_SELECTED_EVENT, refresh);
-    return () => {
-      cancelled = true;
-      window.removeEventListener(PLAYBOOK_SELECTED_EVENT, refresh);
-    };
-  }, []);
-  return playbook;
 }
 
 export function Dots({ colors, size }: { colors: string[]; size?: number }) {
@@ -74,41 +31,21 @@ const NAV = [
   { to: "/", label: "Projects", end: true },
 ];
 
-/** The playbook and style your agent uses next, as one chip that opens a menu to see or change either. */
-function InUseChip({ style, playbook }: { style: PresetSummary | null; playbook: PlaybookSummary | null }) {
-  const navigate = useNavigate();
-  const names = [playbook?.name, style?.name].filter(Boolean).join(" · ");
+/** Shown only while an agent waits for the user to pick a playbook and style for a video. */
+function WaitingPickChip() {
+  const pick = useActivePick();
+  const { pathname } = useLocation();
+  if (!pick || pathname.startsWith("/pick/")) return null;
   return (
-    <Menu
-      label="Playbook and style in use"
-      trigger={
-        <button
-          type="button"
-          className={cn("fc-style-chip fc-inuse", !names && "empty")}
-          title="The playbook and style your agent uses for the next video"
-          aria-label={names ? `In use: ${names}` : "No playbook or style picked"}
-        >
-          {style ? <Dots colors={Object.values(style.palette)} /> : names ? <BookOpen className="fc-i xs" aria-hidden /> : null}
-          <span className="fc-truncate">{names || "Nothing picked"}</span>
-          <ChevronDown className="fc-i xs" aria-hidden />
-        </button>
-      }
-    >
-      <MenuLabel>Playbook</MenuLabel>
-      <MenuItem onSelect={() => navigate(playbook ? `/playbooks/${playbook.id}` : "/playbooks")}>
-        {playbook ? playbook.name : "Pick a playbook"}
-      </MenuItem>
-      <MenuSeparator />
-      <MenuLabel>Style</MenuLabel>
-      <MenuItem onSelect={() => navigate(style ? `/styles/${style.id}` : "/styles")}>{style ? style.name : "Pick a style"}</MenuItem>
-    </Menu>
+    <Link to={pickHref(pick)} className="fc-style-chip fc-waiting" title="Your agent is waiting for you to pick">
+      <span className="dot" aria-hidden />
+      <span className="fc-truncate">Your agent is waiting</span>
+    </Link>
   );
 }
 
-/** App header on every top-level page: wordmark, the main pages, Docs, and the playbook and style in use. */
+/** App header on every top-level page: wordmark, the main pages, Docs, and a chip while an agent waits for a pick. */
 export function HomeHeader() {
-  const style = useSelectedStyle();
-  const playbook = useSelectedPlaybook();
   return (
     <header className="fc-header">
       <Wordmark />
@@ -126,7 +63,7 @@ export function HomeHeader() {
       </nav>
       <span className="fc-grow" />
       <FeedbackButton />
-      {style !== undefined && <InUseChip style={style} playbook={playbook} />}
+      <WaitingPickChip />
     </header>
   );
 }

@@ -38,7 +38,7 @@ Decide once, write it in `BRIEF.md`, ask only what can't be worked out:
   `references/layouts.md`; never convert the project. Say what the bundled template would have added (the
   data-driven build and checks). For a fresh project, use Hyperframes with the template in `template/`.
 - **Look.** The template's default look is ready to use. If the user picked a FrameJam style
-  (`get_selected_preset`), map it onto `theme` in edit.json (fields in `references/layouts.md`, "Look"): background
+  (from `wait_for_pick`, or `get_preset` when the user names one), map it onto `theme` in edit.json (fields in `references/layouts.md`, "Look"): background
   colours, ink and accent, fonts (bundle the files and their license), caption pill, card radius. Layouts, timing and
   caption positions stay as described.
 - **Transcription.** Free and local by default (`references/transcription.md`); paid only with the user's OK.

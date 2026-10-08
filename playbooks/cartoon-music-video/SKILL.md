@@ -39,7 +39,7 @@ Resolve from the request and the environment; ask only what can't be resolved, i
 - **Concept and target:** what the video is for, the reference video if any, the audience, length (≤ 2:20 for X; ~2:10 default).
 - **Song:** supplied master (its lyrics win), or write lyrics and generate it with the user's tool of choice. Music generation is usually paid.
 - **Generators:** check what this runtime can already use (a native image tool, connected MCP/app connectors, configured API keys, logged-in web apps) and the user's stated preferences. Offer options from `providers.md` only when nothing is available or the choice matters; prefer what costs nothing extra.
-- **Style:** call `get_selected_preset`. If the user picked a FrameJam style, use it as the starting point for STYLE.md (palette, type, motion feel), then build this video's own looks from it. No style: design the looks from the concept.
+- **Style:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). If the user picked a FrameJam style, use it as the starting point for STYLE.md (palette, type, motion feel), then build this video's own looks from it. No style: design the looks from the concept.
 - **Cast:** fictional characters (default), a mascot, a product, the user's own likeness (own photos, consent), or none.
 - **Footage:** real recordings available? Generated clips only with an explicit budget. Default: the zero-spend route.
 - **Brand:** official logo files and colour tokens, the copy and facts allowed on screen.

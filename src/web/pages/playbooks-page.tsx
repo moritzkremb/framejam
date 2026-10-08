@@ -1,22 +1,21 @@
-import { Check, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HomeHeader } from "@/components/header";
 import { isOffline, Offline } from "@/components/states";
 import { api, type PlaybookSummary } from "@/lib/api";
-import { usePlaybookSelection } from "@/lib/use-playbook";
-import { cn } from "@/lib/utils";
+import { PickBanner } from "@/components/pick-banner";
 import { costBadge } from "../../shared/playbooks";
 
 const FORMATS = ["All", "16:9", "9:16"] as const;
 
-function PlaybookCard({ playbook, inUse, busy, onUse }: { playbook: PlaybookSummary; inUse: boolean; busy: boolean; onUse(): void }) {
+function PlaybookCard({ playbook }: { playbook: PlaybookSummary }) {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const open = () => navigate(`/playbooks/${playbook.id}`);
   return (
     <div
-      className={cn("fc-scard", inUse && "is-selected")}
+      className="fc-scard"
       data-testid="playbook-card"
       role="link"
       tabIndex={0}
@@ -46,26 +45,6 @@ function PlaybookCard({ playbook, inUse, busy, onUse }: { playbook: PlaybookSumm
         ) : playbook.posterUrl ? (
           <img src={playbook.posterUrl} alt="" className="contain" />
         ) : null}
-        <button
-          type="button"
-          className={cn("fc-use use", inUse && "on")}
-          data-testid="use-playbook-quick"
-          disabled={busy}
-          aria-pressed={inUse}
-          onClick={(e) => {
-            e.stopPropagation();
-            onUse();
-          }}
-        >
-          {inUse ? (
-            <>
-              <Check className="fc-i" />
-              In use
-            </>
-          ) : (
-            "Use"
-          )}
-        </button>
         <span className="br fc-badge on-video">{costBadge(playbook.needs)}</span>
       </div>
       <div>
@@ -80,22 +59,17 @@ function PlaybookCard({ playbook, inUse, busy, onUse }: { playbook: PlaybookSumm
 }
 
 export function PlaybooksPage() {
-  const [data, setData] = useState<{ selected: string | null; playbooks: PlaybookSummary[] } | null>(null);
+  const [data, setData] = useState<{ playbooks: PlaybookSummary[] } | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [format, setFormat] = useState<string>("All");
   const [query, setQuery] = useState("");
-  const selection = usePlaybookSelection(null);
-  const { setSelected } = selection;
 
   useEffect(() => {
     api
       .playbooks()
-      .then((d) => {
-        setData(d);
-        setSelected(d.selected);
-      })
+      .then(setData)
       .catch(setError);
-  }, [setSelected]);
+  }, []);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -110,10 +84,11 @@ export function PlaybooksPage() {
     <div className="fc-screen">
       <HomeHeader />
       <main className="fc-main">
+        <PickBanner />
         <div>
           <h1 className="fc-h1">Playbooks</h1>
           <p className="fc-lede">
-            A playbook is how a kind of video gets made: what you bring, the steps and the tools. Styles set the look. Press Use, and your agent follows it.
+            A playbook is how a kind of video gets made: what you bring, the steps and the tools. Styles set the look. Your agent asks you to pick one when it starts a video, or copy a prompt from a playbook's page.
           </p>
         </div>
         {error && !data ? (
@@ -167,9 +142,6 @@ export function PlaybooksPage() {
                   <PlaybookCard
                     key={p.id}
                     playbook={p}
-                    inUse={selection.selected === p.id}
-                    busy={selection.busy === p.id}
-                    onUse={() => void selection.toggle(p)}
                   />
                 ))}
               </div>

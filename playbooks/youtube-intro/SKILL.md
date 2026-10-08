@@ -34,7 +34,7 @@ Resolve from the request and the files; ask only what can't be resolved, in one 
 - **Tool:** use the project's own tool (Hyperframes, Remotion, an NLE, plain ffmpeg). Starting fresh with Layout A:
   Hyperframes (`npx hyperframes init`; if the Hyperframes skills are installed, use them, otherwise
   `npx hyperframes docs`). Layout B can be done entirely with `scripts/framed.py` (ffmpeg).
-- **Style:** call `get_selected_preset`. A FrameJam style sets the captions, cards and graphics (fonts, palette,
+- **Style:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style sets the captions, cards and graphics (fonts, palette,
   accent, motion feel). The footage stays untouched. No style: use the default look (white heavy uppercase
   captions with a yellow #efd245 accent, inserts on #0c160f).
 - **Music (Layout A):** the user's licensed track, a generated one, or none. Never use unlicensed music.

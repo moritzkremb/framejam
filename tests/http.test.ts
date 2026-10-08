@@ -97,12 +97,16 @@ describe("REST API used by the review UI", () => {
     expect((await app.request(`/api/reviews/${review.id}/versions/1/video`)).status).toBe(200);
   });
 
-  it("selects a preset for the agent", async () => {
-    const res = await app.request("/api/selected-preset", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: "data-story" }) });
-    expect((await res.json()).id).toBe("data-story");
-    expect(fx.store.getState().selectedPreset?.id).toBe("data-story");
-    const bad = await app.request("/api/selected-preset", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: "nope" }) });
-    expect(bad.status).toBe(404);
+  it("sends the user's pick to the waiting agent", async () => {
+    const pick = fx.store.createPick(["playbook", "style"], "Rocket launch");
+    expect(await (await app.request("/api/picks/active")).json()).toMatchObject({ id: pick.id, title: "Rocket launch" });
+    const post = (body: unknown) =>
+      app.request(`/api/picks/${pick.id}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    expect((await post({ styleId: "nope" })).status).toBe(404);
+    const done = await (await post({ styleId: "data-story", playbookId: null })).json();
+    expect(done).toMatchObject({ status: "picked", styleId: "data-story", playbookId: null });
+    expect((await post({ styleId: "data-story" })).status).toBe(409);
+    expect(await (await app.request("/api/picks/active")).json()).toBeNull();
   });
 });
 

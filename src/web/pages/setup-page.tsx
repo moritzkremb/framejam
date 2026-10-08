@@ -7,15 +7,13 @@ import { cn } from "@/lib/utils";
 
 export function SetupPage() {
   const [health, setHealth] = useState<Health | null>(null);
-  const [styleName, setStyleName] = useState<string | undefined>();
   const [hasReview, setHasReview] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
   const load = useCallback(() => {
-    Promise.all([api.health(), api.presets(), api.reviews()])
-      .then(([h, p, r]) => {
+    Promise.all([api.health(), api.reviews()])
+      .then(([h, r]) => {
         setHealth(h);
-        setStyleName(p.presets.find((x) => x.id === p.selected)?.name);
         setHasReview(r.length > 0);
         setError(null);
       })
@@ -58,7 +56,7 @@ export function SetupPage() {
               <span className="dot" />
               {agent ? `Connected to ${agent}` : "No agent connected yet"}
             </span>
-            <SetupSteps health={health} agentName={agent} styleName={styleName} hasReview={hasReview} />
+            <SetupSteps health={health} agentName={agent} hasReview={hasReview} />
           </>
         )}
       </main>

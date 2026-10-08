@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ChevronDown, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Search, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CommunityCard, MadeBy } from "@/components/community";
@@ -6,20 +6,19 @@ import { HomeHeader } from "@/components/header";
 import { Menu, MenuItem } from "@/components/menu";
 import { isOffline, Offline } from "@/components/states";
 import { agentLabel, api, type PresetSummary } from "@/lib/api";
-import { useStyleSelection } from "@/lib/use-style";
-import { cn } from "@/lib/utils";
+import { PickBanner } from "@/components/pick-banner";
 
 const FORMATS = ["All", "16:9", "9:16", "1:1"] as const;
 const PACES = ["slow", "medium", "fast"] as const;
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
-function StyleCard({ preset, inUse, busy, onUse }: { preset: PresetSummary; inUse: boolean; busy: boolean; onUse(): void }) {
+function StyleCard({ preset }: { preset: PresetSummary }) {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const open = () => navigate(`/styles/${preset.id}`);
   return (
     <div
-      className={cn("fc-scard", inUse && "is-selected")}
+      className="fc-scard"
       data-testid="preset-card"
       role="link"
       tabIndex={0}
@@ -49,26 +48,6 @@ function StyleCard({ preset, inUse, busy, onUse }: { preset: PresetSummary; inUs
         ) : preset.posterUrl ? (
           <img src={preset.posterUrl} alt="" className="contain" />
         ) : null}
-        <button
-          type="button"
-          className={cn("fc-use use", inUse && "on")}
-          data-testid="use-style-quick"
-          disabled={busy}
-          aria-pressed={inUse}
-          onClick={(e) => {
-            e.stopPropagation();
-            onUse();
-          }}
-        >
-          {inUse ? (
-            <>
-              <Check className="fc-i" />
-              In use
-            </>
-          ) : (
-            "Use"
-          )}
-        </button>
         <span className="br fc-badge on-video">
           {preset.format} · {cap(preset.pacing)}
         </span>
@@ -118,29 +97,24 @@ function Dropdown({ label, value, options, onChange }: { label: string; value: s
 }
 
 export function StylesPage() {
-  const [data, setData] = useState<{ selected: string | null; presets: PresetSummary[] } | null>(null);
+  const [data, setData] = useState<{ presets: PresetSummary[] } | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [format, setFormat] = useState<string>("All");
   const [pace, setPace] = useState<string | null>(null);
   const [mood, setMood] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [agent, setAgent] = useState<string | null>();
-  const selection = useStyleSelection(null);
-  const { setSelected } = selection;
 
   useEffect(() => {
     api
       .presets()
-      .then((d) => {
-        setData(d);
-        setSelected(d.selected);
-      })
+      .then(setData)
       .catch(setError);
     api
       .health()
       .then((h) => setAgent(agentLabel(h.agent) ?? null))
       .catch(() => {});
-  }, [setSelected]);
+  }, []);
 
   const moods = useMemo(() => [...new Set(data?.presets.flatMap((p) => p.mood) ?? [])].sort(), [data]);
   const visible = useMemo(() => {
@@ -169,9 +143,10 @@ export function StylesPage() {
             </span>
           </Link>
         )}
+        <PickBanner />
         <div>
           <h1 className="fc-h1">Styles</h1>
-          <p className="fc-lede">Pick a look for your next video. Press Use, and your agent builds with it. Open one to see the details.</p>
+          <p className="fc-lede">Looks for whatever your video is about. Your agent asks you to pick one when it starts a video, or copy a prompt from a style's page.</p>
         </div>
         {error && !data ? (
           isOffline(error) ? <Offline /> : <p className="fc-caption">{String((error as Error).message)}</p>
@@ -228,9 +203,6 @@ export function StylesPage() {
                   <StyleCard
                     key={p.id}
                     preset={p}
-                    inUse={selection.selected === p.id}
-                    busy={selection.busy === p.id}
-                    onUse={() => void selection.toggle(p)}
                   />
                 ))}
               </div>

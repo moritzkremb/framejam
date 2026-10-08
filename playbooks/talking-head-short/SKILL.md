@@ -24,7 +24,7 @@ Decide these once and write them in `BRIEF.md`. Ask only for what you can't work
   use it and never convert the project. For a fresh project use Hyperframes:
   `npx -y hyperframes init <name> --example blank --resolution portrait --non-interactive`. If the Hyperframes skills
   are installed, use them; otherwise `npx hyperframes docs` explains the composition rules.
-- **Look.** If the user picked a FrameJam style (`get_selected_preset`), its palette, fonts and card shapes set the
+- **Look.** If the user picked a FrameJam style (from `wait_for_pick`, or `get_preset` when the user names one), its palette, fonts and card shapes set the
   captions, hook and inserts. Otherwise use the default look in `references/captions-and-inserts.md`.
 - **Transcription.** Free and local by default (`npx hyperframes transcribe`, whisper.cpp). Use a paid service only if
   the user asks or gave a budget; say the cost first. See `references/transcription.md`.

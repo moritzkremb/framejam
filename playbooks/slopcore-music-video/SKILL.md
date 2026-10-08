@@ -51,7 +51,7 @@ Resolve from the request and the environment; ask only what's left, in one messa
 - **Video tool.** The project's existing tool (Remotion, Hyperframes, Motion Canvas, an editor's timeline). No project
   yet: Hyperframes (if its skills are installed use them, otherwise `npx hyperframes docs` / `npx hyperframes init`).
   Don't convert an existing project to another tool.
-- **Style.** Call `get_selected_preset`. A FrameJam style sets the overlay's fonts, colours and label voice; the
+- **Style.** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style sets the overlay's fonts, colours and label voice; the
   moodboard sets the imagery. No style: use the defaults in `overlay_system.md`.
 - **Machine.** Python 3.11 (via `uv` or python3.11), ffmpeg, git, Node for the video tool.
 

@@ -26,7 +26,7 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
 - **Cursor:** use the built-in browser tool (`cursor-ide-browser` → `browser_navigate`) with
   `position: "side"` so it opens beside the chat.
 - **Other harnesses:** use their browser/preview tool if there is one. Otherwise give the user the link.
-- **Which page:** the project's `url` when step 1 finds one, `http://localhost:2400/styles` for a new video, and
+- **Which page:** the project's `url` when step 1 finds one, the pick page from `open_picker` for a new video, and
   `http://localhost:2400` (Projects) until you know.
 - If the page doesn't load, nothing is hosting the UI. Run `npx -y framejam start` (it starts the UI in the background,
   or reuses a running one, and prints the URL), then open that URL. Never ask the user to start it.
@@ -39,7 +39,9 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
 The user may type nothing but `/framejam`. Check these in order and act on the first that applies. Don't ask "what do
 you want to make?" if any of them answers it.
 
-1. **What they typed.** "/framejam make a 10s teaser for X" → do that. A style check is only needed for a new video.
+1. **What they typed.** "/framejam make a 10s teaser for X" → do that (a new video starts with the pick, loop step 0).
+   `/framejam playbook` or `/framejam style` → run the pick for just that one (`open_picker({ kinds: ["playbook"] })`
+   or `["style"]`), then ask what the video is about if you don't know yet.
 2. **This conversation.** If you've been making or editing a video in this chat, keep going with it: render the current
    state to the next `renders/vN.mp4`, then add it to the same project (`add_version` with its `reviewId`, or
    `open_review` with the same `title`), and wait for feedback.
@@ -55,23 +57,31 @@ you want to make?" if any of them answers it.
    or Motion Canvas project, a `renders/` folder or a loose video file: use the newest render if it's newer than the
    source, otherwise render. Open it as v1 and wait for feedback. Use the project's own tool; for a plain video file,
    pass `videoPath` only.
-6. **Nothing relevant** (empty folder, unrelated code repo): open the Styles page and ask what video to make: what it's
-   about, roughly how long, the format (16:9, 9:16, 1:1), and any copy, footage or brand assets. Mention they can pick a
-   look on the Styles page and a kind of video on the Playbooks page. Don't start building from a style alone. New
+6. **Nothing relevant** (empty folder, unrelated code repo): ask what video to make: what it's about, roughly how
+   long, the format (16:9, 9:16, 1:1), and any copy, footage or brand assets. Then start the pick (loop step 0). New
    videos default to Hyperframes unless a playbook says otherwise.
 
 If several projects could match, ask one short question that lists them.
 
 ## The loop
 
-0. **Playbook.** Call `get_selected_playbook` (or `get_playbook(id)` when the user names one, e.g. from a pasted
-   prompt). If one is set, its `skill` is the method for this video: follow it step by step, and use the loop below for
-   every render it asks for. Read files in `playbookDir` when the method points to them, and copy its scripts, engine
-   or template into the project before using them; never edit `playbookDir`. `stylesSentence` says how the selected
-   style combines with it. If `selected` is null, carry on; if a playbook in `list_playbooks` clearly matches the
-   request, offer it in one line.
-1. **Style.** Call `get_selected_preset`. If it returns `selected: null`, ask the user to pick one on the Styles page you
-   just opened (then call it again), or pick one yourself with `list_presets({ mood, pacing, format })` and `get_preset(id)`.
+0. **Pick (new videos only).** Let the user pick a playbook and a style for this video in FrameJam. Nothing is
+   selected ahead of time; every new video gets its own pick.
+   - Call `open_picker({ title })` with a few words about the video (`kinds` defaults to both). Open the returned `url`
+     in the built-in browser, post it in chat as a clickable link (`[Pick a playbook and style](url)`), then call
+     `wait_for_pick({ pickId })` right away. While it returns `pending`, call it again; after 6 pending results in a
+     row, stop and ask in chat which playbook and style they want.
+   - Skip the pick when the user already named a playbook or style (use `get_playbook(id)` / `get_preset(id)`, e.g.
+     from a pasted prompt), said they want none, or is continuing an existing project. Existing projects keep their
+     picks: `get_feedback` and `wait_for_feedback` return the project's `playbookId` and `styleId`.
+   - When the pick arrives, say in one line what you're using ("Using the Clean Cut playbook and no style"), with links
+     to their pages. Pass `playbookId` and `styleId` to `open_review` so later versions and new chats keep them.
+   - A `null` playbook or style means the user chose none: build it your own way, or in your own look.
+1. **Follow the playbook and the style.**
+   - **Playbook:** its `skill` is the method for this video: follow it step by step, and use the loop below for every
+     render it asks for. Read files in `playbookDir` when the method points to them, and copy its scripts, engine or
+     template into the project before using them; never edit `playbookDir`. `stylesSentence` says how the style
+     combines with it.
    - **A style is a look, not a starting video.** First plan the video from what the user asked for (a rocket launch
      is about the rocket), then build that subject in the style's visual language: the exact `palette` hex values,
      textures and backgrounds, `fonts`, `easing` names, `transitions`, `textAnimations` and

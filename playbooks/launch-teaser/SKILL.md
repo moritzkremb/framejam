@@ -44,7 +44,7 @@ The method is fixed; the tool is not. In an existing project, use its tool. Star
 - **Glimpses:** real material only. Short and tight beats long and wide. If nothing real exists yet, make it a
   pure-type teaser rather than mocking a UI.
 - **Ending:** name + one of: date ("Oct 14"), link, install command, "Available now".
-- **Style:** call `get_selected_preset`. A FrameJam style sets the whole look. No style: the product's brand, with
+- **Style:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style sets the whole look. No style: the product's brand, with
   one accent color and one display typeface.
 - **Music:** `scripts/launch_bed.py` (free) by default; the user's track or a licensed one if they have it.
 - **Length:** 15–18 s default (X autoplay loops short clips); ≤ 10 s for an end-of-thread sting.

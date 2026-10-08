@@ -225,15 +225,13 @@ export function createApp(ctx: McpContext) {
   // --- Presets -------------------------------------------------------------
   app.get("/api/presets", (c) => {
     const { mood, pacing, format, q } = c.req.query();
-    const selected = store.getState().selectedPreset?.id ?? null;
-    return c.json({ selected, presets: presets.list({ mood, pacing, format, query: q }).map((p) => presets.summary(p)) });
+    return c.json({ presets: presets.list({ mood, pacing, format, query: q }).map((p) => presets.summary(p)) });
   });
 
   app.get("/api/presets/:id", (c) => {
     const p = presets.get(c.req.param("id"));
     if (!p) return c.json({ error: "Preset not found" }, 404);
-    const selected = store.getState().selectedPreset?.id ?? null;
-    return c.json({ preset: presets.summary(p), selected, files: presets.templateSource(p) });
+    return c.json({ preset: presets.summary(p), files: presets.templateSource(p) });
   });
 
   app.get("/api/presets/:id/files/*", (c) => {
@@ -244,25 +242,15 @@ export function createApp(ctx: McpContext) {
     return file ? sendFile(file, c.req.raw) : c.text("Forbidden", 403);
   });
 
-  app.get("/api/selected-preset", (c) => c.json(store.getState().selectedPreset ?? null));
-
-  app.put("/api/selected-preset", async (c) => {
-    const { id } = (await c.req.json()) as { id: string | null };
-    if (id && !presets.get(id)) return c.json({ error: "Preset not found" }, 404);
-    return c.json(store.setSelectedPreset(id).selectedPreset ?? null);
-  });
-
   // --- Playbooks -----------------------------------------------------------
   app.get("/api/playbooks", (c) => {
-    const selected = store.getState().selectedPlaybook?.id ?? null;
-    return c.json({ selected, playbooks: playbooks.list(c.req.query("q")).map((p) => playbooks.summary(p)) });
+    return c.json({ playbooks: playbooks.list(c.req.query("q")).map((p) => playbooks.summary(p)) });
   });
 
   app.get("/api/playbooks/:id", (c) => {
     const p = playbooks.get(c.req.param("id"));
     if (!p) return c.json({ error: "Playbook not found" }, 404);
-    const selected = store.getState().selectedPlaybook?.id ?? null;
-    return c.json({ playbook: playbooks.summary(p), selected });
+    return c.json({ playbook: playbooks.summary(p) });
   });
 
   app.get("/api/playbooks/:id/files/*", (c) => {
@@ -273,12 +261,16 @@ export function createApp(ctx: McpContext) {
     return file ? sendFile(file, c.req.raw) : c.text("Forbidden", 403);
   });
 
-  app.get("/api/selected-playbook", (c) => c.json(store.getState().selectedPlaybook ?? null));
+  // --- Picks: the agent waits while the user picks a playbook and style for one video ---
+  app.get("/api/picks/active", (c) => c.json(store.activePick()));
 
-  app.put("/api/selected-playbook", async (c) => {
-    const { id } = (await c.req.json()) as { id: string | null };
-    if (id && !playbooks.get(id)) return c.json({ error: "Playbook not found" }, 404);
-    return c.json(store.setSelectedPlaybook(id).selectedPlaybook ?? null);
+  app.get("/api/picks/:id", (c) => c.json(store.getPick(c.req.param("id"))));
+
+  app.post("/api/picks/:id", async (c) => {
+    const { playbookId, styleId } = (await c.req.json()) as { playbookId?: string | null; styleId?: string | null };
+    if (playbookId && !playbooks.get(playbookId)) return c.json({ error: "Playbook not found" }, 404);
+    if (styleId && !presets.get(styleId)) return c.json({ error: "Style not found" }, 404);
+    return c.json(store.resolvePick(c.req.param("id"), { playbookId, styleId }));
   });
 
   // --- MCP over streamable HTTP (stateless: one server per request) --------

@@ -1,6 +1,6 @@
-import { Check, Copy, Palette } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { DOCS_URL } from "@/components/header";
 import { copyText, type Health } from "@/lib/api";
@@ -42,7 +42,6 @@ function harnessFor(agentName?: string): Harness {
   return "cursor";
 }
 
-export const STYLE_PROMPT = "Open FrameJam in your built-in browser so I can pick a style";
 export const FIRST_VIDEO_PROMPT = "Make a 7-second launch teaser with FrameJam and open it for review.";
 
 export function CodeBlock({ code, block }: { code: string; block?: boolean }) {
@@ -97,19 +96,17 @@ export function PromptBlock({ text, primary, onCopy }: { text: string; primary?:
   );
 }
 
-/** Setup as three messages to paste into the agent chat. Steps tick off as the server sees a connection, a style and a review. */
+/** Setup as two messages to paste into the agent chat. Steps tick off as the server sees a connection and a first project. */
 export function SetupSteps({
   health,
   agentName,
-  styleName,
   hasReview,
 }: {
   health?: Health | null;
   agentName?: string;
-  styleName?: string;
   hasReview: boolean;
 }) {
-  const done = [Boolean(agentName), Boolean(styleName), hasReview];
+  const done = [Boolean(agentName), hasReview];
   const current = done.indexOf(false);
   const state = (i: number) => (done[i] ? "done" : i === current ? "current" : "");
   // The install prompt opens /?installed=<app>, so the page knows the agent just installed FrameJam there.
@@ -167,20 +164,9 @@ export function SetupSteps({
       <li className={cn("fc-step", state(1))}>
         <span className="n">{done[1] ? <Check className="fc-i xs" /> : 2}</span>
         <div>
-          <div className="st">Pick a style</div>
-          <p className="sd">{done[1] ? `Using ${styleName}. Change it any time.` : "Paste this, then press Use on the look you like."}</p>
-          {!done[1] && <PromptBlock text={STYLE_PROMPT} primary={current === 1} />}
-          <Link to="/styles" className="fc-btn ghost sm" style={{ marginTop: 6, marginLeft: -10 }}>
-            <Palette className="fc-i sm" /> Or browse styles here
-          </Link>
-        </div>
-      </li>
-      <li className={cn("fc-step", state(2))}>
-        <span className="n">{done[2] ? <Check className="fc-i xs" /> : 3}</span>
-        <div>
           <div className="st">Ask for a video</div>
-          <p className="sd">Paste this. Your agent builds it and opens the review right here.</p>
-          <PromptBlock text={FIRST_VIDEO_PROMPT} primary={current === 2} />
+          <p className="sd">Paste this. Your agent asks you to pick a playbook and a style here, then builds it and opens the review.</p>
+          <PromptBlock text={FIRST_VIDEO_PROMPT} primary={current === 1} />
         </div>
       </li>
     </ol>

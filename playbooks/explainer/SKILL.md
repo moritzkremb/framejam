@@ -26,7 +26,7 @@ Resolve from the request and the environment; ask only what can't be resolved, i
 - **Length and format:** default ~90 s, 16:9. ≤ 2:20 for X. 9:16 only when it's for Reels/Shorts/TikTok.
 - **Script:** written by you from the source (default), or the user's script kept word for word, or restructured. Ask once if they pasted one.
 - **Voice:** the user's own recording, Kokoro (free, local, default), or a paid voice (OpenAI with tone instructions, ElevenLabs) only with their OK. See `references/sound.md`.
-- **Style:** call `get_selected_preset`. The style sets the whole look (palette, fonts, ground, texture, motion feel): apply it to the template's `:root`, fonts and card styles, or to the project's own theme. No style: use the template's paper-and-ink look, or offer a few styles from `list_presets` that fit the topic.
+- **Style:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). The style sets the whole look (palette, fonts, ground, texture, motion feel): apply it to the template's `:root`, fonts and card styles, or to the project's own theme. No style: use the template's paper-and-ink look, or offer a few styles from `list_presets` that fit the topic.
 - **Tool:** an existing project keeps its tool (Remotion, Motion Canvas, Manim, ffmpeg edits…); follow `references/other-tools.md` and never convert it. A new project uses Hyperframes (`references/hyperframes.md`). If the Hyperframes agent skills are installed, use them for composition details.
 - **Music:** none, a free library track, or generated (paid) with their OK.
 - **Machine:** Node 20+ (for `npx hyperframes`), Python 3 with numpy, ffmpeg; whisper.cpp for word timing (optional but recommended, free).

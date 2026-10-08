@@ -1,5 +1,5 @@
 import { gsap } from "gsap";
-import { Check, Copy, MoreHorizontal, RotateCcw, Type, Wand2 } from "lucide-react";
+import { Copy, MoreHorizontal, RotateCcw, Type, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { Menu, MenuItem } from "@/components/menu";
 import { CodeBlock, PromptBlock } from "@/components/setup-steps";
 import { NotHere } from "@/components/states";
 import { api, copyText, type PresetSummary } from "@/lib/api";
-import { useStyleSelection } from "@/lib/use-style";
+import { PickBanner } from "@/components/pick-banner";
 import { cn } from "@/lib/utils";
 
 type Tab = "overview" | "motion" | "agent";
@@ -100,26 +100,21 @@ function Section({ title, hint, children, action }: { title: string; hint?: stri
 
 export function StyleDetailPage() {
   const { id = "" } = useParams();
-  const [data, setData] = useState<{ preset: PresetSummary; selected: string | null; files: { path: string; content: string }[] } | null>(
+  const [data, setData] = useState<{ preset: PresetSummary; files: { path: string; content: string }[] } | null>(
     null,
   );
   const [missing, setMissing] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const [replay, setReplay] = useState(0);
-  const selection = useStyleSelection(null);
-  const { setSelected } = selection;
   useGoogleFonts(data?.preset.fonts);
 
   useEffect(() => {
     setData(null);
     api
       .preset(id)
-      .then((d) => {
-        setData(d);
-        setSelected(d.selected);
-      })
+      .then(setData)
       .catch(() => setMissing(true));
-  }, [id, setSelected]);
+  }, [id]);
 
   if (missing) {
     return (
@@ -145,7 +140,6 @@ export function StyleDetailPage() {
   }
 
   const { preset } = data;
-  const inUse = selection.selected === preset.id;
   const vertical = preset.height > preset.width;
   const agentPrompt = `Use the look of the FrameJam style "${preset.name}" (id: ${preset.id}) for my video: call get_preset("${preset.id}") and use its colours, textures, type and motion. Build my own subject in it; don't copy the example scene. My video: `;
   const guideLines = preset.guide
@@ -180,6 +174,7 @@ export function StyleDetailPage() {
         </Menu>
       </BackHeader>
       <main className="fc-main fc-style-page">
+        <PickBanner style={preset.id} />
         <div className={cn("fc-style-media", vertical && "tall")}>
           {preset.previewUrl ? (
             <video key={replay} src={preset.previewUrl} poster={preset.posterUrl} autoPlay muted loop playsInline controls />
@@ -207,19 +202,8 @@ export function StyleDetailPage() {
             </div>
           </div>
           <div className="actions">
-            <button type="button" className="fc-btn outline" onClick={() => void copy(agentPrompt, "prompt for your agent")}>
+            <button type="button" className="fc-btn primary" onClick={() => void copy(agentPrompt, "prompt for your agent")}>
               <Copy className="fc-i sm" /> Copy prompt
-            </button>
-            <button
-              type="button"
-              data-testid="use-style"
-              className={cn("fc-btn", inUse ? "" : "primary")}
-              disabled={selection.busy === preset.id}
-              onClick={() => void selection.toggle(preset)}
-              title={inUse ? "Click to stop using this style" : undefined}
-            >
-              <Check className="fc-i sm" />
-              {inUse ? "In use" : "Use this style"}
             </button>
           </div>
         </div>

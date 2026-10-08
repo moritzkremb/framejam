@@ -76,6 +76,9 @@ export interface Review {
   versions: ReviewVersion[];
   comments: ReviewComment[];
   batches: FeedbackBatch[];
+  /** The playbook and style picked for this video, if any; later versions keep them. */
+  playbookId?: string;
+  styleId?: string;
   /** Computed by the API, not stored: an agent is in (or between) wait_for_feedback calls for this review. */
   agentListening?: boolean;
   /** The agent's FrameJam process started before the current build, so it may lack newer features (like the listening heartbeat). */
@@ -90,6 +93,22 @@ export interface AgentInfo {
   /** The script that MCP process was started from, and its content hash at the time. */
   entry?: string;
   build?: string;
+}
+
+export type PickKind = "playbook" | "style";
+
+/** The agent asked the user to pick a playbook and/or style for one video, and is waiting for the answer. */
+export interface VideoPick {
+  id: string;
+  kinds: PickKind[];
+  /** What the video is about, shown on the pick page. */
+  title?: string;
+  createdAt: string;
+  status: "waiting" | "picked" | "cancelled";
+  /** null: the user chose none. */
+  playbookId?: string | null;
+  styleId?: string | null;
+  pickedAt?: string;
 }
 
 export interface PresetFont {

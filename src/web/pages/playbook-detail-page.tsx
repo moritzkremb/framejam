@@ -1,12 +1,12 @@
-import { ArrowUpRight, Check, ChevronRight, Copy, Loader2 } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { BackHeader, Dots } from "@/components/header";
+import { BackHeader } from "@/components/header";
 import { PromptBlock } from "@/components/setup-steps";
 import { NotHere } from "@/components/states";
-import { api, copyText, type PlaybookSummary, type PresetSummary } from "@/lib/api";
-import { usePlaybookSelection } from "@/lib/use-playbook";
+import { api, copyText, type PlaybookSummary } from "@/lib/api";
+import { PickBanner } from "@/components/pick-banner";
 import { cn } from "@/lib/utils";
 import type { PlaybookNeed } from "../../shared/types";
 import { costBadge, groupNeeds, playbookPrompt, projectLabel, stylesPredicate } from "../../shared/playbooks";
@@ -80,26 +80,16 @@ function ExampleVideo({ p }: { p: PlaybookSummary }) {
 
 export function PlaybookDetailPage() {
   const { id = "" } = useParams();
-  const [data, setData] = useState<{ playbook: PlaybookSummary; selected: string | null } | null>(null);
-  const [style, setStyle] = useState<PresetSummary | null>(null);
+  const [data, setData] = useState<{ playbook: PlaybookSummary } | null>(null);
   const [missing, setMissing] = useState(false);
-  const selection = usePlaybookSelection(null);
-  const { setSelected } = selection;
 
   useEffect(() => {
     setData(null);
     api
       .playbook(id)
-      .then((d) => {
-        setData(d);
-        setSelected(d.selected);
-      })
+      .then(setData)
       .catch(() => setMissing(true));
-    api
-      .presets()
-      .then(({ selected, presets }) => setStyle(presets.find((p) => p.id === selected) ?? null))
-      .catch(() => {});
-  }, [id, setSelected]);
+  }, [id]);
 
   if (missing) {
     return (
@@ -125,7 +115,6 @@ export function PlaybookDetailPage() {
   }
 
   const { playbook: p } = data;
-  const inUse = selection.selected === p.id;
   const prompt = playbookPrompt(p);
   const predicate = stylesPredicate(p);
 
@@ -133,6 +122,7 @@ export function PlaybookDetailPage() {
     <div className="fc-screen">
       <BackHeader to="/playbooks" title={p.name} sub={`Playbook · by ${p.creator.name}`} />
       <main className="fc-main fc-style-page">
+        <PickBanner playbook={p.id} />
         <ExampleVideo key={p.id} p={p} />
 
         <div className="fc-style-head">
@@ -147,19 +137,8 @@ export function PlaybookDetailPage() {
             </div>
           </div>
           <div className="actions">
-            <button type="button" className="fc-btn outline" onClick={() => void copy(prompt, "prompt for your agent")}>
+            <button type="button" className="fc-btn primary" onClick={() => void copy(prompt, "prompt for your agent")}>
               <Copy className="fc-i sm" /> Copy prompt
-            </button>
-            <button
-              type="button"
-              data-testid="use-playbook"
-              className={cn("fc-btn", inUse ? "" : "primary")}
-              disabled={selection.busy === p.id}
-              onClick={() => void selection.toggle(p)}
-              title={inUse ? "Click to stop using this playbook" : undefined}
-            >
-              <Check className="fc-i sm" />
-              {inUse ? "In use" : "Use this playbook"}
             </button>
           </div>
         </div>
@@ -215,20 +194,11 @@ export function PlaybookDetailPage() {
             </SideBlock>
 
             <SideBlock title="Style">
-              {predicate && style ? (
-                <p className="fc-pb-style">
-                  <Link to="/styles" className="fc-pb-var" title="Pick a different style">
-                    <Dots colors={Object.values(style.palette)} />
-                    <span className="fc-truncate">{style.name}</span>
-                    <ChevronRight className="fc-i xs" aria-hidden />
-                  </Link>{" "}
-                  {predicate}
-                </p>
-              ) : predicate ? (
+              {predicate ? (
                 <>
                   <p className="fc-pb-style">Your style {predicate}</p>
                   <Link to="/styles" className="fc-pb-var empty">
-                    Pick a style <ChevronRight className="fc-i xs" aria-hidden />
+                    Browse styles <ChevronRight className="fc-i xs" aria-hidden />
                   </Link>
                 </>
               ) : (

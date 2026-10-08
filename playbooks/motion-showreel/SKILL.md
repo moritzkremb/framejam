@@ -32,7 +32,7 @@ Resolve from the request and the files; ask only what can't be resolved, in one 
   and a one-word HUD label.
 - **Music:** the user's licensed track, generated music (usually paid: ask), or the free scratch beat
   (`references/beat-grid.md`). The scratch beat is fine for drafts.
-- **Look:** call `get_selected_preset`. A FrameJam style is a starting point: take its palette (cut to 3 colours: a
+- **Look:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style is a starting point: take its palette (cut to 3 colours: a
   ground, an ink, one accent), its fonts (one display, one mono) and its motion feel, then design this reel's own
   look from it. No style: use the brand, or the template's look.
 - **Tool:** starting fresh, use the bundled Hyperframes template (`project: new`). **Existing project made with

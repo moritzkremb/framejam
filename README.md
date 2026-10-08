@@ -26,7 +26,8 @@ whatever your project already uses. The hard part is everything around it. Descr
 "the thing at around three seconds should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
 (Cursor, Claude Code, ChatGPT desktop) and handles both.
 
-**Pick a style instead of describing one.** Browse 30 example videos and press *Use*. Your agent gets the look:
+**Pick a style instead of describing one.** When your agent starts a video, it opens a pick page with 30 example
+videos. Choose one and your agent gets the look:
 palette, textures, fonts, easing, transitions, text animations and pacing, and builds whatever your video is about in
 it.
 
@@ -45,8 +46,8 @@ videos from framejam.ai, and the **Feedback** button sends the note you write; n
 
 ## How it works
 
-1. **Pick a look** on the Styles page, and if you like, a kind of video on the Playbooks page.
-2. **Ask your agent** for a video, for example *"make a 7-second launch teaser with FrameJam and open it for review"*.
+1. **Ask your agent** for a video, for example *"make a 7-second launch teaser with FrameJam and open it for review"*.
+2. **Pick a playbook and a style** on the page your agent opens, or none, and press **Start**.
 3. **Review it** in the browser pane next to your chat: click, type, drag, then press **Finish review**.
 4. **Get version 2.** The agent applies your notes and the page switches to the new version on its own. Repeat
    until you love it.
@@ -255,7 +256,8 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 ## Playbooks
 
 A style sets the look; a playbook sets how a kind of video gets made: what you bring, the steps, the tools it needs
-and the quality bar. Press *Use this playbook* on the Playbooks page and your agent follows it. FrameJam ships with 12:
+and the quality bar. When your agent starts a video, it asks you to pick one (or type `/framejam playbook`), then
+follows it. FrameJam ships with 12:
 
 | Playbook | What goes in, what comes out |
 | --- | --- |
@@ -376,10 +378,11 @@ for v2 and v1 still shows what it was.
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
-| `get_selected_preset()` | Returns the preset the user picked with *Use this style*. |
 | `list_playbooks({ query? })` | Lists the playbooks with what to bring, what you get, the cost and the creator. |
-| `get_playbook({ id })` | Returns `playbook.json`, the full `SKILL.md` method, the playbook's local folder and file list, and how the selected style combines with it. |
-| `get_selected_playbook()` | Returns the playbook the user picked with *Use this playbook*. |
+| `get_playbook({ id, styleId? })` | Returns `playbook.json`, the full `SKILL.md` method, the playbook's local folder and file list, and how a style combines with it. |
+| `open_picker({ kinds?, title? })` | Opens a page where the user picks a playbook and/or style for this video, or none. Returns `{ pickId, url }`. |
+| `wait_for_pick({ pickId })` | Waits for the user's pick and returns the playbook and style (or `null` for none). Returns `pending` after about 50s; call it again. |
+| `get_selected_preset()`, `get_selected_playbook()` | Kept for older skills; they point the agent to `open_picker`. |
 
 Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTime`, `position`, `thumbnailPath`), as a
 markdown prompt, and as inline JPEG frames with the pin drawn on them.

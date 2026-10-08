@@ -5,17 +5,19 @@ import type {
   AgentInfo,
   CommentKind,
   FeedbackBatch,
+  PickKind,
   Review,
   ReviewComment,
   ReviewVersion,
   StoryboardPanel,
+  VideoPick,
 } from "../shared/types.ts";
 import { dataDir, setupInfo } from "./paths.ts";
 
 export class StoreError extends Error {
   constructor(
     message: string,
-    readonly status: 400 | 404 = 400,
+    readonly status: 400 | 404 | 409 = 400,
   ) {
     super(message);
   }
@@ -99,8 +101,6 @@ export interface NewCommentInput {
 }
 
 interface AppState {
-  selectedPreset?: { id: string; selectedAt: string };
-  selectedPlaybook?: { id: string; selectedAt: string };
   agent?: AgentInfo;
 }
 
@@ -546,20 +546,71 @@ export class Store {
     }
   }
 
-  setSelectedPreset(id: string | null) {
-    const state = this.getState();
-    if (id) state.selectedPreset = { id, selectedAt: now() };
-    else delete state.selectedPreset;
-    writeJsonAtomic(this.stateFile, state);
-    return state;
+  // --- Picks: the agent asks the user to choose a playbook and/or style for one video ---
+
+  get picksDir() {
+    return path.join(this.root, "picks");
   }
 
-  setSelectedPlaybook(id: string | null) {
-    const state = this.getState();
-    if (id) state.selectedPlaybook = { id, selectedAt: now() };
-    else delete state.selectedPlaybook;
-    writeJsonAtomic(this.stateFile, state);
-    return state;
+  private pickFile(id: string) {
+    if (!/^[\w-]+$/.test(id)) throw new StoreError(`Invalid pick id: ${id}`);
+    return path.join(this.picksDir, `${id}.json`);
+  }
+
+  /** Starts a pick. Any older pick still waiting is cancelled, so the page only ever shows one. */
+  createPick(kinds: PickKind[], title?: string): VideoPick {
+    for (const p of this.listPicks()) if (p.status === "waiting") this.savePick({ ...p, status: "cancelled" });
+    const pick: VideoPick = { id: newId("pick"), kinds, title: title?.trim() || undefined, createdAt: now(), status: "waiting" };
+    this.savePick(pick);
+    return pick;
+  }
+
+  getPick(id: string): VideoPick {
+    const pick = readJson<VideoPick>(this.pickFile(id));
+    if (!pick) throw new StoreError(`No pick ${id}`, 404);
+    return pick;
+  }
+
+  listPicks(): VideoPick[] {
+    if (!fs.existsSync(this.picksDir)) return [];
+    return fs
+      .readdirSync(this.picksDir)
+      .filter((f) => f.endsWith(".json"))
+      .flatMap((f) => readJson<VideoPick>(path.join(this.picksDir, f)) ?? [])
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  /** The newest pick an agent is still waiting on, if it's recent enough to still matter. */
+  activePick(maxAgeMs = 60 * 60 * 1000): VideoPick | null {
+    const pick = this.listPicks().find((p) => p.status === "waiting");
+    return pick && Date.now() - Date.parse(pick.createdAt) < maxAgeMs ? pick : null;
+  }
+
+  resolvePick(id: string, choice: { playbookId?: string | null; styleId?: string | null }): VideoPick {
+    const pick = this.getPick(id);
+    if (pick.status !== "waiting") throw new StoreError(pick.status === "picked" ? "This pick was already sent" : "This pick was cancelled", 409);
+    const done: VideoPick = {
+      ...pick,
+      status: "picked",
+      pickedAt: now(),
+      ...(pick.kinds.includes("playbook") ? { playbookId: choice.playbookId ?? null } : {}),
+      ...(pick.kinds.includes("style") ? { styleId: choice.styleId ?? null } : {}),
+    };
+    this.savePick(done);
+    return done;
+  }
+
+  private savePick(pick: VideoPick) {
+    writeJsonAtomic(this.pickFile(pick.id), pick);
+  }
+
+  /** Remembers the playbook and style picked for a project, so later versions and new chats keep them. */
+  setReviewPicks(reviewId: string, picks: { playbookId?: string | null; styleId?: string | null }) {
+    const review = this.getReview(reviewId);
+    if (picks.playbookId !== undefined) review.playbookId = picks.playbookId ?? undefined;
+    if (picks.styleId !== undefined) review.styleId = picks.styleId ?? undefined;
+    this.save(review);
+    return review;
   }
 }
 

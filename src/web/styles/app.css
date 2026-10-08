@@ -33,11 +33,10 @@ a { color: inherit; }
 .fc-nav a:hover { color: var(--text); background: var(--surface-2); }
 .fc-nav a.on { color: var(--text); background: var(--surface-2); }
 .fc-style-chip.empty { padding: 0 12px; color: var(--text-2); }
-.fc-inuse { flex: 0 1 auto; min-width: 0; max-width: 320px; border: 0; padding: 0 10px 0 8px; cursor: pointer; }
-.fc-header:has(.fc-inuse) .fc-nav { flex: none; }
-.fc-inuse:hover, .fc-inuse[data-state="open"] { background: var(--surface-3); }
-.fc-inuse > .fc-i { flex: none; color: var(--text-3); }
-.fc-inuse.empty { padding: 0 10px 0 12px; }
+.fc-waiting { flex: 0 1 auto; min-width: 0; padding: 0 12px 0 10px; background: var(--accent-soft); color: var(--accent-text); }
+.fc-waiting .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text); animation: fc-pulse 1.4s ease-in-out infinite; }
+@keyframes fc-pulse { 50% { opacity: .35; } }
+.fc-header:has(.fc-waiting) .fc-nav { flex: none; }
 .fc-header .fc-feedback-trigger { flex: none; }
 .fc-banner { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--text); font: 400 13px/19px var(--font-sans); text-decoration: none; }
 .fc-banner > .fc-i { color: var(--accent-text); }
@@ -85,9 +84,6 @@ a { color: inherit; }
   .fc-nav a { padding: 0 9px; }
   .fc-style-chip:not(.empty) .fc-truncate { display: none; }
   .fc-style-chip:not(.empty) { padding: 0 8px; }
-  .fc-inuse > .fc-i:last-child { display: none; }
-  .fc-inuse.empty .fc-truncate { display: none; }
-  .fc-inuse.empty::before { content: "In use"; }
   .fc-header { gap: 4px; }
   .fc-logo { margin-right: 0; }
   .fc-logo img { height: 18px; }
@@ -157,6 +153,13 @@ a { color: inherit; }
 .fc-style-media.tall video { width: auto; max-width: 100%; height: 60dvh; }
 .fc-style-media img { display: block; width: 100%; max-height: 60dvh; object-fit: contain; }
 .fc-style-nopreview { display: grid; place-items: center; width: 100%; max-height: 60dvh; padding: 24px; color: var(--text-2); font: 400 13px/19px var(--font-sans); text-align: center; }
+/* Pick page: the agent waits while the user picks a playbook and a style */
+.fc-pick-page { gap: 36px; padding-bottom: 96px; }
+.fc-pick-intro { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--text); font: 400 14px/21px var(--font-sans); }
+.fc-pick-intro .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text); animation: fc-pulse 1.4s ease-in-out infinite; }
+.fc-pick-tile { scroll-margin: calc(var(--header) + 12px) 0 96px; border: 0; padding: 0; background: none; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.fc-pick-none { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; color: var(--text-2); font: 500 13px/19px var(--font-sans); text-align: center; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); border-radius: inherit; }
+.fc-pick-bar { position: sticky; bottom: 16px; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 18px; border-radius: var(--radius-full); background: var(--surface-2); box-shadow: var(--shadow-pop); font: 500 14px/20px var(--font-sans); }
 /* Playbook detail: example video, head, then a main column and a side panel */
 .fc-pb-media { position: relative; }
 .fc-pb-media.tall { min-height: 40dvh; }

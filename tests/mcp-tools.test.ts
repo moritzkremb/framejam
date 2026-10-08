@@ -34,9 +34,11 @@ describe("tool registry", () => {
         "list_playbooks",
         "list_presets",
         "list_reviews",
+        "open_picker",
         "open_review",
         "resolve_comments",
         "wait_for_feedback",
+        "wait_for_pick",
       ].sort(),
     );
   });
@@ -416,14 +418,10 @@ describe("presets", () => {
     }
   });
 
-  it("get_selected_preset reflects the gallery selection", async () => {
-    const none = parse(await mcp.call("get_selected_preset"));
-    expect(none.selected).toBeNull();
-    fx.store.setSelectedPreset("bauhaus-grid");
-    const sel = parse(await mcp.call("get_selected_preset"));
-    expect(sel.selected).toBe("bauhaus-grid");
-    expect(sel.style.format).toBe("1:1");
-    expect(sel.templateFiles.length).toBeGreaterThan(0);
+  it("get_selected_preset points older skills to the picker", async () => {
+    const res = parse(await mcp.call("get_selected_preset"));
+    expect(res.selected).toBeNull();
+    expect(res.next).toMatch(/open_picker/);
   });
 });
 
@@ -435,26 +433,44 @@ describe("playbooks", () => {
   it("lists playbooks with their cost and project", async () => {
     const all = parse(await mcp.call("list_playbooks"));
     const mine = all.playbooks.find((p: { id: string }) => p.id === "test-cut");
-    expect(mine).toMatchObject({ name: "Test Cut", cost: "Free to run", selected: false, galleryUrl: "http://localhost:2400/playbooks/test-cut" });
+    expect(mine).toMatchObject({ name: "Test Cut", cost: "Free to run", galleryUrl: "http://localhost:2400/playbooks/test-cut" });
     expect(parse(await mcp.call("list_playbooks", { query: "zzz-nothing" })).count).toBe(0);
   });
 
-  it("returns the method, the folder and how the selected style combines", async () => {
-    fx.store.setSelectedPreset("bauhaus-grid");
-    const res = parse(await mcp.call("get_playbook", { id: "test-cut" }));
+  it("returns the method, the folder and how the picked style combines", async () => {
+    const res = parse(await mcp.call("get_playbook", { id: "test-cut", styleId: "bauhaus-grid" }));
     expect(res.skill).toContain("Do the thing.");
     expect(fs.existsSync(res.playbookDir)).toBe(true);
     expect(res.files).toContain(path.join("scripts", "run.sh"));
-    expect(res.stylesSentence).toMatch(/sets the captions\.$/);
-    expect(res.selectedStyle.id).toBe("bauhaus-grid");
+    expect(res.stylesSentence).toBe("Bauhaus Grid sets the captions.");
     expect((await mcp.call("get_playbook", { id: "nope" })).isError).toBe(true);
   });
 
-  it("get_selected_playbook reflects the gallery selection", async () => {
-    expect(parse(await mcp.call("get_selected_playbook")).selected).toBeNull();
-    fx.store.setSelectedPlaybook("test-cut");
-    const sel = parse(await mcp.call("get_selected_playbook"));
-    expect(sel.selected).toBe("test-cut");
-    expect(sel.playbook.name).toBe("Test Cut");
+  it("lets the user pick a playbook and style while the agent waits", async () => {
+    const opened = parse(await mcp.call("open_picker", { title: "Rocket launch" }));
+    expect(opened.kinds).toEqual(["playbook", "style"]);
+    expect(opened.url).toBe(`http://localhost:2400/pick/${opened.pickId}`);
+    expect(parse(await mcp.call("wait_for_pick", { pickId: opened.pickId, timeoutSeconds: 1 })).status).toBe("pending");
+    const waiting = mcp.call("wait_for_pick", { pickId: opened.pickId });
+    setTimeout(() => fx.store.resolvePick(opened.pickId, { playbookId: "test-cut", styleId: "bauhaus-grid" }), 50);
+    const res = parse(await waiting);
+    expect(res).toMatchObject({ status: "picked", playbookId: "test-cut", styleId: "bauhaus-grid" });
+    expect(res.playbook.stylesSentence).toBe("Bauhaus Grid sets the captions.");
+    expect(res.style.style.name).toBe("Bauhaus Grid");
+    expect(res.next).toMatch(/Test Cut playbook and the Bauhaus Grid style/);
+  });
+
+  it("allows picking nothing, and cancels an older pick when a new one starts", async () => {
+    const first = parse(await mcp.call("open_picker", { kinds: ["style"] }));
+    const second = parse(await mcp.call("open_picker", { kinds: ["style"] }));
+    expect(parse(await mcp.call("wait_for_pick", { pickId: first.pickId })).status).toBe("cancelled");
+    fx.store.resolvePick(second.pickId, { styleId: null });
+    const res = parse(await mcp.call("wait_for_pick", { pickId: second.pickId }));
+    expect(res).toMatchObject({ status: "picked", styleId: null, style: null, playbook: null });
+  });
+
+  it("remembers the picks on the project", async () => {
+    const opened = parse(await mcp.call("open_review", { title: "Rocket", videoPath: fx.video, playbookId: "test-cut", styleId: "bauhaus-grid" }));
+    expect(fx.store.getReview(opened.reviewId)).toMatchObject({ playbookId: "test-cut", styleId: "bauhaus-grid" });
   });
 });

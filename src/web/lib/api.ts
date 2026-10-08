@@ -1,6 +1,6 @@
-import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel } from "../../shared/types";
+import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../../shared/types";
 
-export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel };
+export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick };
 
 export interface ReviewListItem {
   id: string;
@@ -83,23 +83,17 @@ export const api = {
   downloadVideo: (id: string, version: number) =>
     request<{ path: string; chosen: boolean } | { cancelled: true }>(`/api/reviews/${id}/versions/${version}/download`, { method: "POST" }),
   prompt: (id: string, version?: number) => request<string>(`/api/reviews/${id}/prompt${version ? `?version=${version}` : ""}`),
-  presets: () => request<{ selected: string | null; presets: PresetSummary[] }>("/api/presets"),
+  presets: () => request<{ presets: PresetSummary[] }>("/api/presets"),
   preset: (id: string) =>
-    request<{ preset: PresetSummary; selected: string | null; files: { path: string; content: string }[] }>(
+    request<{ preset: PresetSummary; files: { path: string; content: string }[] }>(
       `/api/presets/${id}`,
     ),
-  selectPreset: (id: string | null) =>
-    request<{ id: string; selectedAt: string } | null>("/api/selected-preset", {
-      method: "PUT",
-      body: JSON.stringify({ id }),
-    }),
-  playbooks: () => request<{ selected: string | null; playbooks: PlaybookSummary[] }>("/api/playbooks"),
-  playbook: (id: string) => request<{ playbook: PlaybookSummary; selected: string | null }>(`/api/playbooks/${id}`),
-  selectPlaybook: (id: string | null) =>
-    request<{ id: string; selectedAt: string } | null>("/api/selected-playbook", {
-      method: "PUT",
-      body: JSON.stringify({ id }),
-    }),
+  playbooks: () => request<{ playbooks: PlaybookSummary[] }>("/api/playbooks"),
+  playbook: (id: string) => request<{ playbook: PlaybookSummary }>(`/api/playbooks/${id}`),
+  activePick: () => request<VideoPick | null>("/api/picks/active"),
+  pick: (id: string) => request<VideoPick>(`/api/picks/${id}`),
+  sendPick: (id: string, body: { playbookId?: string | null; styleId?: string | null }) =>
+    request<VideoPick>(`/api/picks/${id}`, { method: "POST", body: JSON.stringify(body) }),
 };
 
 export function videoUrl(reviewId: string, version: number) {

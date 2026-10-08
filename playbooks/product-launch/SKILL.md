@@ -40,7 +40,7 @@ Resolve from the request and the project; ask only what's left, in one round:
 - **Sound:** music-only (default, plays muted on autoplay, so type carries the story) or voiceover + music.
 - **Real UI source:** the running app (record it), the website (capture screenshots and its hero video), or files
   the user gives. If there is nothing real to show, say so; don't invent an interface.
-- **Style:** call `get_selected_preset`. If the user picked a FrameJam style, it sets the whole look (palette, type,
+- **Style:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). If the user picked a FrameJam style, it sets the whole look (palette, type,
   motion feel, transitions). No style: derive the look from the product's own brand (colors, fonts, UI surfaces).
 - **Facts:** stats, customer logos and claims only from the product's own site or the user. No invented numbers.
 - **Music:** the included free script (`scripts/launch_bed.py`) by default, a track the user owns, or a licensed
