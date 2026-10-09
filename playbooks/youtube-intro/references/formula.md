@@ -1,11 +1,14 @@
 # The intro formula, measured
 
-Source: the first 90 s of four long-form videos on Moritz Kremb's channel ("Moritz | AI Builder", @promptwarrior),
+Source: the first 90 s of five long-form videos on Moritz Kremb's channel ("Moritz | AI Builder", @promptwarrior),
 September–October 2026, read as 1 s contact sheets, full frames, scene-cut detection, audio floor and word-level
-transcripts. Every one follows the same four beats and ends on a hard cut into the body.
+transcripts. Every one follows the same beats and ends on a hard cut into the body. The newest (first row) is the
+playbook's example: an edited talking head that ends on its proof instead of a promise, with "So let me show you some
+examples" and a small "Some examples →" card before the cut.
 
 | Video | Intro length | Layout | Hook (first sentence) |
 | --- | --- | --- | --- |
+| "How to Create Insane Motion Graphics With Opus 5.5" | 23.7 s | edited talking head | "The latest AI models have now finally crossed a threshold and made it possible to create professional looking videos without having to hire a video editor or a motion designer." |
 | "GPT-6 Astra Finally Replaces Video Editors" | 22.3 s | edited talking head | "The video that you're seeing right now is fully edited with AI." |
 | "Did ChatGPT Spaces just kill Notion?" | 21.9 s | framed screen | "OpenAI launched a bunch of things in their dev day yesterday." |
 | "Opus 5.5 Finally Solved Motion Graphics (5 Use Cases)" | 33.2 s | framed screen | "Okay, motion graphics is officially solved, guys." |
