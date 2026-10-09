@@ -11,6 +11,13 @@ description: >
 
 # Cartoon Music Video
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 A song goes in; a motion designer's showreel cut to the track comes out. Kinetic type, 2D and 3D graphics, illustrated character cut-outs and real footage land on the beats and sung syllables, and the untouched master is the only soundtrack.
 
 The method is fixed; the generators are not. Song, images and optional video clips can come from any tool the user has (`references/providers.md` defines what each step must deliver and lists options such as Suno, ElevenLabs Music, Udio, Midjourney, Higgsfield, GPT Image, Nano Banana, Seedance, Kling, Veo). Ready-made helpers for two of them live in `scripts/providers/`; they are options, not defaults.
@@ -23,7 +30,7 @@ How the work splits:
 - **Footage:** real screen recordings and product video for product truth; optional generated clips (any image-to-video model) for lip-sync, dances or action, only inside an explicit budget.
 - **The engine** (`engine/`, copied into the project by `scaffold.sh`): exact typography, frame-exact timing to onsets and beats, mattes, 3D type, HUD, post, endless free re-renders. `references/engine_api.md`, `references/kit_api.md`.
 - **Scene agents** give each section a dedicated designer; a shared brief, style bible, kit and verification loop keep them coherent.
-- **Review:** FrameJam, after the style frames (storyboard) and after every render.
+- **Review:** FrameJam, after every render (and the style frames first, if the user wants to see them).
 
 Read `references/lessons.md` before starting and `references/motion_library.md` as the design menu. `references/pipeline.md` has every command. `<playbook>` below means this folder (the local path `get_playbook` returned).
 
@@ -33,9 +40,9 @@ Derived from the MIT-licensed `scenario-kinetic-music-video` by Scenario (engine
 - **In:** a brief (what the video is for, a reference video if any), a song or the wish to write one, optionally brand files, real footage and the user's own photos (with consent) for a likeness.
 - **Out:** a 16:9 1080p60 mp4 (~2:10 by default, ≤ 2:20 for X), every lyric word on screen on time, reviewed and approved in FrameJam.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the environment; ask only what can't be resolved, in one round:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **Concept and target:** what the video is for, the reference video if any, the audience, length (≤ 2:20 for X; ~2:10 default).
 - **Song:** supplied master (its lyrics win), or write lyrics and generate it with the user's tool of choice. Music generation is usually paid.
 - **Generators:** check what this runtime can already use (a native image tool, connected MCP/app connectors, configured API keys, logged-in web apps) and the user's stated preferences. Offer options from `providers.md` only when nothing is available or the choice matters; prefer what costs nothing extra.
@@ -48,7 +55,7 @@ Resolve from the request and the environment; ask only what can't be resolved, i
 
 **Paid steps:** song generation, image generation and video clips usually cost money. Stop before the first paid step unless the user stated a budget; say what it will cost and which free route exists (a supplied song, the runtime's own image tool, hand-drawn art, no generated clips).
 
-Unattended: choose creative defaults, write them into TREATMENT.md, and stop before any paid step without a stated budget.
+When nothing is said, choose creative defaults (and still stop before any paid step without a budget). Name the defaults you used when you share the first render.
 
 **Existing project made with another tool** (Remotion, Hyperframes, Motion Canvas…): don't convert it. Follow the same method (song analysis, lyric alignment, style frames as cut-outs, every word on its onset, the verification and FrameJam loops) with that tool, reuse the tool-independent scripts (`audio_analysis.py`, `lyrics_align.py`, `lyrics_fix.py`, `prep_stills.py`, `av_sync_check.py`, `sheet.py`), and tell the user what the bundled engine would have added (frame-exact onset timing, line boil and beat hop on stills, matte-aware 3D type, the HUD spine, free deterministic re-renders).
 
@@ -69,9 +76,9 @@ Unattended: choose creative defaults, write them into TREATMENT.md, and stop bef
 - **TREATMENT.md:** song facts and measured grid, the hook for the first 3 s (must work muted), the arc, one row per section (time range on downbeats, lyrics, look, must-haves per line), the footage map (every still and clip with content, backdrop, matte bbox, key moments in clip seconds).
 - Give each chorus a different look in the treatment, or the agents converge.
 
-### 4. Cast and stills, then the storyboard round
+### 4. Cast and stills
 - Model sheet → per-character reference crops → one style frame per shot (~22-26 for 2 min), in parallel batches, each on a backdrop that contrasts with the character, with negative space for type and no text or logos (`pipeline.md` §4, `providers.md` §2).
-- **Review the stills in FrameJam before animating:** `open_review` with `panelsDir` = `assets/gen` (named `sNN_<desc>.jpg`, so they sort in shot order), open the URL, `wait_for_feedback`. Regenerate the panels the user flags; `add_version` for another round if many changed.
+- **Only if the user wants to see the stills before animating:** `open_review` with `panelsDir` = `assets/gen` (named `sNN_<desc>.jpg`, so they sort in shot order), open the URL, `wait_for_feedback`. Regenerate the panels the user flags; `add_version` for another round if many changed.
 - `prep_stills.py`, then the matte sheet over magenta. Regenerate stills with a bad matte, a wrong extra character, a too-small subject or a third-party logo (or plan a tracked sticker over the logo).
 - Real recordings with `prep_video.py`; generated clips (if budgeted) with `prep_clip.sh` (`providers.md` §3).
 

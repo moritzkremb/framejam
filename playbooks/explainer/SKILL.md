@@ -4,12 +4,19 @@ description: >
   Explainer: turn a topic, article, notes or script into a narrated faceless explainer video (60 s to 3 min) where
   every picture is invented per scene (big type, diagrams, metaphors drawn as objects, data, an optional original
   mascot) and lands on the exact word that names it. Voice first (the user's own, a free local voice or a paid
-  one), word-level timing, scenes placed on named cues, captions, ducked music and sound effects; storyboard and every
-  render reviewed in FrameJam. Works in the project's own video tool; new projects use Hyperframes and the bundled
+  one), word-level timing, scenes placed on named cues, captions, ducked music and sound effects; every render
+  reviewed in FrameJam. Works in the project's own video tool; new projects use Hyperframes and the bundled
   starter scene. Use for concept explainers, how-it-works videos, listicles, story explainers, or revising one.
 ---
 
 # Explainer
+
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
 
 A body of text goes in; a short film that makes one idea click comes out. Nothing is filmed: a voice explains, and drawings, words, diagrams and numbers appear exactly as they're named. The method is the one behind Moritz's own explainers ("AI video under the hood", "Agent Civilizations", "Pace the Frontier", "How the YouTube Upload skill works"): **script → voice → word times → named cues → scenes on cues → sound on the same clock → review.**
 
@@ -19,9 +26,9 @@ Reference build: **"AI video under the hood"** (2:54, 16:9): eleven scenes with 
 - **In:** a topic, article, notes, transcript or finished script; optionally the user's voice, brand colours and facts that must appear.
 - **Out:** a 16:9 1080p mp4 (60 s–3 min; vertical 9:16 if asked), voiceover, burned-in captions, optional music, sound effects, -16 LUFS. Plus the project that re-renders it. Reviewed and approved in FrameJam.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the environment; ask only what can't be resolved, in one round:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **Audience and angle:** who's it for and what should they understand at the end? If the source is long, propose the thesis you'll build around.
 - **Length and format:** default ~90 s, 16:9. ≤ 2:20 for X. 9:16 only when it's for Reels/Shorts/TikTok.
 - **Script:** written by you from the source (default), or the user's script kept word for word, or restructured. Ask once if they pasted one.
@@ -46,7 +53,7 @@ Resolve from the request and the environment; ask only what can't be resolved, i
 - `PLAN.md`: per scene its job, key message, visual idea, technique, and the time-coded build cued by the narration (`references/visuals.md`). Choose the persistent stage or mascot and the scene-change style once for the whole video.
 - Read the narration aloud in your head against the target length (~2.5 words per second).
 
-### 3. Storyboard in FrameJam (do it; it's the cheapest place to change your mind)
+### 3. Storyboard (only if the user asks)
 - Build each scene's final layout without animation first (in Hyperframes: the scene's elements placed, entrances can come later), with draft audio so scenes have length (`tts.py --provider say` or Kokoro).
 - `python scripts/panels.py` snapshots the end of every scene into `storyboard/` and prints the `open_review` arguments (titles = chapters, captions = narration). Other tools: export one still per scene into `storyboard/`.
 - `open_review({ title, panelsDir, panels })`, open the URL, `wait_for_feedback`. Revise the plan and layouts, `add_version({ reviewId, note })`, until approved.

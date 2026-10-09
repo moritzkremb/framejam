@@ -5,6 +5,13 @@ description: Turn raw talking-head recordings into a fast vertical short. Remove
 
 # Talking Head Short
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 **In:** one or more raw recordings of someone talking to camera, plus optional screen recordings, images or clips.
 **Out:** a finished short (default 1080×1920, 30 fps): tight cuts with the speaker's natural delivery, the last take
 of every line, a static text hook, real visuals where they explain something, readable captions in the bottom third.
@@ -12,9 +19,9 @@ of every line, a static text hook, real visuals where they explain something, re
 The speaker's meaning and voice come first. Make it fast by removing dead air, not by speeding the voice up. For
 repeated takes, **keep the last take**.
 
-## Before you start
+## Defaults (the user's request overrides any of them)
 
-Decide these once and write them in `BRIEF.md`. Ask only for what you can't work out from the request and files.
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 
 - **Format.** 9:16 at 1080×1920 unless the user or the project says otherwise. Keep the source frame rate if it's
   a standard one (24/25/30/60), else 30.
@@ -103,7 +110,7 @@ crop, the phrase it explains, what you checked). Rules and placement are in `ref
 show the actual thing; crop so it reads on a phone; mute inserts; no filler; label illustrations as illustrations;
 never fake a product screen or a result. Cut each chosen range to its own small file in `assets/` with the crop applied.
 
-If the shot list has more than ~6 inserts or the user wasn't specific about visuals, show it first as a storyboard:
+If the user wants to see the shot list first, show it as a storyboard:
 one still per insert in `working/storyboard/` (named `01-...png`), `open_review` with `panelsDir`, and wait for
 feedback before building.
 

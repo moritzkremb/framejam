@@ -11,8 +11,8 @@ GitHub at `moritzkremb/framejam`.
 The core of the app, and what every change should be judged against:
 
 - **Styles.** 30 built-in style presets with example videos. A style is a look, not a starting video: the user
-  picks one when the agent starts a video, and the agent builds that subject in the style's palette, textures, fonts,
-  motion and pacing. Nothing is selected ahead of time: every new video gets its own pick, saved on the project. The `guide` holds look rules that work for any subject; `example` says what the preview shows so agents
+  names one (or picks it on a page) and the agent builds that subject in the style's palette, textures, fonts, motion
+  and pacing, bending them where needed. Nothing is selected ahead of time; a pick is saved on the project. The `guide` holds look rules that work for any subject; `example` says what the preview shows so agents
   don't copy that scene. Users can add their own.
 - **Video review.** The agent renders an mp4 and opens it as a project. The user comments at a time, on a spot in the
   frame, on a range of the timeline or on the whole video, then presses **Finish review**. The agent gets every
@@ -20,10 +20,15 @@ The core of the app, and what every change should be judged against:
   repeats.
 - **Storyboards.** The same review loop on a set of still panels, one per shot, before anything is animated.
 - **Playbooks.** The method for one kind of video (a music video, a talking-head short, a product launch...): what the
- user brings, the steps, the tools it needs and the quality bar. Styles set the look; playbooks set how it's made. The
- agent asks the user to pick one for each new video (`open_picker`, then `wait_for_pick`) and gets the method. Each playbook is an agent skill
+ user brings, the steps, the tools it needs and the quality bar, as defaults the user's request overrides. Styles set
+ the look; playbooks set how it's made. The user names one, or picks on a page (`/framejam playbook` → `open_picker`,
+ then `wait_for_pick`). Each playbook is an agent skill
  folder plus a `playbook.json` with a creator, so outside creators can submit their own later.
 - **Any video tool.** FrameJam always reviews the rendered file. It doesn't care how the video was made.
+
+**A toolkit, not a process.** FrameJam should feel like an extension of the user's agent: fast, flexible, with as few
+prescribed steps as possible. Skills and playbooks give defaults, never gates: no question rounds before building, no
+plans to approve, no mandatory storyboards or planning documents. The user's request always wins.
 
 **Videos are mp4-only.** The review page always plays the rendered file. There used to be a beta live Hyperframes
 player (`compositionDir`) that resolved clicks to DOM elements; it was removed because it could show something other

@@ -165,7 +165,7 @@ export function SetupSteps({
         <span className="n">{done[1] ? <Check className="fc-i xs" /> : 2}</span>
         <div>
           <div className="st">Ask for a video</div>
-          <p className="sd">Paste this. Your agent asks you to pick a playbook and a style here, then builds it and opens the review.</p>
+          <p className="sd">Paste this. Your agent builds it and opens the review here.</p>
           <PromptBlock text={FIRST_VIDEO_PROMPT} primary={current === 1} />
         </div>
       </li>

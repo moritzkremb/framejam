@@ -12,6 +12,13 @@ description: >
 
 # Founder Launch
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 A founder talking to camera goes in, with screen recordings of the product; a tight launch video comes out. The kind
 that does well on X when a founder ships: a cold open that makes you stay, a personal reason, the product working on
 screen, a reason to believe, and one clear link. 45–90 s.
@@ -32,9 +39,9 @@ frame clip and overlays on top.
 - **Out:** a 45–90 s mp4 (16:9 for X and landing pages by default, 9:16 on request) with clean cuts, captions,
   callouts, product inserts, brand open and end card, music under the voice, reviewed and approved in FrameJam.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the files; ask only what's left, in one round:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **Footage check:** is there a to-camera recording? If not, stop and hand the founder `references/recording.md`
   (outline, framing, audio, the screen takes to record). Never fake a founder with an avatar unless asked.
 - **The one-line promise** and the **CTA** (URL, waitlist, "free for the first N", install command).
@@ -49,7 +56,7 @@ Resolve from the request and the files; ask only what's left, in one round:
 **Existing project made with another tool:** stay in it. The method, the transcript-based cut and the scripts work
 anywhere; for a timeline editor, export the keep list as an EDL or cut list.
 
-Unattended: pick defaults (16:9, ~60 s, brand look, local whisper, generated bed), write them in `BRIEF.md`.
+When nothing is said: 16:9, ~60 s, the brand's look, local whisper, the generated music bed. Name the defaults you used when you share the first render.
 
 ## Workflow
 
@@ -71,10 +78,10 @@ timecodes) that cover it and the insert planned over it.
 - **CTA:** the link said and shown, then an end card that holds 2 s.
 - Keep the last good take of every line; cut false starts, repeated takes and filler. Target the length.
 
-Show `EDIT.md` as a proposal (beats, lines, inserts, length) and ask: approve or change?
+Then cut it; the first render is the proposal.
 
 ### 3. Rough cut
-- Build the cut from the approved lines. `python3 <playbook>/scripts/pauses.py take.mp4 --out keep.json` finds dead
+- Build the cut from those lines. `python3 <playbook>/scripts/pauses.py take.mp4 --out keep.json` finds dead
   air; edit `keep.json` by hand with the transcript to drop retakes and reorder, then
   `pauses.py take.mp4 --from-json keep.json --render cut.mp4`. Multiple takes: cut each, then concatenate.
 - Cuts land between words, never mid-word. Leave a 0.1–0.2 s breath. Let audio lead the picture by a few frames on

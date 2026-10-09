@@ -88,7 +88,7 @@ export function PlaybooksPage() {
         <div>
           <h1 className="fc-h1">Playbooks</h1>
           <p className="fc-lede">
-            A playbook is how a kind of video gets made: what you bring, the steps and the tools. Styles set the look. Your agent asks you to pick one when it starts a video, or copy a prompt from a playbook's page.
+            A playbook is how a kind of video gets made: what you bring, the steps and the tools. Styles set the look. Name one when you ask your agent for a video, type /framejam playbook to pick on a page, or copy a prompt from a playbook's page.
           </p>
         </div>
         {error && !data ? (

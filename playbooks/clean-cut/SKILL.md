@@ -5,6 +5,13 @@ description: Clean up a raw recording without adding anything. Removes dead air,
 
 # Clean Cut
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 **In:** a raw recording of someone talking: a talking head, a screen recording with voice, a talk, an interview or
 podcast video. Any length, any aspect ratio.
 **Out:** the same video with the dead air, false starts and earlier takes removed (the last take of every line
@@ -16,9 +23,9 @@ stays), at the source's size and frame rate, plus:
 Nothing is added: no captions, graphics, music, color or zooms, unless the user asks. The speaker should sound like
 themselves on a good day, just without the waiting.
 
-## Before you start
+## Defaults (the user's request overrides any of them)
 
-Decide once, write it in `BRIEF.md`, and ask only what you can't work out:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 
 - **How tight.** Pick from the table in `references/clean-cuts.md`: fast for shorts and reels, natural for YouTube and
   tutorials (the default for anything over ~3 minutes), gentle for talks, interviews and podcasts. If the user says

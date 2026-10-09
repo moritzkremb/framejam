@@ -12,6 +12,13 @@ description: >
 
 # Motion Design Showreel
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 A short, dense, beat-cut piece that proves taste and craft: one hero object never leaves the screen and does a new
 trick every bar, the music drives every cut, and it lands on the logo. Inspired by @uxmiles's "Motion designer."
 reel (`references/reference-breakdown.md`); the worked example in `template/` is a 17 s FrameJam reel (the mark as
@@ -23,9 +30,9 @@ the hero, six tricks, a lockup). `<playbook>` below means this folder (the local
 - **Out:** a 1920×1080 60 fps mp4, 12–25 s (default ~16 s + a short logo hold), every trick landing on the beat,
   reviewed and approved in FrameJam. Square or vertical cuts on request.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the files; ask only what can't be resolved, in one round:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **Subject and the hero object:** the thing that survives every shot. Best: something from the brand (the logo
   mark, a product's key button, a cursor, a dot from the wordmark). It must be a simple shape that can morph.
 - **The list:** 5–8 things the reel should show off (features, values, capabilities, skills). Each becomes a trick
@@ -44,8 +51,7 @@ Resolve from the request and the files; ask only what can't be resolved, in one 
 
 **Paid steps:** none needed. Music generation may cost money; stop and ask before using it without a stated budget.
 
-Unattended: pick the hero from the logo, 6 tricks from the subject, the scratch beat at 120 BPM, write the plan
-into `PLAN.md`, and continue.
+When nothing is said: the hero from the logo, 6 tricks from the subject, the scratch beat at 120 BPM. Name the defaults you used when you share the first render.
 
 ## Workflow
 
@@ -69,8 +75,8 @@ writes a scratch beat with hits on beats 12 and 24 to `assets/music.wav`, so it 
 `<audio>` at it, run `python3 tools/beat_grid.py assets/<track> --out analysis/beats.json`, set `BPM`/`OFFSET` and
 the root `data-duration`, and move the flood and lockup beats onto its accents (`references/beat-grid.md`).
 
-### 3. Storyboard round
-Before animating new tricks, make one still per shot at its key pose: build each shot's peak state quickly in the
+### 3. Storyboard (only if the user asks)
+If the user wants to see the shots first, make one still per shot at its key pose: build each shot's peak state quickly in the
 composition, `npx hyperframes snapshot --at <peak times> --describe false -o storyboard` and rename the frames
 `01_<label>.png`... Review them in FrameJam: `open_review` with `panelsDir` = `storyboard/`, open the URL,
 `wait_for_feedback`. Fix what the user flags; `add_version` for another round if much changed.

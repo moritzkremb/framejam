@@ -26,8 +26,8 @@ whatever your project already uses. The hard part is everything around it. Descr
 "the thing at around three seconds should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
 (Cursor, Claude Code, ChatGPT desktop) and handles both.
 
-**Pick a style instead of describing one.** When your agent starts a video, it opens a pick page with 30 example
-videos. Choose one and your agent gets the look:
+**Pick a style instead of describing one.** Name one of 30 example videos when you ask for a video, or type
+`/framejam style` to choose on a page. Your agent gets the look:
 palette, textures, fonts, easing, transitions, text animations and pacing, and builds whatever your video is about in
 it.
 
@@ -47,7 +47,8 @@ videos from framejam.ai, and the **Feedback** button sends the note you write; n
 ## How it works
 
 1. **Ask your agent** for a video, for example *"make a 7-second launch teaser with FrameJam and open it for review"*.
-2. **Pick a playbook and a style** on the page your agent opens, or none, and press **Start**.
+2. **Optionally pick a playbook and a style**: name them in your request, or type `/framejam playbook` or
+   `/framejam style` to choose on a page.
 3. **Review it** in the browser pane next to your chat: click, type, drag, then press **Finish review**.
 4. **Get version 2.** The agent applies your notes and the page switches to the new version on its own. Repeat
    until you love it.
@@ -256,8 +257,8 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 ## Playbooks
 
 A style sets the look; a playbook sets how a kind of video gets made: what you bring, the steps, the tools it needs
-and the quality bar. When your agent starts a video, it asks you to pick one (or type `/framejam playbook`), then
-follows it. FrameJam ships with 12:
+and the quality bar, all as defaults your request can override. Name one when you ask for a video, or type
+`/framejam playbook` to choose on a page. FrameJam ships with 12:
 
 | Playbook | What goes in, what comes out |
 | --- | --- |

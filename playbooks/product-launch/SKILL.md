@@ -12,6 +12,13 @@ description: >
 
 # Product Launch
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 A product goes in; a polished launch video comes out. The kind you see on X when a SaaS team ships: a hook that names
 the pain, the product name landing on a drop, three features shown in the real interface, proof, and a clean end card.
 Music-driven, usually no voiceover, 20–60 s.
@@ -32,9 +39,9 @@ project (`npx hyperframes init`), and copy `template/hyperframes/` as the starti
 - **Out:** a 20–60 s mp4 (16:9 by default, 9:16 or 1:1 on request) with real product UI, kinetic type, music and sound
   effects on one beat grid, reviewed and approved in FrameJam.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the project; ask only what's left, in one round:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **The one-line promise.** What the viewer should remember. Everything else is evidence for it.
 - **Length and format:** X feed 30–45 s 16:9 (default); landing hero 30–45 s 16:9, muted-first; Reels 9:16 ≤ 30 s.
 - **Sound:** music-only (default, plays muted on autoplay, so type carries the story) or voiceover + music.
@@ -49,7 +56,7 @@ Resolve from the request and the project; ask only what's left, in one round:
 **Existing project made with another tool:** stay in that tool. The method (beat grid, storyboard, real UI in windows,
 paced reveals, verification, FrameJam loop) and the scripts (`launch_bed.py`, `sheet.sh`) work with any tool.
 
-Unattended: choose defaults (music-only, 16:9, ~40 s, brand look), write them into `BRIEF.md`, and keep going.
+When nothing is said: music-only, 16:9, ~40 s, the brand's look. Name the defaults you used when you share the first render.
 
 ## Workflow
 
@@ -76,8 +83,8 @@ Read `references/story.md`. Then write `STORYBOARD.md`:
 - Write a `## Video direction` block once at the top: palette roles, type roles, how windows enter, motion rules,
   which frames are dark "impact" frames, what never appears.
 
-Show the plan as a short proposal (frame list with times and one line each) and ask: approve or change? If the look
-is uncertain, sketch the frames first and review them in FrameJam as a storyboard: `open_review` with `panelsDir`
+Then build; the first render is the proposal. If the user wants to see the frames first, sketch them and review them
+in FrameJam as a storyboard: `open_review` with `panelsDir`
 (one image per frame, named `01-hook.png`…), then `wait_for_feedback`.
 
 ### 3. Shot design

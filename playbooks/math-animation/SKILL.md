@@ -10,6 +10,13 @@ description: >
 
 # Math Animation
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 A concept goes in; a short film where the viewer *sees* why it's true comes out. One insight per video, shown as a picture before it's written as a formula, with narration that never runs ahead of the animation.
 
 The look is Manim's: the open-source library 3Blue1Brown's Grant Sanderson wrote for his videos, in its community edition. The starter project in `template/` sets up the palette, fonts, helpers that work with or without LaTeX, a `NarratedScene` that paces each scene to its spoken lines, a free local voice, and scripts that render, join and mix everything. `<playbook>` below means this folder (the local path `get_playbook` returned).
@@ -20,9 +27,9 @@ Reference build: the template's own example, **"Why odd numbers add up to square
 - **In:** the idea (a proof, formula, algorithm, phenomenon), the audience, optionally notes, a source text, a script or the user's own voice recording.
 - **Out:** a 16:9 1080p60 mp4 (60 s to 5 min), narrated, -16 LUFS, plus the Manim project that re-renders it. Reviewed and approved in FrameJam.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the environment; ask only what can't be resolved, in one round:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **Idea and audience:** what should the viewer understand at the end, and what do they already know? If the request is a whole topic ("explain Fourier series"), propose the one insight you'll build the video around.
 - **Length:** 60–90 s for one visual proof; 3–5 min for a concept with a build-up. Default 90 s.
 - **Voice:** the user's own recording, or a free local voice (Kokoro via `scripts/tts.py`, default `am_michael`), or a paid voice (ElevenLabs, OpenAI) only with their OK. Silent with on-screen text is fine for social clips.
@@ -50,7 +57,7 @@ Resolve from the request and the environment; ask only what can't be resolved, i
 - Mark each scene's technique from `references/visual-language.md`: build-up, morph, rearrange, highlight, zoom, sweep a parameter.
 - Pass example numbers before the general case (1+3+5 = 9, then n²).
 
-### 3. Storyboard in FrameJam
+### 3. Storyboard (only if the user asks)
 Draw each planned scene's key frame as code, so the storyboard becomes the first draft:
 - Copy the template: `cp -R <playbook>/template <project>` and set up the venv (`references/setup.md`).
 - In `storyboard.py`, one small `Scene` per planned scene, named `Panel01_<SceneId>`, `Panel02_<SceneId>`…, that just `self.add(...)`s the key layout with real positions, colours and labels (the template has two examples).

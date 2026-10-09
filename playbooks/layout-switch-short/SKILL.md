@@ -5,6 +5,13 @@ description: Turn a raw talking-head recording into a fast-cut vertical short th
 
 # Dynamic Layout Short
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 **In:** a raw recording of someone talking to camera (best: a how-to or list with clear steps), plus screen
 recordings, screenshots, product photos or footage of what they talk about.
 **Out:** a 1080×1920 short where every beat of the speech gets the layout that fits it and something on screen
@@ -24,9 +31,9 @@ a small label chip, a bold display font with a mono label font, and big 1–3 wo
 word being spoken turns the accent colour. The pattern comes from a reel by @itsolelehmann (cut faster here);
 `references/reference-breakdown.md` has its timeline and the rules derived from it.
 
-## Before you start
+## Defaults (the user's request overrides any of them)
 
-Decide once, write it in `BRIEF.md`, ask only what can't be worked out:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 
 - **Is the speech right for it?** It works best with a structure (steps, a list, a before/after). If there's none,
   use the speaker, split and visual layouts only and skip the roadmap.
@@ -117,7 +124,7 @@ should end up at least ~22 px tall in the 960 px wide card, and wide crops (1.3:
 mouse cursors and anything private (account IDs, tokens, emails). Trim clips to the beat length plus a little and
 mute them. Give cards a 2–3 word `label` and the UI's own `bg` colour.
 
-If more than ~5 visuals had to be found or made, show the plan first: one still per beat in
+If the user wants to see the plan first, show it: one still per beat in
 `working/storyboard/01-....png` (a snapshot or the picture with the layout name written on it), `open_review` with
 `panelsDir`, and adjust before building.
 

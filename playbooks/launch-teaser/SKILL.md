@@ -12,6 +12,13 @@ description: >
 
 # Launch Teaser
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 A name, a promise and a handful of real glimpses go in; a 10–20 s teaser comes out. It doesn't explain the product.
 It makes you curious, lands the name hard, and says when or where.
 
@@ -37,7 +44,7 @@ The method is fixed; the tool is not. In an existing project, use its tool. Star
 - **Out:** a 10–20 s mp4 (16:9 default; 9:16 or 1:1 on request), music and sound effects on one grid, reviewed and
   approved in FrameJam.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 - **The idea:** one visual idea that carries the whole teaser (FrameJam: comment pins landing on frames; Claude:
   horizons of textures; ElevenLabs: voices as particle faces). Pick it from the product's own world.
 - **Words:** 6–20 words total. Write them first; they set the beats.
@@ -51,7 +58,7 @@ The method is fixed; the tool is not. In an existing project, use its tool. Star
 
 **Existing project made with another tool:** stay in that tool; the beat plan, cue sheet and checks apply unchanged.
 
-Unattended: choose defaults (16:9, 18 s, 120 BPM, brand look), write them in `BRIEF.md`, keep going.
+When nothing is said: 16:9, 18 s, 120 BPM, the brand's look. Name the defaults you used when you share the first render.
 
 ## Workflow
 
@@ -68,8 +75,8 @@ Read `references/teaser.md`. Pick a tempo (120 BPM: beat 0.5 s, bar 2 s) and lay
 | 9 | 16–18 | outro | date / link / command on the final hit; hold; fade |
 
 Write `STORYBOARD.md` with a time-coded line per scene (what's on screen, where, how it moves, which beat), and the
-cue sheet `cues.json` from the same plan. Show the plan as a short proposal and ask approve / change. If the look is
-uncertain, make 4–6 stills of key moments and review them in FrameJam first (`open_review` with `panelsDir`).
+cue sheet `cues.json` from the same plan. Then build; the first render is the proposal. If the user wants to see the shots first, make 4–6 stills of key
+moments and review them in FrameJam (`open_review` with `panelsDir`).
 
 ### 2. Prepare glimpses
 - Cut each glimpse to a short H.264 clip with frequent keyframes at the target size, from its best moment:

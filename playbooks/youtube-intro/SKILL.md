@@ -12,6 +12,13 @@ description: >
 
 # YouTube Intro
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 The first 20–35 seconds of a long-form YouTube video, built to keep people watching: say what happened with the proof
 on screen, why it matters, what the video will show (three things), then cut straight into the body. Measured from
 Moritz Kremb's own intros; `references/formula.md` has the numbers and examples, `references/graphics.md` the exact
@@ -23,9 +30,9 @@ specs. `<playbook>` below means this folder (the local path `get_playbook` retur
 - **Out:** `intro-vN.mp4`, 1920×1080, 20–35 s (≤ 60 s), voice at about -14 LUFS, ending on a clean frame so it can be
   cut onto the start of the long video. Plus the trimmed script and the list of what was used.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the files; ask only what can't be resolved, in one round:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **Footage:** a camera take of the intro (Layout A, edited talking head), a take recorded over the screen
   (Layout B, framed screen), or only a script (write and tighten it first, then ask the user to record: one take
   to camera, one screen recording of the proof; offer Layout B if they'd rather record once over the screen).
@@ -44,7 +51,7 @@ Resolve from the request and the files; ask only what can't be resolved, in one 
 **Paid steps:** none are needed. Music generation or a transcription service may cost money; stop and ask before
 using one unless the user set a budget.
 
-Unattended: pick the layout from the footage, write the plan into `INTRO_PLAN.md`, and continue.
+When nothing is said, pick the layout from the footage. Name the defaults you used when you share the first render.
 
 ## Workflow
 
@@ -60,7 +67,7 @@ with what's on screen for each:
 4. **Handoff:** "So let's dive in." No title card, logo sting or subscribe ask.
 
 Cut anything else (greetings, "in today's video", throat-clearing, a long credential). Read it aloud at speaking
-pace: 20–35 s. If the user only gave a script, stop here and ask them to record (or to approve the plan).
+pace: 20–35 s. If the user only gave a script, ask them to record it.
 
 ### 2. Transcribe and tighten the take
 ```bash
@@ -75,14 +82,14 @@ over 35 s with no reason, cut a sentence, not speed.
 Layout B: the screen take usually carries the voice; tighten it the same way, or tighten the camera take and use
 `--screen-start` to line up the screen.
 
-### 3. Plan the graphics (storyboard round when it's Layout A)
+### 3. Plan the graphics
 In `INTRO_PLAN.md`, add a timed list from `words_cut.json`: each sentence → shot scale (wide/punch, alternating),
 caption text (1–4 words, kicker), and at most one graphic: the full-screen insert on the context line, a pop-up card
 per "like this", an icon row for a list, the proof clip during the hook. Specs in `references/graphics.md`.
 
-For Layout A, render one still per graphic (the insert, each card, a caption frame) into `storyboard/` as
+If the user wants to see the graphics first (Layout A), render one still per graphic (the insert, each card, a caption frame) into `storyboard/` as
 `01_hook.png`, `02_insert.png`..., then review them in FrameJam: `open_review` with `panelsDir` = the storyboard
-folder, open the URL, `wait_for_feedback`. Fix what the user flags before animating. Layout B skips this.
+folder, open the URL, `wait_for_feedback`. Fix what the user flags before animating.
 
 ### 4. Build
 **Layout A (edited talking head):**

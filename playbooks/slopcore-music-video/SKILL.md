@@ -11,6 +11,13 @@ description: >
 
 # Slopcore Music Video
 
+> **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
+> default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
+> defaults you chose in one line when you share the first render (ask only if something essential is missing, like the
+> footage itself). The first render is the proposal, so there's no plan to approve first. Storyboards only when the
+> user asks to see the shots first. Planning files the method mentions (`BRIEF.md`, `PLAN.md` and the like) are your
+> own working notes: write them when they help you, never as a step for the user.
+
 A song goes in; a dense, internet-literate music video comes out. A generated protagonist (the muse) walks through a
 season of looks, each shot a lyric's joke, while a pin-sharp overlay annotates everything: the sung line, a giant hook
 word, a citation for the meme, a price tag, a chart, a countdown that escalates, a ticker of timeline news.
@@ -25,7 +32,7 @@ How the work splits:
 - **Edit:** `shot_plan.py` cuts on each sung line's pickup; `base_edit.py` assembles clips into a frame-exact base
   with the untouched song.
 - **Overlay:** code, in the project's video tool, specified in `references/overlay_system.md`.
-- **Review:** FrameJam, on the stills (storyboard) and after every render.
+- **Review:** FrameJam, after every render (and the stills first, if the user wants to see them).
 
 `references/pipeline.md` has every command. `<playbook>` = this folder (the local path `get_playbook` returned).
 
@@ -35,9 +42,9 @@ How the work splits:
 - **Out:** a 16:9 1080p music video (~2:20 for X; as long as the song otherwise), every sung word on screen on time,
   reviewed and approved in FrameJam.
 
-## Before you start (decide once, then run)
+## Defaults (the user's request overrides any of them)
 
-Resolve from the request and the environment; ask only what's left, in one message:
+Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 - **Topic and device.** The scene whose slang drives the lyrics, and the frame device that numbers the shots
   (fashion collection with looks, keynote with slides, countdown, trial with exhibits, training run with steps).
 - **Song.** Supplied (its lyrics win) or written and generated. Music generation usually costs money.
@@ -56,7 +63,7 @@ Resolve from the request and the environment; ask only what's left, in one messa
 - **Machine.** Python 3.11 (via `uv` or python3.11), ffmpeg, git, Node for the video tool.
 
 Stop before the first paid generation unless the user gave a budget. Keep `analysis/ledger.md` of every paid call.
-Unattended: choose defaults, write them into `TREATMENT.md`, and stop at the first paid step.
+When nothing is said, choose defaults (and still stop at the first paid step without a budget). Name the defaults you used when you share the first render.
 
 ## Workflow
 
@@ -91,11 +98,11 @@ Unattended: choose defaults, write them into `TREATMENT.md`, and stop at the fir
 - Collect or build the moodboard (`generation.md` §1), write its adjectives into STYLE.md.
 - Muse sheet and crops (§2). Get the user's OK on the muse before generating shots; it's in every frame.
 
-### 6. Stills, then the storyboard round
+### 6. Stills
 - One still per planned shot (40-60 unique for ~2:30; reuse close-ups across chorus shots), in batches, Read each at
   full size, regenerate misses (drifted muse, garbled signage, logos, no room for the hero word).
 - Midjourney: write `analysis/prompts.md` for the user to paste; they save picks as `assets/stills/sNNN_<desc>.jpg`.
-- **Review in FrameJam:** copy the stills to `out/storyboard/`, `open_review` with `panelsDir` (absolute path), open
+- **Only if the user wants to see the stills first** (worth offering before paying for clips): copy the stills to `out/storyboard/`, `open_review` with `panelsDir` (absolute path), open
   the URL, `wait_for_feedback`. Fix the flagged panels; `add_version` if many changed.
 
 ### 7. Clips and base edit

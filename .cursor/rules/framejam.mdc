@@ -14,7 +14,11 @@ FrameJam runs next to your chat at http://localhost:2400. It gives you three thi
 feedback** (timestamped, pinned comments with a frame image of the render).
 
 FrameJam works with whatever makes the video. **The user reviews the rendered video** (`videoPath`), so what they see
-is exactly what you rendered. Hyperframes is the default way to build a new video.
+is exactly what you rendered. Use whatever tool fits: the project's own, or what you'd normally reach for
+(Hyperframes, Remotion, Motion Canvas, ffmpeg…).
+
+FrameJam is a toolkit, not a process. Do what the user asks, with sensible defaults, and reach for these tools when
+they help. Don't add steps, questions or approvals the user didn't ask for.
 
 **Words to use with the user:** FrameJam calls each review a **project** (the start page is "Projects"). Say
 "I opened the project in FrameJam", not "I opened a review". Tool and field names (`open_review`, `reviewId`) stay as
@@ -27,66 +31,50 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
 - **Cursor:** use the built-in browser tool (`cursor-ide-browser` → `browser_navigate`) with
   `position: "side"` so it opens beside the chat.
 - **Other harnesses:** use their browser/preview tool if there is one. Otherwise give the user the link.
-- **Which page:** the project's `url` when step 1 finds one, the pick page from `open_picker` for a new video, and
-  `http://localhost:2400` (Projects) until you know.
+- **Which page:** the project's `url` when there is one, the pick page when you opened one, and
+  `http://localhost:2400` (Projects) otherwise.
 - If the page doesn't load, nothing is hosting the UI. Run `npx -y framejam start` (it starts the UI in the background,
   or reuses a running one, and prints the URL), then open that URL. Never ask the user to start it.
 - If the framejam tools themselves aren't available, run `npx -y framejam install <app>` with the app you're running
   in (`cursor`, `claude` or `codex`). It adds the MCP server and the skill (or confirms them) and starts the UI. Open
   the link it prints, then tell the user the last step it prints (restarting the app once so the tools load).
 
-## 1. Work out what the user is doing (before asking anything)
+## 1. Do what the user asked
 
-The user may type nothing but `/framejam`. Check these in order and act on the first that applies. Don't ask "what do
-you want to make?" if any of them answers it.
+Act on the request right away with sensible defaults (length, format, tool, look); ask only when something can't be
+guessed, like the footage for an edit. Useful shortcuts when the request is short:
 
-1. **What they typed.** "/framejam make a 10s teaser for X" → do that (a new video starts with the pick, loop step 0).
-   `/framejam playbook` or `/framejam style` → run the pick for just that one (`open_picker({ kinds: ["playbook"] })`
-   or `["style"]`), then ask what the video is about if you don't know yet.
-2. **This conversation.** If you've been making or editing a video in this chat, keep going with it: render the current
-   state to the next `renders/vN.mp4`, then add it to the same project (`add_version` with its `reviewId`, or
-   `open_review` with the same `title`), and wait for feedback.
-3. **Feedback waiting.** Call `list_reviews()`. If a project is `sent_not_delivered` or `user_commenting`, call
-   `get_feedback({ reviewId })` and apply it.
-4. **A FrameJam project for this folder:** one whose `videoPath` or `panelsDir` is inside the
-   current workspace.
-   - `awaiting_user`: open its `url` and call `wait_for_feedback`.
-   - `delivered_to_agent`: an earlier chat got the comments but never shipped the next version. Call `get_feedback` to
-     get them again, apply them, and ship the next version.
-   - A storyboard the user approved, and no video yet: build the video from the panels.
-5. **A video project here, but no FrameJam project.** A Hyperframes `index.html` with `data-composition-id`, a Remotion
-   or Motion Canvas project, a `renders/` folder or a loose video file: use the newest render if it's newer than the
-   source, otherwise render. Open it as v1 and wait for feedback. Use the project's own tool; for a plain video file,
-   pass `videoPath` only.
-6. **Nothing relevant** (empty folder, unrelated code repo): ask what video to make: what it's about, roughly how
-   long, the format (16:9, 9:16, 1:1), and any copy, footage or brand assets. Then start the pick (loop step 0). New
-   videos default to Hyperframes unless a playbook says otherwise.
-
-If several projects could match, ask one short question that lists them.
+- **`/framejam playbook` or `/framejam style`:** open the picker for just that (`open_picker({ kinds: ["playbook"] })`
+  or `["style"]`), see loop step 0.
+- **Continuing:** if you've been making a video in this chat, render the next version into the same project
+  (`add_version` with its `reviewId`, or `open_review` with the same `title`).
+- **Feedback waiting:** `list_reviews()` shows every project. If one is `sent_not_delivered` or `user_commenting`, call
+  `get_feedback({ reviewId })` and apply it. If one is `awaiting_user`, open its `url` and `wait_for_feedback`.
+- **A video already in this folder** (a render, or a Hyperframes, Remotion or Motion Canvas project) and the user
+  wants to review it: open the newest render as a project.
+- **`/framejam` alone with nothing to go on:** ask in one line what the video should be about.
 
 ## The loop
 
-0. **Pick (new videos only).** Let the user pick a playbook and a style for this video in FrameJam. Nothing is
-   selected ahead of time; every new video gets its own pick.
-   - Call `open_picker({ title })` with a few words about the video (`kinds` defaults to both). Open the returned `url`
-     in the built-in browser, post it in chat as a clickable link (`[Pick a playbook and style](url)`), then call
-     `wait_for_pick({ pickId })` right away. While it returns `pending`, call it again; after 6 pending results in a
-     row, stop and ask in chat which playbook and style they want.
-   - Skip the pick when the user already named a playbook or style (use `get_playbook(id)` / `get_preset(id)`, e.g.
-     from a pasted prompt), said they want none, or is continuing an existing project. Existing projects keep their
-     picks: `get_feedback` and `wait_for_feedback` return the project's `playbookId` and `styleId`.
+0. **Pick (only when asked).** If the user names a playbook or style, use it (`get_playbook(id)` / `get_preset(id)`).
+   Open the pick page only when they ask to choose (`/framejam playbook`, `/framejam style`, "let me pick a style") or
+   when the request is too open to start from. Otherwise just build.
+   - Call `open_picker({ title, kinds })` (`kinds` defaults to both), open the returned `url` in the built-in browser,
+     post it in chat as a clickable link, then call `wait_for_pick({ pickId })`. While it returns `pending`, call it
+     again; after 6 pending results in a row, ask in chat instead.
    - When the pick arrives, say in one line what you're using ("Using the Clean Cut playbook and no style"), with links
-     to their pages. Pass `playbookId` and `styleId` to `open_review` so later versions and new chats keep them.
-   - A `null` playbook or style means the user chose none: build it your own way, or in your own look.
+     to their pages.
+   - A `null` playbook or style means the user chose none. Pass `playbookId` and `styleId` to `open_review` so later
+     versions keep them; existing projects return them from `get_feedback` and `wait_for_feedback`.
 1. **Follow the playbook and the style.**
-   - **Playbook:** its `skill` is the method for this video: follow it step by step, and use the loop below for every
-     render it asks for. Read files in `playbookDir` when the method points to them, and copy its scripts, engine or
+   - **Playbook:** its `skill` is a recipe for this kind of video, with defaults the user's request overrides. Use the
+     loop below for every render. Read files in `playbookDir` when the method points to them, and copy its scripts, engine or
      template into the project before using them; never edit `playbookDir`. `stylesSentence` says how the style
      combines with it.
    - **A style is a look, not a starting video.** First plan the video from what the user asked for (a rocket launch
-     is about the rocket), then build that subject in the style's visual language: the exact `palette` hex values,
-     textures and backgrounds, `fonts`, `easing` names, `transitions`, `textAnimations` and
-     `rhythm.averageShotSeconds`, following the look rules in `guide` whatever the tool.
+     is about the rocket), then build that subject in the style's visual language: its `palette`, textures and
+     backgrounds, `fonts`, `easing`, `transitions`, `textAnimations` and pacing, as `guide` describes them. Treat it as a
+     strong starting point, not a rulebook: bend it where the subject or the user's request needs it.
    - `example` says what the style's preview video shows. Don't reuse that scene (its subject, props, layout or story,
      like the computer in Cyanotype Mac) unless the user asks for it.
    - The example composition in `templateDir` is a reference, not a skeleton. Don't copy it in and swap the text.
@@ -106,7 +94,7 @@ If several projects could match, ask one short question that lists them.
    - **Stop after 12 `pending` results in a row (about 10 minutes).** Don't wait forever. End your turn with one short
      message: the project's `url`, "Press **Finish review** when you're done, then paste the line the page shows (or
      say `apply my FrameJam feedback`) and I'll pick it up." The comments are saved, so nothing is lost. When the user
-     comes back, call `get_feedback` (step 1.3). Stop earlier if the user tells you to in chat.
+     comes back, call `get_feedback`. Stop earlier if the user tells you to in chat.
    - `status: "feedback"` returns `comments[]`, a markdown summary, and frame images.
    - `revised: true` means the user reopened their review after you got it and changed the comments. The new list
      **replaces** the old one: drop changes from the old list that aren't in the new one.
@@ -126,7 +114,7 @@ If several projects could match, ask one short question that lists them.
    comments. If you couldn't address a comment, say why in chat and in the note.
 8. Go back to step 5.
 
-## Hyperframes (the default)
+## Hyperframes
 
 - **First run on this machine:** run `npx hyperframes doctor` once. It checks Node, ffmpeg and Chrome, which rendering
   needs. If something is missing, tell the user how to install it before you build.

@@ -119,7 +119,7 @@ export function StylesPage() {
         <PickBanner />
         <div>
           <h1 className="fc-h1">Styles</h1>
-          <p className="fc-lede">Looks for whatever your video is about. Your agent asks you to pick one when it starts a video, or copy a prompt from a style's page.</p>
+          <p className="fc-lede">Looks for whatever your video is about. Name one when you ask your agent for a video, type /framejam style to pick on a page, or copy a prompt from a style's page.</p>
         </div>
         {error && !data ? (
           isOffline(error) ? <Offline /> : <p className="fc-caption">{String((error as Error).message)}</p>
