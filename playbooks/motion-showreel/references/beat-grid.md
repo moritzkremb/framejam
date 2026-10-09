@@ -1,12 +1,15 @@
 # Music and the beat grid
 
-## Sources (in order of preference)
-1. **The user's licensed track** (or one from a library they subscribe to). Cut it to 15–25 s on bar lines, ideally
+## Sources
+1. **The included track** (`template/assets/music.mp3`, copied into every new project): 32 s of polished instrumental
+   electronic music at exactly 120 BPM, bars starting at 0 s (`BPM = 120`, `OFFSET = 0`), with big hits near 6 s and
+   12 s (beats 12 and 24, where the template's flood and 3D type land) and a final hit with a short tail. Generated with
+   ElevenLabs Music for FrameJam and free to use in your videos. Trim it to the reel's length on a bar line and fade
+   the last ~0.8 s.
+2. **The user's licensed track** (or one from a library they subscribe to). Cut it to 15–25 s on bar lines, ideally
    with a hit where the big flood goes and one where the logo lands.
-2. **Generated music** in a tool the user already has (Suno, Udio, ElevenLabs Music). Usually paid; ask first. Brief:
+3. **Generated music** in a tool the user already has (Suno, Udio, ElevenLabs Music). Usually paid. Brief:
    "instrumental, 115–130 BPM, punchy electronic percussion, a riser into a hit at bar 4 and bar 7, clean ending".
-3. **The scratch beat** (`scripts/scratch_beat.py`): free, synthesized on an exact grid, royalty-free. Fine for the
-   build and for drafts; offer to replace it for the final cut.
 
 Never use music the user doesn't have rights to (no ripped songs, no "trending audio" downloads).
 

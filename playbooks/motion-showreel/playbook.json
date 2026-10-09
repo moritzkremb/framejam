@@ -19,8 +19,8 @@
   "needs": [
     { "name": "Hyperframes", "where": "computer" },
     { "name": "Node, Python 3 and ffmpeg", "where": "computer" },
-    { "name": "Showreel starter and beat tools", "where": "included" },
-    { "name": "A music generator", "where": "service", "cost": "paid", "examples": ["Suno", "Udio", "ElevenLabs Music", "the included scratch beat (free)"], "optional": true }
+    { "name": "Showreel starter, a 120 BPM music track and beat tools", "where": "included" },
+    { "name": "A music generator, for your own track", "where": "service", "cost": "paid", "examples": ["ElevenLabs Music", "Suno", "Udio"], "optional": true }
   ],
   "styles": "inspiration",
   "steps": [

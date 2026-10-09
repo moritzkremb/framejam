@@ -5,7 +5,7 @@ description: >
   hero object (a dot, a button, the logo mark) morphs through a fast run of motion-design "tricks" (UI
   micro-interactions, onion-skin trails, colour floods, kinetic type, a 3D type ring, grid ripples) cut to a music
   beat grid, ending on a logo lockup. Includes a beat-synced Hyperframes starter, a beat-grid analyzer and a
-  royalty-free scratch beat. Every version is reviewed in FrameJam. Use for "make a motion design showreel", a launch
+  ready 120 BPM music track. Every version is reviewed in FrameJam. Use for "make a motion design showreel", a launch
   teaser, a logo reveal with flair, "make something like this @uxmiles video", or a brand sizzle. Not for narrated
   explainers or talking-head edits.
 ---
@@ -37,21 +37,21 @@ Work these out from the request and the files. Where nothing is said, use the de
   mark, a product's key button, a cursor, a dot from the wordmark). It must be a simple shape that can morph.
 - **The list:** 5–8 things the reel should show off (features, values, capabilities, skills). Each becomes a trick
   and a one-word HUD label.
-- **Music:** the user's licensed track, generated music (usually paid: ask), or the free scratch beat
-  (`references/beat-grid.md`). The scratch beat is fine for drafts.
+- **Music:** the included 120 BPM track (default, free to use), the user's licensed track, or generated music
+  (usually paid). See `references/beat-grid.md`.
 - **Look:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style is a starting point: take its palette (cut to 3 colours: a
   ground, an ink, one accent), its fonts (one display, one mono) and its motion feel, then design this reel's own
   look from it. No style: use the brand, or the template's look.
 - **Tool:** starting fresh, use the bundled Hyperframes template (`project: new`). **Existing project made with
   another tool** (Remotion, Motion Canvas, After Effects scripts...): don't convert it. Follow the same method with
-  that tool; `references/tricks.md` gives each trick tool-independently, and `beat_grid.py`, `scratch_beat.py`,
-  `sync_check.py` work anywhere. Say what the template would have added (beat-addressed timeline, HUD index and beat
+  that tool; `references/tricks.md` gives each trick tool-independently, and `beat_grid.py` and
+  `sync_check.py` work anywhere, and the included track works in any tool. Say what the template would have added (beat-addressed timeline, HUD index and beat
   dots, the six worked tricks, free deterministic re-renders).
 - **Machine:** Node ≥ 20, Python 3 with numpy, ffmpeg. `npx hyperframes` is free and local.
 
 **Paid steps:** none needed. Music generation may cost money; stop and ask before using it without a stated budget.
 
-When nothing is said: the hero from the logo, 6 tricks from the subject, the scratch beat at 120 BPM. Name the defaults you used when you share the first render.
+When nothing is said: the hero from the logo, 6 tricks from the subject, the included 120 BPM track. Name the defaults you used when you share the first render.
 
 ## Workflow
 
@@ -67,10 +67,10 @@ When nothing is said: the hero from the logo, 6 tricks from the subject, the scr
 
 ### 2. Scaffold and music
 ```bash
-bash <playbook>/scripts/scaffold.sh <project-dir> --bpm 120 --bars 8 --hits 12,24
+bash <playbook>/scripts/scaffold.sh <project-dir>
 ```
-This runs `npx hyperframes init`, copies `template/` (index.html, Geist fonts) and the tools into `tools/`, and
-writes a scratch beat with hits on beats 12 and 24 to `assets/music.wav`, so it renders at once
+This runs `npx hyperframes init`, copies `template/` (index.html, Geist fonts, the 120 BPM track in
+`assets/music.mp3` with hits near beats 12 and 24) and the tools into `tools/`, so it renders at once
 (`npx hyperframes render --output renders/v0.mp4`, ~20 s). With a real track: put it in `assets/`, point the
 `<audio>` at it, run `python3 tools/beat_grid.py assets/<track> --out analysis/beats.json`, set `BPM`/`OFFSET` and
 the root `data-duration`, and move the flood and lockup beats onto its accents (`references/beat-grid.md`).
@@ -121,16 +121,16 @@ an `onUpdate` so seeking redraws them; no `Math.random()` or clocks.
 - **A trick per bar:** nothing holds longer than ~2 s except the lockup; every trick shows a different skill.
 - **Restraint:** 3 colours, 2 fonts, flat shapes, no stock effects, no glow soup.
 - **Readable at speed:** every word on screen is ≤ 3 words or a big single word, held ≥ 0.75 s.
-- **Rights:** official logos and real product UI only; licensed, generated or scratch music; no third-party logos.
+- **Rights:** official logos and real product UI only; the included track, licensed or generated music; no third-party logos.
 - **Photosensitivity:** at most 3 full-frame luminance flips per second.
 
 ## Files in this playbook
 - `template/index.html`: the beat-addressed Hyperframes starter (the FrameJam reel: send → onion skin → timeline →
   flood → 3D type → grid → lockup, HUD index, beat dots, timecode). `template/assets/fonts/`: Geist and Geist Mono
   (OFL).
-- `scripts/scaffold.sh`: new project from the template, tools copied, scratch beat written.
+- `scripts/scaffold.sh`: new project from the template (with its music track), tools copied.
+- `template/assets/music.mp3`: 32 s, 120 BPM, bars from 0 s, hits near 6 s and 12 s; free to use in your videos.
 - `scripts/beat_grid.py`: tempo, grid origin, downbeats and accents of any track → `beats.json` (numpy, ffmpeg).
-- `scripts/scratch_beat.py`: royalty-free synthesized beat on an exact grid with risers into chosen hits.
 - `scripts/sync_check.py`: picture-vs-audio hit offsets in a render. `scripts/sheet.sh`: contact sheets.
 - `references/reference-breakdown.md`: the @uxmiles reel, shot by shot. `references/tricks.md`: the trick library
   with GSAP/CSS and Remotion notes, transitions, motion grammar, determinism. `references/beat-grid.md`: music
