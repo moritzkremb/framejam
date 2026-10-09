@@ -1,6 +1,6 @@
 import { Check, ChevronDown, Loader2, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FilterDropdown } from "@/components/filter-dropdown";
 import { BackHeader, Dots } from "@/components/header";
@@ -127,6 +127,7 @@ function Seg({ value, options, onChange, label }: { value: string; options: stri
 export function PickPage() {
   const { id = "" } = useParams();
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const [pick, setPick] = useState<VideoPick | null>(null);
   const [missing, setMissing] = useState(false);
   const [playbooks, setPlaybooks] = useState<PlaybookSummary[]>([]);
@@ -158,6 +159,14 @@ export function PickPage() {
       .then((d) => setStyles(d.presets))
       .catch(() => {});
   }, [id]);
+
+  // An old link: the pick was already sent or replaced, so there's nothing to do here.
+  const stale = pick && pick.status !== "waiting" ? pick.status : null;
+  useEffect(() => {
+    if (!stale) return;
+    toast(stale === "picked" ? "This pick was already sent to your agent" : "Your agent started a newer pick");
+    navigate("/", { replace: true });
+  }, [stale, navigate]);
 
   const visiblePlaybooks = useMemo(() => {
     const q = pbQuery.trim().toLowerCase();
@@ -207,34 +216,7 @@ export function PickPage() {
   const stylesUnused = chosenPlaybook?.styles === "none";
   const sub = pick.title ? `For: ${pick.title}` : "For the video your agent is about to make";
 
-  if (pick.status !== "waiting") {
-    const sentPlaybook = playbooks.find((p) => p.id === pick.playbookId)?.name;
-    const sentStyle = styles.find((s) => s.id === pick.styleId)?.name;
-    return (
-      <div className="fc-screen">
-        <BackHeader to="/" title="Pick for your video" sub={sub} />
-        <main className="fc-main">
-          <div className="fc-empty">
-            {pick.status === "picked" ? (
-              <>
-                <div className="fc-h3">Sent to your agent</div>
-                <p className="fc-caption">
-                  {`${[wants("playbook") && (sentPlaybook ? `Playbook: ${sentPlaybook}` : "No playbook"), wants("style") && (sentStyle ? `Style: ${sentStyle}` : "No style")]
-                    .filter(Boolean)
-                    .join(" · ")}. Go back to your chat; your agent is starting the video.`}
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="fc-h3">This pick was replaced</div>
-                <p className="fc-caption">Your agent started a newer one. Use the link it posted most recently.</p>
-              </>
-            )}
-          </div>
-        </main>
-      </div>
-    );
-  }
+  if (pick.status !== "waiting") return null;
 
   const choose = (kind: Kind, value: string | null) => {
     if (kind === "playbook") setPlaybookId(value);
@@ -246,7 +228,12 @@ export function PickPage() {
   const start = async () => {
     setSending(true);
     try {
-      setPick(await api.sendPick(pick.id, { playbookId, styleId: stylesUnused ? null : styleId }));
+      await api.sendPick(pick.id, { playbookId, styleId: stylesUnused ? null : styleId });
+      const sent = [wants("playbook") && (chosenPlaybook?.name ?? "No playbook"), wants("style") && !stylesUnused && (chosenStyle?.name ?? "No style")]
+        .filter(Boolean)
+        .join(" · ");
+      toast.success("Sent to your agent", { description: sent });
+      navigate("/");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
