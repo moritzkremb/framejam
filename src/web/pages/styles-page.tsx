@@ -1,9 +1,9 @@
-import { ArrowRight, ChevronDown, Search, Sparkles, X } from "lucide-react";
+import { ArrowRight, Search, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CommunityCard, MadeBy } from "@/components/community";
 import { HomeHeader } from "@/components/header";
-import { Menu, MenuItem } from "@/components/menu";
+import { FilterDropdown } from "@/components/filter-dropdown";
 import { isOffline, Offline } from "@/components/states";
 import { agentLabel, api, type PresetSummary } from "@/lib/api";
 import { PickBanner } from "@/components/pick-banner";
@@ -66,33 +66,6 @@ function StyleCard({ preset }: { preset: PresetSummary }) {
         <div className="tagline">{preset.tagline}</div>
       </div>
     </div>
-  );
-}
-
-function Dropdown({ label, value, options, onChange }: { label: string; value: string | null; options: string[]; onChange(v: string | null): void }) {
-  if (value) {
-    return (
-      <button type="button" className="fc-drop on" onClick={() => onChange(null)} aria-label={`Clear ${label}`}>
-        {cap(value)} <X className="fc-i xs" />
-      </button>
-    );
-  }
-  return (
-    <Menu
-      align="start"
-      label={label}
-      trigger={
-        <button type="button" className="fc-drop">
-          {label} <ChevronDown className="fc-i xs" />
-        </button>
-      }
-    >
-      {options.map((o) => (
-        <MenuItem key={o} onSelect={() => onChange(o)}>
-          {cap(o)}
-        </MenuItem>
-      ))}
-    </Menu>
   );
 }
 
@@ -170,8 +143,8 @@ export function StylesPage() {
                     </button>
                   ))}
                 </div>
-                <Dropdown label="Mood" value={mood} options={moods} onChange={setMood} />
-                <Dropdown label="Pace" value={pace} options={[...PACES]} onChange={setPace} />
+                <FilterDropdown label="Mood" value={mood} options={moods} onChange={setMood} />
+                <FilterDropdown label="Pace" value={pace} options={[...PACES]} onChange={setPace} />
               </div>
             </div>
             {!data ? (

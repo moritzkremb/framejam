@@ -26,8 +26,8 @@ export function Dots({ colors, size }: { colors: string[]; size?: number }) {
 }
 
 const NAV = [
-  { to: "/styles", label: "Styles", end: false },
   { to: "/playbooks", label: "Playbooks", end: false },
+  { to: "/styles", label: "Styles", end: false },
   { to: "/", label: "Projects", end: true },
 ];
 

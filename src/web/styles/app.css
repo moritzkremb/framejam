@@ -154,12 +154,31 @@ a { color: inherit; }
 .fc-style-media img { display: block; width: 100%; max-height: 60dvh; object-fit: contain; }
 .fc-style-nopreview { display: grid; place-items: center; width: 100%; max-height: 60dvh; padding: 24px; color: var(--text-2); font: 400 13px/19px var(--font-sans); text-align: center; }
 /* Pick page: the agent waits while the user picks a playbook and a style */
-.fc-pick-page { gap: 36px; padding-bottom: 96px; }
-.fc-pick-intro { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--text); font: 400 14px/21px var(--font-sans); }
+.fc-pick-page { gap: 24px; padding-bottom: 64px; }
+.fc-pick-intro { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--accent-soft); color: var(--text); font: 400 14px/21px var(--font-sans); scroll-margin-top: calc(var(--header) + 16px); }
 .fc-pick-intro .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-text); animation: fc-pulse 1.4s ease-in-out infinite; }
-.fc-pick-tile { scroll-margin: calc(var(--header) + 12px) 0 96px; border: 0; padding: 0; background: none; color: inherit; text-align: left; font: inherit; cursor: pointer; }
-.fc-pick-none { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; color: var(--text-2); font: 500 13px/19px var(--font-sans); text-align: center; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); border-radius: inherit; }
-.fc-pick-bar { position: sticky; bottom: 16px; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 18px; border-radius: var(--radius-full); background: var(--surface-2); box-shadow: var(--shadow-pop); font: 500 14px/20px var(--font-sans); }
+.fc-pick-overview { display: flex; flex-direction: column; gap: 8px; max-width: 720px; }
+.fc-pick-field { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 10px 14px; border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: box-shadow .15s, background-color .15s; }
+.fc-pick-field:hover:not(:disabled) { background: var(--surface-2); }
+.fc-pick-field.open { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.fc-pick-field:disabled { cursor: default; opacity: .7; }
+.fc-pick-field .lbl { flex: none; width: 72px; color: var(--text-3); font: 600 11px/16px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; }
+.fc-pick-field .thumb { flex: none; display: grid; place-items: center; width: 72px; height: 44px; border-radius: var(--radius-md); background: var(--video); overflow: hidden; }
+.fc-pick-field .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.fc-pick-field .thumb .empty { width: 100%; height: 100%; background: var(--surface-2); }
+.fc-pick-field .thumb .sw { display: flex; }
+.fc-pick-field .thumb .sw span { width: 14px; height: 14px; border-radius: 50%; margin-left: -4px; box-shadow: 0 0 0 2px var(--video); }
+.fc-pick-field .thumb .sw span:first-child { margin-left: 0; }
+.fc-pick-field .nm { font: 600 15px/20px var(--font-sans); }
+.fc-pick-field .chev { flex: none; color: var(--text-3); transition: transform .15s; }
+.fc-pick-field.open .chev { transform: rotate(180deg); }
+.fc-pick-go { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
+.fc-pick-panel { display: flex; flex-direction: column; gap: 14px; padding: 18px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
+.fc-pick-panel > header { display: flex; align-items: center; gap: 8px; }
+.fc-pick-panel .fc-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.fc-pick-panel .fc-search { flex: 1 1 220px; }
+.fc-pick-tile { scroll-margin: calc(var(--header) + 12px) 0 24px; border: 0; padding: 0; background: none; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.fc-pick-none { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; color: var(--text-2); font: 500 13px/19px var(--font-sans); text-align: center; background: var(--surface-2); border-radius: inherit; }
 /* Playbook detail: example video, head, then a main column and a side panel */
 .fc-pb-media { position: relative; }
 .fc-pb-media.tall { min-height: 40dvh; }
