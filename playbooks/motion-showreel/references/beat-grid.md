@@ -1,11 +1,11 @@
 # Music and the beat grid
 
 ## Sources
-1. **The included track** (`template/assets/music.mp3`, copied into every new project): 32 s of polished instrumental
-   electronic music at exactly 120 BPM, bars starting at 0 s (`BPM = 120`, `OFFSET = 0`), with big hits near 6 s and
-   12 s (beats 12 and 24, where the template's flood and 3D type land) and a final hit with a short tail. Generated with
-   ElevenLabs Music for FrameJam and free to use in your videos. Trim it to the reel's length on a bar line and fade
-   the last ~0.8 s.
+1. **The included track** (`template/assets/music.mp3`, copied into every new project): 24 s of polished instrumental
+   electronic music at exactly 120 BPM, at full level from the first beat, bars starting at 0 s (`BPM = 120`,
+   `OFFSET = 0`). Generated with ElevenLabs Music for FrameJam and free to use in your videos. Trim it to the reel's
+   length on a bar line and fade the last ~0.8 s; run `beat_grid.py` on it to find its accents for the flood and the
+   lockup. For reels over ~24 s, use a longer track.
 2. **The user's licensed track** (or one from a library they subscribe to). Cut it to 15–25 s on bar lines, ideally
    with a hit where the big flood goes and one where the logo lands.
 3. **Generated music** in a tool the user already has (Suno, Udio, ElevenLabs Music). Usually paid. Brief:

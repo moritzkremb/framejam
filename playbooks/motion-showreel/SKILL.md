@@ -69,8 +69,8 @@ When nothing is said: the hero from the logo, 6 tricks from the subject, the inc
 ```bash
 bash <playbook>/scripts/scaffold.sh <project-dir>
 ```
-This runs `npx hyperframes init`, copies `template/` (index.html, Geist fonts, the 120 BPM track in
-`assets/music.mp3` with hits near beats 12 and 24) and the tools into `tools/`, so it renders at once
+This runs `npx hyperframes init`, copies `template/` (index.html, Geist fonts, the 24 s, 120 BPM track in
+`assets/music.mp3`) and the tools into `tools/`, so it renders at once
 (`npx hyperframes render --output renders/v0.mp4`, ~20 s). With a real track: put it in `assets/`, point the
 `<audio>` at it, run `python3 tools/beat_grid.py assets/<track> --out analysis/beats.json`, set `BPM`/`OFFSET` and
 the root `data-duration`, and move the flood and lockup beats onto its accents (`references/beat-grid.md`).
@@ -129,7 +129,7 @@ an `onUpdate` so seeking redraws them; no `Math.random()` or clocks.
   flood → 3D type → grid → lockup, HUD index, beat dots, timecode). `template/assets/fonts/`: Geist and Geist Mono
   (OFL).
 - `scripts/scaffold.sh`: new project from the template (with its music track), tools copied.
-- `template/assets/music.mp3`: 32 s, 120 BPM, bars from 0 s, hits near 6 s and 12 s; free to use in your videos.
+- `template/assets/music.mp3`: 24 s, 120 BPM, full level from the first beat, bars from 0 s; free to use in your videos.
 - `scripts/beat_grid.py`: tempo, grid origin, downbeats and accents of any track → `beats.json` (numpy, ffmpeg).
 - `scripts/sync_check.py`: picture-vs-audio hit offsets in a render. `scripts/sheet.sh`: contact sheets.
 - `references/reference-breakdown.md`: the @uxmiles reel, shot by shot. `references/tricks.md`: the trick library
