@@ -64,7 +64,9 @@ with what's on screen for each:
    entirely with AI." / "You've probably heard by now, but X just released Y. And I'll be honest: [verdict]."
 2. **Context (5–12 s):** why it matters or what was hard before. "Up until now... Well, that changed with..."
    For a review or test, use skin in the game instead: what was spent or built, in numbers ("I've spent $1,500 in
-   credits over a week", "I built X in four prompts"), ideally with the result on screen.
+   credits over a week", "I built X in four prompts"), ideally with the result on screen. A strong way to show it:
+   full-screen cutaways of the payoffs the video shows later (a few seconds each, taken from the body's own footage),
+   tagged as the real result.
 3. **Promise (12–28 s):** "In this video I'll show you..." + exactly three things (what it is → how to use it →
    examples/use cases), each with its visual. If the title has a number ("7 reasons", "20 updates"), promise that
    same number instead.

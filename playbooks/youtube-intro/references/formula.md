@@ -72,18 +72,21 @@ What he does that the four beats above don't spell out:
 6. **Straight into item one**: "So, let's hop over to the board." His name and credential only appear in the course
    video.
 
-What it looks like (the first 65 s of "I Spent 100 Hours Using GPT-6 Astra", frame by frame):
+What it looks like (from the first minute of his most-viewed intro; the takeaways are the technique, not that
+video's topic):
 
-- **Set:** a warm, orange-lit room, medium shot at the desk with a podcast mic in frame; small punch-ins between
-  sentences.
-- **Words on screen:** the key phrase types in beside his face in big white bold sans ("You probably have already heard
-  by now"); the thesis lands word by word over a blurred copy of the shot ("GPT 6 ASTRA / simply / feels / different").
-  App logos pop in as they're named.
-- **Proof as numbers:** money in red rounded pills that count up ("$241" → "$1500 worth of credits").
-- **Demo cutaways:** full-screen footage of what he built (3D scenes, the game), each with a small red "CREATED WITH
-  GPT 6" tag in the corner, so you know it's the proof, not stock.
-- **Pace:** a cut every 1.5–2.5 s for the first 15 s (17 scene cuts in 65 s overall), then longer demo holds.
-- **The promise as a card:** "7 Reasons why GPT 6 feels different" with the product logo, right before item one.
+- **The proof is the video's own payoff, shown first.** Within seconds he cuts to full-screen footage of the results
+  the video will show later (the things he built, the demo running), a few seconds each, as a teaser of the body. Each
+  cutaway carries a small tag saying it's the real result, not stock ("CREATED WITH …"). Use the user's own later
+  footage for this, cut from the body of their video.
+- **The camera always moves.** On the talking head: slow zooms in and out between sentences, and a lateral drift from
+  right to left across the frame (a slow digital pan on a slightly punched-in shot), so even a static camera feels
+  alive. Hard cuts between moves, no transitions.
+- **Words on screen:** the key phrase types in beside the face in big white bold sans; the thesis lands word by word
+  over a blurred copy of the shot; logos pop in as they're named.
+- **Proof as numbers:** money or hours spent in rounded coloured pills that count up.
+- **Pace:** a cut every 1.5–2.5 s for the first 15 s, then longer holds on the demo footage.
+- **The promise as a card:** "N reasons why …" (the number from the title) right before item one.
 
 When to borrow it: news, launch and review videos with something real to prove (numbers spent, a result built).
 Keep the four-beat timing as the target and let the intro run longer only when each extra sentence adds proof.
@@ -92,6 +95,8 @@ Keep the four-beat timing as the target and let the intro run longer only when e
 
 - Full-frame camera, subject at desk, centred. Framing alternates per sentence between a wide (100%) and a punch-in
   (~115–125%, face higher in frame), cut on sentence boundaries; never two consecutive shots at the same scale.
+- Moving-camera variant (Riley Brown's): instead of static framings, each sentence gets a slow digital zoom (in or
+  out, ~8-12%) and a lateral drift from right to left on a slightly punched-in frame, hard-cut to the next move.
 - Silences and retakes removed (pauses ≤ ~0.12 s).
 - **Keyword captions**, not subtitles: 1–4 words of the sentence's key idea, bottom-left, heavy uppercase sans,
   white with the payoff word in the accent yellow, a small mono kicker above ("THIS JUST LAUNCHED") and a short
