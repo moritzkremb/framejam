@@ -85,6 +85,8 @@ describe("playbook helpers", () => {
     expect(validatePlaybook(samplePlaybook("feat", { styles: "none", featuredStyles: [{ id: "pop" }] }))).toContain(
       "featuredStyles needs styles other than none",
     );
+    expect(validatePlaybook(samplePlaybook("ex", { examples: [{ id: "cartoon", label: "Cartoon" }] }))).toEqual([]);
+    expect(validatePlaybook(samplePlaybook("ex", { examples: [{ id: "cartoon", label: "" }] }))).toContain("examples[0] needs a label");
   });
 
   it("counts required paid tools for the badge", () => {
@@ -146,6 +148,10 @@ describe("built-in playbooks", () => {
       expect(fs.existsSync(path.join(builtinPresetsDir, s.id, "style.json")), `${dir}: style ${s.id}`).toBe(true);
       expect(fs.existsSync(path.join(p.dir, "previews", s.id, "poster.jpg")), `${dir}: poster for ${s.id}`).toBe(true);
       expect(fs.existsSync(path.join(p.dir, "previews", s.id, "preview.mp4"))).toBe(false);
+    }
+    for (const x of raw.examples ?? []) {
+      expect(fs.existsSync(path.join(p.dir, "previews", x.id, "poster.jpg")), `${dir}: poster for ${x.id}`).toBe(true);
+      expect(fs.existsSync(path.join(p.dir, "previews", x.id, "preview.mp4"))).toBe(false);
     }
   });
 });

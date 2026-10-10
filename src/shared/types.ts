@@ -179,6 +179,15 @@ export interface PlaybookStyle {
   settings?: Record<string, unknown>;
 }
 
+/** Another finished video made with a playbook, shown next to its main example (a different look or route). */
+export interface PlaybookExample {
+  id: string;
+  /** Short name in the example switcher, e.g. "Cartoon". */
+  label: string;
+  /** For the agent: what's different about this one and how it was made. */
+  note?: string;
+}
+
 export interface Playbook {
   id: string;
   name: string;
@@ -200,6 +209,8 @@ export interface Playbook {
   stylesNote?: string;
   /** Styles made for this playbook, first one first. Any other style still works as `styles` says. */
   featuredStyles?: PlaybookStyle[];
+  /** More finished videos made with it, each with its own example in previews/<id>/. */
+  examples?: PlaybookExample[];
   steps: string[];
   tags?: string[];
   skill: string;
@@ -211,7 +222,12 @@ export interface PlaybookStyleSummary extends PlaybookStyle {
   posterUrl?: string;
 }
 
-export interface PlaybookSummary extends Omit<Playbook, "featuredStyles"> {
+export interface PlaybookExampleSummary extends PlaybookExample {
+  previewUrl?: string;
+  posterUrl?: string;
+}
+
+export interface PlaybookSummary extends Omit<Playbook, "featuredStyles" | "examples"> {
   builtin: boolean;
   /** The example video's shape, read from its poster. */
   previewShape: "wide" | "tall" | "square";
@@ -219,4 +235,5 @@ export interface PlaybookSummary extends Omit<Playbook, "featuredStyles"> {
   previewUrl?: string;
   posterUrl?: string;
   featuredStyles: PlaybookStyleSummary[];
+  examples: PlaybookExampleSummary[];
 }

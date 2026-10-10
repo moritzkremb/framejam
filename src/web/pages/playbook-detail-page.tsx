@@ -133,27 +133,33 @@ export function PlaybookDetailPage() {
   const prompt = playbookPrompt(p);
   const predicate = stylesPredicate(p);
   const featured = p.featuredStyles.filter((s) => styleNames[s.id]);
-  const shownStyle = shown?.playbook === p.id ? featured.find((s) => s.id === shown.style) : undefined;
-  const example = shownStyle ? { ...p, previewUrl: shownStyle.previewUrl, posterUrl: shownStyle.posterUrl ?? p.posterUrl } : p;
+  // The switcher: the main example, other examples, then the styles made for this playbook.
+  const options = [
+    ...p.examples.map((x) => ({ id: x.id, label: x.label, previewUrl: x.previewUrl, posterUrl: x.posterUrl, style: false })),
+    ...featured.map((s) => ({ id: s.id, label: styleNames[s.id], previewUrl: s.previewUrl, posterUrl: s.posterUrl, style: true })),
+  ];
+  const picked = shown?.playbook === p.id ? options.find((o) => o.id === shown.style) : undefined;
+  const shownStyle = picked?.style ? picked : undefined;
+  const example = picked ? { ...p, previewUrl: picked.previewUrl, posterUrl: picked.posterUrl ?? p.posterUrl } : p;
 
   return (
     <div className="fc-screen">
       <BackHeader to="/playbooks" title={p.name} sub={`Playbook · by ${p.creator.name}`} />
       <main className="fc-main fc-style-page">
         <PickBanner playbook={p.id} style={shownStyle?.id} />
-        {featured.length > 0 && (
-          <div className="fc-seg fc-pb-looks" role="group" aria-label="Example style">
-            <button type="button" aria-pressed={!shownStyle} onClick={() => setShown(null)}>
+        {options.length > 0 && (
+          <div className="fc-seg fc-pb-looks" role="group" aria-label="Example">
+            <button type="button" aria-pressed={!picked} onClick={() => setShown(null)}>
               Default
             </button>
-            {featured.map((s) => (
-              <button key={s.id} type="button" aria-pressed={shownStyle?.id === s.id} onClick={() => setShown({ playbook: p.id, style: s.id })}>
-                {styleNames[s.id]}
+            {options.map((o) => (
+              <button key={o.id} type="button" aria-pressed={picked?.id === o.id} onClick={() => setShown({ playbook: p.id, style: o.id })}>
+                {o.label}
               </button>
             ))}
           </div>
         )}
-        <ExampleVideo key={`${p.id}:${shownStyle?.id ?? ""}`} p={example} />
+        <ExampleVideo key={`${p.id}:${picked?.id ?? ""}`} p={example} />
 
         <div className="fc-style-head">
           <div className="fc-grow">

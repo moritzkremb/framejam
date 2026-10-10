@@ -102,6 +102,10 @@ export class PlaybookLibrary {
         const dir = `previews/${encodeURIComponent(s.id)}`;
         return { ...s, previewUrl: previewUrl(`${dir}/preview.mp4`), posterUrl: posterUrl(`${dir}/poster.jpg`) };
       }),
+      examples: (p.playbook.examples ?? []).map((x) => {
+        const dir = `previews/${encodeURIComponent(x.id)}`;
+        return { ...x, previewUrl: previewUrl(`${dir}/preview.mp4`), posterUrl: posterUrl(`${dir}/poster.jpg`) };
+      }),
     };
   }
 

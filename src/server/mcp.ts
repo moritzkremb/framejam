@@ -550,6 +550,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
       project: projectLabel(p.playbook.project),
       stylesSentence: stylesSentence(p.playbook, style?.name),
       featuredStyles: featured.map((s) => ({ id: s.id, name: presets.get(s.id)!.style.name, note: s.note })),
+      ...(p.playbook.examples?.length ? { examples: p.playbook.examples } : {}),
       ...(picked
         ? {
             styleForThisPlaybook: {

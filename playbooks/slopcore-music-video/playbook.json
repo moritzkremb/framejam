@@ -23,6 +23,13 @@
     { "name": "An image-to-video model", "where": "service", "cost": "paid", "optional": true, "examples": ["Midjourney Video", "Seedance", "Kling", "Veo"] },
     { "name": "A music generator, unless you bring a song", "where": "service", "cost": "paid", "optional": true, "examples": ["Suno", "ElevenLabs Music", "Udio"] }
   ],
+  "examples": [
+    {
+      "id": "so-over",
+      "label": "Cartoon",
+      "note": "\"So Over (We're So Back)\": the same method with cartoon illustrations of one character and no generated video clips (stills with push-ins, cut on every sung line, labels, counters and a ticker on top). The zero-budget route for this playbook."
+    }
+  ],
   "styles": "parts",
   "stylesNote": "on-screen type, colors and labels",
   "steps": [

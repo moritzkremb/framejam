@@ -87,6 +87,18 @@ export function validatePlaybook(p: Partial<Playbook>): string[] {
       });
     }
   }
+  if (p.examples !== undefined) {
+    if (!Array.isArray(p.examples)) errors.push("examples must be a list");
+    else {
+      const seen = new Set<string>(p.featuredStyles?.map((s) => s?.id) ?? []);
+      p.examples.forEach((x, i) => {
+        if (typeof x?.id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(x.id)) errors.push(`examples[${i}] needs an id of lowercase letters, numbers and dashes`);
+        else if (seen.has(x.id)) errors.push(`examples has ${x.id} twice`);
+        else seen.add(x.id);
+        if (typeof x?.label !== "string" || !x.label) errors.push(`examples[${i}] needs a label`);
+      });
+    }
+  }
   if (!Array.isArray(p.needs)) errors.push("needs must be a list");
   else
     p.needs.forEach((n, i) => {
