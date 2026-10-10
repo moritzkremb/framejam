@@ -3,7 +3,7 @@ name: talking-head-short
 description: Turn raw talking-head recordings into a fast vertical short. Removes dead air and earlier takes (keeps the last take), matches the user's screen recordings or images to what is being said, and adds a static hook and bottom-third captions. Works with whatever video tool the project uses; Hyperframes is the default for new projects.
 ---
 
-# Talking Head Short
+# Show & Tell Short
 
 > **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
 > default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the

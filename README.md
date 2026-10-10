@@ -265,7 +265,7 @@ video. FrameJam ships with 14:
 | --- | --- |
 | **Cartoon Music Video** | A song goes in, a cartoon music video with every lyric on the beat comes out. |
 | **Slopcore Music Video** | A song full of internet in-jokes goes in, a dense music video with one AI-made star comes out. |
-| **Talking Head Short** | Raw talking-head clips go in, a tight vertical short with captions and matching visuals comes out. |
+| **Show & Tell Short** | Raw talking-head clips go in, a tight vertical short that shows what you talk about while you say it comes out. |
 | **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. Comes with three styles made for it: Pop Zine, Midnight Glow and Mono Plex. |
 | **Clean Cut** | A raw recording goes in, the same video without pauses, false starts and retakes comes out. |
 | **Product Launch** | Your product goes in, a polished launch video with the real app on screen comes out. |
@@ -275,7 +275,7 @@ video. FrameJam ships with 14:
 | **Math Animation** | A math or science idea goes in, a calm animated explainer in the style of 3Blue1Brown comes out. |
 | **How-to** | A process goes in, a short step-by-step video that's clear even with the sound off comes out. |
 | **Timeline** | Dates and milestones go in, a fast story told one milestone at a time comes out. |
-| **YouTube Intro** | Your intro script or recording goes in, a tight 20–60 second opening for a long video comes out. |
+| **YouTube Hook** | Your intro script or recording goes in, the 20–60 second opening that keeps people watching your long video comes out. |
 | **Motion Design Showreel** | Your logo and a few things to show off go in, a short motion piece cut to the beat comes out. |
 
 Each playbook page says what you need (what's included, what runs free on your computer, and which accounts cost

@@ -1,7 +1,7 @@
 {
   "id": "talking-head-short",
-  "name": "Talking Head Short",
-  "tagline": "Raw talking-head clips go in, a tight vertical short with captions and matching visuals comes out.",
+  "name": "Show & Tell Short",
+  "tagline": "Raw talking-head clips go in, a tight vertical short that shows what you talk about while you say it comes out.",
   "description": "A fast 9:16 short from a recording of you talking to camera. Pauses and earlier takes are cut out (the last take of every line stays), your screen recordings or images show up exactly when you talk about them, and a hook and readable captions sit where phones don't cover them.",
   "version": "1.0.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },

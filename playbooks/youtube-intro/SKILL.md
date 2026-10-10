@@ -1,7 +1,7 @@
 ---
 name: youtube-intro
 description: >
-  YouTube Intro: turn a script or a raw camera/screen take of a long-form video's opening into a finished 20–60 s
+  YouTube Hook: turn a script or a raw camera/screen take of a long-form video's opening into a finished 20–60 s
   16:9 intro, using the formula from Moritz Kremb's channel ("Moritz | AI Builder"): a hook with the proof on screen,
   one line of context, a three-part promise, "let's dive in", hard cut to the body. Either an edited talking head
   (punch-ins, keyword captions, a full-screen insert, pop-up cards, icon row, quiet music bed) or a framed screen
@@ -10,7 +10,7 @@ description: >
   launch or news video. Not for shorts or full video edits.
 ---
 
-# YouTube Intro
+# YouTube Hook
 
 > **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
 > default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
@@ -21,8 +21,9 @@ description: >
 
 The first 20–35 seconds of a long-form YouTube video, built to keep people watching: say what happened with the proof
 on screen, why it matters, what the video will show (three things), then cut straight into the body. Measured from
-Moritz Kremb's own intros; `references/formula.md` has the numbers and examples, `references/graphics.md` the exact
-specs. `<playbook>` below means this folder (the local path `get_playbook` returned).
+Moritz Kremb's own intros and checked against Riley Brown's most-viewed ones; `references/formula.md` has the numbers
+and examples, `references/graphics.md` the exact specs. `<playbook>` below means this folder (the local path
+`get_playbook` returned).
 
 ## What goes in, what comes out
 - **In:** the topic and the video's title; the intro as a script, a camera take, a screen take, or both; optional
@@ -60,10 +61,13 @@ Write or tighten the intro into `INTRO_PLAN.md` (from the user's script or the t
 with what's on screen for each:
 1. **Hook (0–5 s):** the news or result in one sentence with a number or a verdict, the proof on screen.
    "Yesterday X was released that's 20 to 200 times faster..." / "The video you're seeing right now was edited
-   entirely with AI."
+   entirely with AI." / "You've probably heard by now, but X just released Y. And I'll be honest: [verdict]."
 2. **Context (5–12 s):** why it matters or what was hard before. "Up until now... Well, that changed with..."
+   For a review or test, use skin in the game instead: what was spent or built, in numbers ("I've spent $1,500 in
+   credits over a week", "I built X in four prompts"), ideally with the result on screen.
 3. **Promise (12–28 s):** "In this video I'll show you..." + exactly three things (what it is → how to use it →
-   examples/use cases), each with its visual.
+   examples/use cases), each with its visual. If the title has a number ("7 reasons", "20 updates"), promise that
+   same number instead.
 4. **Handoff:** "So let's dive in." No title card, logo sting or subscribe ask.
 
 Cut anything else (greetings, "in today's video", throat-clearing, a long credential). Read it aloud at speaking

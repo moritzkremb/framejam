@@ -38,6 +38,43 @@ German engineer with 10 years in tech who now builds AI automations for business
 Delivery: spoken straight to camera, fast, no dead air. Contractions, plain words, "guys" once at most. Intro takes
 are recorded separately from the body (closer camera, louder and drier voice than the screen-recorded body).
 
+## Another channel: Riley Brown (@rileybrownai)
+
+Source: the first 75 s of his seven most-viewed recent uploads (121k–750k views, October 2026), read from the
+transcripts. Same four beats, but longer (35–50 s for news and reviews, ~70 s for a long course) and carried by
+stacked proof instead of a tight promise.
+
+| Video | Views | Time to item one | Opener |
+| --- | --- | --- | --- |
+| "I Spent 100 Hours Using GPT-6 Astra" | 750k | ~40 s | "You probably have already heard by now, but OpenAI released Astra..." |
+| "28 Insane Things Astra Can Do" (2 h course) | 278k | ~70 s | "This is the complete guide to using Codex with GPT6." |
+| "JEV: How It Works" | 195k | ~38 s, then a live demo | "We have huge news in the world of AI." |
+| "Claude Opus 5.5 Is Insane… But Muse is EVEN Bigger" | 170k | ~50 s | "You might have heard the news." |
+| "ChatGPT Just Changed A LOT" | 157k | ~42 s | "You've probably heard by now, but OpenAI announced 20 new updates..." |
+| "NEW Claude Projects Changes Everything" | 135k | ~35 s | "You might have already noticed, but Claude just added a new feature..." |
+| "8 ChatGPT Agents That Do My Work" | 121k | ~35 s | "Today, we're going to turn ChatGPT from something we prompt into an agent..." |
+
+What he does that the four beats above don't spell out:
+
+1. **"You've probably heard" framing** (4 of 7). It assumes the viewer saw the news and positions the video as the
+   one that makes sense of it. Works for any launch or update video.
+2. **An honest verdict right after**, in the first person: "I'm going to be honest with you, I am genuinely shook by
+   how good this model is", "one of the best updates they've shipped all year".
+3. **Skin in the game, in numbers**: early access, hours or money spent testing ("about a week before it came out",
+   "$1,500 worth of credits", "$3,000 in tokens over the past 2 weeks", "48 hours straight", "6 months straight").
+   This replaces the context beat when the video is a review.
+4. **One concrete wow result** in a sentence or two ("I built a Call of Duty game in just four prompts... then made
+   it multiplayer"), or the demo already running on screen while he talks (500 emails being sorted, the counter
+   climbing).
+5. **A numbered promise that matches the title's number**: "the seven reasons", "all 20 updates", "the 28 things",
+   "three examples and the 10 things you need to know", "my eight favorite workflows". Long guides add parts ("in
+   part one... in part two...") and an outcome line ("by the end of this video, you will know exactly how to...").
+6. **Straight into item one**: "So, let's hop over to the board." His name and credential only appear in the course
+   video.
+
+When to borrow it: news, launch and review videos with something real to prove (numbers spent, a result built).
+Keep the four-beat timing as the target and let the intro run longer only when each extra sentence adds proof.
+
 ## Layout A: edited talking head (the "fully edited" intro)
 
 - Full-frame camera, subject at desk, centred. Framing alternates per sentence between a wide (100%) and a punch-in
