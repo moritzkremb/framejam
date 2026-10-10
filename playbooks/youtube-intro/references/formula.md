@@ -72,6 +72,19 @@ What he does that the four beats above don't spell out:
 6. **Straight into item one**: "So, let's hop over to the board." His name and credential only appear in the course
    video.
 
+What it looks like (the first 65 s of "I Spent 100 Hours Using GPT-6 Astra", frame by frame):
+
+- **Set:** a warm, orange-lit room, medium shot at the desk with a podcast mic in frame; small punch-ins between
+  sentences.
+- **Words on screen:** the key phrase types in beside his face in big white bold sans ("You probably have already heard
+  by now"); the thesis lands word by word over a blurred copy of the shot ("GPT 6 ASTRA / simply / feels / different").
+  App logos pop in as they're named.
+- **Proof as numbers:** money in red rounded pills that count up ("$241" → "$1500 worth of credits").
+- **Demo cutaways:** full-screen footage of what he built (3D scenes, the game), each with a small red "CREATED WITH
+  GPT 6" tag in the corner, so you know it's the proof, not stock.
+- **Pace:** a cut every 1.5–2.5 s for the first 15 s (17 scene cuts in 65 s overall), then longer demo holds.
+- **The promise as a card:** "7 Reasons why GPT 6 feels different" with the product logo, right before item one.
+
 When to borrow it: news, launch and review videos with something real to prove (numbers spent, a result built).
 Keep the four-beat timing as the target and let the intro run longer only when each extra sentence adds proof.
 
