@@ -5,6 +5,7 @@ import { HomeHeader } from "@/components/header";
 import { isOffline, Offline } from "@/components/states";
 import { api, type PlaybookSummary } from "@/lib/api";
 import { PickBanner } from "@/components/pick-banner";
+import { VideoBackdrop } from "@/components/video-backdrop";
 import { costBadge } from "../../shared/playbooks";
 
 const FORMATS = ["All", "16:9", "9:16"] as const;
@@ -31,6 +32,7 @@ function PlaybookCard({ playbook }: { playbook: PlaybookSummary }) {
       }}
     >
       <div className="media" style={{ background: "#0b0b0a" }}>
+        {playbook.previewShape !== "wide" && <VideoBackdrop video={videoRef} poster={playbook.posterUrl} />}
         {playbook.previewUrl ? (
           <video
             ref={videoRef}

@@ -146,6 +146,13 @@ a { color: inherit; }
 .fc-scard .media video, .fc-scard .media img { position: absolute; inset: 0; width: 100%; height: 100%; }
 .fc-scard .media .cover { object-fit: cover; }
 .fc-scard .media .contain { object-fit: contain; }
+.fc-scard .media { isolation: isolate; }
+.fc-scard .media > video, .fc-scard .media > img { z-index: 1; }
+.fc-scard .media > .fc-badge, .fc-scard .media > .fc-use { z-index: 2; }
+/* A blurred, stretched copy of a tall or square example behind it, instead of black bars */
+.fc-backdrop { --blur: 22px; position: absolute; inset: calc(var(--blur) * -1.2); z-index: 0; filter: blur(var(--blur)) saturate(1.3) brightness(.65); pointer-events: none; }
+.fc-backdrop img, .fc-backdrop canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fc-pb-media .fc-backdrop { --blur: 40px; }
 .fc-scard .name .fc-truncate { min-width: 0; }
 .fc-use[disabled] { opacity: .6; cursor: progress; }
 .fc-style-media { display: flex; justify-content: center; border-radius: var(--radius-lg); background: var(--video); overflow: hidden; }
@@ -183,8 +190,7 @@ a { color: inherit; }
 .fc-pb-media { position: relative; isolation: isolate; }
 .fc-pb-media > video, .fc-pb-media > img { position: relative; z-index: 1; }
 .fc-pb-media.tall > video, .fc-pb-media.tall > img { background: transparent; box-shadow: 0 20px 60px -20px rgb(0 0 0 / .7); }
-.fc-pb-backdrop { position: absolute; inset: -48px; z-index: 0; filter: blur(40px) saturate(1.3) brightness(.65); pointer-events: none; }
-.fc-pb-backdrop img, .fc-pb-backdrop canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
 .fc-pb-looks { align-self: center; flex-wrap: wrap; justify-content: center; max-width: 100%; }
 .fc-pick-sub { margin: 4px 0 0; color: var(--text-3); font: 600 11px/16px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; }
 .fc-pb-media.tall { min-height: 40dvh; }

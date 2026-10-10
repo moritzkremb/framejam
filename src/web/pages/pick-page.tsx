@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FilterDropdown } from "@/components/filter-dropdown";
 import { BackHeader, Dots } from "@/components/header";
 import { NotHere } from "@/components/states";
+import { VideoBackdrop } from "@/components/video-backdrop";
 import { api, type PlaybookSummary, type PresetSummary, type VideoPick } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { costBadge } from "../../shared/playbooks";
@@ -48,6 +49,7 @@ function Tile({
       }}
     >
       <div className="media">
+        {contain && (preview || poster) && <VideoBackdrop video={video} poster={poster} />}
         {preview ? (
           <video ref={video} src={preview} poster={poster} muted loop playsInline preload="none" className={contain ? "contain" : "cover"} />
         ) : poster ? (
