@@ -78,6 +78,13 @@
   ],
   "styles": "parts",
   "stylesNote": "on-screen type, colors and labels",
+  "examples": [
+    {
+      "id": "eu-region",
+      "label": "Not Available in Your Region",
+      "note": "A second film made with this method: Europe's launch day of its own frontier model, told as a perfect-day schedule with a flip-clock spine that runs to 17:00, when the model clocks out by law and the screen says 'Not available in your region'. A generated lead (not Claudia) in API image models instead of Midjourney, Seedance for the sung shots, a French-house Suno song, and a graphic on every line."
+    }
+  ],
   "steps": [
     "Pick the story and make the song; you pick the take by ear",
     "Time every word and beat, and test the lead's face on four plates",
