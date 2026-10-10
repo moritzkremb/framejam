@@ -27,12 +27,12 @@ themselves on a good day, just without the waiting.
 
 Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 
-- **How tight.** Pick from the table in `references/clean-cuts.md`: fast for shorts and reels, natural for YouTube and
-  tutorials (the default for anything over ~3 minutes), gentle for talks, interviews and podcasts. If the user says
-  "tight" or "keep it natural", follow that.
-- **What counts as a mistake.** Default: dead air, false starts, repeated takes, abandoned sentences. Leave "um"s,
-  breaths and natural pauses between thoughts unless the user asks for a harder cut; removing every filler word
-  makes people sound robotic.
+- **How tight.** A tight jump cut, fast-paced, for every length: every pause becomes ~0.13 s (the script's
+  defaults), so one thought runs straight into the next. Natural or gentle (`references/clean-cuts.md`) only when the
+  user asks for it ("keep it natural", a podcast or talk they want to breathe).
+- **What counts as a mistake.** Dead air, false starts, repeated takes, abandoned sentences, and the filler that slows
+  it down: "um", "uh", "so, uh", audible breaths between sentences. Keep breaths and short words inside a phrase, and
+  never cut into a word.
 - **Sound.** Keep the source's channels (`--keep-channels`) when it's stereo with music, a second mic or room tone that
   matters; mono narration is fine for a single voice. Don't change loudness unless asked; offer -14 LUFS for social.
 - **Frame rate.** Pass the source's own rate (`--fps 25`, `--fps 60`); for variable frame rate phone footage use the
@@ -72,17 +72,22 @@ start or end (walking to the camera, checking the screen) that should go too.
 
 ```bash
 python3 scripts/prepare_edit.py --input source/raw.mp4 --transcript transcripts/source.words.json \
-  --out working/edit-01 --fps 30 [--min-silence 0.45 --pre-roll 0.12 --post-roll 0.18]
+  --out working/edit-01 --fps 30
 ```
+
+The defaults are the tight jump cut. Only for a natural cut the user asked for, add
+`--min-silence 0.45 --pre-roll 0.12 --post-roll 0.18`.
 
 Writes `silence.edl.json` and `silence.transcript.json`. Check `silences.log`: if the room is noisy and almost
 nothing was found, measure the noise floor and raise `--threshold-db`; if soft word endings were cut, lower it or
 raise the rolls.
 
-### 4. Find false starts and earlier takes
+### 4. Find false starts, earlier takes and fillers
 
 Read `silence.transcript.json` from start to end and mark: lines said twice (keep the **last**), sentences abandoned
-halfway, setup chatter ("is this recording?"), long off-topic asides only if the user asked for that. Then do the
+halfway, setup chatter ("is this recording?"), fillers ("um", "uh", a stray "so" or "like" that starts a sentence) and
+audible breaths between sentences, long off-topic asides only if the user asked for that. Transcripts often drop
+fillers: find them on the waveform and in the excerpts below, and cut each in its own quiet gap. Then do the
 partial-retake audit from `references/clean-cuts.md`: transcribe 3–6 s excerpts around every sentence start and every
 removed pause. Full-length transcripts hide short restarts; in testing every one of them did.
 
@@ -133,7 +138,8 @@ it with `add_version` and a note of what changed. Repeat until approved.
 - The last take of every line, every time; an incomplete last take is flagged, not swapped.
 - Picture and sound in sync to the frame from first to last cut; same size, frame rate and channel layout as the
   source.
-- Natural rhythm: the pauses between thoughts are shorter, not gone.
+- Fast-paced: no gap between phrases longer than ~0.15 s, no "um" or "uh" left, and still no clipped sound; it
+  should feel like a tight YouTube jump-cut edit, not a rushed one.
 - `VERIFY.md` lists source and cut durations, number of cuts, every removed take with its reason, what was checked
   and what wasn't (e.g. no listening).
 

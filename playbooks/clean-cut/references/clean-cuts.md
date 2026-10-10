@@ -28,9 +28,10 @@ sample-exact linguistic boundaries from ASR alone.
 
 | Use | Settings for `prepare_edit.py` |
 | --- | --- |
-| Shorts, reels (fast) | defaults: `--min-silence 0.28 --pre-roll 0.065 --post-roll 0.085` |
-| YouTube, tutorials (natural) | `--min-silence 0.45 --pre-roll 0.12 --post-roll 0.18` |
-| Talks, interviews, podcasts (gentle) | `--min-silence 0.8 --pre-roll 0.2 --post-roll 0.3` |
+| Tight jump cut (the default, for everything) | defaults: `--min-silence 0.18 --pre-roll 0.06 --post-roll 0.07`: every gap becomes ~0.13 s |
+| Fast but softer | `--min-silence 0.28 --pre-roll 0.065 --post-roll 0.085` |
+| Natural (only when asked) | `--min-silence 0.45 --pre-roll 0.12 --post-roll 0.18` |
+| Gentle, for talks and podcasts (only when asked) | `--min-silence 0.8 --pre-roll 0.2 --post-roll 0.3` |
 
 Don't speed the voice up to make it feel faster; remove dead air instead. Only speed up (e.g. 1.1x with
 `setpts`/`atempo`) when the user asks.
