@@ -275,7 +275,7 @@ export function PlaybookDetailPage() {
 
             <section className="fc-pb-section">
               <h2 className="fc-pb-label">Prompt</h2>
-              <p className="fc-sect-note">Paste it into your agent chat and add what you have.</p>
+              <p className="fc-sect-note">Paste it into your agent chat and replace the part in brackets with what the video is about and your files.</p>
               <PromptBlock text={prompt} primary />
             </section>
           </div>

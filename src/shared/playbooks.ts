@@ -57,8 +57,8 @@ export function stylesSentence(p: Pick<Playbook, "styles" | "stylesNote">, style
 /** What "Copy prompt" puts on the clipboard; the user adds their input after it. With a style, it asks for that look. */
 export function playbookPrompt(p: Pick<Playbook, "id" | "name">, style?: { id: string; name: string }): string {
   if (style)
-    return `Make a video with the FrameJam playbook "${p.name}" (id: ${p.id}) in the style "${style.name}" (id: ${style.id}). Call get_playbook with id "${p.id}" and styleId "${style.id}" and follow it. Here's what I have: `;
-  return `Make a video with the FrameJam playbook "${p.name}" (id: ${p.id}). Call get_playbook("${p.id}") and follow it. Here's what I have: `;
+    return `Make a video with the FrameJam playbook "${p.name}" (id: ${p.id}) in the style "${style.name}" (id: ${style.id}). Call get_playbook with id "${p.id}" and styleId "${style.id}" and follow it. [Add more context here]`;
+  return `Make a video with the FrameJam playbook "${p.name}" (id: ${p.id}). Call get_playbook("${p.id}") and follow it. [Add more context here]`;
 }
 
 const WHERE = new Set(["included", "computer", "service"]);
