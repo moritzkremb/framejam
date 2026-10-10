@@ -20,6 +20,12 @@
     { "name": "Music", "where": "service", "cost": "free tier", "optional": true, "examples": ["YouTube Audio Library", "ElevenLabs Music", "Suno"] }
   ],
   "styles": "all",
+  "featuredStyles": [
+    {
+      "id": "parchment-epic",
+      "note": "A documentary look for histories and origin stories: each milestone as an engraved drawing on parchment under sunburst rays, the year as a big serif counter. Build every milestone in it as the style's guide says; keep this playbook's beat structure and progress bar."
+    }
+  ],
   "steps": [
     "Pick 5–9 milestones and check every date against a source",
     "Write a big year or number and a short headline for each",
