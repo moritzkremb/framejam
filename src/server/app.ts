@@ -19,6 +19,14 @@ export function createApp(ctx: McpContext) {
   const app = new Hono();
   const checkUpdate = createUpdateChecker(ctx.fetchLatestVersion);
 
+  // Without these headers browsers keep stale playbook data and posters after the files change on disk.
+  app.use("/api/*", async (c, next) => {
+    await next();
+    if (c.res.headers.has("Cache-Control")) return;
+    if (c.res.headers.get("Content-Type")?.includes("application/json")) c.res.headers.set("Cache-Control", "no-store");
+    else if (/^\/api\/(playbooks|presets)\/[^/]+\/files\//.test(c.req.path)) c.res.headers.set("Cache-Control", "no-cache");
+  });
+
   app.onError((err, c) => {
     if (err instanceof StoreError) return c.json({ error: err.message }, err.status);
     console.error("[framejam]", err);
