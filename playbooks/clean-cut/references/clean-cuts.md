@@ -7,13 +7,13 @@ sample-exact linguistic boundaries from ASR alone.
 ## Practical method
 
 1. Extract mono PCM at 16–48 kHz while preserving time zero. Inspect the noise floor and speech levels. Detect
-   candidate silence runs around 250–350 ms or longer; for a clean close-mic recording -40 dBFS is a useful
-   starting point, not a universal setting. For a noisy room, measure the floor first
-   (`ffmpeg -i in.wav -af astats -f null -`) and set `--threshold-db` about 6 dB above it.
+   candidate silence runs of 100 ms or longer. The default -35 dBFS also treats breaths, lip clicks and room
+   noise between phrases as silence, which is what keeps the cut fast; if soft word endings get clipped, lower it
+   to -40. For a noisy room, measure the floor first (`ffmpeg -i in.wav -af astats -f null -`) and raise
+   `--threshold-db` until the pauses are found.
 2. Merge candidate silences separated by tiny isolated clicks only after checking they are not speech. Inspect
-   ambiguous spans against the transcript and waveform. Shorten larger pauses to roughly 100–180 ms total by
-   retaining ~50–80 ms before onset and ~70–100 ms after offset. Keep smaller natural articulation gaps. Prefer a
-   little room over a clipped consonant.
+   ambiguous spans against the transcript and waveform. Shorten every pause to about 90 ms total by retaining
+   ~40 ms before onset and ~50 ms after offset. Prefer a little room over a clipped consonant.
 3. For cut boundaries, search a low-energy region beyond the protected speech envelope. Snap picture cuts outward to
    video frame boundaries. Audio may cut at a nearby zero crossing or receive a 3–5 ms edge ramp within retained
    non-speech. Never use a long crossfade across syllables.
@@ -28,10 +28,10 @@ sample-exact linguistic boundaries from ASR alone.
 
 | Use | Settings for `prepare_edit.py` |
 | --- | --- |
-| Tight jump cut (the default, for everything) | defaults: `--min-silence 0.18 --pre-roll 0.06 --post-roll 0.07`: every gap becomes ~0.13 s |
-| Fast but softer | `--min-silence 0.28 --pre-roll 0.065 --post-roll 0.085` |
-| Natural (only when asked) | `--min-silence 0.45 --pre-roll 0.12 --post-roll 0.18` |
-| Gentle, for talks and podcasts (only when asked) | `--min-silence 0.8 --pre-roll 0.2 --post-roll 0.3` |
+| Tight jump cut (the default, for everything) | defaults: `--threshold-db -35 --min-silence 0.10 --pre-roll 0.04 --post-roll 0.05`: every gap becomes ~0.09 s |
+| Fast but softer | `--threshold-db -40 --min-silence 0.18 --pre-roll 0.06 --post-roll 0.07` |
+| Natural (only when asked) | `--threshold-db -40 --min-silence 0.45 --pre-roll 0.12 --post-roll 0.18` |
+| Gentle, for talks and podcasts (only when asked) | `--threshold-db -40 --min-silence 0.8 --pre-roll 0.2 --post-roll 0.3` |
 
 Don't speed the voice up to make it feel faster; remove dead air instead. Only speed up (e.g. 1.1x with
 `setpts`/`atempo`) when the user asks.

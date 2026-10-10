@@ -47,8 +47,8 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--input',required=True);ap.add_argument('--transcript',required=True);ap.add_argument('--out',required=True)
     ap.add_argument('--removals',help='JSON array of reviewed source_start/source_end/reason entries')
-    ap.add_argument('--threshold-db',type=float,default=-40);ap.add_argument('--min-silence',type=float,default=.18)
-    ap.add_argument('--pre-roll',type=float,default=.06);ap.add_argument('--post-roll',type=float,default=.07)
+    ap.add_argument('--threshold-db',type=float,default=-35);ap.add_argument('--min-silence',type=float,default=.10)
+    ap.add_argument('--pre-roll',type=float,default=.04);ap.add_argument('--post-roll',type=float,default=.05)
     ap.add_argument('--fps',type=int,default=30);ap.add_argument('--render',action='store_true')
     ap.add_argument('--keep-channels',action='store_true',help='keep stereo sound in speech.wav and cut.mp4 (default: mono narration)')
     a=ap.parse_args();out=Path(a.out);out.mkdir(parents=True,exist_ok=True);src=Path(a.input).resolve()
@@ -65,13 +65,20 @@ def main():
         # Only bridge isolated impulses shorter than 20ms. Review the report.
         if sil and s-sil[-1][1]<.020:sil[-1][1]=e
         else:sil.append([s,e])
-    kept=[];cursor=0
+    kept=[];cursor=0;last=math.floor(duration*fps)/fps
+    def keep(lo,hi):
+        lo=math.floor(lo*fps)/fps;hi=min(math.ceil(hi*fps)/fps,last)
+        if hi<=lo:return
+        # Gaps shorter than a frame round to overlapping clips; merge them.
+        if kept and lo<=kept[-1][1]:kept[-1][1]=max(kept[-1][1],hi)
+        else:kept.append([lo,hi])
     for s,e in sil:
         left=min(duration,s+a.post_roll) if s>0 else 0
         right=max(0,e-a.pre_roll) if e<duration-.02 else duration
-        if left>cursor:kept.append([math.floor(cursor*fps)/fps, min(math.ceil(left*fps)/fps,math.floor(duration*fps)/fps)])
+        if right-left<1/fps:continue
+        if left>cursor:keep(cursor,left)
         cursor=right
-    if cursor<duration-.02:kept.append([math.floor(cursor*fps)/fps,math.floor(duration*fps)/fps])
+    if cursor<duration-.02:keep(cursor,duration)
     stage1=mapped(kept,fps)
     if not stage1:raise SystemExit('No retained speech. Inspect audio/threshold before proceeding.')
     write(out/'silence.edl.json',{'timestamp_basis':'source','clips':stage1,'parameters':vars(a),'silences':sil})

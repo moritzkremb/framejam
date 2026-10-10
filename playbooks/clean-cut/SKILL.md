@@ -27,7 +27,7 @@ themselves on a good day, just without the waiting.
 
 Work these out from the request and the files. Where nothing is said, use the default and keep going; ask only if something essential is missing.
 
-- **How tight.** A tight jump cut, fast-paced, for every length: every pause becomes ~0.13 s (the script's
+- **How tight.** A tight jump cut, fast-paced, for every length: every pause becomes ~0.09 s (the script's
   defaults), so one thought runs straight into the next. Natural or gentle (`references/clean-cuts.md`) only when the
   user asks for it ("keep it natural", a podcast or talk they want to breathe).
 - **What counts as a mistake.** Dead air, false starts, repeated takes, abandoned sentences, and the filler that slows
@@ -76,11 +76,11 @@ python3 scripts/prepare_edit.py --input source/raw.mp4 --transcript transcripts/
 ```
 
 The defaults are the tight jump cut. Only for a natural cut the user asked for, add
-`--min-silence 0.45 --pre-roll 0.12 --post-roll 0.18`.
+`--threshold-db -40 --min-silence 0.45 --pre-roll 0.12 --post-roll 0.18`.
 
 Writes `silence.edl.json` and `silence.transcript.json`. Check `silences.log`: if the room is noisy and almost
-nothing was found, measure the noise floor and raise `--threshold-db`; if soft word endings were cut, lower it or
-raise the rolls.
+nothing was found, measure the noise floor and raise `--threshold-db`; if soft word endings were cut, lower it to
+-40 or raise the rolls.
 
 ### 4. Find false starts, earlier takes and fillers
 
@@ -138,7 +138,7 @@ it with `add_version` and a note of what changed. Repeat until approved.
 - The last take of every line, every time; an incomplete last take is flagged, not swapped.
 - Picture and sound in sync to the frame from first to last cut; same size, frame rate and channel layout as the
   source.
-- Fast-paced: no gap between phrases longer than ~0.15 s, no "um" or "uh" left, and still no clipped sound; it
+- Fast-paced: no gap between phrases longer than ~0.12 s, no "um" or "uh" left, and still no clipped sound; it
   should feel like a tight YouTube jump-cut edit, not a rushed one.
 - `VERIFY.md` lists source and cut durations, number of cuts, every removed take with its reason, what was checked
   and what wasn't (e.g. no listening).
