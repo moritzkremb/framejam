@@ -5,7 +5,6 @@
   "description": "A how-to short that never sits still: you alone for the big claims, split screen when you name something, the thing full-screen with you cut out in front when you show a process, and a step list that comes back at every new step. Pauses and earlier takes are cut out, and short captions sit where each layout leaves room.",
   "version": "1.0.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
-  "inspiredBy": [{ "name": "@itsolelehmann", "url": "https://www.instagram.com/itsolelehmann/" }],
   "license": "MIT",
   "bring": [
     "Your raw recording of you talking to camera, best with clear steps",
