@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { costBadge, groupNeeds, needLabel, stylesSentence, validatePlaybook } from "../src/shared/playbooks.ts";
+import { costBadge, needLabel, needTag, sortNeeds, stylesSentence, validatePlaybook } from "../src/shared/playbooks.ts";
 import type { Playbook } from "../src/shared/types.ts";
 import { builtinPlaybooksDir, builtinPresetsDir, PLAYBOOK_PREVIEW_BASE_URL } from "../src/server/paths.ts";
 import { PlaybookLibrary } from "../src/server/playbooks.ts";
@@ -108,12 +108,15 @@ describe("playbook helpers", () => {
     expect(needLabel({ name: "Engine", where: "included" })).toBe("Engine");
   });
 
-  it("groups needs in a fixed order and drops empty groups", () => {
-    const groups = groupNeeds([
-      { name: "Music", where: "service", cost: "paid" },
+  it("lists needs in one order with a tag each", () => {
+    const needs = sortNeeds([
+      { name: "Music", where: "service", cost: "paid", optional: true },
+      { name: "Voice", where: "service", cost: "free tier" },
+      { name: "ffmpeg", where: "computer" },
       { name: "Engine", where: "included" },
     ]);
-    expect(groups.map((g) => g.label)).toEqual(["Included", "Your accounts"]);
+    expect(needs.map((n) => n.name)).toEqual(["Engine", "ffmpeg", "Voice", "Music"]);
+    expect(needs.map(needTag)).toEqual(["Included", "Free", "Free tier", "Paid"]);
   });
 
   it("says in one sentence how a style combines", () => {

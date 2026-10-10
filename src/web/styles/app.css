@@ -231,11 +231,10 @@ a { color: inherit; }
 .fc-pb-side { position: sticky; top: calc(var(--header) + 16px); display: flex; flex-direction: column; padding: 4px 20px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
 .fc-pb-block { padding: 16px 0; }
 .fc-pb-block + .fc-pb-block { border-top: 1px solid var(--border); }
-.fc-pb-group + .fc-pb-group { margin-top: 12px; }
-.fc-pb-sublabel { margin-bottom: 6px; color: var(--text-2); font: 500 12px/16px var(--font-sans); }
-.fc-pb-needs { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.fc-pb-needs { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .fc-pb-needs li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; font: 400 13px/19px var(--font-sans); }
-.fc-pb-needs .opt { color: var(--text-3); }
+.fc-pb-needs .tags { display: flex; gap: 4px; align-self: start; }
+.fc-pb-needs .fc-pb-cost.opt { background: transparent; box-shadow: inset 0 0 0 1px var(--border); color: var(--text-3); }
 .fc-pb-needs .ex { grid-column: 1 / -1; color: var(--text-3); font-size: 12px; line-height: 17px; }
 .fc-pb-cost { align-self: start; padding: 1px 7px; border-radius: var(--radius-full); background: var(--surface-2); color: var(--text-2); font: 500 11px/17px var(--font-sans); white-space: nowrap; }
 .fc-pb-cost.paid { background: var(--accent-soft); color: var(--accent-text); }

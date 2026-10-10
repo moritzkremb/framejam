@@ -10,7 +10,7 @@ import { PickBanner } from "@/components/pick-banner";
 import { VideoBackdrop } from "@/components/video-backdrop";
 import { cn } from "@/lib/utils";
 import type { PlaybookNeed } from "../../shared/types";
-import { costBadge, groupNeeds, playbookPrompt, projectLabel, stylesPredicate } from "../../shared/playbooks";
+import { costBadge, needTag, playbookPrompt, projectLabel, sortNeeds, stylesPredicate } from "../../shared/playbooks";
 
 async function copy(text: string, what: string) {
   try {
@@ -31,14 +31,14 @@ function SideBlock({ title, children }: { title: string; children: ReactNode }) 
 }
 
 function NeedLine({ need }: { need: PlaybookNeed }) {
-  const cost = need.where === "service" ? need.cost : need.where === "computer" ? "free" : undefined;
+  const tag = needTag(need);
   return (
     <li>
-      <span className="n">
-        {need.name}
-        {need.optional && <span className="opt"> · optional</span>}
+      <span className="n">{need.name}</span>
+      <span className="tags">
+        {need.optional && <span className="fc-pb-cost opt">Optional</span>}
+        <span className={cn("fc-pb-cost", tag === "Paid" && "paid")}>{tag}</span>
       </span>
-      {cost && <span className={cn("fc-pb-cost", cost === "paid" && "paid")}>{cost}</span>}
       {need.examples?.length ? <span className="ex">{need.examples.slice(0, 3).join(", ")}</span> : null}
     </li>
   );
@@ -117,7 +117,7 @@ function Variants({
     <section className="fc-pb-variants" aria-label="Styles">
       <div className="fc-pb-variants-head">
         <div className="fc-grow">
-          <h2 className="fc-h3">{options.length > 1 ? "See it in other styles" : "Styles"}</h2>
+          <h2 className="fc-h3">{styles ? "See it in other styles" : options.length > 1 ? "More examples" : "Styles"}</h2>
           <p className="fc-caption">{lede}</p>
         </div>
         {predicate && (
@@ -282,16 +282,11 @@ export function PlaybookDetailPage() {
 
           <aside className="fc-pb-side">
             <SideBlock title="What you need">
-              {groupNeeds(p.needs).map((g) => (
-                <div key={g.where} className="fc-pb-group">
-                  <div className="fc-pb-sublabel">{g.label}</div>
-                  <ul className="fc-pb-needs">
-                    {g.needs.map((n) => (
-                      <NeedLine key={n.name} need={n} />
-                    ))}
-                  </ul>
-                </div>
-              ))}
+              <ul className="fc-pb-needs">
+                {sortNeeds(p.needs).map((n) => (
+                  <NeedLine key={n.name} need={n} />
+                ))}
+              </ul>
               <p className="fc-pb-note">{projectLabel(p.project)}</p>
             </SideBlock>
 

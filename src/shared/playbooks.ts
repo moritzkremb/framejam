@@ -1,13 +1,18 @@
 import type { Playbook, PlaybookNeed } from "./types.ts";
 
-export const NEED_GROUPS: { where: PlaybookNeed["where"]; label: string }[] = [
-  { where: "included", label: "Included" },
-  { where: "computer", label: "On your computer" },
-  { where: "service", label: "Your accounts" },
-];
+const NEED_ORDER: Record<PlaybookNeed["where"], number> = { included: 0, computer: 1, service: 2 };
 
-export function groupNeeds(needs: PlaybookNeed[]) {
-  return NEED_GROUPS.map((g) => ({ ...g, needs: needs.filter((n) => n.where === g.where) })).filter((g) => g.needs.length);
+/** Every need in one list: what ships with the playbook, then what runs on the computer, then accounts; optional ones last. */
+export function sortNeeds(needs: PlaybookNeed[]): PlaybookNeed[] {
+  return [...needs].sort((a, b) => Number(!!a.optional) - Number(!!b.optional) || NEED_ORDER[a.where] - NEED_ORDER[b.where]);
+}
+
+/** The tag next to a need. */
+export function needTag(need: PlaybookNeed): "Included" | "Free" | "Free tier" | "Paid" {
+  if (need.where === "included") return "Included";
+  if (need.where === "service" && need.cost === "paid") return "Paid";
+  if (need.where === "service" && need.cost === "free tier") return "Free tier";
+  return "Free";
 }
 
 /** "A voice (paid, optional), e.g. ElevenLabs, OpenAI TTS" */
