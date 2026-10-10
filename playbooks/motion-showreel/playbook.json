@@ -4,8 +4,17 @@
   "tagline": "Give it your logo and a few things to show off, get a short motion piece cut to the beat.",
   "description": "A 12–25 second show-off video for a product, a brand or your own motion skills. One shape from your brand, like the logo mark, stays on screen and does a new trick every bar: clicks, trails, colour floods, words that land on the beat, 3D type and grids, then it lands as your logo. It comes with a ready project that's already timed to the music.",
   "version": "1.0.0",
-  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
-  "inspiredBy": [{ "name": "@uxmiles", "url": "https://x.com/uxmiles/status/2104618175803609305" }],
+  "creator": {
+    "id": "moritz",
+    "name": "Moritz Kremb",
+    "url": "https://x.com/promptwarrior"
+  },
+  "inspiredBy": [
+    {
+      "name": "@uxmiles",
+      "url": "https://x.com/uxmiles/status/2104618175803609305"
+    }
+  ],
   "license": "MIT",
   "bring": [
     "Your logo, brand colours and fonts",
@@ -17,12 +26,85 @@
   "format": "16:9",
   "project": "new",
   "needs": [
-    { "name": "Hyperframes", "where": "computer" },
-    { "name": "Node, Python 3 and ffmpeg", "where": "computer" },
-    { "name": "Showreel starter, a 120 BPM music track and beat tools", "where": "included" },
-    { "name": "A music generator, for your own track", "where": "service", "cost": "paid", "examples": ["ElevenLabs Music", "Suno", "Udio"], "optional": true }
+    {
+      "name": "Hyperframes",
+      "where": "computer"
+    },
+    {
+      "name": "Node, Python 3 and ffmpeg",
+      "where": "computer"
+    },
+    {
+      "name": "Showreel starter, a 120 BPM music track and beat tools",
+      "where": "included"
+    },
+    {
+      "name": "A music generator, for your own track",
+      "where": "service",
+      "cost": "paid",
+      "examples": [
+        "ElevenLabs Music",
+        "Suno",
+        "Udio"
+      ],
+      "optional": true
+    }
   ],
   "styles": "inspiration",
+  "featuredStyles": [
+    {
+      "id": "bauhaus-grid",
+      "note": "Cream ground, black type, a cobalt accent and flat red, blue, black and cream floods, Outfit with JetBrains Mono. Set the :root variables, the ACCENT/NIGHT/INK/PAPER constants and CELL_COLORS in template/index.html to these values, and the cursor's fill/stroke to paper/night; the fonts ship in template/assets/fonts.",
+      "settings": {
+        "vars": {
+          "night": "#ece6d6",
+          "surface": "#ffffff",
+          "surface-3": "#d6ceb9",
+          "paper": "#121212",
+          "muted": "#6e6656",
+          "accent": "#2f4bf5",
+          "ink": "#ece6d6"
+        },
+        "cells": [
+          "#f2542d",
+          "#2f4bf5",
+          "#121212",
+          "#ece6d6"
+        ],
+        "font": "Outfit",
+        "fontFile": "assets/fonts/outfit.woff2",
+        "monoFont": "JetBrains Mono",
+        "monoFontFile": "assets/fonts/jetbrains-mono.woff2"
+      }
+    },
+    {
+      "id": "pop-zine",
+      "note": "Navy ground, cream type, a hot-pink accent and pink, yellow, periwinkle and orange floods, condensed Anton with Share Tech Mono. Set the :root variables, the ACCENT/NIGHT/INK/PAPER constants and CELL_COLORS in template/index.html to these values, and the cursor's fill/stroke to paper/night; the fonts ship in template/assets/fonts.",
+      "settings": {
+        "vars": {
+          "night": "#2e3a6b",
+          "surface": "#232b52",
+          "surface-3": "#6f7fb8",
+          "paper": "#efe6d2",
+          "muted": "#c9c3e6",
+          "accent": "#ff4f9a",
+          "ink": "#232b52"
+        },
+        "cells": [
+          "#ff4f9a",
+          "#f5c84b",
+          "#6f7fb8",
+          "#efe6d2",
+          "#f0582a",
+          "#ff6fae"
+        ],
+        "font": "Anton",
+        "fontFile": "assets/fonts/anton.woff2",
+        "monoFont": "Share Tech Mono",
+        "monoFontFile": "assets/fonts/share-tech-mono.woff2"
+      }
+    }
+  ],
   "steps": [
     "Pick the shape that stays on screen and the things to show off",
     "Plan one trick per bar on the music",
@@ -30,6 +112,13 @@
     "Build it on the beat in the included project",
     "Review the video in FrameJam until it's right"
   ],
-  "tags": ["motion design", "showreel", "logo reveal", "launch teaser", "kinetic type", "beat sync"],
+  "tags": [
+    "motion design",
+    "showreel",
+    "logo reveal",
+    "launch teaser",
+    "kinetic type",
+    "beat sync"
+  ],
   "skill": "SKILL.md"
 }

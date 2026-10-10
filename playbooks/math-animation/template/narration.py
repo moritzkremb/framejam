@@ -15,7 +15,9 @@ import json
 from contextlib import contextmanager
 from pathlib import Path
 
-from manim import Scene, config
+from manim import DOWN, LEFT, RIGHT, UP, Line, Scene, VGroup, config
+
+import palette as P
 
 ROOT = Path(__file__).resolve().parent
 GAP = 0.35          # silence after each line
@@ -47,6 +49,15 @@ def line_duration(scene, line_id):
     return round(len(line_text(scene, line_id).split()) / WORDS_PER_SEC + 0.3, 2)
 
 
+def grid():
+    """A faint full-frame grid in P.GRID, behind everything."""
+    w, h, step = config.frame_width / 2, config.frame_height / 2, P.GRID_STEP
+    xs = [i * step for i in range(-int(w / step), int(w / step) + 1)]
+    ys = [i * step for i in range(-int(h / step), int(h / step) + 1)]
+    lines = [Line(x * RIGHT + h * DOWN, x * RIGHT + h * UP) for x in xs] + [Line(y * UP + w * LEFT, y * UP + w * RIGHT) for y in ys]
+    return VGroup(*lines).set_stroke(P.GRID, width=1).set_z_index(-100)
+
+
 class NarratedScene(Scene):
     lead_in = 0.4   # seconds of picture before the first line
     tail = 0.6      # seconds after the last line before the scene cuts
@@ -55,6 +66,8 @@ class NarratedScene(Scene):
         super().setup()
         self._cues = []
         self._started = False
+        if P.GRID:
+            self.add(grid())
 
     @contextmanager
     def line(self, line_id, gap=GAP):

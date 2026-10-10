@@ -2,32 +2,107 @@
   "id": "talking-head-short",
   "name": "Show & Tell Short",
   "tagline": "Raw talking-head clips go in, a tight vertical short that shows what you talk about while you say it comes out.",
-  "description": "A fast 9:16 short from a recording of you talking to camera. Pauses and earlier takes are cut out (the last take of every line stays), your screen recordings or images show up exactly when you talk about them, and a hook and readable captions sit where phones don't cover them.",
+  "description": "A vertical short where you talk in the bottom of the frame and the top shows what you're saying as you say it: the real product, logos, results, a prompt being typed, the steps of a process. Pauses and earlier takes are cut out (the last take of every line stays), and a title and then captions sit on the line between the two halves.",
   "version": "1.0.0",
-  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "creator": {
+    "id": "moritz",
+    "name": "Moritz Kremb",
+    "url": "https://x.com/promptwarrior"
+  },
   "license": "MIT",
   "bring": [
     "Your raw recording of you talking to camera",
     "Optional: screen recordings, images or clips of what you talk about",
     "Optional: where it will be posted and how long it should be"
   ],
-  "get": "A 30–90 s vertical video with tight cuts, a hook, captions and matching visuals",
+  "get": "A 30–90 s vertical video: you below, animated scenes above, captions on the seam",
   "format": "9:16",
   "project": "any",
   "needs": [
-    { "name": "Python 3 and ffmpeg", "where": "computer" },
-    { "name": "Hyperframes, or the video tool your project already uses", "where": "computer" },
-    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+    {
+      "name": "Python 3 and ffmpeg",
+      "where": "computer"
+    },
+    {
+      "name": "Hyperframes, or the video tool your project already uses",
+      "where": "computer"
+    },
+    {
+      "name": "Speech to text",
+      "where": "service",
+      "cost": "free",
+      "examples": [
+        "whisper on your computer (free)",
+        "ElevenLabs Scribe (paid)",
+        "OpenAI (paid)"
+      ]
+    },
+    {
+      "name": "Sound effects",
+      "where": "service",
+      "cost": "free tier",
+      "optional": true,
+      "examples": [
+        "ElevenLabs sound effects",
+        "a licensed library"
+      ]
+    }
   ],
   "styles": "parts",
-  "stylesNote": "captions, hook text and inserts",
+  "stylesNote": "colors, fonts, the background, cards and the title and caption pills",
+  "featuredStyles": [
+    {
+      "id": "midnight-launch",
+      "note": "Dark: near-black ground with purple and warm glows, dark cards and pills with light text, an orange-to-violet accent. Set these look roles (references/layout.md); keep meaning colours (red, green, code) as they are.",
+      "settings": {
+        "theme": {
+          "ground": "#0a0a0b",
+          "dots": "#2a2a31",
+          "blobA": "#5b2dbf",
+          "blobB": "#ff5b3a",
+          "ink": "#f2f2f3",
+          "surface": "#151518",
+          "accentA": "#ff7a45",
+          "accentB": "#c04bff",
+          "font": "Inter"
+        }
+      }
+    },
+    {
+      "id": "paper-marker",
+      "note": "Warm paper: cream ground with a yellow highlighter glow, off-white cards, black ink, a red-pen accent, Archivo Black for every 800-weight line. Set these look roles (references/layout.md); keep meaning colours as they are.",
+      "settings": {
+        "theme": {
+          "ground": "#f4efe4",
+          "dots": "#d9cfbc",
+          "blobA": "#ffd23f",
+          "blobB": "#f7b9a8",
+          "ink": "#1c1a17",
+          "surface": "#fffaf0",
+          "accentA": "#e2412b",
+          "accentB": "#f08a24",
+          "font": "Inter",
+          "fontHeavy": "Archivo Black"
+        }
+      }
+    }
+  ],
   "steps": [
     "Turn your recording into text",
     "Cut the pauses and keep the last take of every line",
-    "Pick which picture goes with which line",
-    "Add the hook, captions and visuals",
+    "Plan one animated scene for each idea, showing the real thing when you name it",
+    "Add the title, captions and sound effects",
     "Review each version in FrameJam until it's right"
   ],
-  "tags": ["talking head", "short", "reels", "tiktok", "youtube shorts", "captions", "b-roll", "screen recording"],
+  "tags": [
+    "talking head",
+    "short",
+    "reels",
+    "tiktok",
+    "youtube shorts",
+    "captions",
+    "b-roll",
+    "screen recording"
+  ],
   "skill": "SKILL.md"
 }

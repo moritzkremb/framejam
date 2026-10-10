@@ -41,7 +41,7 @@ Work these out from the request and the files. Where nothing is said, use the de
   (usually paid). See `references/beat-grid.md`.
 - **Look:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style is a starting point: take its palette (cut to 3 colours: a
   ground, an ink, one accent), its fonts (one display, one mono) and its motion feel, then design this reel's own
-  look from it. No style: use the brand, or the template's look.
+  look from it. No style: use the brand, or the template's look. Two styles are made for this playbook (Bauhaus Grid, Pop Zine): when one is picked, `get_playbook` returns it as `styleForThisPlaybook` with ready values for the template's `:root` variables, its colour constants and `CELL_COLORS`; the fonts are already in `template/assets/fonts`.
 - **Tool:** starting fresh, use the bundled Hyperframes template (`project: new`). **Existing project made with
   another tool** (Remotion, Motion Canvas, After Effects scripts...): don't convert it. Follow the same method with
   that tool; `references/tricks.md` gives each trick tool-independently, and `beat_grid.py` and

@@ -1,6 +1,6 @@
 ---
 name: talking-head-short
-description: Turn raw talking-head recordings into a fast vertical short. Removes dead air and earlier takes (keeps the last take), matches the user's screen recordings or images to what is being said, and adds a static hook and bottom-third captions. Works with whatever video tool the project uses; Hyperframes is the default for new projects.
+description: Turn a raw talking-head recording into a vertical show-and-tell short - the speaker in the bottom 60%, animated scenes in the top 40% that show what is being said as it is said (the real product, logos, results, typed prompts, steps), a title and captions on the seam. Removes dead air and earlier takes (keeps the last take). Works with whatever video tool the project uses; Hyperframes is the default for new projects.
 ---
 
 # Show & Tell Short
@@ -13,8 +13,10 @@ description: Turn raw talking-head recordings into a fast vertical short. Remove
 > own working notes: write them when they help you, never as a step for the user.
 
 **In:** one or more raw recordings of someone talking to camera, plus optional screen recordings, images or clips.
-**Out:** a finished short (default 1080×1920, 30 fps): tight cuts with the speaker's natural delivery, the last take
-of every line, a static text hook, real visuals where they explain something, readable captions in the bottom third.
+**Out:** a finished short (default 1080×1920, 30 fps) split 40/60: animated scenes on top that show each idea as
+it's said, the speaker below with a face-centred crop, the title and then captions on the seam. Tight cuts with the
+speaker's natural delivery and the last take of every line. The playbook's example and every number for it are in
+`references/layout.md`.
 
 The speaker's meaning and voice come first. Make it fast by removing dead air, not by speeding the voice up. For
 repeated takes, **keep the last take**.
@@ -31,8 +33,10 @@ Work these out from the request and the files. Where nothing is said, use the de
   use it and never convert the project. For a fresh project use Hyperframes:
   `npx -y hyperframes init <name> --example blank --resolution portrait --non-interactive`. If the Hyperframes skills
   are installed, use them; otherwise `npx hyperframes docs` explains the composition rules.
-- **Look.** If the user picked a FrameJam style (from `wait_for_pick`, or `get_preset` when the user names one), its palette, fonts and card shapes set the
-  captions, hook and inserts. Otherwise use the default look in `references/captions-and-inserts.md`.
+- **Look.** The default look is in `references/layout.md` (light ground, white pills, a blue-cyan accent, Inter).
+  Two styles are made for this playbook (Midnight Glow, Paper Marker): when one is picked, `get_playbook` returns it
+  as `styleForThisPlaybook` with ready values for every look role. For any other FrameJam style (from
+  `wait_for_pick`, or `get_preset` when the user names one), map its palette and fonts onto the same roles.
 - **Transcription.** Free and local by default (`npx hyperframes transcribe`, whisper.cpp). Use a paid service only if
   the user asks or gave a budget; say the cost first. See `references/transcription.md`.
 - **Music.** None unless asked or already part of the project.
@@ -103,26 +107,35 @@ Then:
 - Transcribe the edited audio for caption timing (`transcripts/edited.words.json`) and fix names.
 - Normalise the narration: `ffmpeg -i speech.wav -af loudnorm=I=-15:TP=-1.5:LRA=11 -ar 48000 speech-norm.wav`.
 
-### 6. Plan the visuals
+### 6. Plan the scenes
 
-Work from the final edited narration. Write the shot list in `EDIT_PLAN.md` (edited in/out, file, source in/out,
-crop, the phrase it explains, what you checked). Rules and placement are in `references/captions-and-inserts.md`:
-show the actual thing; crop so it reads on a phone; mute inserts; no filler; label illustrations as illustrations;
-never fake a product screen or a result. Cut each chosen range to its own small file in `assets/` with the crop applied.
+Work from the final edited narration. Write a beat sheet in `EDIT_PLAN.md`: one row per idea with its edited time,
+the line, what the top panel shows, and the source of every real thing (file, crop, URL). Rules and the scene
+vocabulary are in `references/layout.md`:
+- One scene per idea, changing every 2–5 s on the first word of the sentence that motivates it; pieces land on the
+  word that names them.
+- Show the real thing whenever something is named (the product, the post, the result, the logo); designed pieces
+  only for ideas without a picture. Never fake a product screen or a result.
+- A list gets step pills ("STEP 01"), and all steps as rows the first time it's named.
+- The last scene is the call to action with the exact words the speaker says ("comment TOOLS").
 
-If the user wants to see the shot list first, show it as a storyboard:
-one still per insert in `working/storyboard/` (named `01-...png`), `open_review` with `panelsDir`, and wait for
-feedback before building.
+If the user wants to see the scenes first, show one still per scene as a storyboard (`working/storyboard/01-...png`,
+`open_review` with `panelsDir`) and wait for feedback before animating.
 
-### 7. Hook, captions and inserts
+### 7. Build
 
-- Hook: static big text from frame 0 until the first caption, then a hard cut.
-- Captions: `python3 scripts/make_captions.py --words transcripts/edited.words.json --max-words 5 --max-chars 28
-  --out transcripts/captions.json --fix "..."`; bottom third, opaque pill, on top of everything.
-- Inserts per the shot list, upper panel by default, speaker moved down while a panel is up.
+- **Speaker:** the cut video in the bottom panel with a face-centred crop (face tracked on the edited video,
+  smoothed, stored per frame) and a small punch-in on every jump cut.
+- **Title:** the hook on 1–2 pills on the seam from frame 0 until the first idea (about 4 s).
+- **Captions:** `python3 scripts/make_captions.py --words transcripts/edited.words.json --max-words 4 --max-chars 26
+  --out transcripts/captions.json --fix "..."`; on the seam after the title, the spoken word in the accent colour
+  (keep word times for that).
+- **Scenes:** the beat sheet, built on the scaled stage over the moving ground.
+- **Sound:** quiet effects on scene changes and pops; the voice stays on top.
 
-Build it in the project's tool (`references/captions-and-inserts.md` has the Hyperframes, Remotion and ffmpeg notes).
-Generate caption and insert elements from data files with a small script, so re-cuts don't mean hand edits.
+Keep the look roles as CSS variables (or one theme object) and generate captions and timed elements from data files,
+so re-cuts and restyles don't mean hand edits. In Hyperframes, use one composition with the GSAP timeline; in
+Remotion or Motion Canvas, build the same layers.
 
 ### 8. Check, render, review
 
@@ -140,10 +153,11 @@ Generate caption and insert elements from data files with a small script, so re-
 ## Quality bar
 
 - No dead air, no doubled phrase, no clipped first or last syllable at any join; the last take of every line.
-- Every caption matches the words heard, on time, inside the bottom third, readable over every shot.
-- Every insert shows the real thing being said at that moment, readable on a phone, and the face is never hidden
-  for long.
-- The hook is on screen from the first frame. Sound is even and at -14 to -16 LUFS.
+- Every caption matches the words heard, on time, on the seam, the spoken word lit.
+- The top panel always shows the idea being said, and the real thing whenever something is named, readable on a
+  phone; nothing sits still longer than ~5 s.
+- The face is always fully in the bottom panel, centred, never covered.
+- The title is on screen from the first frame. Sound is even and at -14 to -16 LUFS.
 - `VERIFY.md` lists: source and cut durations, number of kept ranges, each removed take with its reason, checks run
   (transcripts of joins, contact sheets, loudness, blackdetect) and anything not verified. If you couldn't listen to
   the audio, say so; transcripts and waveforms don't prove a join sounds clean.
@@ -156,5 +170,5 @@ Generate caption and insert elements from data files with a small script, so re-
   balanced phrase lengths, name fixes).
 - `references/clean-cuts.md`: cut boundaries, how tight to cut, retake rules and the partial-retake audit.
 - `references/transcription.md`: free and paid transcription, and what transcripts get wrong.
-- `references/captions-and-inserts.md`: hook, caption and insert geometry and rules, and how to build them in
-  Hyperframes, Remotion or plain ffmpeg.
+- `references/layout.md`: the 40/60 split, the moving ground, the scene vocabulary, title, captions, sound and the
+  look roles a style replaces.

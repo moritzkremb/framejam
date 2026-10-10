@@ -4,8 +4,17 @@
   "tagline": "A math or science idea goes in, a calm animated explainer in the style of 3Blue1Brown comes out.",
   "description": "A narrated video where equations morph, graphs draw themselves and shapes rearrange until the idea clicks. It's for teachers, students and anyone explaining something technical. What makes it good: one clear insight, shown as a picture before the formula, with the voice paced to every move.",
   "version": "1.0.0",
-  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
-  "inspiredBy": [{ "name": "3Blue1Brown", "url": "https://www.youtube.com/@3blue1brown" }],
+  "creator": {
+    "id": "moritz",
+    "name": "Moritz Kremb",
+    "url": "https://x.com/promptwarrior"
+  },
+  "inspiredBy": [
+    {
+      "name": "3Blue1Brown",
+      "url": "https://www.youtube.com/@3blue1brown"
+    }
+  ],
   "license": "MIT",
   "bring": [
     "The idea you want to explain: a proof, a formula, a concept",
@@ -16,14 +25,97 @@
   "format": "16:9",
   "project": "new",
   "needs": [
-    { "name": "Starter Manim project", "where": "included" },
-    { "name": "Manim, Python 3 and ffmpeg", "where": "computer" },
-    { "name": "LaTeX for typeset equations", "where": "computer", "optional": true },
-    { "name": "A narration voice", "where": "service", "cost": "free", "examples": ["Your own recording", "Kokoro (runs locally)", "macOS say", "ElevenLabs (paid)", "OpenAI TTS (paid)"] },
-    { "name": "Background music", "where": "service", "cost": "free tier", "optional": true, "examples": ["YouTube Audio Library", "ElevenLabs Music", "Suno"] }
+    {
+      "name": "Starter Manim project",
+      "where": "included"
+    },
+    {
+      "name": "Manim, Python 3 and ffmpeg",
+      "where": "computer"
+    },
+    {
+      "name": "LaTeX for typeset equations",
+      "where": "computer",
+      "optional": true
+    },
+    {
+      "name": "A narration voice",
+      "where": "service",
+      "cost": "free",
+      "examples": [
+        "Your own recording",
+        "Kokoro (runs locally)",
+        "macOS say",
+        "ElevenLabs (paid)",
+        "OpenAI TTS (paid)"
+      ]
+    },
+    {
+      "name": "Background music",
+      "where": "service",
+      "cost": "free tier",
+      "optional": true,
+      "examples": [
+        "YouTube Audio Library",
+        "ElevenLabs Music",
+        "Suno"
+      ]
+    }
   ],
   "styles": "parts",
   "stylesNote": "colours and fonts",
+  "featuredStyles": [
+    {
+      "id": "blueprint-explainer",
+      "note": "Navy blueprint: a faint grid behind every scene, cyan for the main object, amber for what to look at, IBM Plex Sans labels. Put these values into template/palette.py (and BG into manim.cfg's background_color); the fonts ship in template/fonts.",
+      "settings": {
+        "palette": {
+          "BG": "#0F1626",
+          "INK": "#E8EDF5",
+          "DIM": "#7A869C",
+          "BLUE": "#7FD3FF",
+          "TEAL": "#5EE0C8",
+          "GREEN": "#9BE38B",
+          "YELLOW": "#FFC857",
+          "BROWN": "#FF9F6B",
+          "GOLD": "#FFD98A",
+          "RED": "#FF6B6B",
+          "GRID": "#1A2740",
+          "TEXT_FONTS": [
+            "IBM Plex Sans"
+          ],
+          "MATH_FONTS": [
+            "STIX Two Text"
+          ]
+        }
+      }
+    },
+    {
+      "id": "recipe-steps",
+      "note": "Maths on paper: a cream ground, brown ink, warm pastel colours that still tell the parts apart, Patrick Hand for labels. Put these values into template/palette.py (and BG into manim.cfg's background_color); the fonts ship in template/fonts.",
+      "settings": {
+        "palette": {
+          "BG": "#FBF6EC",
+          "INK": "#3B2F2F",
+          "DIM": "#B5A99C",
+          "BLUE": "#3D8FC4",
+          "TEAL": "#2E9C8C",
+          "GREEN": "#6FA23C",
+          "YELLOW": "#E5484D",
+          "BROWN": "#C2702D",
+          "GOLD": "#E8962B",
+          "RED": "#D13A3F",
+          "GRID": null,
+          "TEXT_FONTS": [
+            "Patrick Hand"
+          ],
+          "MATH_FONTS": [
+            "STIX Two Text"
+          ]
+        }
+      }
+    }
+  ],
   "steps": [
     "Find the one idea the video should make click",
     "Plan the picture that proves it and review it as a storyboard",
@@ -32,6 +124,13 @@
     "Join the scenes and add the voice and music",
     "Review each version in FrameJam until it's right"
   ],
-  "tags": ["math", "explainer", "education", "manim", "animation", "3blue1brown"],
+  "tags": [
+    "math",
+    "explainer",
+    "education",
+    "manim",
+    "animation",
+    "3blue1brown"
+  ],
   "skill": "SKILL.md"
 }

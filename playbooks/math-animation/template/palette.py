@@ -1,5 +1,6 @@
 """Colours and fonts by role. Scenes use these names, never raw hex values."""
 from functools import lru_cache
+from pathlib import Path
 
 BG = "#1C1C1C"        # ground
 INK = "#ECECEC"       # default text and strokes
@@ -14,6 +15,10 @@ RED = "#FC6255"       # wrong, negative, the thing being removed
 
 # For sequences (1st, 2nd, 3rd ... item). Neighbours stay distinguishable.
 SEQUENCE = [BLUE, TEAL, GREEN, YELLOW, GOLD, BROWN, RED]
+
+# Optional faint grid behind every scene (a blueprint look). None: no grid. Keep BG in manim.cfg the same as BG here.
+GRID = None
+GRID_STEP = 0.5       # Manim units between grid lines
 
 # Font roles. The first installed font in each list wins; Pango falls back silently otherwise.
 TEXT_FONTS = ["CMU Serif", "Latin Modern Roman", "STIX Two Text", "Charter", "Georgia", "Times New Roman"]
@@ -33,6 +38,19 @@ def _installed():
         return set(manimpango.list_fonts())
     except Exception:
         return set()
+
+
+def _register_bundled_fonts():
+    """Font files in fonts/ (.ttf or .otf) work without installing them, e.g. a FrameJam style's fonts."""
+    try:
+        import manimpango
+        for f in sorted((Path(__file__).resolve().parent / "fonts").glob("*.[ot]tf")):
+            manimpango.register_font(str(f))
+    except Exception:
+        pass
+
+
+_register_bundled_fonts()
 
 
 def pick_font(candidates):
