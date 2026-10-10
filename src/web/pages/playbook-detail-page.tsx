@@ -1,5 +1,5 @@
 import { ArrowUpRight, ChevronRight, Copy, Loader2 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { BackHeader } from "@/components/header";
@@ -43,14 +43,45 @@ function NeedLine({ need }: { need: PlaybookNeed }) {
   );
 }
 
+/** The playing video, stretched to cover the frame and blurred, behind a tall example instead of black bars. */
+function Backdrop({ video, poster }: { video: RefObject<HTMLVideoElement | null>; poster?: string }) {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    let frame = 0;
+    const draw = () => {
+      const v = video.current;
+      const c = canvas.current;
+      const ctx = c?.getContext("2d");
+      if (v && c && ctx && v.readyState >= 2 && v.videoWidth) {
+        const scale = Math.max(c.width / v.videoWidth, c.height / v.videoHeight);
+        const w = v.videoWidth * scale;
+        const h = v.videoHeight * scale;
+        ctx.drawImage(v, (c.width - w) / 2, (c.height - h) / 2, w, h);
+      }
+      frame = requestAnimationFrame(draw);
+    };
+    frame = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(frame);
+  }, [video]);
+  return (
+    <div className="fc-pb-backdrop" aria-hidden>
+      {poster && <img src={poster} alt="" />}
+      <canvas ref={canvas} width={96} height={54} />
+    </div>
+  );
+}
+
 /** Plays the example, with a loading state until the first frame arrives and a message if it can't load. */
 function ExampleVideo({ p }: { p: Pick<PlaybookSummary, "previewUrl" | "posterUrl" | "previewShape"> }) {
   const [state, setState] = useState<"loading" | "ready" | "error">(p.previewUrl ? "loading" : "error");
+  const video = useRef<HTMLVideoElement>(null);
   const tall = p.previewShape !== "wide";
   return (
     <div className={cn("fc-style-media fc-pb-media", tall && "tall")}>
+      {tall && (p.previewUrl || p.posterUrl) && <Backdrop video={video} poster={p.posterUrl} />}
       {p.previewUrl && state !== "error" ? (
         <video
+          ref={video}
           src={p.previewUrl}
           poster={p.posterUrl}
           autoPlay
