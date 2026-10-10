@@ -492,6 +492,22 @@ describe("playbooks", () => {
     expect(res).toMatchObject({ status: "picked", styleId: null, style: null, playbook: null });
   });
 
+  it("tells the agent when the user closes the pick, and drops picks nobody is waiting on", async () => {
+    const opened = parse(await mcp.call("open_picker", {}));
+    expect(fx.store.activePick()?.id).toBe(opened.pickId);
+    const waiting = mcp.call("wait_for_pick", { pickId: opened.pickId });
+    setTimeout(() => fx.store.dismissPick(opened.pickId), 50);
+    const res = parse(await waiting);
+    expect(res.status).toBe("dismissed");
+    expect(fx.store.activePick()).toBeNull();
+    expect(() => fx.store.resolvePick(opened.pickId, {})).toThrow("This pick was closed");
+
+    const idle = fx.store.createPick(["style"]);
+    expect(fx.store.isListening(idle)).toBe(true);
+    expect(fx.store.isListening({ ...idle, listenedAt: new Date(Date.now() - 60_000).toISOString() })).toBe(false);
+    expect(fx.store.isListening(idle, 0)).toBe(false);
+  });
+
   it("remembers the picks on the project", async () => {
     const opened = parse(await mcp.call("open_review", { title: "Rocket", videoPath: fx.video, playbookId: "test-cut", styleId: "bauhaus-grid" }));
     expect(fx.store.getReview(opened.reviewId)).toMatchObject({ playbookId: "test-cut", styleId: "bauhaus-grid" });

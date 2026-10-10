@@ -264,7 +264,12 @@ export function createApp(ctx: McpContext) {
   // --- Picks: the agent waits while the user picks a playbook and style for one video ---
   app.get("/api/picks/active", (c) => c.json(store.activePick()));
 
-  app.get("/api/picks/:id", (c) => c.json(store.getPick(c.req.param("id"))));
+  app.get("/api/picks/:id", (c) => {
+    const pick = store.getPick(c.req.param("id"));
+    return c.json({ ...pick, listening: store.isListening(pick) });
+  });
+
+  app.post("/api/picks/:id/dismiss", (c) => c.json(store.dismissPick(c.req.param("id"))));
 
   app.post("/api/picks/:id", async (c) => {
     const { playbookId, styleId } = (await c.req.json()) as { playbookId?: string | null; styleId?: string | null };

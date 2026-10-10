@@ -31,6 +31,9 @@ const now = () => new Date().toISOString();
 
 export const LISTEN_HEARTBEAT_MS = 4_000;
 const LISTEN_GRACE_MS = 15_000;
+/** How long a pick counts as waiting after the agent last listened (it touches it every few seconds while it does). */
+export const PICK_IDLE_MS = 30_000;
+export const PICK_HEARTBEAT_MS = 5_000;
 
 const hashCache = new Map<string, { mtimeMs: number; hash: string }>();
 
@@ -580,15 +583,42 @@ export class Store {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
-  /** The newest pick an agent is still waiting on, if it's recent enough to still matter. */
-  activePick(maxAgeMs = 60 * 60 * 1000): VideoPick | null {
+  /**
+   * Whether an agent is still waiting on a pick: it was opened or listened to within `idleMs`. An agent that stopped
+   * waiting (its turn ended, the user interrupted it) stops counting after that.
+   */
+  isListening(pick: VideoPick, idleMs = PICK_IDLE_MS): boolean {
+    return pick.status === "waiting" && Date.now() - Date.parse(pick.listenedAt ?? pick.createdAt) < idleMs;
+  }
+
+  /** The newest pick an agent is still waiting on. */
+  activePick(): VideoPick | null {
     const pick = this.listPicks().find((p) => p.status === "waiting");
-    return pick && Date.now() - Date.parse(pick.createdAt) < maxAgeMs ? pick : null;
+    return pick && this.isListening(pick) ? pick : null;
+  }
+
+  /** Called while an agent waits on a pick, so the app knows someone is still listening. */
+  touchPick(id: string) {
+    const pick = this.getPick(id);
+    if (pick.status === "waiting") this.savePick({ ...pick, listenedAt: now() });
+  }
+
+  /** The user closed the pick without choosing; the waiting agent is told so. */
+  dismissPick(id: string): VideoPick {
+    const pick = this.getPick(id);
+    if (pick.status !== "waiting") return pick;
+    const done: VideoPick = { ...pick, status: "dismissed" };
+    this.savePick(done);
+    return done;
   }
 
   resolvePick(id: string, choice: { playbookId?: string | null; styleId?: string | null }): VideoPick {
     const pick = this.getPick(id);
-    if (pick.status !== "waiting") throw new StoreError(pick.status === "picked" ? "This pick was already sent" : "This pick was cancelled", 409);
+    if (pick.status !== "waiting")
+      throw new StoreError(
+        pick.status === "picked" ? "This pick was already sent" : pick.status === "dismissed" ? "This pick was closed" : "This pick was cancelled",
+        409,
+      );
     const done: VideoPick = {
       ...pick,
       status: "picked",

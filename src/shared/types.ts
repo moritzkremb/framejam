@@ -104,11 +104,16 @@ export interface VideoPick {
   /** What the video is about, shown on the pick page. */
   title?: string;
   createdAt: string;
-  status: "waiting" | "picked" | "cancelled";
+  /** cancelled: a newer pick replaced it. dismissed: the user closed it without choosing. */
+  status: "waiting" | "picked" | "cancelled" | "dismissed";
   /** null: the user chose none. */
   playbookId?: string | null;
   styleId?: string | null;
   pickedAt?: string;
+  /** Last time an agent was in wait_for_pick for it. */
+  listenedAt?: string;
+  /** Sent by the HTTP API: whether an agent is still waiting on it. */
+  listening?: boolean;
 }
 
 export interface PresetFont {

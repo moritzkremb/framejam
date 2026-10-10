@@ -11,7 +11,7 @@ import { currentSkillVersion } from "./skill.ts";
 import { UPDATE_COMMAND } from "./update.ts";
 import type { PresetLibrary } from "./presets.ts";
 import type { ChooseSavePath } from "./save-dialog.ts";
-import { LISTEN_HEARTBEAT_MS, type Store } from "./store.ts";
+import { LISTEN_HEARTBEAT_MS, PICK_HEARTBEAT_MS, type Store } from "./store.ts";
 
 export interface McpContext {
   store: Store;
@@ -629,7 +629,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Wait for the user's pick",
       description:
-        "Blocks until the user presses Start on the pick page, then returns the picked playbook (same as get_playbook) and style (same as get_preset); null for none. Returns { status: 'pending' } after ~50s: call it again with the same pickId. After 6 pending results in a row, stop and ask in chat which playbook and style they want.",
+        "Blocks until the user presses Start on the pick page, then returns the picked playbook (same as get_playbook) and style (same as get_preset); null for none. Returns status 'dismissed' if the user closed the page without choosing. Returns { status: 'pending' } after ~50s: call it again with the same pickId. After 6 pending results in a row, stop and ask in chat which playbook and style they want.",
       inputSchema: {
         pickId: z.string(),
         timeoutSeconds: z.number().min(1).max(300).optional().describe("Max seconds to block before returning pending (default 50)"),
@@ -644,10 +644,25 @@ export function createMcpServer(ctx: McpContext): McpServer {
       const timeoutMs = (timeoutSeconds ?? ctx.waitSeconds ?? 50) * 1000;
       const pollMs = ctx.pollMs ?? 400;
       const started = Date.now();
+      let touched = 0;
       while (!extra.signal.aborted && Date.now() - started < timeoutMs) {
+        if (Date.now() - touched >= PICK_HEARTBEAT_MS) {
+          store.touchPick(pickId);
+          touched = Date.now();
+        }
         const pick = store.getPick(pickId);
         if (pick.status === "cancelled") {
           return { content: [json({ status: "cancelled", next: "This pick was replaced by a newer one. Use the newest pickId, or ask the user in chat." })] };
+        }
+        if (pick.status === "dismissed") {
+          return {
+            content: [
+              json({
+                status: "dismissed",
+                next: "The user closed the pick page without choosing. Don't open it again: go on with what they asked in chat, without a playbook or style, or ask in one line what they'd like to do.",
+              }),
+            ],
+          };
         }
         if (pick.status === "picked") {
           const playbook = pick.playbookId ? (playbookPayload(pick.playbookId, pick.styleId) ?? null) : null;

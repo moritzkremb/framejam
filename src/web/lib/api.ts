@@ -92,6 +92,7 @@ export const api = {
   playbook: (id: string) => request<{ playbook: PlaybookSummary }>(`/api/playbooks/${id}`),
   activePick: () => request<VideoPick | null>("/api/picks/active"),
   pick: (id: string) => request<VideoPick>(`/api/picks/${id}`),
+  dismissPick: (id: string) => request<VideoPick>(`/api/picks/${id}/dismiss`, { method: "POST" }),
   sendPick: (id: string, body: { playbookId?: string | null; styleId?: string | null }) =>
     request<VideoPick>(`/api/picks/${id}`, { method: "POST", body: JSON.stringify(body) }),
 };

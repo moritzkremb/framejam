@@ -147,11 +147,19 @@ export function PickPage() {
   const [stPace, setStPace] = useState<string | null>(null);
   const top = useRef<HTMLDivElement>(null);
 
+  // Reloaded every few seconds, so the page notices when the agent stops waiting.
   useEffect(() => {
-    api
-      .pick(id)
-      .then(setPick)
-      .catch(() => setMissing(true));
+    const load = () =>
+      api
+        .pick(id)
+        .then(setPick)
+        .catch(() => setMissing(true));
+    void load();
+    const timer = window.setInterval(load, 4000);
+    return () => window.clearInterval(timer);
+  }, [id]);
+
+  useEffect(() => {
     api
       .playbooks()
       .then((d) => setPlaybooks(d.playbooks))
@@ -166,7 +174,7 @@ export function PickPage() {
   const stale = pick && pick.status !== "waiting" ? pick.status : null;
   useEffect(() => {
     if (!stale) return;
-    toast(stale === "picked" ? "This pick was already sent to your agent" : "Your agent started a newer pick");
+    toast(stale === "picked" ? "This pick was already sent to your agent" : stale === "dismissed" ? "This pick was closed" : "Your agent started a newer pick");
     navigate("/", { replace: true });
   }, [stale, navigate]);
 
@@ -240,12 +248,23 @@ export function PickPage() {
       const sent = [wants("playbook") && (chosenPlaybook?.name ?? "No playbook"), wants("style") && !stylesUnused && (chosenStyle?.name ?? "No style")]
         .filter(Boolean)
         .join(" · ");
-      toast.success("Sent to your agent", { description: sent });
+      if (pick.listening) toast.success("Sent to your agent", { description: sent });
+      else toast.success("Saved", { description: `${sent}. Tell your agent in chat to continue.` });
       navigate("/");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setSending(false);
+    }
+  };
+
+  const dismiss = async () => {
+    try {
+      await api.dismissPick(pick.id);
+      toast("Closed", { description: pick.listening ? "Your agent carries on without a pick." : undefined });
+      navigate("/");
+    } catch (e) {
+      toast.error((e as Error).message);
     }
   };
 
@@ -256,12 +275,18 @@ export function PickPage() {
     <div className="fc-screen">
       <BackHeader to="/" title="Pick for your video" sub={sub} />
       <main className="fc-main fc-pick-page">
-        <div ref={top} className="fc-pick-intro">
+        <div ref={top} className={cn("fc-pick-intro", !pick.listening && "idle")}>
           <span className="dot" aria-hidden />
-          <span>
-            <b>Your agent is waiting.</b> Choose {wants("playbook") && wants("style") ? "a playbook and a style" : wants("playbook") ? "a playbook" : "a style"}, or
-            none, then press Start.
-          </span>
+          {pick.listening ? (
+            <span>
+              <b>Your agent is waiting.</b> Choose {wants("playbook") && wants("style") ? "a playbook and a style" : wants("playbook") ? "a playbook" : "a style"}, or
+              none, then press Start.
+            </span>
+          ) : (
+            <span>
+              <b>Your agent stopped waiting.</b> You can still pick and press Start, then tell your agent in chat. Or close this pick.
+            </span>
+          )}
         </div>
 
         <div className="fc-pick-overview">
@@ -297,7 +322,12 @@ export function PickPage() {
             />
           )}
           <div className="fc-pick-go">
-            <span className="fc-caption fc-grow">Your agent starts as soon as you press Start.</span>
+            <span className="fc-caption fc-grow">
+              {pick.listening ? "Your agent starts as soon as you press Start." : "After Start, tell your agent in chat to continue."}
+            </span>
+            <button type="button" className="fc-btn ghost" disabled={sending} onClick={() => void dismiss()} data-testid="pick-dismiss">
+              Not now
+            </button>
             <button type="button" className="fc-btn primary" disabled={sending} onClick={() => void start()} data-testid="pick-start">
               {sending ? <Loader2 className="fc-i sm fc-spin" /> : <Check className="fc-i sm" />}
               Start
