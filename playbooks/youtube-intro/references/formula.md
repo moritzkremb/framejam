@@ -82,9 +82,13 @@ video's topic):
 - **The camera always moves.** On the talking head: slow zooms in and out between sentences, and a lateral drift from
   right to left across the frame (a slow digital pan on a slightly punched-in shot), so even a static camera feels
   alive. Hard cuts between moves, no transitions.
-- **Words on screen:** the key phrase types in beside the face in big white bold sans; the thesis lands word by word
-  over a blurred copy of the shot; logos pop in as they're named.
-- **Proof as numbers:** money or hours spent in rounded coloured pills that count up.
+- **Words on screen, and how they move:** big white bold sans with a soft shadow, stacked left-aligned in the empty
+  space beside the face. Words arrive one at a time on the spoken word: each pops in from small with a quick
+  overshoot (a bounce of roughly 0.2–0.3 s, about 110% before settling) and starts dimmed, then settles to full white.
+  On a tight punch-in, the headline lands big first ("GPT 6 ASTRA") and the rest of the sentence builds word by word
+  under it. Logo tiles bounce in the same way as they're named, and the words build under the logo.
+- **Proof as numbers:** money or hours spent in a rounded red pill whose number counts up fast with an ease-out
+  ($44 → $241 → $1,152 → $1,500 in under a second); the label ("worth of credits") appears under it once it lands.
 - **Pace:** a cut every 1.5–2.5 s for the first 15 s, then longer holds on the demo footage.
 - **The promise as a card:** "N reasons why …" (the number from the title) right before item one.
 
