@@ -263,7 +263,7 @@ video. FrameJam ships with 15:
 
 | Playbook | What goes in, what comes out |
 | --- | --- |
-| **Cartoon Music Video** | A song goes in, a cartoon music video with every lyric on the beat comes out. |
+| **Kinetic Music Video** | A song goes in, a music video where the lyrics, graphics and illustrated characters move on every beat comes out. |
 | **Slopcore Music Video** | A song full of a scene's in-jokes goes in, a music video with one star, every lyric on screen and a graphic explaining every line comes out. Made the way anabology made ESCAPE VELOCITY with Claudia (claudia.gallery). |
 | **Slopcore Cartoon** | A song about a scene's memes goes in, a cartoon music video that explains every joke comes out, from still illustrations only, for a few dollars. |
 | **Show & Tell Short** | Raw talking-head clips go in, a tight vertical short that shows what you talk about while you say it comes out. Comes with two styles made for it: Midnight Glow and Paper Marker. |

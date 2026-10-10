@@ -1,7 +1,7 @@
 ---
 name: cartoon-music-video
 description: >
-  Cartoon Music Video: turn a song (supplied, or written and generated with any music generator) into a 1080p60
+  Kinetic Music Video: turn a song (supplied, or written and generated with any music generator) into a 1080p60
   kinetic-typography music video. Illustrated characters from any image generator become living cut-outs, real
   footage or optional generated clips are woven in, and a bundled three.js/Canvas2D engine lands every lyric word,
   cut and camera hit on the vocal and the beat, built section by section by parallel scene agents. Every version is
@@ -9,7 +9,7 @@ description: >
   viral music video", or revising one of these. Not for narrated explainers or product launch films.
 ---
 
-# Cartoon Music Video
+# Kinetic Music Video
 
 > **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
 > default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the
