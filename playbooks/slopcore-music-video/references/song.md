@@ -1,39 +1,52 @@
-# Writing the song
+# The song
 
-Only when the user doesn't bring a song. The lyrics are the script: every line becomes a shot, a hero word and often
-an annotation, so write them with the screen in mind.
+Condensed from https://claudia.gallery/wiki/song/. The video runs the full length of the song and is timed to it word
+by word, so the song comes first, and the song starts from the lyric.
 
-## Research the timeline first
+## Lyrics
 
-List 25-40 phrases the audience already repeats about the topic (for AI: "feel the AGI", "permanent underclass",
-"it's so over / we're so back", "you're absolutely right", "usage limit", "p(doom)", "slop"). For each: who said it
-first or made it famous, and a source link, in `analysis/references.md`. These become lines, looks, ticker items and
-the citations in the annotations. Use the web if the runtime can; quote only what you can source.
+- The topic is obvious in the first two lines. Name the big moments people actually saw, or tell a story.
+- Every reference lands in one listen; obscure studies and insider trivia go into the graphics instead.
+- A sequel never reuses the last song's device (no second countdown after "18 months").
+- Subtracting beats adding. Never touch a line the user has locked.
+- Spoken verse lines: Suno sets each in a two-bar slot, so write natural sentences of 10–13 syllables with the stressed
+  words where speech stresses them, and rhyme couplets on the last word. Lines of 5–8 syllables come out choppy.
+- Every sung couplet should ring (a rhyme, a slant rhyme or shared vowels within four lines); deadpan spoken lines can
+  stay unrhymed. The films scored 75–83 on scansion and 39–55 on assonance; how to score:
+  https://claudia.gallery/wiki/toolkit/#2-the-lyric-scorer-scansion-and-assonance. Scores don't replace hearing a take.
+- A hook that lands in a stop is syncopated: write the off-beat accent into the sheet and the direction.
+- If the film has a sound palette, write the song in its key.
 
-The topic doesn't have to be AI. The same method works for any scene with shared slang: crypto, startups, fashion
-week, a sport, a fandom, the user's own company (internal jokes, product names, launch dates).
+## Suno
 
-## Structure (~2:20-3:00 for X; the reference ran 5:06)
+Custom mode, v6. ESCAPE VELOCITY's style field:
 
 ```
-[Intro]      the premise as one spoken or sung sentence (it becomes the hook card)
-[Verse 1]    4-8 short lines, one reference each, call-and-response welcome
-[Pre-Chorus] 2-4 lines that build the counter ("18 months", "T-minus")
-[Chorus]     the title phrase as the hook, repeated; 4 lines max
-[Verse 2]    new references, darker or funnier
-[Chorus]
-[Bridge]     spoken / whispered, slower; the counter runs out
-[Chorus]     last chorus, the hook's meaning flips (so over → so back)
-[Outro]      one line, the signature image
+fashion show electroclash techno, 128 BPM, 4/4, dry analog kick, rolling acid bassline, cold detuned synth stabs, sweeping orchestral strings on the builds, deadpan female spoken-word verses, close and dry, clipped and confident, every word crisp and intelligible, euphoric sung female trance chorus with a supersaw lift and big clear vowels, crowd call-and-response shouts, stacked chanted vocals in the drop, a key change up into the last chorus, catwalk energy, cold, luxurious, optimistic, Berlin minimal austerity, clean modern mix
 ```
 
-- Lines short enough to read in 1-2 s (3-7 words). Spell acronyms with spaces for the singer ("A G I"), respell names
-  phonetically, keep the screen text spelled normally in `lyrics.txt`.
-- One rhyme family per section keeps it catchy; slang carries the jokes.
-- Pick the device (fashion show, keynote, countdown…) now and name the looks or chapters in the lyrics or the overlay.
+Exclude: `rap, rock guitar, lo-fi, male lead vocal, mumbled vocals, big room EDM, dubstep`. CLODYSSEY's and BLISS's
+style fields are in the wiki. No brand or artist names in the style field; describe the sound.
 
-## Generator prompt
+- Her voice: deadpan, clipped spoken verses rising into euphoric sung choruses, close and dry, every word crisp.
+- Spell numbers and acronyms out ("A G I"); respell names Suno gets wrong ("Dahrio"); section cues in square brackets
+  on their own lines (`[Verse 1 - spoken, deadpan]`); parentheses get sung; cues steer the arrangement ("darker, the
+  bass drops out").
+- Generate many takes, round by round; the user picks by ear. Keep each round's lyric, style and verdict in a takes log.
+- Suno has no API and its terms forbid bots: the user presses Create and downloads the WAV (a paid plan allows
+  commercial use).
 
-Style field: genre, BPM, voice, production, e.g. "glossy synth-pop, hyperpop drums, 136 BPM, breathy female lead,
-gang vocals on the hook, vocoder ad-libs, big sidechained chorus". Put section tags in the lyrics (`[Chorus]`,
-`[Spoken]`, `[Gang vocals]`). Generate at least two takes and keep them in `audio/takes/`.
+## Listening
+
+Before boarding: stems (htdemucs), a beat map, every word's start and end (forced alignment), a list of hits.
+
+- Suno takes speed up (131.5 → 133.9 BPM in ESCAPE VELOCITY): use a beat map, never a fixed BPM.
+- Put the grid on the kick (BLISS's first grid sat on the hi-hats, 0.214 s early).
+- Check word times by ear (a delay throw got aligned 2.6 s early).
+- Map a new mix through time before swapping it in (an editor export came back re-timed by up to 0.7 s).
+
+## Releasing
+
+Under the user's own name, never as "anabology"; no "feat. Claudia" in the artist field; credit her in the
+description ("Claudia is an open character by anabology (claudia.gallery)"); say what's AI-made; don't re-release the
+films' songs or stems.

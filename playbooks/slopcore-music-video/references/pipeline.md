@@ -30,20 +30,25 @@ Re-run `align` then `lyrics_fix.py` after every change to `lyrics.txt`.
 py tools/shot_plan.py --fps 24 --flurry chorus    # analysis/shots.json + shots.md (cut on each line's pickup)
 ```
 
-Then fill each shot in `shots.json`: `look` (act), `prompt` (still prompt), `hero` (word or null), `overlay`
-(which annotation/artifact/data viz), later `still`, `clip`, `in`, `speed`. Re-running `shot_plan.py` keeps these
+Then fill each shot in `shots.json` from the board (`board.md`): `framing`, `action`, `camera`, `moves` (still,
+2.5D, motion or sung), `prompt` (the plate prompt), `graphic` (the explaining graphic), `typed` (how its lyric is set),
+later `still` (`assets/plates/<id>.png`), `clip`, `in`, `speed`. Re-running `shot_plan.py` keeps these
 fields for shots whose id and start didn't change. For a flurry the plan doesn't make (a drum fill), split a shot by
 hand into 0.1-0.3 s pieces; keep `start`/`end`/`dur`/`frames` consistent.
 
-## Storyboard round
+## Plates and the board review
+
+Write `analysis/plates.md`: one numbered Midjourney prompt per shot in the fixed order (`generation.md`); the user runs
+them and saves picks as `assets/plates/<shot id>.png`. Then one panel per shot in `out/board/` (the plate, or a rough
+frame), named in shot order:
 
 ```bash
-mkdir -p out/storyboard && for f in assets/stills/s*.jpg; do cp "$f" out/storyboard/; done
+for f in assets/plates/s*.png; do cp "$f" out/board/; done
 ```
 
-FrameJam: `open_review` with `panelsDir` = the absolute path of `out/storyboard` (panels sort by name = shot order),
-open the URL, `wait_for_feedback`. Comments name the panel. Regenerate, then `add_version` for another round if many
-panels changed.
+FrameJam: `open_review` with `panelsDir` = the absolute path of `out/board` and `panels` whose titles are the shot ids
+and times and whose captions are the lyric, the action, what moves and the graphic. Send it with the clip prompt book
+and its cost (`board.md`, "Showing the board"). Notes name the panel; log them verbatim in `DECISIONS.md`.
 
 ## Base edit
 
@@ -69,7 +74,15 @@ ffmpeg -v error -ss 0 -t 3 -i out/final/v1.mp4 -vf "fps=8,scale=480:-1,tile=6x4"
 ```
 
 Read every sheet. Spot-check 10 hero words at their onset frame (`ffmpeg -ss <t> -frames:v 1`), the first 3 seconds,
-and every act change. Then review in FrameJam (SKILL.md step 9).
+and every chapter change. Run the lyric gate (every word of `analysis/lyrics.json` drawn at its time) and a flash
+check before review. Then review in FrameJam (SKILL.md step 9).
+
+## Master
+
+```bash
+ffmpeg -i out/final/vN.mp4 -c:v libx264 -crf 16 -preset slow -pix_fmt yuv420p -color_primaries bt709 -color_trc bt709 \
+  -colorspace bt709 -c:a aac -b:a 256k -movflags +faststart out/final/vN_master.mp4
+```
 
 ## Delivery for X
 

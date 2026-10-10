@@ -7,7 +7,7 @@
 # Needs: ffmpeg/ffprobe, git, and uv (preferred) or python3.11.
 set -euo pipefail
 PB="$(cd "$(dirname "$0")/.." && pwd)"
-mkdir -p audio/takes analysis tools moodboard assets/refs assets/stills assets/clips assets/inserts out/base out/watch
+mkdir -p audio/takes analysis tools assets/plates assets/clips assets/inserts out/base out/board out/watch
 cp "$PB/scripts/"*.py tools/
 if [ $# -ge 1 ]; then
   [ "$1" -ef "audio/master.${1##*.}" ] || cp "$1" "audio/master.${1##*.}"

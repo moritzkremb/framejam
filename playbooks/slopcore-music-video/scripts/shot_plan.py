@@ -2,9 +2,9 @@
 
 usage: python tools/shot_plan.py [--fps 24] [--bars 1] [--max-bars 2] [--min 0.6] [--lead 0.08] [--flurry chorus,hook]
 
-The rhythm it encodes (measured on the reference: median shot 1.8 s at 136 BPM, about one bar):
-- A cut lands just before each sung line, on the beat at or before the line's first word (vocal pickup), so the new
-  image arrives with the new words.
+The rhythm it encodes (ESCAPE VELOCITY: mean shot 2.17 s, median 1.83 s, about one bar; every cut on a beat):
+- A cut lands on the beat at or before each sung line's first word (vocal pickup), so the new image arrives with the
+  new words. Lines with no beat within 0.35 s fall back to --lead; the board audit then flags them.
 - Long lines and instrumental stretches split on downbeats so no shot runs past --max-bars bars.
 - In --flurry sections (substring match on the section id) shots split every 2 beats for the hook.
 - Shots shorter than --min seconds merge into the next. All times snap to whole frames at --fps.

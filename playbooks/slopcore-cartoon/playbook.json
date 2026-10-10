@@ -1,0 +1,35 @@
+{
+  "id": "slopcore-cartoon",
+  "name": "Slopcore Cartoon",
+  "tagline": "A song about a scene's memes goes in, a cartoon music video that explains every joke comes out, for a few dollars.",
+  "description": "A meme-dense music video drawn as a 2000s TV cartoon: one illustrated character lives through the song's story, a still per line with push-ins cut on the beat, every lyric on screen, and stamps, counters and a running HUD that explain each joke. Made from still illustrations only, so it needs no video generation and costs a few dollars. Good for songs about the AI timeline, a job market, a scene's in-jokes.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "A topic with its own slang, or the story you want the song to tell",
+    "A song, or lyrics we write together and generate",
+    "Optional: a look for the cartoon, your colours, a character idea"
+  ],
+  "get": "A 16:9 cartoon music video, about 2–3 min, every lyric on screen on time",
+  "format": "16:9",
+  "project": "new",
+  "needs": [
+    { "name": "Still generator and the analysis scripts", "where": "included" },
+    { "name": "Python 3, ffmpeg and Node", "where": "computer" },
+    { "name": "Hyperframes, or your project's video tool", "where": "computer" },
+    { "name": "An image model that takes reference images", "where": "service", "cost": "paid", "examples": ["GPT Image (about $3–6 a video)", "Nano Banana", "Midjourney"] },
+    { "name": "A music generator, unless you bring a song", "where": "service", "cost": "free tier", "optional": true, "examples": ["ACE-Step (runs locally, free)", "MiniMax Music", "Suno"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "on-screen type, stamps, counters and colours",
+  "steps": [
+    "Write or bring the song, and line up every word with the beat",
+    "Design the character and lock one cartoon style for every image",
+    "Draw one still per line, and see them as a storyboard if you want",
+    "Cut the stills to the beat and add the lyrics, stamps, counters and HUD",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["music video", "lyric video", "cartoon", "memes", "illustration", "low budget"],
+  "skill": "SKILL.md"
+}

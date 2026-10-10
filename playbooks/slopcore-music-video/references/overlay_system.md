@@ -1,9 +1,41 @@
-# Overlay system: specs at 1920×1080
+# The motion design layer: specs at 1920×1080
 
-The overlay is code (HTML/CSS/JS in Hyperframes, React in Remotion, or whatever the project uses), drawn over the base
-edit (`out/base.mp4`). Everything here is a default for the Escape Velocity look; a FrameJam style or the user's brand
-replaces the fonts and colours, never the structure. Scale all numbers by width/1920 for other sizes; for 9:16 move the
-subtitle up to y ≈ 1500 and stack the HUD labels.
+The generated footage is only the plate. Everything that carries meaning (every lyric on its word, the graphics that
+explain each joke, the through-line device) is drawn in code on top, so it is exact and lands on the beat
+(https://claudia.gallery/wiki/motion/). It's code in the project's tool (HTML/CSS/JS in Hyperframes, React in Remotion),
+drawn over the base edit (`out/base.mp4`). Everything here is a default for the ESCAPE VELOCITY look; a FrameJam style
+or the user's brand replaces the fonts and colours, never the structure. Scale all numbers by width/1920; for 9:16 move
+the subtitle up to y ≈ 1500 and stack the HUD labels.
+
+## The engine
+
+- **Every frame is a pure function of song time.** No frame depends on the one before, so any frame renders alone, out
+  of order, on any number of workers. Check it: render a few frames out of order and compare.
+- **Chapters are separate files** with one contract: draw footage, draw lyrics, draw graphics, draw transitions. In a
+  long film, one animator per chapter and a reviewer who looks at real rendered frames.
+- **Stills stand in for missing clips**, so the film renders end to end at every stage.
+
+## Lyrics are composition, not karaoke
+
+Every sung word is on screen at its aligned time (the lyric gate prints N of N before any render), but the words live
+on surfaces in the scene: subtitles, model cards, garment tags, mastheads and split-flap rows in ESCAPE VELOCITY; a type
+system in CLODYSSEY (DINish Condensed Black for the shouted lines, Nimbus Sans Bold for hers, IBM Plex Mono for
+readouts); title bars, balloons, Notepad and dialogs in BLISS.
+
+## Tucks and depth
+
+- **Type behind her:** per-frame mattes (BiRefNet, SAM 2) let type pass behind her hair or a prop. Tuck an edge, never
+  lose a glyph.
+- **2.5D:** a depth map (Depth Anything V2) splits a still into layers for parallax; each 2.5D shot gets its own
+  treatment, never a still with a slow zoom.
+- **Inserts sit in the scene,** on a screen or a surface, depth-matched, never floating in a box on a flat background.
+
+## Colour and texture
+
+Keep the image model's colour. ESCAPE VELOCITY's first cut ran a monochrome xerox look and came back "way too.. gray
+… loses the Midjourney magic"; the print pass became a colour halftone with line screens, grain, dither transitions and
+misregistration, with clay `#D97757` as the graphics accent. CLODYSSEY ran clean ("keep it clean so it feels like imax")
+with every plate graded toward one hero plate. Decide texture per film.
 
 ## Tokens
 
@@ -11,7 +43,7 @@ subtitle up to y ≈ 1500 and stack the HUD labels.
 |---|---|---|
 | Ink | `#F2EFE8` (warm white) | text and hairlines on dark footage |
 | Ink on light | `#141414` | for the white-studio act |
-| Accent | `#E8743B` (signal orange) | current lyric word, counter digits, stamps, chart lines; one accent only |
+| Accent | `#D97757` (clay) | current lyric word, counter digits, stamps, chart lines; one accent only |
 | Paper | `#F4F1EA` | tags, labels, receipts |
 | Shade | `rgba(0,0,0,.35)` | soft panel behind small text when the image is busy |
 | Hairline | 1.5 px | borders, brackets, chart axes |
@@ -70,9 +102,9 @@ or the line; exit in ≤ 6 frames (cut, wipe or fade). Rotate the treatments; ne
 | Spaced mono | Mono 64-80 px, letter-spacing .3em, types on one letter per frame | phrases ("ESCAPE VELOCITY") |
 | Boxed punch | Archivo Black 150 px, black on a Paper box with 24 px padding, slight 1-2° tilt | shouts ("BACK!", "NERF.") |
 | Stacked statement | Inter 700 72 px, 2-3 lines left-aligned in the negative space, one word in Accent | full jokes ("THIS IS NOT AN AI BILLBOARD.") |
-| Ghost | Bebas 400 px at 12 % opacity behind the muse (matte not needed: put it behind a dark area) | section titles ("UNDERCLASS") |
+| Ghost | Bebas 400 px at 12 % opacity behind the lead (tucked behind her with a matte, or behind a dark area) | section titles ("UNDERCLASS") |
 
-Position: in the negative space the still left for it, opposite the muse's face; never across the face or hands.
+Position: in the negative space the still left for it, opposite her face; never across the face or hands.
 
 ## Annotations (the citation layer)
 
@@ -106,7 +138,17 @@ a prop. Track by hand with 3-6 keyframes per shot (clips are short) or with any 
 
 ## Timing rules
 
-- Lyrics: every sung word is on screen at its onset (subtitle at least). Hero words peak on the onset frame.
-- Beats: overlays move on beats (stamps, flips, ticks, chart steps); cuts follow lines (see `shot_plan.py`).
-- Photosensitivity: no more than 3 full-frame flashes per second; flurries are cuts between images, not white flashes.
-- The first 3 seconds: the premise sentence in big spaced mono over a close-up, readable with the sound off.
+- Lyrics: every sung word is on screen at its onset. Hero words peak on the onset frame.
+- Graphics enter on the word that names them and animate in beats: counters roll on sixteenths, rows type one per
+  sixteenth, detections land on thirty-seconds, crops cut on eighths.
+- Cuts land within 0.03 s of a beat (a sound-event map from the stems: kicks, snares, hats, impacts, risers); camera
+  moves ride risers into their hits. Mostly hard cuts on the beat, a motivated device every few shots ("edgar wright
+  level … but also not overdone").
+- Photosensitivity: at most 3 full-frame flashes a second, checked with a WCAG-style flash test before delivery.
+- The hook: at 1.0 s her face, her accent and one readable line of the premise; the premise by 3 s.
+
+## Delivery
+
+A CRF 16 master tagged BT.709 (untagged streams look washed out in QuickTime). Gates: the lyric gate (N of N), contact
+sheets of the whole film, chapter seams, 100% crops of her face, the flash test. Map a new mix through time, not
+through a re-edit.
