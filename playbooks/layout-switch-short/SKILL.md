@@ -44,8 +44,10 @@ Work these out from the request and the files. Where nothing is said, use the de
 - **Tool.** If the project already renders with another tool, follow this method there, using the geometry in
   `references/layouts.md`; never convert the project. Say what the bundled template would have added (the
   data-driven build and checks). For a fresh project, use Hyperframes with the template in `template/`.
-- **Look.** The template's default look is ready to use. If the user picked a FrameJam style
-  (from `wait_for_pick`, or `get_preset` when the user names one), map it onto `theme` in edit.json (fields in `references/layouts.md`, "Look"): background
+- **Look.** The template's default look is ready to use. Three styles are made for this playbook (Pop Zine, Midnight
+  Launch, Mono Changelog): when one is picked, `get_playbook` returns it as `styleForThisPlaybook`, and its
+  `settings.theme` goes into edit.json as `theme` unchanged (the fonts are already in `template/assets/fonts`). For any
+  other FrameJam style (from `wait_for_pick`, or `get_preset` when the user names one), map it onto `theme` in edit.json (fields in `references/layouts.md`, "Look"): background
   colours, ink and accent, fonts (bundle the files and their license), caption pill, card radius. Layouts, timing and
   caption positions stay as described.
 - **Transcription.** Free and local by default (`references/transcription.md`); paid only with the user's OK.
@@ -187,7 +189,8 @@ moved through the new `final.edl.json`, the cut-outs re-made and the captions re
   background, cards, focus zooms, galleries, roadmap slab, punch-ins, captions with the spoken word lit, theme,
   deterministic GSAP timeline). `python3 build.py --help`.
 - `template/edit.example.json`: the beat plan of the preview video (76 s, 36 beats) to copy from.
-- `template/assets/fonts/`: Bricolage Grotesque and Geist Mono (SIL Open Font License, texts included);
+- `template/assets/fonts/`: Bricolage Grotesque and Geist Mono for the default look, plus Anton, Share Tech Mono,
+  Inter, IBM Plex Sans and IBM Plex Mono for the styles made for this playbook (SIL Open Font License, texts included);
   `template/assets/grain.png`: the grain texture.
 - `scripts/prepare_edit.py`: the cut (silence pass, removals, frame-accurate render, retimed transcripts).
 - `scripts/check_pacing.py`: beats, changes per second and every hold over 2.5 s in a plan.

@@ -265,7 +265,7 @@ and the quality bar, all as defaults your request can override. Name one when yo
 | **Cartoon Music Video** | A song goes in, a cartoon music video with every lyric on the beat comes out. |
 | **Slopcore Music Video** | A song full of internet in-jokes goes in, a dense music video with one AI-made star comes out. |
 | **Talking Head Short** | Raw talking-head clips go in, a tight vertical short with captions and matching visuals comes out. |
-| **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. |
+| **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. Comes with three styles made for it: Pop Zine, Midnight Launch and Mono Changelog. |
 | **Clean Cut** | A raw recording goes in, the same video without pauses, false starts and retakes comes out. |
 | **Product Launch** | Your product goes in, a polished launch video with the real app on screen comes out. |
 | **Founder Launch** | A founder talking to camera and screen recordings go in, a tight launch video comes out. |
@@ -380,7 +380,7 @@ for v2 and v1 still shows what it was.
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
 | `list_playbooks({ query? })` | Lists the playbooks with what to bring, what you get, the cost and the creator. |
-| `get_playbook({ id, styleId? })` | Returns `playbook.json`, the full `SKILL.md` method, the playbook's local folder and file list, and how a style combines with it. |
+| `get_playbook({ id, styleId? })` | Returns `playbook.json`, the full `SKILL.md` method, the playbook's local folder and file list, how a style combines with it, and the styles made for it (with their ready settings when `styleId` is one of them). |
 | `open_picker({ kinds?, title? })` | Opens a page where the user picks a playbook and/or style for this video, or none. Returns `{ pickId, url }`. |
 | `wait_for_pick({ pickId })` | Waits for the user's pick and returns the playbook and style (or `null` for none). Returns `pending` after about 50s; call it again. |
 | `get_selected_preset()`, `get_selected_playbook()` | Kept for older skills; they point the agent to `open_picker`. |

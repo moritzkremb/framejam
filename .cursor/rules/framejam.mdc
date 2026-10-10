@@ -6,7 +6,7 @@ alwaysApply: false
 
 # FrameJam: styles, playbooks + one-click video and storyboard review
 
-Skill version: 3
+Skill version: 4
 
 FrameJam runs next to your chat at http://localhost:2400. It gives you three things the chat is bad at:
 **choosing a style** (a structured `style.json` that describes a look, plus an example video), **following a playbook**
@@ -70,7 +70,9 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    - **Playbook:** its `skill` is a recipe for this kind of video, with defaults the user's request overrides. Use the
      loop below for every render. Read files in `playbookDir` when the method points to them, and copy its scripts, engine or
      template into the project before using them; never edit `playbookDir`. `stylesSentence` says how the style
-     combines with it.
+     combines with it. Some playbooks list styles made for them (`featuredStyles`); when the picked style is one, call
+     `get_playbook({ id, styleId })` and use `styleForThisPlaybook.settings` where the playbook's skill says, since they
+     match its example video.
    - **A style is a look, not a starting video.** First plan the video from what the user asked for (a rocket launch
      is about the rocket), then build that subject in the style's visual language: its `palette`, textures and
      backgrounds, `fonts`, `easing`, `transitions`, `textAnimations` and pacing, as `guide` describes them. Treat it as a

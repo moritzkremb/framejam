@@ -88,13 +88,20 @@ export class PlaybookLibrary {
     const id = encodeURIComponent(p.playbook.id);
     const base = `/api/playbooks/${id}`;
     const localPreview = fs.existsSync(path.join(p.dir, "preview.mp4"));
+    const previewUrl = (rel: string) =>
+      fs.existsSync(path.join(p.dir, rel)) ? `${base}/files/${rel}` : p.builtin ? `${PLAYBOOK_PREVIEW_BASE_URL}/${id}/${rel}` : undefined;
+    const posterUrl = (rel: string) => (fs.existsSync(path.join(p.dir, rel)) ? `${base}/files/${rel}` : undefined);
     return {
       ...p.playbook,
       builtin: p.builtin,
       previewShape: previewShape(path.join(p.dir, "poster.jpg"), p.playbook.format),
       hasPreview: localPreview || p.builtin,
-      previewUrl: localPreview ? `${base}/files/preview.mp4` : p.builtin ? `${PLAYBOOK_PREVIEW_BASE_URL}/${id}/preview.mp4` : undefined,
-      posterUrl: fs.existsSync(path.join(p.dir, "poster.jpg")) ? `${base}/files/poster.jpg` : undefined,
+      previewUrl: previewUrl("preview.mp4"),
+      posterUrl: posterUrl("poster.jpg"),
+      featuredStyles: (p.playbook.featuredStyles ?? []).map((s) => {
+        const dir = `previews/${encodeURIComponent(s.id)}`;
+        return { ...s, previewUrl: previewUrl(`${dir}/preview.mp4`), posterUrl: posterUrl(`${dir}/poster.jpg`) };
+      }),
     };
   }
 
@@ -109,6 +116,7 @@ export class PlaybookLibrary {
     const walk = (dir: string) => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         if (out.length >= MAX_FILES || entry.name.startsWith(".") || entry.name === "node_modules" || entry.name === "__pycache__") continue;
+        if (dir === p.dir && entry.name === "previews") continue;
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) walk(full);
         else out.push(path.relative(p.dir, full));

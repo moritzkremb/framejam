@@ -96,7 +96,7 @@ def mark_html(line, mark, mid):
     if mark and mark.lower() in line.lower():
         i = line.lower().index(mark.lower())
         a, m, b = line[:i], line[i:i + len(mark)], line[i + len(mark):]
-        return f'{esc(a)}<span class="mark"><span class="mark-bg" id="{mid}"></span><span class="mark-t">{esc(m)}</span></span>{esc(b)}'
+        return f'{esc(a)}<span class="mark"><span class="mark-bg" id="{mid}"></span><span class="mark-t" id="{mid}-t">{esc(m)}</span></span>{esc(b)}'
     return esc(line)
 
 
@@ -121,6 +121,11 @@ def main():
             user_theme[new] = user_theme[old]
     theme = {**DEFAULT_THEME, **user_theme}
     theme["captionActive"] = theme["captionActive"] or theme["accent"]
+
+    def mark_js(mid, at, dur):
+        """The highlighter sweeps in; the marked text turns from ink to accentInk as it's covered."""
+        return [f"tl.fromTo('#{mid}',{{scaleX:0}},{{scaleX:1,duration:{dur},ease:'power3.out'}},{num(at)});",
+                f"tl.fromTo('#{mid}-t',{{color:'{theme['ink']}'}},{{color:'{theme['accentInk']}',duration:{dur * 0.6:.2f},ease:'none'}},{num(at + dur * 0.3)});"]
     dur = float(e["duration"])
     beats = sorted(e["beats"], key=lambda b: b["start"])
     for i, b in enumerate(beats):
@@ -311,7 +316,7 @@ def main():
             if b.get("mark"):
                 for i, x in enumerate(lines):
                     if b["mark"].lower() in x.lower():
-                        js.append(f"tl.fromTo('#mk-{bid}-{i}',{{scaleX:0}},{{scaleX:1,duration:.35,ease:'power3.out'}},{num(b.get('markAt', s + 0.4))});")
+                        js.extend(mark_js(f"mk-{bid}-{i}", b.get("markAt", s + 0.4), 0.35))
         if lay == "words":
             ws = b.get("words", [])
             ats = b.get("at") or [s + 0.12 + i * min(0.5, d / max(1, len(ws)) * 0.6) for i in range(len(ws))]
@@ -324,7 +329,7 @@ def main():
             for i, at in enumerate(ats):
                 js.append(f"tl.fromTo('#wd-{bid}-{i}',{{opacity:0,scale:.8,y:40}},{{opacity:1,scale:1,y:0,duration:.26,ease:'back.out(2)'}},{num(at)});")
             if ws:
-                js.append(f"tl.fromTo('#wm-{bid}',{{scaleX:0}},{{scaleX:1,duration:.3,ease:'power3.out'}},{num(ats[-1] + 0.12)});")
+                js.extend(mark_js(f"wm-{bid}", ats[-1] + 0.12, 0.3))
 
     def beat_at(time):
         cur = beats[0]

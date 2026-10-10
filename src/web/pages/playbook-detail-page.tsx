@@ -44,7 +44,7 @@ function NeedLine({ need }: { need: PlaybookNeed }) {
 }
 
 /** Plays the example, with a loading state until the first frame arrives and a message if it can't load. */
-function ExampleVideo({ p }: { p: PlaybookSummary }) {
+function ExampleVideo({ p }: { p: Pick<PlaybookSummary, "previewUrl" | "posterUrl" | "previewShape"> }) {
   const [state, setState] = useState<"loading" | "ready" | "error">(p.previewUrl ? "loading" : "error");
   const tall = p.previewShape !== "wide";
   return (
@@ -82,6 +82,9 @@ export function PlaybookDetailPage() {
   const { id = "" } = useParams();
   const [data, setData] = useState<{ playbook: PlaybookSummary } | null>(null);
   const [missing, setMissing] = useState(false);
+  const [styleNames, setStyleNames] = useState<Record<string, string>>({});
+  // Which example plays: the playbook's own look (null) or one of the styles made for it.
+  const [shown, setShown] = useState<{ playbook: string; style: string } | null>(null);
 
   useEffect(() => {
     setData(null);
@@ -90,6 +93,14 @@ export function PlaybookDetailPage() {
       .then(setData)
       .catch(() => setMissing(true));
   }, [id]);
+
+  useEffect(() => {
+    if (!data?.playbook.featuredStyles.length) return;
+    api
+      .presets()
+      .then((d) => setStyleNames(Object.fromEntries(d.presets.map((s) => [s.id, s.name]))))
+      .catch(() => {});
+  }, [data]);
 
   if (missing) {
     return (
@@ -117,13 +128,28 @@ export function PlaybookDetailPage() {
   const { playbook: p } = data;
   const prompt = playbookPrompt(p);
   const predicate = stylesPredicate(p);
+  const featured = p.featuredStyles.filter((s) => styleNames[s.id]);
+  const shownStyle = shown?.playbook === p.id ? featured.find((s) => s.id === shown.style) : undefined;
+  const example = shownStyle ? { ...p, previewUrl: shownStyle.previewUrl, posterUrl: shownStyle.posterUrl ?? p.posterUrl } : p;
 
   return (
     <div className="fc-screen">
       <BackHeader to="/playbooks" title={p.name} sub={`Playbook · by ${p.creator.name}`} />
       <main className="fc-main fc-style-page">
-        <PickBanner playbook={p.id} />
-        <ExampleVideo key={p.id} p={p} />
+        <PickBanner playbook={p.id} style={shownStyle?.id} />
+        {featured.length > 0 && (
+          <div className="fc-seg fc-pb-looks" role="group" aria-label="Example style">
+            <button type="button" aria-pressed={!shownStyle} onClick={() => setShown(null)}>
+              Default
+            </button>
+            {featured.map((s) => (
+              <button key={s.id} type="button" aria-pressed={shownStyle?.id === s.id} onClick={() => setShown({ playbook: p.id, style: s.id })}>
+                {styleNames[s.id]}
+              </button>
+            ))}
+          </div>
+        )}
+        <ExampleVideo key={`${p.id}:${shownStyle?.id ?? ""}`} p={example} />
 
         <div className="fc-style-head">
           <div className="fc-grow">
@@ -197,6 +223,18 @@ export function PlaybookDetailPage() {
               {predicate ? (
                 <>
                   <p className="fc-pb-style">Your style {predicate}</p>
+                  {featured.length > 0 && (
+                    <p className="fc-pb-note">
+                      Made for this playbook:{" "}
+                      {featured.map((s, i) => (
+                        <span key={s.id}>
+                          {i > 0 && ", "}
+                          <Link to={`/styles/${s.id}`}>{styleNames[s.id]}</Link>
+                        </span>
+                      ))}
+                      . Any other style works too.
+                    </p>
+                  )}
                   <Link to="/styles" className="fc-pb-var empty">
                     Browse styles <ChevronRight className="fc-i xs" aria-hidden />
                   </Link>

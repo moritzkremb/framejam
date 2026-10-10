@@ -43,7 +43,7 @@ const skillLine = () => {
 
 const serverInstructions = (baseUrl: string) => `FrameJam lets the user review videos made with any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg, screen recordings...) and storyboards (a sequence of still panels), pick style presets, and pick playbooks (a method for one kind of video, e.g. a music video or a talking-head short).
 First, open the FrameJam UI (${baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
-FrameJam is a toolkit, not a process: do what the user asks with sensible defaults, and don't add steps, questions or approvals they didn't ask for. If they name a playbook or style, use get_playbook / get_preset. Open the pick page (open_picker, then wait_for_pick) only when they ask to choose ('/framejam playbook', '/framejam style') or the request is too open to start from. A playbook is a recipe with defaults their request overrides; say in chat what you're using, and pass playbookId and styleId to open_review.
+FrameJam is a toolkit, not a process: do what the user asks with sensible defaults, and don't add steps, questions or approvals they didn't ask for. If they name a playbook or style, use get_playbook / get_preset. Open the pick page (open_picker, then wait_for_pick) only when they ask to choose ('/framejam playbook', '/framejam style') or the request is too open to start from. A playbook is a recipe with defaults their request overrides; say in chat what you're using, and pass playbookId and styleId to open_review. Some playbooks list styles made for them (featuredStyles); when the picked style is one, get_playbook returns its ready settings for that playbook.
 A style is a look, not a starting video: plan the video from the user's request, then build that subject in the style's palette, textures, type, motion and pacing, bending it where the subject or request needs. Don't copy the style's example scene (its subject, props or layout) unless the user asks for it.
 Loop: build the video with the project's own tool (or whatever fits) -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending", but stop after 12 pending results in a row, about 10 minutes, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
 Pass videoPath (the render) for every tool; the user always reviews the rendered file. Don't convert the project to another tool.
@@ -529,6 +529,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
         format: p.format,
         cost: costBadge(p.needs),
         project: projectLabel(p.project),
+        ...(p.featuredStyles?.length ? { featuredStyles: p.featuredStyles.map((s) => s.id) } : {}),
         creator: p.creator.name,
         galleryUrl: `${ctx.baseUrl}/playbooks/${p.id}`,
       }));
@@ -540,12 +541,26 @@ export function createMcpServer(ctx: McpContext): McpServer {
     const p = playbooks.get(id);
     if (!p) return undefined;
     const style = styleId ? presets.get(styleId)?.style : undefined;
+    const featured = (p.playbook.featuredStyles ?? []).filter((s) => presets.get(s.id));
+    const picked = styleId ? featured.find((s) => s.id === styleId) : undefined;
     return {
       playbook: p.playbook,
       playbookDir: p.dir,
       files: playbooks.files(p),
       project: projectLabel(p.playbook.project),
       stylesSentence: stylesSentence(p.playbook, style?.name),
+      featuredStyles: featured.map((s) => ({ id: s.id, name: presets.get(s.id)!.style.name, note: s.note })),
+      ...(picked
+        ? {
+            styleForThisPlaybook: {
+              id: picked.id,
+              note: picked.note,
+              settings: picked.settings,
+              howToUse:
+                "This style was made for this playbook: use these settings where the playbook's SKILL.md says (they match its example video), and the style's guide for anything they don't cover.",
+            },
+          }
+        : {}),
       galleryUrl: `${ctx.baseUrl}/playbooks/${id}`,
       next:
         "Follow skill (the playbook's SKILL.md) step by step. Read files under playbookDir/references when the method points to them, and copy scripts, engine or template folders into the user's project before using them; never edit playbookDir itself. If the project already uses another tool, keep that tool and follow the method with it. Review every render in FrameJam (open_review, wait_for_feedback, add_version).",
@@ -558,7 +573,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     {
       title: "Get a playbook",
       description:
-        "Return a playbook: its playbook.json (what to bring, needs, steps), the full SKILL.md method to follow, the local folder with its references, scripts and engine or template, and how a style combines with it.",
+        "Return a playbook: its playbook.json (what to bring, needs, steps), the full SKILL.md method to follow, the local folder with its references, scripts and engine or template, how a style combines with it, and the styles made for it (with ready settings when styleId is one of them).",
       inputSchema: {
         id: z.string(),
         styleId: z.string().optional().describe("The style picked for this video, so stylesSentence names it"),

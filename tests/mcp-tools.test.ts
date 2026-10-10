@@ -443,7 +443,30 @@ describe("playbooks", () => {
     expect(fs.existsSync(res.playbookDir)).toBe(true);
     expect(res.files).toContain(path.join("scripts", "run.sh"));
     expect(res.stylesSentence).toBe("Bauhaus Grid sets the captions.");
+    expect(res.featuredStyles).toEqual([]);
+    expect(res.styleForThisPlaybook).toBeUndefined();
     expect((await mcp.call("get_playbook", { id: "nope" })).isError).toBe(true);
+  });
+
+  it("hands over the settings of a style made for the playbook", async () => {
+    writePlaybook(
+      fx.store.userPlaybooksDir,
+      samplePlaybook("styled-cut", {
+        styles: "parts",
+        stylesNote: "captions",
+        featuredStyles: [
+          { id: "bauhaus-grid", note: "Flat primaries.", settings: { theme: { accent: "#f2542d" } } },
+          { id: "no-such-style" },
+        ],
+      }),
+    );
+    const plain = parse(await mcp.call("get_playbook", { id: "styled-cut" }));
+    expect(plain.featuredStyles).toEqual([{ id: "bauhaus-grid", name: "Bauhaus Grid", note: "Flat primaries." }]);
+    expect(plain.styleForThisPlaybook).toBeUndefined();
+    const picked = parse(await mcp.call("get_playbook", { id: "styled-cut", styleId: "bauhaus-grid" }));
+    expect(picked.styleForThisPlaybook).toMatchObject({ id: "bauhaus-grid", settings: { theme: { accent: "#f2542d" } } });
+    const listed = parse(await mcp.call("list_playbooks", { query: "styled-cut" }));
+    expect(listed.playbooks[0].featuredStyles).toEqual(["bauhaus-grid", "no-such-style"]);
   });
 
   it("lets the user pick a playbook and style while the agent waits", async () => {

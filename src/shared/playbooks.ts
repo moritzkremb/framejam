@@ -73,6 +73,20 @@ export function validatePlaybook(p: Partial<Playbook>): string[] {
   if (p.project !== "new" && p.project !== "any") errors.push("project must be new or any");
   if (!p.styles || !STYLES.has(p.styles)) errors.push("styles must be all, parts, inspiration or none");
   if (p.styles === "parts" && !p.stylesNote) errors.push("stylesNote is required when styles is parts");
+  if (p.featuredStyles !== undefined) {
+    if (!Array.isArray(p.featuredStyles)) errors.push("featuredStyles must be a list");
+    else {
+      if (p.featuredStyles.length && p.styles === "none") errors.push("featuredStyles needs styles other than none");
+      const seen = new Set<string>();
+      p.featuredStyles.forEach((s, i) => {
+        if (typeof s?.id !== "string" || !s.id) errors.push(`featuredStyles[${i}] needs an id`);
+        else if (seen.has(s.id)) errors.push(`featuredStyles has ${s.id} twice`);
+        else seen.add(s.id);
+        if (s?.settings !== undefined && (typeof s.settings !== "object" || s.settings === null || Array.isArray(s.settings)))
+          errors.push(`featuredStyles[${i}].settings must be an object`);
+      });
+    }
+  }
   if (!Array.isArray(p.needs)) errors.push("needs must be a list");
   else
     p.needs.forEach((n, i) => {

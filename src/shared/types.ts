@@ -164,6 +164,16 @@ export interface PlaybookNeed {
   optional?: boolean;
 }
 
+/** A library style made for one playbook: how it's applied there, shown with its own example video. */
+export interface PlaybookStyle {
+  /** A style id from the library. */
+  id: string;
+  /** For the agent: how this style is applied in this playbook. */
+  note?: string;
+  /** Ready values for the playbook's own settings (e.g. a template's theme); the playbook's SKILL.md says where they go. */
+  settings?: Record<string, unknown>;
+}
+
 export interface Playbook {
   id: string;
   name: string;
@@ -183,16 +193,25 @@ export interface Playbook {
   /** How a selected style combines with this playbook. */
   styles: "all" | "parts" | "inspiration" | "none";
   stylesNote?: string;
+  /** Styles made for this playbook, first one first. Any other style still works as `styles` says. */
+  featuredStyles?: PlaybookStyle[];
   steps: string[];
   tags?: string[];
   skill: string;
 }
 
-export interface PlaybookSummary extends Playbook {
+export interface PlaybookStyleSummary extends PlaybookStyle {
+  /** This playbook made in this style; without one, show the style's own example. */
+  previewUrl?: string;
+  posterUrl?: string;
+}
+
+export interface PlaybookSummary extends Omit<Playbook, "featuredStyles"> {
   builtin: boolean;
   /** The example video's shape, read from its poster. */
   previewShape: "wide" | "tall" | "square";
   hasPreview: boolean;
   previewUrl?: string;
   posterUrl?: string;
+  featuredStyles: PlaybookStyleSummary[];
 }

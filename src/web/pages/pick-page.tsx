@@ -214,6 +214,12 @@ export function PickPage() {
   const chosenPlaybook = playbooks.find((p) => p.id === playbookId);
   const chosenStyle = styles.find((s) => s.id === styleId);
   const stylesUnused = chosenPlaybook?.styles === "none";
+  const madeFor = (chosenPlaybook?.featuredStyles ?? []).flatMap((f) => {
+    const s = styles.find((x) => x.id === f.id);
+    return s ? [{ style: s, previewUrl: f.previewUrl ?? s.previewUrl, posterUrl: f.posterUrl ?? s.posterUrl, own: !!f.previewUrl }] : [];
+  });
+  const filtering = !!stQuery || stFormat !== "All" || !!stMood || !!stPace;
+  const chosenMadeFor = madeFor.find((m) => m.style.id === styleId);
   const sub = pick.title ? `For: ${pick.title}` : "For the video your agent is about to make";
 
   if (pick.status !== "waiting") return null;
@@ -273,9 +279,19 @@ export function PickPage() {
               open={open === "style"}
               disabled={stylesUnused}
               onToggle={() => toggle("style")}
-              thumb={thumb(stylesUnused ? undefined : chosenStyle?.posterUrl)}
+              thumb={thumb(stylesUnused ? undefined : (chosenMadeFor?.posterUrl ?? chosenStyle?.posterUrl))}
               name={stylesUnused ? "Not used" : (chosenStyle?.name ?? "No style")}
-              sub={stylesUnused ? `${chosenPlaybook?.name} has its own look` : chosenStyle ? chosenStyle.tagline : "Your agent picks the look"}
+              sub={
+                stylesUnused
+                  ? `${chosenPlaybook?.name} has its own look`
+                  : chosenStyle
+                    ? chosenMadeFor
+                      ? `Made for ${chosenPlaybook?.name}`
+                      : chosenStyle.tagline
+                    : chosenPlaybook
+                      ? `${chosenPlaybook.name}'s default look`
+                      : "Your agent picks the look"
+              }
             />
           )}
           <div className="fc-pick-go">
@@ -338,10 +354,38 @@ export function PickPage() {
               <FilterDropdown label="Mood" value={stMood} options={moods} onChange={setStMood} />
               <FilterDropdown label="Pace" value={stPace} options={["slow", "medium", "fast"]} onChange={setStPace} />
             </div>
+            {!filtering && madeFor.length > 0 && (
+              <>
+                <h3 className="fc-pick-sub">Made for {chosenPlaybook?.name}</h3>
+                <div className="fc-sgrid">
+                  <Tile
+                    selected={styleId === null}
+                    onSelect={() => choose("style", null)}
+                    poster={chosenPlaybook?.posterUrl}
+                    preview={chosenPlaybook?.previewUrl}
+                    contain={chosenPlaybook?.previewShape !== "wide"}
+                    name="Default"
+                  />
+                  {madeFor.map((m) => (
+                    <Tile
+                      key={m.style.id}
+                      selected={styleId === m.style.id}
+                      onSelect={() => choose("style", m.style.id)}
+                      poster={m.posterUrl}
+                      preview={m.previewUrl}
+                      contain={m.own ? chosenPlaybook?.previewShape !== "wide" : m.style.format !== "16:9"}
+                      name={m.style.name}
+                      meta={<Dots colors={Object.values(m.style.palette)} />}
+                    />
+                  ))}
+                </div>
+                <h3 className="fc-pick-sub">All styles</h3>
+              </>
+            )}
             <div className="fc-sgrid">
-              {!stQuery && stFormat === "All" && !stMood && !stPace && (
+              {!filtering && !madeFor.length && (
                 <Tile selected={styleId === null} onSelect={() => choose("style", null)} name="No style">
-                  Your agent picks the look
+                  {chosenPlaybook ? `${chosenPlaybook.name}'s default look` : "Your agent picks the look"}
                 </Tile>
               )}
               {visibleStyles.map((s) => (
