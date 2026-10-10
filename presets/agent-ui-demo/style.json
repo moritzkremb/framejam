@@ -1,8 +1,8 @@
 {
   "id": "agent-ui-demo",
-  "name": "Agent UI Demo",
-  "tagline": "A glowing prompt bar, shimmering step-by-step agent status and a confirmation card that lands.",
-  "description": "Light, airy product-demo style for AI agents and assistants. A pill prompt bar floats on a soft blue glow and types a real request, a cursor sends it, the request becomes a chat bubble, agent steps appear one by one with a shimmer sweeping each line, earlier steps dim, and result cards slide in with a green check that draws itself.",
+  "name": "Airy UI",
+  "tagline": "Off-white and airy: a floating pill input, shimmering status lines and cards that land with a green check.",
+  "description": "Light, airy interface look: an off-white canvas, white surfaces with very soft shadows, a pill input floating on a soft blue glow, short status lines swept by a shimmer while earlier ones dim, and white cards that slide in with a green check that draws itself. The preview shows an assistant booking a table for six.",
   "mood": [
     "calm",
     "helpful",
@@ -63,7 +63,7 @@
   ],
   "rhythm": {
     "averageShotSeconds": 3,
-    "notes": "Prompt ~2.3s, agent steps every 0.5s, the found place appears with step three and the confirmation after the last step, then a long hold and a ~1.6s lockup."
+    "notes": "Typing at ~19ms per character, status lines every ~0.5s, long holds on results so they can be read."
   },
   "tags": [
     "ai-agent",
@@ -72,6 +72,6 @@
     "light",
     "chat"
   ],
-  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Off-white #f6f6f4 canvas, white #ffffff surfaces with very soft shadows (0 1px 0 rgba(0,0,0,0.04) + 0 24px 60px rgba(0,0,0,0.08)), bubbles #ebebe8, text #1f1f1f with #6f6f6f and #a5a5a5 for secondary. One blue accent #3d6bff; green #19a974 only for success.\n- Inter only, sentence case, lots of air: 600 for titles (34px) and the wordmark (136px, tracking -0.04em), 500 for status lines (36px), 400 for input text (32px), 26px muted meta.\n- The input is a large pill (~1100×116px, fully rounded, white) floating on a soft radial glow rgba(120,165,255,0.45) blurred 30px. Text types at ~19ms per character, a cursor (power3.inOut) presses send, and the input lifts 60px and fades as the request becomes a right-aligned bubble.\n- Show work as short status lines with a small sparkle icon and a › chevron, one every ~0.5s, each rising 14px (power3.out) and then swept by a shimmer: a 160px light gradient band moved across with transform only (ease none). Earlier lines fade to grey; the last turns green as its check draws.\n- Results land as white cards with 26px radius sliding in from the right (expo.out): an image tile plus a detail card with exact facts. Checks are SVG strokes drawn with dashoffset (0.35s power2.out).\n- Keep the layout centred with wide margins: at most one input, one list and two cards on screen at once. Hold the outcome, then hard cut to a dot + wordmark lockup with one muted line.\n- Every request and result is specific (names, times, counts), never placeholder text. Avoid dark backgrounds, gradients on surfaces, hard shadows and a second accent colour.",
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Off-white #f6f6f4 canvas, white #ffffff surfaces with very soft shadows (0 1px 0 rgba(0,0,0,0.04) + 0 24px 60px rgba(0,0,0,0.08)), bubbles #ebebe8, text #1f1f1f with #6f6f6f and #a5a5a5 for secondary. One blue accent #3d6bff; green #19a974 only for success.\n- Inter only, sentence case, lots of air: 600 for titles (34px) and the wordmark (136px, tracking -0.04em), 500 for status lines (36px), 400 for input text (32px), 26px muted meta.\n- The input is a large pill (~1100×116px, fully rounded, white) floating on a soft radial glow rgba(120,165,255,0.45) blurred 30px. Text types at ~19ms per character, a cursor (power3.inOut) presses send, and the input lifts 60px and fades as the request becomes a right-aligned bubble.\n- Show work as short status lines with a small sparkle icon and a › chevron, one every ~0.5s, each rising 14px (power3.out) and then swept by a shimmer: a 160px light gradient band moved across with transform only (ease none). Earlier lines fade to grey; the last turns green as its check draws.\n- Results land as white cards with 26px radius sliding in from the right (expo.out): an image tile plus a detail card with exact facts. Checks are SVG strokes drawn with dashoffset (0.35s power2.out).\n- Keep the layout centred with wide margins: at most one input, one list and two cards on screen at once. Hold results long enough to read. A lockup is a small dot plus wordmark with one muted line.\n- Every request and result is specific (names, times, counts), never placeholder text. Avoid dark backgrounds, gradients on surfaces, hard shadows and a second accent colour.",
   "example": "The preview shows an assistant greeting Maya, a typed request to book a table for 6 on Friday, agent steps that find a place, and a confirmation card for 7:30 at Osteria Nove. Don't copy this scene unless asked."
 }

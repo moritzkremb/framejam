@@ -1,7 +1,7 @@
 {
   "id": "midnight-launch",
-  "name": "Midnight Launch",
-  "tagline": "A glowing app icon, blur-in type and fanned media cards on near-black — the classic AI launch film.",
+  "name": "Midnight Glow",
+  "tagline": "A glowing hero, blur-in type and fanned cards on near-black, with one warm accent.",
   "description": "Dark, polished launch look: near-black with a faint purple glow, a glowing centred hero that focuses in from blur, short lines that crossfade through blur, fans of cards flying out from behind, and one warm accent for the moment of action. The preview is an AI app launch with a prompt that types itself.",
   "mood": [
     "sleek",
@@ -62,7 +62,7 @@
   ],
   "rhythm": {
     "averageShotSeconds": 1.6,
-    "notes": "Logo ~1.7s, then three capability beats of ~0.9s each, a ~2s prompt demo and a ~1.5s lockup."
+    "notes": "Hero moments hold ~1.7s, short lines swap every ~0.9s, a moment of action gets ~2s and a closing lockup ~1.5s."
   },
   "tags": [
     "launch",

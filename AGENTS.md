@@ -26,6 +26,15 @@ The core of the app, and what every change should be judged against:
  folder plus a `playbook.json` with a creator, so outside creators can submit their own later.
 - **Any video tool.** FrameJam always reviews the rendered file. It doesn't care how the video was made.
 
+**Styles vs playbooks.** A playbook is what you're making and how (inputs, steps, tools, length, story arc,
+quality bar); a style is how it looks (palette, type, texture, motion, tempo), never a beat order or content rules.
+Two checks for anything new: a style should make sense for a launch, an explainer and a talking-head short; a
+playbook should still be the same playbook in three very different styles. If the steps or what the user brings
+change, it's a new playbook; if only the look changes, it's a style. A playbook can list styles made for it
+(`featuredStyles`: a note, ready `settings` for its template, and its own example video in `previews/<style id>/`);
+any other style still works as its `styles` field says. Style names describe the look ("Midnight Glow"), not a kind
+of video.
+
 **A toolkit, not a process.** FrameJam should feel like an extension of the user's agent: fast, flexible, with as few
 prescribed steps as possible. Skills and playbooks give defaults, never gates: no question rounds before building, no
 plans to approve, no mandatory storyboards or planning documents. The user's request always wins.
@@ -128,7 +137,7 @@ Push to `main` only after the npm release is live if the README or website alrea
 - **Styles:** adding or removing a built-in preset also means adding or removing its folder in
  `../framejam-site/public/presets` (preview.mp4, poster.jpg and style.json) and updating the counts and lists in `README.md`.
 - **Playbooks:** the same for `../framejam-site/public/playbooks` (preview.mp4, poster.jpg and an identical
- playbook.json) and the list in `README.md`. The display helpers in `src/shared/playbooks.ts` (needs groups, cost badge,
+ playbook.json, plus `previews/<style id>/preview.mp4` and `poster.jpg` for each featured style) and the list in `README.md`. The display helpers in `src/shared/playbooks.ts` (needs groups, cost badge,
  styles sentence, copy prompt) have a copy in `../framejam-site/lib/playbooks.ts`; change both together.
 
 ## Writing

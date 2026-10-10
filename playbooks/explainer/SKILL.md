@@ -87,7 +87,8 @@ Work these out from the request and the files. Where nothing is said, use the de
 - **Readable on a phone:** captions ≥ 40 px, labels ≥ 40 px, ≤ 7 words per on-screen element, nothing under the caption band.
 - **One look:** the style's palette and fonts everywhere; a consistent stage or mascot; 1–2 scene-change styles.
 - **Sound:** voice clear above everything, effects quieter than the voice, music ducked, -16 LUFS, no clipping.
-- **True:** every fact traced to the source; no third-party logos or real people without permission.
+- **True:** every fact traced to the source; no third-party logos or real people without permission. Every number on
+  screen is the real one, with its takeaway and a source line.
 
 ## Files in this playbook
 - `scripts/` (any tool): `tts.py` (voice per scene: kokoro, say, piper, record, paid openai/elevenlabs), `word_times.py` (whisper.cpp word times), `build_timing.py` (the clock: scenes, cues, captions), `sfx.py` (free synthesized effects), `mix.py` (voice + effects + ducked music → soundtrack), `fetch_fonts.py` (Google Fonts as local files), `sheet.sh` (contact sheet).

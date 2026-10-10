@@ -216,11 +216,11 @@ side automatically (headless Chrome) and saves screenshots.
 
 FrameJam ships with 30 styles:
 
-**Neon Terminal**, **Noir Quote**, **Data Story**, **Mono Changelog**, **Paper Marker**, **Bauhaus Grid** (1:1),
-**Dot Matrix**, **Red Band Title**, **Midnight Launch**, **Cream Serif Launch**, **Agent UI Demo**,
-**Dot Field Showreel**, **Blueprint Explainer**, **Topo Credits**, **Parchment Epic**, **Case File**, **Ink Wash**,
-**Acid Chrome**, **Recipe Steps**, **Split Flap**, **Label Collage**, **Cyanotype Mac**, **Doodle Mascot**,
-**Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**, **Dither Serif**, **Life Timeline** and
+**Neon Terminal**, **Noir Quote**, **Navy Teal**, **Mono Plex**, **Paper Marker**, **Bauhaus Grid** (1:1),
+**Dot Matrix**, **Red Band Title**, **Midnight Glow**, **Cream Serif**, **Airy UI**,
+**Dot Field**, **Blueprint**, **Topo Credits**, **Parchment Epic**, **Case File**, **Ink Wash**,
+**Acid Chrome**, **Soft Outline**, **Split Flap**, **Label Collage**, **Cyanotype Mac**, **Doodle Mascot**,
+**Synthwave Grid**, **Pop Zine**, **UI Microstudy**, **Motion Principles**, **Dither Serif**, **Color Wipe** and
 **Storybook Lantern**. Want a style that isn't here? Ask for it in the
 [FrameJam Discord](https://discord.gg/7bW9tP2ySK).
 
@@ -258,20 +258,23 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 
 A style sets the look; a playbook sets how a kind of video gets made: what you bring, the steps, the tools it needs
 and the quality bar, all as defaults your request can override. Name one when you ask for a video, or type
-`/framejam playbook` to choose on a page. FrameJam ships with 12:
+`/framejam playbook` to choose on a page. Some playbooks come with styles made for them, each with its own example
+video. FrameJam ships with 14:
 
 | Playbook | What goes in, what comes out |
 | --- | --- |
 | **Cartoon Music Video** | A song goes in, a cartoon music video with every lyric on the beat comes out. |
 | **Slopcore Music Video** | A song full of internet in-jokes goes in, a dense music video with one AI-made star comes out. |
 | **Talking Head Short** | Raw talking-head clips go in, a tight vertical short with captions and matching visuals comes out. |
-| **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. Comes with three styles made for it: Pop Zine, Midnight Launch and Mono Changelog. |
+| **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. Comes with three styles made for it: Pop Zine, Midnight Glow and Mono Plex. |
 | **Clean Cut** | A raw recording goes in, the same video without pauses, false starts and retakes comes out. |
 | **Product Launch** | Your product goes in, a polished launch video with the real app on screen comes out. |
 | **Founder Launch** | A founder talking to camera and screen recordings go in, a tight launch video comes out. |
 | **Launch Teaser** | A name, one promise and a few real clips go in, a 15-second teaser that lands the name on the beat comes out. |
 | **Explainer** | A topic, article or script goes in, a narrated animated explainer comes out. |
 | **Math Animation** | A math or science idea goes in, a calm animated explainer in the style of 3Blue1Brown comes out. |
+| **How-to** | A process goes in, a short step-by-step video that's clear even with the sound off comes out. |
+| **Timeline** | Dates and milestones go in, a fast story told one milestone at a time comes out. |
 | **YouTube Intro** | Your intro script or recording goes in, a tight 20–60 second opening for a long video comes out. |
 | **Motion Design Showreel** | Your logo and a few things to show off go in, a short motion piece cut to the beat comes out. |
 

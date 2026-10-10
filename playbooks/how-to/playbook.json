@@ -1,0 +1,32 @@
+{
+  "id": "how-to",
+  "name": "How-to",
+  "tagline": "A process goes in, a short step-by-step video that's clear even with the sound off comes out.",
+  "description": "A 30–90 second video that walks through a recipe, a setup or any process with a handful of steps. One scene stays on screen and changes step by step, a step card says where you are, and every step shows its one action with the exact amount or setting. Good for tutorials, onboarding and recipes.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "The steps: a recipe, notes, a doc or a recording that walks through the process",
+    "Optional: photos or screen recordings of the steps",
+    "Optional: your own voice recording"
+  ],
+  "get": "A 30–90 s video (16:9, or 9:16 on request) with a step card, captions and optional voiceover",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    { "name": "Hyperframes (or your project's video tool), Python 3 and ffmpeg", "where": "computer" },
+    { "name": "Voice, timing and sound scripts (from the Explainer playbook)", "where": "included" },
+    { "name": "A voice, if you want narration", "where": "service", "cost": "free", "optional": true, "examples": ["Your own recording", "Kokoro (runs locally)", "ElevenLabs (paid)"] }
+  ],
+  "styles": "all",
+  "steps": [
+    "Turn the process into 4–8 steps, each one action with its exact amount or setting",
+    "Plan one scene that changes in place, with a step card and progress dots",
+    "Record or generate the voice and time each step to it, if there is one",
+    "Animate every step and add captions",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["how-to", "tutorial", "recipe", "steps", "setup guide", "onboarding"],
+  "skill": "SKILL.md"
+}

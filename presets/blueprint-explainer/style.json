@@ -1,8 +1,8 @@
 {
   "id": "blueprint-explainer",
-  "name": "Blueprint Explainer",
+  "name": "Blueprint",
   "tagline": "Thin line drawings on a navy grid, a needle that sweeps, a formula that writes itself and calm subtitles.",
-  "description": "Patient teaching style for science, maths and how-it-works explainers. White and cyan line art draws itself on a navy blueprint grid, a gauge needle sweeps into place, an italic serif formula writes on letter by letter, measurements appear in amber mono, and one subtitle line at the bottom narrates each step.",
+  "description": "Calm line-drawing look: white and cyan line art draws itself on a navy blueprint grid, needles and dials settle into place, formulas write on in an italic serif, measurements appear in amber mono, and one subtitle line narrates at the bottom. The preview explains a car's speedometer.",
   "mood": [
     "calm",
     "curious",
@@ -68,7 +68,7 @@
   ],
   "rhythm": {
     "averageShotSeconds": 2.2,
-    "notes": "One idea per ~2.2s beat, each with exactly one subtitle. Give drawings time to finish before the next line appears."
+    "notes": "Slow tempo, ~2.2s per beat with exactly one subtitle. Let drawings finish before the next line appears."
   },
   "tags": [
     "explainer",
@@ -77,6 +77,6 @@
     "math",
     "blueprint"
   ],
-  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Navy #0f1626 with a faint 60px grid (1px lines in rgba(122,140,170,0.08)). Draw everything as 3–5px strokes with round caps; no fills except tiny hubs.\n- Colour by role: the subject in cyan #7fd3ff, structure and axes in off-white #e8edf5, measurements in amber #ffc857, warnings and needles in coral #ff6b6b, secondary marks in muted #7a869c (dashed 28/22).\n- Draw lines on with pathLength=1 and dashoffset 1→0 (power2.inOut); other elements fade up 20px or fade out in place. No cuts and no camera moves.\n- Measure things visibly: drawn brackets, tick marks and amber IBM Plex Mono 500 readouts (30px) that count with the motion. When the motion itself is being measured, move at constant speed (ease none); dials and needles settle with back.out(1.6) and a small wobble.\n- Formulas in STIX Two Text 500, 76–92px: italic variables, upright operators, written on letter by letter (~40ms) with an amber underline drawn beneath the key term.\n- Keep exactly one plain-language subtitle at the bottom (IBM Plex Sans, 34px), phrased as a narrator would say it; crossfade between them (0.3s out, 0.4s in). Questions sit at 64px in muted.\n- One idea per ~2.2s beat; let each drawing finish before the next line appears. Build to a question, then answer it in amber italic.\n- Avoid filled shapes, photos, gradients, glow and fast cuts.",
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Navy #0f1626 with a faint 60px grid (1px lines in rgba(122,140,170,0.08)). Draw everything as 3–5px strokes with round caps; no fills except tiny hubs.\n- Colour by role: the subject in cyan #7fd3ff, structure and axes in off-white #e8edf5, measurements in amber #ffc857, warnings and needles in coral #ff6b6b, secondary marks in muted #7a869c (dashed 28/22).\n- Draw lines on with pathLength=1 and dashoffset 1→0 (power2.inOut); other elements fade up 20px or fade out in place. No cuts and no camera moves.\n- Measure things visibly: drawn brackets, tick marks and amber IBM Plex Mono 500 readouts (30px) that count with the motion. When the motion itself is being measured, move at constant speed (ease none); dials and needles settle with back.out(1.6) and a small wobble.\n- Formulas in STIX Two Text 500, 76–92px: italic variables, upright operators, written on letter by letter (~40ms) with an amber underline drawn beneath the key term.\n- Keep exactly one plain-language subtitle at the bottom (IBM Plex Sans, 34px), phrased as a narrator would say it; crossfade between them (0.3s out, 0.4s in). Questions sit at 64px in muted.\n- Slow tempo, ~2.2s per beat; let each drawing finish before the next line appears. Answers and key results land in amber italic.\n- Avoid filled shapes, photos, gradients, glow and fast cuts.",
   "example": "The preview explains a car's speedometer: a line-drawn car on a road, a gauge needle at 60 km/h, the formula 120 km ÷ 2 h = 60 km/h, and the answer that the needle shows speed at one instant. Don't copy this scene unless asked."
 }

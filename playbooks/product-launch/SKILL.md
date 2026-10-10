@@ -74,6 +74,10 @@ Read `references/story.md`. Then write `STORYBOARD.md`:
 - Pick one arc (problem → platform, demo loop, before/after, feature cascade). Write the promise in one line.
 - 6–10 frames. Each frame has one job: hook, product intro, feature, benefit, proof, CTA. A feature is shown as a
   short sequence on the real surface (input → action → result), not a static screenshot.
+- **AI agents and assistants:** show one real request end to end: it's typed into the input and sent, becomes a
+  message, the agent's steps appear one by one (earlier ones dim), the result lands as a card with exact facts and a
+  check, and the frame holds on the outcome before the lockup. Requests and results are specific (names, times,
+  counts), never placeholder text.
 - The hook is 3–4 s and works muted: the viewer's pain or desire in their words, never "X is a platform that…".
 - **Beat grid first.** Pick a tempo (110–128 BPM; at 120 BPM a beat is 0.5 s, a bar 2 s). Every frame starts on a
   downbeat and lasts whole bars. Mark the drops: usually the product name and the proof section. Every reveal in

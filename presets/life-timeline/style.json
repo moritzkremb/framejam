@@ -1,7 +1,7 @@
 {
   "id": "life-timeline",
-  "name": "Life Timeline",
-  "tagline": "A biography in flat-vector scenes: a new colour wipes in per milestone, springy shapes, and a year bar that advances along the bottom.",
+  "name": "Color Wipe",
+  "tagline": "A new solid colour wipes in for every beat, with a huge number and springy flat-vector shapes.",
   "description": "Flat-vector look: a new solid colour wipes in for every beat, a huge number and a short bold headline sit beside a springy illustration built from circles, rectangles and simple people, and a thin progress bar can advance along the bottom. The preview tells one person's life milestone by milestone.",
   "mood": [
     "warm",
@@ -63,7 +63,7 @@
   ],
   "rhythm": {
     "averageShotSeconds": 1.15,
-    "notes": "Black opener 0.9s, then five milestones of ~1.15s, then a 2.3s closing quote card. Every scene: wipe, text cascade, illustration spring, then one small secondary motion (a plane sliding, a chart line drawing, a ticket swaying)."
+    "notes": "Beats of ~1.15s. Every beat: the wipe, the text cascade, the illustration spring, then one small secondary motion (a plane sliding, a chart line drawing, a ticket swaying)."
   },
   "tags": [
     "biography",

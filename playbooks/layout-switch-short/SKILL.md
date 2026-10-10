@@ -45,7 +45,7 @@ Work these out from the request and the files. Where nothing is said, use the de
   `references/layouts.md`; never convert the project. Say what the bundled template would have added (the
   data-driven build and checks). For a fresh project, use Hyperframes with the template in `template/`.
 - **Look.** The template's default look is ready to use. Three styles are made for this playbook (Pop Zine, Midnight
-  Launch, Mono Changelog): when one is picked, `get_playbook` returns it as `styleForThisPlaybook`, and its
+  Glow, Mono Plex): when one is picked, `get_playbook` returns it as `styleForThisPlaybook`, and its
   `settings.theme` goes into edit.json as `theme` unchanged (the fonts are already in `template/assets/fonts`). For any
   other FrameJam style (from `wait_for_pick`, or `get_preset` when the user names one), map it onto `theme` in edit.json (fields in `references/layouts.md`, "Look"): background
   colours, ink and accent, fonts (bundle the files and their license), caption pill, card radius. Layouts, timing and

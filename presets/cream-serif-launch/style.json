@@ -1,8 +1,8 @@
 {
   "id": "cream-serif-launch",
-  "name": "Cream Serif Launch",
-  "tagline": "Warm cream, a chunky serif with one coral italic word, and a product demo that proves a number.",
-  "description": "Friendly editorial launch style for developer tools and AI products. A big Fraunces question de-blurs onto warm cream with one coral italic word, a soft paper card types a real query and surfaces results with a highlighter sweep, two bars compare before and after while a tilted coral percentage slams in, and the logo lockup ends on an install command.",
+  "name": "Cream Serif",
+  "tagline": "Warm cream, a chunky serif with one coral italic word, soft paper cards and a highlighter sweep.",
+  "description": "Friendly editorial look: warm cream, a big Fraunces headline that de-blurs with one coral italic word, soft paper cards with a warm shadow, a coral highlighter sweep, and a tilted coral number that slams in. The preview is a developer-tool launch: a question, a search demo, a before-and-after comparison and a logo with an install command.",
   "mood": [
     "warm",
     "friendly",
@@ -70,7 +70,7 @@
   ],
   "rhythm": {
     "averageShotSeconds": 2,
-    "notes": "Four beats of ~2s: question, demo, proof, lockup."
+    "notes": "Beats of ~2s with hard cuts; headlines resolve from blur in under a second."
   },
   "tags": [
     "launch",
@@ -79,6 +79,6 @@
     "warm",
     "comparison"
   ],
-  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Cream ground #f3ede2 with a soft radial lightening (#f8f3ea centre → #ebe3d4 edge). Surfaces are #fffaf2 with 26px radius, a #e2d9c9 hairline and a warm low shadow (0 30px 80px rgba(90,60,30,0.14)). Ink #1d1b18, muted #8f877b. No pure white or black backgrounds.\n- Headlines in Fraunces 800, 76–150px, tracking -0.02em; exactly one word per headline in coral #ec5b3c Fraunces 700 italic.\n- Titles, logos and big words resolve from blur (blur 8–26px and scale 1.08 → sharp, power3.out, ~0.6–0.95s) instead of fading; after a hard cut the next headline rises 30px.\n- Show the subject doing one concrete thing rather than abstract decoration: e.g. input typing with a coral caret, results rising in sequence, the key one swept by a coral-tint #fbe3d9 highlighter (power2.inOut).\n- Prove a claim with one number: a before/after bar pair (ink vs coral, expo.out) and a big coral figure (~260px) that slams in tilted -8° from scale 1.7 with back.out(2.2) while the old value is struck through. Add a small muted note saying what was measured.\n- Inter 400–600 for UI text (24–34px); JetBrains Mono 500 (26–30px) for code, paths or commands, set in a dark #1d1b18 pill with cream text.\n- Four beats of ~2s with hard cuts. Close on mark + name and a two-part line whose second half is coral italic.\n- Avoid cold greys, neon, heavy gradients and more than one italic word per headline.",
+  "guide": "- Look only: build the user's own subject in this visual language; don't reuse the example's scene.\n- Cream ground #f3ede2 with a soft radial lightening (#f8f3ea centre → #ebe3d4 edge). Surfaces are #fffaf2 with 26px radius, a #e2d9c9 hairline and a warm low shadow (0 30px 80px rgba(90,60,30,0.14)). Ink #1d1b18, muted #8f877b. No pure white or black backgrounds.\n- Headlines in Fraunces 800, 76–150px, tracking -0.02em; exactly one word per headline in coral #ec5b3c Fraunces 700 italic.\n- Titles, logos and big words resolve from blur (blur 8–26px and scale 1.08 → sharp, power3.out, ~0.6–0.95s) instead of fading; after a hard cut the next headline rises 30px.\n- Show the subject doing one concrete thing rather than abstract decoration: e.g. input typing with a coral caret, results rising in sequence, the key one swept by a coral-tint #fbe3d9 highlighter (power2.inOut).\n- Prove a claim with one number: a before/after bar pair (ink vs coral, expo.out) and a big coral figure (~260px) that slams in tilted -8° from scale 1.7 with back.out(2.2) while the old value is struck through. Add a small muted note saying what was measured.\n- Inter 400–600 for UI text (24–34px); JetBrains Mono 500 (26–30px) for code, paths or commands, set in a dark #1d1b18 pill with cream text.\n- Beats of ~2s with hard cuts. A closing line can split in two, with the second half in coral italic.\n- Avoid cold greys, neon, heavy gradients and more than one italic word per headline.",
   "example": "The preview asks 'What are we shipping?', then a search card types a query and finds code files, two bars compare cost before and after with a coral −42%, and it ends on a logo with an install command. Don't copy this scene unless asked."
 }

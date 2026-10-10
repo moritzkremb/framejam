@@ -6,7 +6,10 @@ Faceless means nothing is filmed or captured: every visual is designed. Typograp
 - **Type as the subject:** the hero word, a coined term, a big number, a short list. Near full-frame for hooks and landings.
 - **A metaphor made into an object:** the prism that splits a script into sound, the pace car, the snowball. Build the thing the narration names; never generic decoration.
 - **A diagram that builds:** nodes and arrows, a timeline, a process flow, a before/after split, a formula. Each part appears as it's named; the build is the teaching.
-- **Data:** a count-up, bars that grow, a line that draws, a single huge stat. One number per beat.
+- **Data:** a count-up, bars that grow, a line that draws, a single huge stat. One number per beat. One chart makes
+  one point: highlight the bar or point that matters and dim the rest once it lands. Every statistic gets a
+  one-sentence plain-language takeaway and a small source line (who, when, n=). Use the real, specific number (87%,
+  1,240), never a round placeholder.
 - Plus, when the topic is software or a product, a **simplified UI mock** (a chat bubble, a file, a terminal line): drawn in the video's own style, never a screenshot of someone else's product or logo.
 
 ## Each scene is a shot over time, not a slide
