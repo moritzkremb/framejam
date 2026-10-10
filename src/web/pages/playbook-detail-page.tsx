@@ -2,7 +2,7 @@ import { ArrowUpRight, ChevronRight, Copy, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { BackHeader } from "@/components/header";
+import { BackHeader, Dots } from "@/components/header";
 import { PromptBlock } from "@/components/setup-steps";
 import { NotHere } from "@/components/states";
 import { api, copyText, type PlaybookSummary } from "@/lib/api";
@@ -82,11 +82,80 @@ function ExampleVideo({ p }: { p: Pick<PlaybookSummary, "previewUrl" | "posterUr
   );
 }
 
+type Variant = {
+  /** "" for the playbook's own look. */
+  id: string;
+  label: string;
+  kind: "default" | "style" | "example";
+  colors?: string[];
+  note?: string;
+  previewUrl?: string;
+  posterUrl?: string;
+};
+
+const KIND_LABEL: Record<Variant["kind"], string> = { default: "Its own look", style: "Style", example: "Another example" };
+
+/** The other versions of the example under the player: the styles made for the playbook and extra examples. */
+function Variants({
+  options,
+  picked,
+  tall,
+  predicate,
+  onPick,
+}: {
+  options: Variant[];
+  picked: string;
+  tall: boolean;
+  predicate: string | null;
+  onPick(id: string | null): void;
+}) {
+  const styles = options.filter((o) => o.kind === "style").length;
+  const lede = !predicate
+    ? "This playbook has its own look. Styles aren't used."
+    : `A style ${predicate} ${styles ? "These are made for this playbook; any other style works too." : "Pick one when you start, or name it in your prompt."}`;
+  return (
+    <section className="fc-pb-variants" aria-label="Styles">
+      <div className="fc-pb-variants-head">
+        <div className="fc-grow">
+          <h2 className="fc-h3">{options.length > 1 ? "See it in other styles" : "Styles"}</h2>
+          <p className="fc-caption">{lede}</p>
+        </div>
+        {predicate && (
+          <Link to="/styles" className="fc-btn ghost sm">
+            Browse all styles <ChevronRight className="fc-i xs" aria-hidden />
+          </Link>
+        )}
+      </div>
+      {options.length > 1 && (
+        <div className={cn("fc-pb-variant-row", tall && "tall")}>
+          {options.map((o) => (
+            <button
+              key={o.id || "default"}
+              type="button"
+              className={cn("fc-pb-variant", picked === o.id && "is-picked")}
+              aria-pressed={picked === o.id}
+              title={o.note}
+              onClick={() => onPick(o.id || null)}
+            >
+              <span className="thumb">{o.posterUrl && <img src={o.posterUrl} alt="" />}</span>
+              <span className="nm fc-truncate">{o.label}</span>
+              <span className="kind">
+                {o.colors && <Dots colors={o.colors} />}
+                {KIND_LABEL[o.kind]}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function PlaybookDetailPage() {
   const { id = "" } = useParams();
   const [data, setData] = useState<{ playbook: PlaybookSummary } | null>(null);
   const [missing, setMissing] = useState(false);
-  const [styleNames, setStyleNames] = useState<Record<string, string>>({});
+  const [styleInfo, setStyleInfo] = useState<Record<string, { name: string; colors: string[] }>>({});
   // Which example plays: the playbook's own look (null) or one of the styles made for it.
   const [shown, setShown] = useState<{ playbook: string; style: string } | null>(null);
 
@@ -102,7 +171,7 @@ export function PlaybookDetailPage() {
     if (!data?.playbook.featuredStyles.length) return;
     api
       .presets()
-      .then((d) => setStyleNames(Object.fromEntries(d.presets.map((s) => [s.id, s.name]))))
+      .then((d) => setStyleInfo(Object.fromEntries(d.presets.map((s) => [s.id, { name: s.name, colors: Object.values(s.palette) }]))))
       .catch(() => {});
   }, [data]);
 
@@ -130,36 +199,33 @@ export function PlaybookDetailPage() {
   }
 
   const { playbook: p } = data;
-  const prompt = playbookPrompt(p);
   const predicate = stylesPredicate(p);
-  const featured = p.featuredStyles.filter((s) => styleNames[s.id]);
-  // The switcher: the main example, other examples, then the styles made for this playbook.
-  const options = [
-    ...p.examples.map((x) => ({ id: x.id, label: x.label, previewUrl: x.previewUrl, posterUrl: x.posterUrl, style: false })),
-    ...featured.map((s) => ({ id: s.id, label: styleNames[s.id], previewUrl: s.previewUrl, posterUrl: s.posterUrl, style: true })),
+  // The examples under the player: the playbook's own look, the styles made for it, then other examples.
+  const options: Variant[] = [
+    { id: "", label: "Default", kind: "default", previewUrl: p.previewUrl, posterUrl: p.posterUrl },
+    ...p.featuredStyles
+      .filter((s) => styleInfo[s.id])
+      .map((s) => ({ id: s.id, label: styleInfo[s.id].name, kind: "style" as const, colors: styleInfo[s.id].colors, previewUrl: s.previewUrl, posterUrl: s.posterUrl })),
+    ...p.examples.map((x) => ({ id: x.id, label: x.label, kind: "example" as const, note: x.note, previewUrl: x.previewUrl, posterUrl: x.posterUrl })),
   ];
-  const picked = shown?.playbook === p.id ? options.find((o) => o.id === shown.style) : undefined;
-  const shownStyle = picked?.style ? picked : undefined;
-  const example = picked ? { ...p, previewUrl: picked.previewUrl, posterUrl: picked.posterUrl ?? p.posterUrl } : p;
+  const picked = (shown?.playbook === p.id && options.find((o) => o.id === shown.style)) || options[0];
+  const shownStyle = picked.kind === "style" ? picked : undefined;
+  const prompt = playbookPrompt(p, shownStyle && { id: shownStyle.id, name: shownStyle.label });
+  const example = { ...p, previewUrl: picked.previewUrl, posterUrl: picked.posterUrl ?? p.posterUrl };
 
   return (
     <div className="fc-screen">
       <BackHeader to="/playbooks" title={p.name} sub={`Playbook · by ${p.creator.name}`} />
       <main className="fc-main fc-style-page">
         <PickBanner playbook={p.id} style={shownStyle?.id} />
-        {options.length > 0 && (
-          <div className="fc-seg fc-pb-looks" role="group" aria-label="Example">
-            <button type="button" aria-pressed={!picked} onClick={() => setShown(null)}>
-              Default
-            </button>
-            {options.map((o) => (
-              <button key={o.id} type="button" aria-pressed={picked?.id === o.id} onClick={() => setShown({ playbook: p.id, style: o.id })}>
-                {o.label}
-              </button>
-            ))}
-          </div>
-        )}
-        <ExampleVideo key={`${p.id}:${picked?.id ?? ""}`} p={example} />
+        <ExampleVideo key={`${p.id}:${picked.id}`} p={example} />
+        <Variants
+          options={options}
+          picked={picked.id}
+          tall={p.previewShape !== "wide"}
+          predicate={predicate}
+          onPick={(v) => setShown(v ? { playbook: p.id, style: v } : null)}
+        />
 
         <div className="fc-style-head">
           <div className="fc-grow">
@@ -174,7 +240,7 @@ export function PlaybookDetailPage() {
           </div>
           <div className="actions">
             <button type="button" className="fc-btn primary" onClick={() => void copy(prompt, "prompt for your agent")}>
-              <Copy className="fc-i sm" /> Copy prompt
+              <Copy className="fc-i sm" /> {shownStyle ? `Copy prompt with ${shownStyle.label}` : "Copy prompt"}
             </button>
           </div>
         </div>
@@ -227,31 +293,6 @@ export function PlaybookDetailPage() {
                 </div>
               ))}
               <p className="fc-pb-note">{projectLabel(p.project)}</p>
-            </SideBlock>
-
-            <SideBlock title="Style">
-              {predicate ? (
-                <>
-                  <p className="fc-pb-style">Your style {predicate}</p>
-                  {featured.length > 0 && (
-                    <p className="fc-pb-note">
-                      Made for this playbook:{" "}
-                      {featured.map((s, i) => (
-                        <span key={s.id}>
-                          {i > 0 && ", "}
-                          <Link to={`/styles/${s.id}`}>{styleNames[s.id]}</Link>
-                        </span>
-                      ))}
-                      . Any other style works too.
-                    </p>
-                  )}
-                  <Link to="/styles" className="fc-pb-var empty">
-                    Browse styles <ChevronRight className="fc-i xs" aria-hidden />
-                  </Link>
-                </>
-              ) : (
-                <p className="fc-pb-note">This playbook has its own look. Styles aren&apos;t used.</p>
-              )}
             </SideBlock>
 
             <SideBlock title="Made by">

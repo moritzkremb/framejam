@@ -195,7 +195,22 @@ a { color: inherit; }
 .fc-pb-media > video, .fc-pb-media > img { position: relative; z-index: 1; }
 .fc-pb-media.tall > video, .fc-pb-media.tall > img { background: transparent; box-shadow: 0 20px 60px -20px rgb(0 0 0 / .7); }
 
-.fc-pb-looks { align-self: center; flex-wrap: wrap; justify-content: center; max-width: 100%; }
+.fc-pb-variants { display: flex; flex-direction: column; gap: 12px; }
+.fc-pb-variants-head { display: flex; align-items: flex-end; gap: 12px; }
+.fc-pb-variants-head .fc-caption { margin-top: 2px; }
+.fc-pb-variant-row { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 6px; }
+.fc-pb-variant { flex: none; width: 196px; display: flex; flex-direction: column; gap: 4px; padding: 6px 6px 10px; border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); color: inherit; text-align: left; font: inherit; cursor: pointer; transition: box-shadow .15s, transform .15s; }
+.fc-pb-variant:hover { transform: translateY(-2px); }
+.fc-pb-variant.is-picked { box-shadow: inset 0 0 0 2px var(--accent); }
+.fc-pb-variant .thumb { display: block; aspect-ratio: 16 / 9; margin-bottom: 4px; border-radius: 10px; overflow: hidden; background: var(--video); }
+.fc-pb-variant-row.tall .fc-pb-variant { width: 128px; }
+.fc-pb-variant-row.tall .thumb { aspect-ratio: 3 / 4; }
+.fc-pb-variant .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+.fc-pb-variant .nm { padding: 0 4px; font: 600 13px/18px var(--font-sans); }
+.fc-pb-variant .kind { display: flex; align-items: center; gap: 6px; padding: 0 4px; color: var(--text-3); font: 500 12px/16px var(--font-sans); }
+.fc-pb-variant .sw { display: flex; }
+.fc-pb-variant .sw span { width: 10px; height: 10px; border-radius: 50%; margin-left: -3px; box-shadow: 0 0 0 2px var(--surface); }
+.fc-pb-variant .sw span:first-child { margin-left: 0; }
 .fc-pick-sub { margin: 4px 0 0; color: var(--text-3); font: 600 11px/16px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; }
 .fc-pb-media.tall { min-height: 40dvh; }
 .fc-pb-novideo { position: absolute; z-index: 2; left: 50%; bottom: 14px; transform: translateX(-50%); padding: 5px 12px; border-radius: var(--radius-full); background: rgb(0 0 0 / .6); color: var(--on-video); font: 500 12px/16px var(--font-sans); white-space: nowrap; pointer-events: none; }
