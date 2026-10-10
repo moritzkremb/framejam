@@ -6,6 +6,7 @@ edit.json lists the beats of the edited talking-head video. Each beat picks one 
   speaker   the speaker fills the frame ("zoom": 1.0 wide, 1.12-1.18 punched in; "punches" re-frame inside the beat)
   split     a visual on top (0-960) in a rounded card on the animated background, the speaker below (960-1920)
   visual    the visual in a big card on the background, the speaker cut out in front ("cutout": transparent webm)
+  full      the visual fills the whole frame edge to edge, the speaker cut out in front at the bottom ("cutout")
   roadmap   split, with the step list on top; "step": n moves the highlight to step n, "step": 0 shows them all
   title     split, with the hook title on top (on screen from the first frame)
   words     split, with one to three big words on top that land as they are spoken
@@ -45,10 +46,13 @@ DEFAULT_THEME = {
 }
 LEGACY_KEYS = {"text": "ink", "title": "ink", "panelBg": "card"}
 # Caption centre line per layout, in px from the top.
-CAPTION_Y = {"split": SEAM, "roadmap": SEAM, "title": SEAM, "words": SEAM, "speaker": 1410, "visual": 1010}
+CAPTION_Y = {"split": SEAM, "roadmap": SEAM, "title": SEAM, "words": SEAM, "speaker": 1410, "visual": 1010, "full": 1040}
 # Where media cards sit: x, y, w, h. Top ~200 px and the strip around the seam stay free for the platform UI and captions.
 SPLIT_BOX = (60, 205, 960, 690)
 VISUAL_BOX = (40, 225, 1000, 700)
+FULL_BOX = (0, 0, W, H)
+# Cut-out scale and top edge per layout: in "full" the speaker is smaller and lower, so more of the picture shows.
+CUTOUT = {"visual": (0.70, 640), "full": (0.62, 860)}
 VIDEO_EXT = (".mp4", ".webm", ".mov", ".m4v")
 
 
@@ -197,7 +201,7 @@ def main():
         split = lay in ("split", "roadmap", "title", "words")
         zoom = b.get("zoom", 1)
         # Speaker geometry for this beat (hard cut at the beat start), then any punches inside the beat.
-        if lay == "visual":
+        if lay in CUTOUT:
             js.append(f"tl.set('#spk',{{opacity:0}},{num(s)});")
         elif split:
             js.append(f"tl.set('#spk',{{opacity:1,top:{SEAM},height:{H - SEAM}}},{num(s)});")
@@ -213,8 +217,8 @@ def main():
         js.append(f"tl.set('#roadmap',{{opacity:{1 if lay == 'roadmap' else 0}}},{num(s)});")
 
         v = b.get("visual")
-        if v and lay in ("split", "visual"):
-            box = tuple(v.get("box") or (SPLIT_BOX if lay == "split" else VISUAL_BOX))
+        if v and lay in ("split", "visual", "full"):
+            box = tuple(v.get("box") or {"split": SPLIT_BOX, "visual": VISUAL_BOX, "full": FULL_BOX}[lay])
             inner = ""
             if v.get("backdrop") and v.get("src"):
                 inner += media_el(f"bd-{bid}", v["src"], s, d, v.get("mediaStart", 0), "cover", cls="media backdrop")
@@ -240,14 +244,15 @@ def main():
             else:
                 src = v["src"]
                 mw, mh = media_size(root, src)
-                cover = v.get("fit") == "cover"
+                cover = v.get("fit", "cover" if lay == "full" else "contain") == "cover"
                 cx, cy, cw, ch = box if cover else fit_box(mw, mh, box)
                 bg = v.get("bg", theme["card"])
                 m = media_el(f"m-{bid}", src, s, d, v.get("mediaStart", 0), "cover" if cover else "contain", v.get("pos", "50% 50%"))
-                inner += (f'<div class="card" id="c-{bid}" style="left:{cx}px;top:{cy}px;width:{cw}px;height:{ch}px;background:{esc(bg)}">'
+                inner += (f'<div class="card{" edge" if lay == "full" else ""}" id="c-{bid}" style="left:{cx}px;top:{cy}px;width:{cw}px;height:{ch}px;background:{esc(bg)}">'
                           f'<div class="card-in" id="ci-{bid}">{m}</div></div>')
                 if v.get("label"):
-                    inner += f'<div class="lab-wrap" style="left:{cx + 4}px;top:{cy - 58}px"><span class="label">{esc(v["label"])}</span></div>'
+                    lx, ly = (60, 230) if lay == "full" else (cx + 4, cy - 58)
+                    inner += f'<div class="lab-wrap" style="left:{lx}px;top:{ly}px"><span class="label">{esc(v["label"])}</span></div>'
                 motion = v.get("motion", "none" if src.lower().endswith(VIDEO_EXT) else "push")
                 if motion == "push":
                     js.append(f"tl.fromTo('#ci-{bid}',{{scale:1}},{{scale:1.04,duration:{num(d)},ease:'none'}},{num(s)});")
@@ -264,12 +269,12 @@ def main():
             body.append(f'<div id="w-{bid}" class="vis" data-layout-allow-overflow>{inner}</div>')
             js.append(f"tl.set('#w-{bid}',{{opacity:1}},{num(s)});tl.set('#w-{bid}',{{opacity:0}},{num(t)});")
 
-        if lay == "visual":
+        if lay in CUTOUT:
             if not b.get("cutout"):
-                raise SystemExit(f"Beat {bid}: the visual layout needs a cutout (transparent webm of the speaker for this beat)")
-            sc = b.get("cutoutScale", 0.7)
+                raise SystemExit(f"Beat {bid}: the {lay} layout needs a cutout (transparent webm of the speaker for this beat)")
+            sc = b.get("cutoutScale", CUTOUT[lay][0])
             cw, ch = round(W * sc), round(H * sc)
-            top = b.get("cutoutTop", 640)
+            top = b.get("cutoutTop", CUTOUT[lay][1])
             body.append(
                 f'<div id="cut-{bid}" class="cut" style="left:{(W - cw) // 2}px;top:{top}px;width:{cw}px;height:{ch}px">'
                 f'<video id="cv-{bid}" class="clip" src="{esc(b["cutout"])}" data-start="{num(s)}" data-duration="{num(d)}" '
@@ -380,6 +385,7 @@ html,body{{width:{W}px;height:{H}px;overflow:hidden;background:#000}}
 .vis{{left:0;top:0;width:{W}px;height:{H}px;opacity:0;z-index:3}}
 .card{{border-radius:{R}px;overflow:hidden;background:{theme["card"]};box-shadow:0 0 0 1.5px rgba(255,255,255,.75),0 2px 0 1.5px rgba(0,0,0,.04),0 50px 90px -30px rgba(26,18,48,.55),0 18px 36px -12px rgba(26,18,48,.28)}}
 .card-in{{position:absolute;inset:0;overflow:hidden;border-radius:{R}px}}
+.card.edge,.card.edge .card-in{{border-radius:0;box-shadow:none}}
 .media{{position:absolute;left:0;top:0;width:100%;height:100%;display:block}}
 .media.backdrop{{filter:blur(40px) brightness(.6);transform:scale(1.15)}}
 .lab-wrap{{z-index:2}}

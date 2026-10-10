@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Cut the speaker out of the edited talking-head video for every "visual" beat in edit.json.
+"""Cut the speaker out of the edited talking-head video for every "visual" and "full" beat in edit.json.
 
-For each beat with "layout": "visual" it trims the speaker video to the beat (frame-accurate re-encode), removes the
+For each beat with "layout": "visual" or "full" it trims the speaker video to the beat (frame-accurate re-encode), removes the
 background locally with `npx hyperframes remove-background` (free, runs on this computer, about 5-10 frames per
 second on a laptop) and writes assets/cutouts/<beat-id>.webm (VP9 with transparency). It then sets each beat's
 "cutout" field in edit.json. Existing cutouts are kept unless --force.
@@ -28,7 +28,7 @@ def main():
     for i, b in enumerate(beats):
         b.setdefault("id", f"b{i + 1:02d}")
         end = b.get("end", beats[i + 1]["start"] if i + 1 < len(beats) else e["duration"])
-        if b["layout"] != "visual":
+        if b["layout"] not in ("visual", "full"):
             continue
         target = outdir / f"{b['id']}.webm"
         if target.exists() and not a.force:

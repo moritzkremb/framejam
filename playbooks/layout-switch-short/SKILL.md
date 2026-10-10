@@ -1,6 +1,6 @@
 ---
 name: layout-switch-short
-description: Turn a raw talking-head recording into a fast-cut vertical short that switches layout with the speech every two seconds or so - speaker alone with punch-ins, split screen with the thing being described, full-screen visual with the speaker cut out in front, and a step roadmap that returns at every new step. Includes the cut (pauses and earlier takes removed), short captions placed per layout, and a Hyperframes starter template. Works with the project's own video tool too.
+description: Turn a raw talking-head recording into a fast-cut vertical short that switches layout with the speech every two seconds or so - speaker alone with punch-ins, split screen with the thing being described, the thing in a big card or filling the whole screen with the speaker cut out in front, and a step roadmap that returns at every new step. Includes the cut (pauses and earlier takes removed), short captions placed per layout, and a Hyperframes starter template. Works with the project's own video tool too.
 ---
 
 # Dynamic Layout Short
@@ -22,6 +22,7 @@ changes every 1.5–2.5 s:
 | **speaker**: the speaker alone, wide or punched in | claims, numbers, opinions, the payoff, the call to action |
 | **split**: the thing on top in a framed card, the speaker below | a concrete thing is named (a site, a product, a document) |
 | **visual**: the thing in a big card, the speaker cut out in front | a process or a tool doing something, in motion |
+| **full**: the thing fills the whole screen, the speaker cut out in front at the bottom | the thing takes over: an app in use, a result, a reveal; best with tall material (phone recordings, portrait images, long pages) |
 | **roadmap** (split): the step list, a highlight sliding to the current step | every new step ("Step two...") and a recap at the end |
 | **title** (split): the hook headline with one phrase highlighted | from frame 0 until the first idea lands |
 | **words** (split): 1–3 big words landing as spoken | an abstract idea with no picture, the CTA keyword |
@@ -106,13 +107,13 @@ and these rules (`references/reference-breakdown.md` shows them in a real reel):
 - Open with **title** (the promise, with a number if the speech has one) from 0 s to the end of the first sentence;
   set `mark` to the key phrase and `markAt` to when it's spoken.
 - Every "step N" → **roadmap** with that step (1.3–2.5 s), then the beat that explains it.
-- Named thing → **split**; process in motion → **visual**; several results ("five new ads") → split with a
+- Named thing → **split**; process in motion → **visual**; the thing taking over the screen (a phone recording, a result to look at) → **full**, a few times a minute at most; several results ("five new ads") → split with a
   `gallery`; claim, number, joke, payoff → **speaker**.
 - **Punch-ins:** speaker beats alternate wide (`"zoom": 1.0`) and punched in (1.12–1.18), so two speaker beats in a
   row never share a framing. A speaker stretch over ~2.5 s gets `"punches"` on sentence or clause starts. Hard cuts,
   face always fully in frame.
 - Never the same layout with the same picture twice in a row; roughly 40–50% split/roadmap/words, 25–30% speaker,
-  15–25% visual.
+  15–25% visual or full.
 - End with **roadmap** `"step": 0, "check": true` (recap), then the CTA (a **words** beat with the keyword works
   well) and **speaker** to finish.
 
@@ -133,7 +134,7 @@ If the user wants to see the plan first, show it: one still per beat in
 ### 4. Cut-outs and captions
 
 ```bash
-python3 scripts/make_cutouts.py --edit edit.json          # visual beats only; local background removal
+python3 scripts/make_cutouts.py --edit edit.json          # visual and full beats; local background removal
 python3 scripts/make_captions.py --words transcripts/edited.words.json --breaks edit.json \
   --out captions.json --fix "cloud code=Claude Code"
 ```
@@ -185,7 +186,7 @@ moved through the new `final.edl.json`, the cut-outs re-made and the captions re
 
 ## Files in this playbook
 
-- `template/build.py`: builds a Hyperframes `index.html` from `edit.json` + `captions.json` (all six layouts,
+- `template/build.py`: builds a Hyperframes `index.html` from `edit.json` + `captions.json` (all seven layouts,
   background, cards, focus zooms, galleries, roadmap slab, punch-ins, captions with the spoken word lit, theme,
   deterministic GSAP timeline). `python3 build.py --help`.
 - `template/edit.example.json`: the beat plan of the preview video (76 s, 36 beats) to copy from.
@@ -195,7 +196,7 @@ moved through the new `final.edl.json`, the cut-outs re-made and the captions re
 - `scripts/prepare_edit.py`: the cut (silence pass, removals, frame-accurate render, retimed transcripts).
 - `scripts/check_pacing.py`: beats, changes per second and every hold over 2.5 s in a plan.
 - `scripts/make_captions.py`: edited-time words to 1–3 word captions with word times (`captions.json`, `.srt`).
-- `scripts/make_cutouts.py`: speaker cut-outs for visual beats with `npx hyperframes remove-background`.
+- `scripts/make_cutouts.py`: speaker cut-outs for visual and full beats with `npx hyperframes remove-background`.
 - `references/layouts.md`: pacing, exact geometry of every layout, transitions, captions, theme fields.
 - `references/reference-breakdown.md`: second-by-second breakdown of the reference reel and the switching rules.
 - `references/clean-cuts.md`, `references/transcription.md`: cutting and transcription details.

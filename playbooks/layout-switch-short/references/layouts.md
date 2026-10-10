@@ -14,7 +14,7 @@ The seam between top and bottom halves is at **y = 960**. Platform UI covers rou
   zoom, a second word landing, a gallery card landing, the roadmap highlight moving, a screen recording playing.
 - Every switch lands on the **first word of the phrase that motivates it** (word start time from the edited
   transcript, not a round number). Never switch in the middle of a word.
-- Rough mix: 40–50% split/roadmap/words, 25–30% speaker alone, 15–25% visual with the cut-out.
+- Rough mix: 40–50% split/roadmap/words, 25–30% speaker alone, 15–25% visual or full with the cut-out.
 
 ## speaker
 
@@ -94,6 +94,23 @@ The visual in a big card on the background; the speaker is cut out and stands in
   2 s beat on a laptop). Only visual beats need them.
 - Use for: a process or a tool doing something, best a screen recording in motion.
 
+## full
+
+The visual fills the whole frame edge to edge; the speaker is cut out and stands in front of it at the bottom.
+
+- Media: the full 1080×1920 frame, `object-fit: cover` by default, no card, radius or ring. Pick the part of a wide
+  source with `"pos"` (`object-position`, e.g. `"20% 50%"`) and keep it moving with `"focus"` zooms or `"motion":
+  "scroll"` for a tall page. `"fit": "contain"` with `"backdrop": true` instead shows all of a wide source, centred
+  over a blurred copy of itself.
+- Best with tall material: a phone screen recording, a portrait photo or video, a long page that scrolls. A wide
+  desktop screenshot cropped to 9:16 rarely reads; use visual or split for those, or crop to one panel first.
+- Cut-out speaker: scaled 0.62 (670×1190), centred, top at y = 860, so more of the picture shows above the head.
+  Tune with `cutoutScale` / `cutoutTop`; the cut-out comes from `scripts/make_cutouts.py` like for visual.
+- Label chip (optional): top-left at (60, 230), below the platform UI.
+- Caption centre: y = 1040, above the head; check it in a snapshot against the picture behind it.
+- Use for: the moment the thing itself should take over the screen, an app being used, a result to look at,
+  a reveal. Use it sparingly (a few beats a minute) so it stays an event.
+
 ## Transitions
 
 Hard cuts between layouts, on the first frame of the phrase that motivates the change. No wipes, slides or zoom
@@ -106,7 +123,7 @@ slab, word landings, gallery landings, scrolling, footage).
   across a beat start, no trailing punctuation, names fixed.
 - 62 px / 800, white on an ink pill (92% opacity), radius 24, padding 12×28 px, `white-space: nowrap`, soft shadow,
   a 0.12 s pop on entry. **The word being spoken turns accent** (per-word start times in `captions.json`).
-- Position by the layout under the caption's midpoint: split 960, speaker 1410, visual 1010 (override per beat with
+- Position by the layout under the caption's midpoint: split 960, speaker 1410, visual 1010, full 1040 (override per beat with
   `"captionY"`).
 - Keep text inside x 60–1020 and above y 1540.
 
