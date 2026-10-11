@@ -165,7 +165,7 @@ async function runInstall(): Promise<never> {
   }
   const setup = setupInfo();
   log(`Setting up FrameJam for ${apps.map((a) => APPS.find((x) => x.id === a)!.label).join(", ")}…\n`);
-  const steps = install({ apps, mcpCommand: setup.mcpCommand, skillSource: setup.skillSource });
+  const steps = install({ apps, plugin: setup.plugin, mcpCommand: setup.mcpCommand, skillSource: setup.skillSource });
   const ui = await ensureRunning();
   steps.push(ui);
   for (const s of steps) log(`${s.ok ? "✓" : "✗"} ${s.text}`);

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "framejam": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "framejam@0.4.0",
+        "--stdio"
+      ]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "framejam",
+  "displayName": "FrameJam",
+  "version": "0.4.0",
+  "description": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.",
+  "author": {
+    "name": "Moritz Kremb",
+    "url": "https://www.framejam.ai"
+  },
+  "homepage": "https://www.framejam.ai",
+  "repository": "https://github.com/moritzkremb/framejam",
+  "license": "MIT",
+  "keywords": [
+    "video",
+    "review",
+    "storyboard",
+    "motion graphics",
+    "hyperframes",
+    "remotion"
+  ],
+  "mcpServers": {
+    "framejam": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "framejam@0.4.0",
+        "--stdio"
+      ]
+    }
+  }
+}

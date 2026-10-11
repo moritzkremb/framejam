@@ -55,6 +55,8 @@ export function setupInfo() {
     installCommand: installed ? ["npx", "-y", "framejam", "install"] : ["node", cliPath, "install"],
     /** What `npx skills add` installs the skill from: the GitHub repo, or this checkout. */
     skillSource: installed ? SKILL_REPO : packageRoot,
+    /** npm installs set up the plugin from the GitHub repo; a checkout keeps the MCP entry that runs its own build. */
+    plugin: installed ? { source: SKILL_REPO, dir: path.join(packageRoot, "plugin") } : undefined,
     skillPath: path.join(packageRoot, "skills", "framejam", "SKILL.md"),
   };
 }

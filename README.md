@@ -23,11 +23,11 @@ Your agent gets the exact timestamp and a frame image with your pin on the spot 
 Coding agents are surprisingly good at making videos, with [Hyperframes](https://github.com/heygen-com/hyperframes),
 [Remotion](https://www.remotion.dev), [Motion Canvas](https://motioncanvas.io), [ffmpeg](https://ffmpeg.org) or
 whatever your project already uses. The hard part is everything around it. Describing a look in words is slow, and
-"the thing at around three seconds should be bigger" is a terrible way to give feedback. FrameJam is a small app that sits next to your agent
-(Cursor, Claude Code, ChatGPT desktop) and handles both.
+"the thing at around three seconds should be bigger" is a terrible way to give feedback. FrameJam is a plugin for
+Claude, ChatGPT and Cursor, with a small app that sits next to your agent, and it handles both.
 
 **Pick a style instead of describing one.** Name one of 30 example videos when you ask for a video, or type
-`/framejam style` to choose on a page. Your agent gets the look:
+`/framejam:style` to choose on a page. Your agent gets the look:
 palette, textures, fonts, easing, transitions, text animations and pacing, and builds whatever your video is about in
 it.
 
@@ -47,8 +47,8 @@ videos from framejam.ai, and the **Feedback** button sends the note you write; n
 ## How it works
 
 1. **Ask your agent** for a video, for example *"make a 7-second launch teaser with FrameJam and open it for review"*.
-2. **Optionally pick a playbook and a style**: name them in your request, or type `/framejam playbook` or
-   `/framejam style` to choose on a page.
+2. **Optionally pick a playbook and a style**: name them in your request, or type `/framejam:playbook` or
+   `/framejam:style` to choose on a page.
 3. **Review it** in the browser pane next to your chat: click, type, drag, then press **Finish review**.
 4. **Get version 2.** The agent applies your notes and the page switches to the new version on its own. Repeat
    until you love it.
@@ -61,24 +61,25 @@ Not ready to animate yet? Ask for a **storyboard** first: one still per shot, wh
 
 ## Quick start
 
-You need **Node 22+** and **ffmpeg** (`brew install ffmpeg` on macOS). Paste this into your agent (shown for Cursor;
-use `claude` or `codex` for the other apps):
+FrameJam is a plugin for **Claude Code** (terminal and the Claude desktop app), **ChatGPT** (Work and Codex in the
+ChatGPT desktop app) and **Cursor**. You need **Node 22+** and **ffmpeg** (`brew install ffmpeg` on macOS). Paste this
+into your agent (shown for Cursor; use `claude` or `codex` for the other apps):
 
 > Run `npx -y framejam install cursor` and open the link it prints in your built-in browser.
 
-Or run `npx -y framejam install` in a terminal yourself; without an app name it sets up every app it finds. It adds
-the FrameJam MCP server to each app, installs the skill with the [skills CLI](https://github.com/vercel-labs/skills),
-checks Node and ffmpeg, and starts the app in the background at `http://localhost:2400`. Restart your agent app once
-so it loads the new tools (Cursor: reload the window or turn framejam on in Settings → MCP; Codex: Settings → MCP
-servers → Restart).
+Or run `npx -y framejam install` in a terminal yourself; without an app name it sets up every app it finds. It
+installs the FrameJam plugin in each app (the tools and the skill), checks Node and ffmpeg, and starts the app in the
+background at `http://localhost:2400`. Then start a new session in Claude, reopen the ChatGPT app, or reload the
+Cursor window, so the plugin loads. FrameJam shows up in each app's plugin list, where you can turn it off or remove
+it.
 
-**Updating.** Run `npx -y framejam@latest install` any time: it refreshes the skill and the MCP entry, and replaces an
-older FrameJam UI that is still running in the background with the new one. The Projects page shows a notice with
-this command when a newer version is on npm (it asks the npm registry at most every 6 hours; set
-`FRAMEJAM_NO_UPDATE_CHECK=1` to turn that off). Restart your agent app afterwards so it loads the new version.
+**Updating.** In Claude Code the plugin updates on its own. Run `npx -y framejam@latest install` any time to update
+everywhere: it updates the plugin and replaces an older FrameJam UI that is still running in the background with the
+new one. The Projects page shows a notice with this command when a newer version is on npm (it asks the npm registry
+at most every 6 hours; set `FRAMEJAM_NO_UPDATE_CHECK=1` to turn that off).
 
-After that, typing `/framejam` in your agent is all it takes: the agent opens FrameJam and picks up where you are (a
-video you're already editing, feedback waiting, or a new video). Until an agent has connected, the start page shows a
+After that, typing `/framejam:start` in your agent is all it takes: the agent opens FrameJam and picks up where you
+are (a video you're already editing, feedback waiting, or a new video). Until an agent has connected, the start page shows a
 short setup checklist (it stays available at `/setup`). After that, it lists your projects and shows whose turn it is
 on each one.
 
@@ -90,23 +91,75 @@ cd framejam
 npm install
 npm run build
 npm start                 # http://localhost:2400  (MCP at http://localhost:2400/mcp)
-node dist/server/cli.js install   # points your apps at this clone instead of npm
+node dist/server/cli.js install   # points your apps at this clone instead of npm (MCP server + skill, no plugin)
 ```
 
 ## Connect your agent
 
-`npx -y framejam install` does all of this for you. To set it up by hand, each app needs the MCP server and the
-skill; then run `npx -y framejam start` to start the UI. Desktop apps launched from the Dock may not see the `PATH`
-from your shell (nvm, fnm): if the server fails to start because `npx` isn't found, use the full path from
-`which npx` as the command. When running from a clone, replace `npx -y framejam` with
-`node /absolute/path/to/framejam/dist/server/cli.js` and `moritzkremb/framejam` with the clone's path.
+`npx -y framejam install` does all of this for you. The plugin lives in [`plugin/`](plugin): one folder that Claude
+Code, ChatGPT and Cursor all read, listed in this repo's marketplaces (`.claude-plugin/marketplace.json` for Claude,
+`.agents/plugins/marketplace.json` for ChatGPT). To install it by hand, then run `npx -y framejam start` to start the
+UI:
 
 <details open>
+<summary><b>Claude Code</b></summary>
+
+<br>
+
+In Claude Code:
+
+```
+/plugin install framejam --marketplace moritzkremb/framejam
+```
+
+Or in a terminal:
+
+```bash
+claude plugin marketplace add moritzkremb/framejam
+claude plugin install framejam@framejam
+```
+
+In the Claude desktop app you can also add the marketplace under Customize → Plugins → Add → Add marketplace → Add
+from a repository. Start a new session so it loads. Claude Code has no built-in browser, so open
+`http://localhost:2400` yourself.
+
+</details>
+
+<details>
+<summary><b>ChatGPT (Work and Codex)</b></summary>
+
+<br>
+
+```bash
+codex plugin marketplace add moritzkremb/framejam
+codex plugin add framejam@framejam
+```
+
+The `codex` command comes with the ChatGPT desktop app. Reopen the app; FrameJam is listed under Plugins.
+
+</details>
+
+<details>
 <summary><b>Cursor</b></summary>
 
 <br>
 
-Add this to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
+Cursor also loads plugins you installed in Claude Code, so if you have FrameJam there, you're done. Otherwise copy the
+[`plugin`](plugin) folder to `~/.cursor/plugins/local/framejam` and reload the window.
+
+</details>
+
+<details>
+<summary><b>Any other MCP client (without the plugin)</b></summary>
+
+<br>
+
+Each app needs the MCP server and the skill. Desktop apps launched from the Dock may not see the `PATH` from your
+shell (nvm, fnm): if the server fails to start because `npx` isn't found, use the full path from `which npx` as the
+command. When running from a clone, replace `npx -y framejam` with
+`node /absolute/path/to/framejam/dist/server/cli.js` and `moritzkremb/framejam` with the clone's path.
+
+For example, in Cursor's `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
 
 ```json
 {
@@ -123,35 +176,8 @@ Add this to `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project):
 npx -y skills add moritzkremb/framejam -g -a cursor -y
 ```
 
-Open `http://localhost:2400` in Cursor's built-in browser so the review sits beside the chat.
-
-</details>
-
-<details>
-<summary><b>Claude Code</b></summary>
-
-<br>
-
-```bash
-claude mcp add -s user framejam -- npx -y framejam --stdio
-npx -y skills add moritzkremb/framejam -g -a claude-code -y
-```
-
-Restart Claude Code so it loads the server. It has no built-in browser, so open `http://localhost:2400` yourself.
-
-</details>
-
-<details>
-<summary><b>Codex (ChatGPT desktop app)</b></summary>
-
-<br>
-
-```bash
-codex mcp add framejam -- npx -y framejam --stdio
-npx -y skills add moritzkremb/framejam -g -a codex -y
-```
-
-Then restart the MCP servers in Settings → MCP servers.
+Claude Code: `claude mcp add -s user framejam -- npx -y framejam --stdio`. Codex: `codex mcp add framejam -- npx -y
+framejam --stdio`. Use `-a claude-code` or `-a codex` for the skill.
 
 </details>
 
@@ -178,8 +204,9 @@ it hands out are reachable.
 
 <br>
 
-[`skills/framejam/SKILL.md`](skills/framejam/SKILL.md) is the skill. `npx skills add moritzkremb/framejam` installs it
-for most agents; you can also drop it into `AGENTS.md`. It walks the agent through: ask what to make → pick a preset →
+[`skills/framejam/SKILL.md`](skills/framejam/SKILL.md) is the skill. The plugin ships it as `start` (so the command
+reads `/framejam:start`), next to `playbook` and `style`. Without the plugin, `npx skills add moritzkremb/framejam`
+installs it for most agents (there it's `/framejam`); you can also drop it into `AGENTS.md`. It walks the agent through: ask what to make → pick a preset →
 build with the project's tool → render → `open_review` → `wait_for_feedback` (and call it again while the result is
 `pending`, up to 12 times in a row, about 10 minutes) → edit → `add_version` with a note, until you say it's done. `.cursor/rules/framejam.mdc` is the same text
 as a Cursor rule; regenerate it with `npm run sync:rule` after editing the skill.
@@ -258,7 +285,7 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 
 A style sets the look; a playbook sets how a kind of video gets made: what you bring, the steps, the tools it needs
 and the quality bar, all as defaults your request can override. Name one when you ask for a video, or type
-`/framejam playbook` to choose on a page. Some playbooks come with styles made for them, each with its own example
+`/framejam:playbook` to choose on a page. Some playbooks come with styles made for them, each with its own example
 video. FrameJam ships with 15:
 
 | Playbook | What goes in, what comes out |
@@ -410,13 +437,14 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` sets up the MCP server and skill for each app (`src/server/install.ts`) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/server/mcp.ts` | MCP tool definitions. |
 | `src/server/store.ts` | JSON file store. Every call re-reads from disk, so several processes can share `~/.framejam`. |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). |
 | `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
 | `skills/framejam/` | The agent skill (also mirrored as the Cursor rule in `.cursor/rules/framejam.mdc`). |
+| `plugin/` | The plugin for Claude Code, ChatGPT and Cursor: both manifests, `mcp.json` and the skills `start`, `playbook` and `style`. `npm run sync:plugin` regenerates the manifests and `start` from `package.json` and the skill. |
 
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), `FRAMEJAM_PUBLIC_URL` (the base URL used in links), and

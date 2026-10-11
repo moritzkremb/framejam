@@ -1,0 +1,40 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "framejam",
+  "version": "0.4.0",
+  "description": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.",
+  "author": {
+    "name": "Moritz Kremb",
+    "url": "https://www.framejam.ai"
+  },
+  "homepage": "https://www.framejam.ai",
+  "repository": "https://github.com/moritzkremb/framejam",
+  "license": "MIT",
+  "keywords": [
+    "video",
+    "review",
+    "storyboard",
+    "motion graphics",
+    "hyperframes",
+    "remotion"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "FrameJam",
+        "shortDescription": "Make videos with your agent and review them frame by frame",
+        "longDescription": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.",
+        "developerName": "Moritz Kremb",
+        "category": "Productivity",
+        "websiteURL": "https://www.framejam.ai",
+        "defaultPrompt": [
+          "Use FrameJam to make a 10-second launch video for my app.",
+          "Use FrameJam to let me pick a style for a short explainer."
+        ],
+        "brandColor": "#D4FF3A",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/icon.png"
+      }
+    }
+  }
+}

@@ -37,6 +37,7 @@
     "playbooks",
     "!playbooks/*/preview.mp4",
     "skills",
+    "plugin",
     "README.md",
     "LICENSE"
   ],
@@ -53,7 +54,8 @@
     "render:presets": "tsx scripts/render-presets.ts",
     "e2e": "tsx scripts/e2e.ts",
     "sync:rule": "tsx scripts/sync-rule.ts",
-    "version": "tsx scripts/sync-rule.ts --release && git add skills/framejam/versions.json .cursor/rules/framejam.mdc",
+    "sync:plugin": "tsx scripts/sync-plugin.ts",
+    "version": "tsx scripts/sync-rule.ts --release && tsx scripts/sync-plugin.ts && git add skills/framejam/versions.json .cursor/rules/framejam.mdc plugin",
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {

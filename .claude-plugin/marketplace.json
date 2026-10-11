@@ -1,0 +1,12 @@
+{
+  "name": "framejam",
+  "description": "FrameJam: make and review videos with your coding agent",
+  "owner": { "name": "Moritz Kremb" },
+  "plugins": [
+    {
+      "name": "framejam",
+      "source": "./plugin",
+      "description": "Pick a style or a playbook, then review renders and storyboards with timestamped, pinned comments. Runs on your computer."
+    }
+  ]
+}
