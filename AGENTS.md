@@ -124,6 +124,13 @@ plugin that names an unpublished version breaks every install. Plugin users only
 changes, so skill edits go out with the next release. Claude Code installs update on their own; everyone else gets
 the new version by rerunning `npx -y framejam@latest install`, which the app's update notice tells them.
 
+**Anthropic's directory.** The plugin is submitted at claude.ai/directory/manage (folder `plugin`, branch `main`,
+listed on Claude Code only, since claude.ai chat can't run its local server). The directory scans every new commit on
+`main`, and each new version is held for a reviewer because the plugin launches FrameJam from npm; the reviewer has
+to approve it before it can be published from the plugin's page. The listing reads `plugin/.claude-plugin/plugin.json`
+and `plugin/README.md`; keep the README's list of what leaves the user's computer accurate, since the submission's
+data-handling answers rely on it.
+
 **Doesn't need one:**
 - Preview videos and the website: they deploy from `../framejam-site`.
 - `README.md` (the npmjs.com copy only refreshes on the next release, which is fine), `design/`, `tests/`,
