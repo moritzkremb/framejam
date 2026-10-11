@@ -4,7 +4,18 @@ FrameJam helps you make videos with your coding agent. Pick a style or a playboo
 any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg or screen recordings), then review the render: click a moment
 or a spot in the frame, say what to change, press **Finish review**, and the agent makes the next version.
 
-Everything runs on your computer. There's no account and nothing is uploaded; projects are saved in `~/.framejam`.
+Everything runs on your computer. There's no account, and your videos and comments are never uploaded; projects are
+saved in `~/.framejam`.
+
+What leaves your computer, and only to framejam.ai or npm:
+
+- The Styles and Playbooks pages stream their example videos from framejam.ai.
+- The app asks the npm registry whether a newer FrameJam is out (at most every 6 hours; set
+  `FRAMEJAM_NO_UPDATE_CHECK=1` to turn it off).
+- The **Feedback** button sends the note you write, and your email if you add one, to framejam.ai.
+- The **Get updates** form sends the email you enter to framejam.ai, to send you release news.
+
+Nothing is sent from your agent's conversation.
 
 This plugin adds the FrameJam tools and three commands:
 
