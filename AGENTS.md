@@ -56,7 +56,8 @@ https://www.framejam.ai (landing page, Styles gallery, docs) is a separate repo:
 - GitHub: `moritzkremb/framejam-site`
 - Next.js 16 on Vercel. **Every push to its `main` deploys to production**; other branches get preview deploys.
 - Where things are: `app/page.tsx` (landing page), `app/docs/` (install, review, storyboards, custom styles, MCP tools,
-  troubleshooting), `lib/site.ts` (install prompt and commands), `public/presets/` (preview videos the app streams).
+  troubleshooting), `app/guides/` (walkthroughs for search, listed in `lib/guides.ts`), `lib/site.ts` (install prompt
+  and commands), `public/presets/` (preview videos the app streams).
 - Check with `npx tsc --noEmit`, `npm run lint` and `npm run build` before pushing.
 - Work and commit directly on `main` there too, with no feature branches or pull requests unless asked. Since a push
   is a production deploy, push only once the checks pass.
