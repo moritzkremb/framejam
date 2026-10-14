@@ -221,13 +221,13 @@ export function createApp(ctx: McpContext) {
     const chosen = await (ctx.chooseSavePath ?? chooseSavePath)(`${name}${ext}`, dir);
     if (chosen === null) return c.json({ cancelled: true });
     if (chosen) {
-      fs.copyFileSync(file, chosen);
+      fs.copyFileSync(file, chosen, fs.constants.COPYFILE_FICLONE);
       return c.json({ path: chosen, chosen: true });
     }
     for (let i = 1; ; i++) {
       const target = path.join(dir, `${name}${i > 1 ? ` (${i})` : ""}${ext}`);
       try {
-        fs.copyFileSync(file, target, fs.constants.COPYFILE_EXCL);
+        fs.copyFileSync(file, target, fs.constants.COPYFILE_EXCL | fs.constants.COPYFILE_FICLONE);
         return c.json({ path: target, chosen: false });
       } catch (err) {
         if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;

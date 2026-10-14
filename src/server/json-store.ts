@@ -242,13 +242,13 @@ export class JsonStore implements Store {
     });
   }
 
-  /** Copies the render so v1 stays watchable after the agent overwrites the mp4 for v2. */
+  /** Copies the render so v1 stays watchable after the agent overwrites the mp4 for v2. Clones where the disk supports it (APFS, Btrfs), so an unchanged render takes no extra space. */
   private snapshotVideo(reviewId: string, version: ReviewVersion) {
     if (!version.videoPath) return;
     const dir = path.join(this.reviewsDir, reviewId, "versions");
     fs.mkdirSync(dir, { recursive: true });
     const file = `v${version.number}${path.extname(version.videoPath) || ".mp4"}`;
-    fs.copyFileSync(version.videoPath, path.join(dir, file));
+    fs.copyFileSync(version.videoPath, path.join(dir, file), fs.constants.COPYFILE_FICLONE);
     version.videoSnapshot = file;
   }
 
@@ -261,7 +261,7 @@ export class JsonStore implements Store {
     const pad = String(version.panels.length).length;
     version.panels.forEach((p, i) => {
       const file = `${String(i + 1).padStart(Math.max(2, pad), "0")}${path.extname(p.sourcePath).toLowerCase()}`;
-      fs.copyFileSync(p.sourcePath, path.join(dir, file));
+      fs.copyFileSync(p.sourcePath, path.join(dir, file), fs.constants.COPYFILE_FICLONE);
       p.image = `${rel}/${file}`;
     });
   }
