@@ -32,3 +32,4 @@ artifacts/
 
 # Video projects (landing video, explainer) stay on this machine
 videos/
+__pycache__/

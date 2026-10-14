@@ -6,10 +6,15 @@ silence.transcript.json and final.transcript.json (words retimed to the edit). W
 (silent picture), speech.wav (mono narration) and cut.mp4 (picture and sound together).
 
 --transcript accepts word timings as: a JSON list of {text|word,start,end}; {"words": [...]} (OpenAI verbose_json,
-ElevenLabs Scribe, `npx hyperframes transcribe`); or {"segments": [{"words": [...]}]} (openai-whisper, faster-whisper
-with word timestamps). Non-word entries such as ElevenLabs "spacing" are skipped.
+ElevenLabs Scribe, `npx hyperframes transcribe`); {"segments": [{"words": [...]}]} (openai-whisper, faster-whisper
+with word timestamps); or {"transcription": [...]} (whisper.cpp `whisper-cli -ojf -ml 1 -sow`, one word per entry).
+Non-word entries such as ElevenLabs "spacing" are skipped.
+
+Rendered clips are cached by source range in --cache (default: part-cache next to --out), so cutting again into a new
+folder only renders the clips that changed.
 """
-import argparse,json,math,re,subprocess,wave
+import argparse,hashlib,json,math,re,subprocess,wave
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import numpy as np
 
@@ -19,6 +24,8 @@ def load_words(path):
     d=json.loads(Path(path).read_text())
     if isinstance(d,dict) and 'words' in d: d=d['words']
     elif isinstance(d,dict) and 'segments' in d: d=[w for s in d['segments'] for w in s.get('words',[])]
+    elif isinstance(d,dict) and 'transcription' in d:
+        d=[dict(word=s['text'].strip(),start=s['offsets']['from']/1000,end=s['offsets']['to']/1000) for s in d['transcription'] if s['text'].strip() and not s['text'].strip().startswith('[')]
     if not isinstance(d,list): raise SystemExit('Transcript has no word timings. See --help for accepted formats.')
     words=[w for w in d if w.get('type','word')=='word' and 'start' in w and 'end' in w]
     if not words: raise SystemExit('Transcript has no word timings. Transcribe with word timestamps.')
@@ -51,6 +58,8 @@ def main():
     ap.add_argument('--pre-roll',type=float,default=.04);ap.add_argument('--post-roll',type=float,default=.05)
     ap.add_argument('--fps',type=int,default=30);ap.add_argument('--render',action='store_true')
     ap.add_argument('--keep-channels',action='store_true',help='keep stereo sound in speech.wav and cut.mp4 (default: mono narration)')
+    ap.add_argument('--cache',help='folder for rendered clips reused across cuts (default: part-cache next to --out)')
+    ap.add_argument('--jobs',type=int,default=3,help='clips rendered at the same time')
     a=ap.parse_args();out=Path(a.out);out.mkdir(parents=True,exist_ok=True);src=Path(a.input).resolve()
     if any(out.glob('*.edl.json')):raise SystemExit('Use a new output directory; EDL files already exist.')
     probe=json.loads(run(['ffprobe','-v','quiet','-show_streams','-show_format','-of','json',str(src)]).stdout);write(out/'source-probe.json',probe)
@@ -113,17 +122,27 @@ def main():
         ch=min(2,max(int(s.get('channels',1)) for s in probe['streams'] if s.get('codec_type')=='audio'))
         aud=out/'source-full.wav';run(['ffmpeg','-v','error','-i',str(src),'-vn','-ac',str(ch),'-ar','48000',str(aud)])
     with wave.open(str(aud),'rb') as w:rate=w.getframerate();ch=w.getnchannels();audio=np.frombuffer(w.readframes(w.getnframes()),dtype=np.int16).astype(np.float32).reshape(-1,ch)
-    chunks=[];paths=[]
-    for i,c in enumerate(edl):
-        n=c['frames'];path=out/f'part-{i:03d}.mp4';paths.append(path)
-        run(['ffmpeg','-v','error','-ss',str(c['source_start']),'-i',str(src),'-an','-vf',f'fps={fps},format=yuv420p','-frames:v',str(n),'-c:v','libx264','-preset','fast','-crf','18','-g',str(fps),'-keyint_min',str(fps),'-sc_threshold','0','-threads','4',str(path)])
-        lo=round(c['source_start']*rate);count=round(n/fps*rate);chunk=audio[lo:lo+count].copy()
+    # Every kept clip is rendered once and cached by its source range, so the next cut (a new --out folder) reuses
+    # every clip it shares with this one and only renders what changed: on long recordings a fix round takes seconds.
+    cache=(Path(a.cache) if a.cache else out.parent/'part-cache').resolve();cache.mkdir(parents=True,exist_ok=True)
+    st=src.stat();enc=['-c:v','libx264','-preset','fast','-crf','18','-g',str(fps),'-keyint_min',str(fps),'-sc_threshold','0','-threads','4']
+    def part(c):
+        key=hashlib.sha1(json.dumps([str(src),st.st_size,st.st_mtime_ns,round(c['source_start'],6),c['frames'],fps,enc]).encode()).hexdigest()[:20]
+        path=cache/f'{key}.mp4'
+        if not path.exists():
+            tmp=cache/f'{key}.part.mp4'
+            run(['ffmpeg','-v','error','-y','-ss',str(c['source_start']),'-i',str(src),'-an','-vf',f'fps={fps},format=yuv420p','-frames:v',str(c['frames']),*enc,str(tmp)]);tmp.rename(path)
+        return path
+    with ThreadPoolExecutor(max_workers=max(1,a.jobs)) as ex:paths=list(ex.map(part,edl))
+    print(f'Rendered {len(edl)} speech segments ({len(set(paths))} unique, cached in {cache})',flush=True)
+    chunks=[]
+    for c in edl:
+        n=c['frames'];lo=round(c['source_start']*rate);count=round(n/fps*rate);chunk=audio[lo:lo+count].copy()
         if len(chunk)<count:chunk=np.pad(chunk,((0,count-len(chunk)),(0,0)))
         ramp=min(round(.003*rate),len(chunk)//2);chunk[:ramp]*=np.linspace(0,1,ramp)[:,None];chunk[-ramp:]*=np.linspace(1,0,ramp)[:,None];chunks.append(chunk)
-        print(f'Rendered speech segment {i+1}/{len(edl)}',flush=True)
     with wave.open(str(out/'speech.wav'),'wb') as w:w.setnchannels(ch);w.setsampwidth(2);w.setframerate(rate);w.writeframes(np.concatenate(chunks).clip(-32768,32767).astype(np.int16).tobytes())
-    # Relative generated names contain no quoting characters.
-    (out/'concat.txt').write_text(''.join(f"file '{p.name}'\n" for p in paths))
+    esc=lambda p:str(p).replace("'","'\\''")
+    (out/'concat.txt').write_text(''.join(f"file '{esc(p)}'\n" for p in paths))
     run(['ffmpeg','-v','error','-f','concat','-safe','0','-i',str(out/'concat.txt'),'-c','copy','-movflags','+faststart',str(out/'speech.mp4')])
     final_probe=json.loads(run(['ffprobe','-v','quiet','-show_format','-of','json',str(out/'speech.mp4')]).stdout)
     assert abs(float(final_probe['format']['duration'])-edl[-1]['edited_end'])<=1/fps+.001

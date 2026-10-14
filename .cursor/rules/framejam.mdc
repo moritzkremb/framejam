@@ -6,7 +6,7 @@ alwaysApply: false
 
 # FrameJam: styles, playbooks + one-click video and storyboard review
 
-Skill version: 4
+Skill version: 5
 
 FrameJam runs next to your chat at http://localhost:2400. It gives you three things the chat is bad at:
 **choosing a style** (a structured `style.json` that describes a look, plus an example video), **following a playbook**
@@ -84,6 +84,8 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
      is built, such as a texture filter or a title reveal, and rebuild that technique in your own composition.
 2. **Build** the video with the project's tool (Hyperframes details below, other tools further down).
 3. **Render** to a *new file per version*, e.g. `renders/v1.mp4`, `renders/v2.mp4`, so earlier versions stay comparable.
+   **Check it yourself first:** before opening a review, check the render against the request (and the playbook's
+   quality bar, if there is one) with whatever you can check yourself, and fix what you find.
 4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`. Use an absolute path, and the same
    `title` every time so later renders become new versions of this project.
    Open the returned `url` in the built-in browser (step 0), and **always post it in chat as a clickable markdown link**,
@@ -114,7 +116,16 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    `[Open v2 in FrameJam](http://localhost:2400/review/rev_…)`, with the same one-line summary.
    Each version is one round: the user's "Finish review" locked the previous version, and the new one starts with no
    comments. If you couldn't address a comment, say why in chat and in the note.
+   **Keep rounds fast:** re-render only what changed and reuse the rest.
 8. Go back to step 5.
+
+## Long jobs
+
+- Start anything that takes more than a minute so it keeps running after your command returns (a background job,
+  not a subshell `&` that dies with the shell), log to a file, and check on it every 30–60 s. Never wait a fixed long
+  time on a job you could poll.
+- Run one heavy job at a time: two renders or a render plus transcription at once make both slower.
+- Tell the user what's running and how long it should take, in one line, before you wait on it.
 
 ## Hyperframes
 

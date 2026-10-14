@@ -14,6 +14,22 @@ npx -y hyperframes transcribe working/source-16k.wav --dir transcripts --model s
 ```
 
 Use `--model medium.en` for accents or noisy rooms, `--language de` (and a non-`.en` model) for other languages.
+
+**Long recordings (over ~10 minutes), and any transcript you check for retakes:** whisper.cpp with
+`large-v3-turbo` and DTW word timing. It is free, local and fast (a 37-minute recording in 85 s on an M-series Mac),
+and it keeps far more retakes than `small.en`: on that recording `small.en` merged most restarts into clean
+sentences, turbo kept every one the reviewer later pointed at.
+
+```bash
+# once: brew install whisper-cpp; model ~1.6 GB
+curl -L -o ~/.cache/whisper-large-v3-turbo.bin \
+  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin
+whisper-cli -m ~/.cache/whisper-large-v3-turbo.bin -dtw large.v3.turbo -f working/source-16k.wav \
+  -ojf -ml 1 -sow -t 8 -np -of transcripts/source.words
+# -> transcripts/source.words.json, one word per entry; prepare_edit.py and find_retakes.py read it as is
+```
+
+Word times from a whole-file pass still drift 0.5–1.5 s on long files: good enough to find a spot, never to place a cut.
 Other free routes that give word timings: `whisper-cli -m ggml-small.en.bin -f clip.wav -ojf` (whisper.cpp),
 `whisper clip.wav --word_timestamps True --output_format json` (openai-whisper), or faster-whisper with
 `word_timestamps=True`. The scripts in this playbook accept all of these formats (see `prepare_edit.py --help`).
@@ -32,6 +48,7 @@ Never send a file to a paid API without saying what it costs first.
   into one clean sentence. In testing, a 163 s recording with four retakes transcribed fluently with local whisper,
   and a paid cloud model also hid them. Short excerpts (2–6 s) around each pause exposed all four. Do the
   partial-retake audit in `clean-cuts.md` every time; a clean transcript is not evidence of clean audio.
+  `large-v3-turbo` hides far fewer (see above), which makes `find_retakes.py` on the cut worth running.
 - **Timings smear across pauses.** A word can start inside a pause, last a second, or have zero length. Use the
   waveform for cut points, never word timings alone.
 - **Names.** Product and people names come out wrong ("cloud code" for Claude Code, "Higgs field" for Higgsfield).

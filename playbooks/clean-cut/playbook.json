@@ -3,7 +3,7 @@
   "name": "Clean Cut",
   "tagline": "A raw recording goes in, the same video as a tight, fast-paced jump cut without pauses, fillers and retakes comes out.",
   "description": "The basic cleanup every recording needs, cut tight: dead air, \"um\"s and \"uh\"s, false starts and earlier takes are removed, every pause becomes a beat, and the last take of every line stays. Nothing gets added, and you also get a cut list to keep editing in Resolve, Premiere or Final Cut.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "creator": {
     "id": "moritz",
     "name": "Moritz Kremb",
