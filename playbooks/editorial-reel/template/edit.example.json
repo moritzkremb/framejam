@@ -27,6 +27,7 @@
       "cutout": "assets/cutouts/speaker.webm",
       "cutoutStart": 8.0,
       "masthead": "The Reel",
+      "y": 470,
       "issue": "No. 01 · October 2026 · Edited by an agent",
       "kicker": "One sentence",
       "coverlines": ["The whole video.", "edited."]

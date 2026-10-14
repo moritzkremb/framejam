@@ -56,7 +56,8 @@ The frame becomes a magazine cover over the speaker: a thin cream frame, a masth
 a kicker and cover lines on the left, a barcode at the bottom left.
 
 - `masthead` (one word or two, upper-cased), `issue` ("No. 01 · October 2026 · Edited by …"), `kicker` (2 words),
-  `coverlines` (2–3 short lines; the second is serif italic). `at`: when it lands. Needs `cutout`.
+  `coverlines` (2–3 short lines; the second is serif italic). `at`: when it lands. `y`: top of the masthead
+  (default 330; set it so the masthead runs behind the top of the head). Needs `cutout`.
 - Use it once, when the speech is about how something looks or about a big claim.
 
 ### grid

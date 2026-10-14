@@ -261,7 +261,7 @@ def main():
             at = float(b.get("at", s + 0.05))
             mast = str(b.get("masthead", "")).upper()
             fs = fit_px([mast], 260, 1000, 0.7)
-            body.append(f'<div id="mg-{bid}" class="clip mast" data-start="{num(s)}" data-duration="{num(d)}" style="z-index:{z_text}">'
+            body.append(f'<div id="mg-{bid}" class="clip mast" data-start="{num(s)}" data-duration="{num(d)}" style="top:{b.get("y", 330)}px;z-index:{z_text}">'
                         f'<span class="mast-t" id="mt-{bid}" style="font-size:{fs}px">{esc(mast)}</span></div>')
             bars = "".join(f'<i style="width:{w}px"></i>' for w in [3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 3, 1, 2, 1, 3, 1, 2])
             cover = "".join(f'<span class="cl cl-{i}">{esc(x)}</span>' for i, x in enumerate(b.get("coverlines", [])))
@@ -269,7 +269,7 @@ def main():
                 f'<div id="mf-{bid}" class="magfront" style="visibility:{shown(f"mf-{bid}", s, t)}">'
                 f'<div class="frame" id="fr-{bid}"></div>'
                 f'<div class="issue" id="is-{bid}">{esc(b.get("issue", ""))}</div>'
-                f'<div class="cover" id="co-{bid}"><span class="kicker">{esc(b.get("kicker", ""))}</span>{cover}</div>'
+                f'<div class="cover" id="co-{bid}" style="top:{int(b.get("y", 330) + fs * 1.1 + 40)}px"><span class="kicker">{esc(b.get("kicker", ""))}</span>{cover}</div>'
                 f'<div class="barcode" id="bc-{bid}">{bars}</div></div>'
             )
             js.append(f"tl.fromTo('#mt-{bid}',{{opacity:0,y:-40,scale:1.12}},{{opacity:1,y:0,scale:1,duration:.45,ease:'power3.out'}},{num(at)});")
@@ -546,12 +546,12 @@ html,body{{width:{W}px;height:{H}px;overflow:hidden;background:#000}}
 .word{{left:0;width:{W}px;display:flex;flex-direction:column;align-items:center}}
 .lead{{font-family:'{T["sans"]}',sans-serif;font-size:40px;font-weight:600;color:{T["ink"]};margin-bottom:6px;text-shadow:0 2px 12px rgba(0,0,0,.35)}}
 .big{{display:block;font-family:'{T["serif"]}',serif;font-weight:500;line-height:.9;color:{T["ink"]};transform:scaleY(1.35);transform-origin:50% 0%;text-shadow:0 10px 40px rgba(0,0,0,.25)}}
-.mast{{left:0;top:250px;width:{W}px;text-align:center}}
+.mast{{left:0;width:{W}px;text-align:center}}
 .mast-t{{display:inline-block;font-family:'{T["serif"]}',serif;font-weight:600;line-height:1;color:{T["ink"]};text-shadow:0 8px 30px rgba(0,0,0,.25)}}
 .magfront{{left:0;top:0;width:{W}px;height:{H}px;z-index:9}}
 .frame{{position:absolute;left:34px;top:150px;right:34px;bottom:120px;border:3px solid {T["ink"]};opacity:.85}}
 .issue{{position:absolute;left:0;right:0;top:200px;text-align:center;font-family:'{T["mono"]}',monospace;font-size:24px;letter-spacing:.22em;text-transform:uppercase;color:{T["ink"]}}}
-.cover{{position:absolute;left:70px;top:560px;width:330px;display:flex;flex-direction:column;gap:8px;text-shadow:0 2px 14px rgba(0,0,0,.45)}}
+.cover{{position:absolute;left:70px;width:290px;display:flex;flex-direction:column;gap:8px;text-shadow:0 2px 14px rgba(0,0,0,.45)}}
 .kicker{{font-family:'{T["mono"]}',monospace;font-size:22px;letter-spacing:.2em;text-transform:uppercase;color:{T["accent"]}}}
 .cl{{font-family:'{T["sans"]}',sans-serif;font-size:40px;font-weight:750;line-height:1.05;color:{T["ink"]}}}
 .cl-1{{font-family:'{T["serif"]}',serif;font-style:italic;font-weight:500}}
