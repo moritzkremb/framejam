@@ -1,0 +1,89 @@
+{
+  "duration": 24.6,
+  "speaker": "assets/speech.mp4",
+  "narration": "assets/speech-norm.wav",
+  "narrationVolume": 1.3,
+  "music": { "src": "assets/music.wav", "volume": 0.09 },
+  "theme": {},
+  "emphasis": ["steps", "think", "rules"],
+  "beats": [
+    { "id": "b01", "start": 0, "layout": "board" },
+    { "id": "b02", "start": 3.5, "layout": "speaker", "zoom": 1.0, "punches": [{ "at": 4.4, "zoom": 1.14 }] },
+    { "id": "b03", "start": 5.3, "layout": "board", "zoom": 1.0 },
+    { "id": "b04", "start": 10.3, "layout": "board", "zoom": 1.1 },
+    { "id": "b05", "start": 12.8, "layout": "speaker", "zoom": 1.16 },
+    { "id": "b06", "start": 14.4, "layout": "board", "zoom": 1.0 },
+    { "id": "b07", "start": 19.6, "layout": "speaker", "zoom": 1.0 },
+    { "id": "b08", "start": 21.7, "layout": "speaker", "zoom": 1.14, "punches": [{ "at": 23.05, "zoom": 1.0 }] }
+  ],
+  "pops": [
+    {
+      "type": "thumbs",
+      "at": 0.05,
+      "until": 3.45,
+      "srcs": ["assets/vis/thumb-1.png", "assets/vis/thumb-2.png", "assets/vis/thumb-3.png", "assets/vis/thumb-4.png"],
+      "input": { "placeholder": "Ask anything", "text": "write me a viral script", "at": 1.1, "cps": 26 }
+    },
+    {
+      "type": "steps",
+      "at": 5.35,
+      "until": 8.15,
+      "label": "Steps",
+      "items": [
+        { "text": "Hook", "at": 5.45 },
+        { "text": "Three tips", "at": 6.0 },
+        { "text": "Call to action", "at": 6.95 }
+      ],
+      "note": { "text": "but why?", "at": 7.6 }
+    },
+    {
+      "type": "tree",
+      "at": 8.25,
+      "until": 10.25,
+      "root": { "text": "the steps", "kind": "pill" },
+      "children": [
+        { "title": "Script 01", "at": 8.75 },
+        { "title": "Script 02", "at": 8.9 },
+        { "title": "Script 03", "at": 9.05 }
+      ]
+    },
+    {
+      "type": "mindmap",
+      "at": 10.35,
+      "until": 12.75,
+      "center": "how to think",
+      "nodes": [
+        { "text": "Curiosity", "at": 10.9 },
+        { "text": "Tension", "at": 11.2 },
+        { "text": "Specificity", "at": 11.5 },
+        { "text": "Payoff", "at": 11.8 }
+      ]
+    },
+    { "type": "badge", "at": 12.85, "until": 14.35, "word": "TOOL", "tag": "tuesday" },
+    {
+      "type": "fan",
+      "at": 14.45,
+      "until": 19.55,
+      "cards": [{ "title": "Open a loop" }, { "title": "Be specific" }, { "title": "Pay it off" }],
+      "focus": [
+        { "card": 0, "at": 16.65 },
+        { "card": 1, "at": 17.5 },
+        { "card": 2, "at": 18.6 }
+      ]
+    },
+    { "type": "title", "at": 15.55, "until": 16.55, "lines": ["Story", "Rules"] },
+    {
+      "type": "stats",
+      "at": 19.7,
+      "until": 21.65,
+      "title": "Insights",
+      "range": "Last 30 days",
+      "rows": [
+        { "label": "Views", "value": "2.4M", "delta": "up", "highlight": true },
+        { "label": "New followers", "value": "18.2K", "delta": "up" },
+        { "label": "Saves", "value": "3,410" }
+      ]
+    },
+    { "type": "keyword", "at": 21.75, "until": 24.6, "lead": "comment", "keyword": "RULES" }
+  ]
+}
