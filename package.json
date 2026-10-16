@@ -74,6 +74,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "cn": "^0.4.0",
     "concurrently": "^10.0.5",
+    "happy-dom": "^21.0.3",
     "lucide-react": "^1.49.0",
     "oxlint": "^1.81.0",
     "puppeteer-core": "^24.43.1",

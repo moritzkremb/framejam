@@ -18,5 +18,5 @@
     "noFallthroughCasesInSwitch": true,
     "paths": { "@/*": ["./src/web/*"] }
   },
-  "include": ["src/web", "src/shared"]
+  "include": ["src/web", "src/core", "tests/web"]
 }

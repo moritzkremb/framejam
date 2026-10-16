@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reviewStatus, type ReviewTurnInput } from "../src/shared/review-status.ts";
+import { reviewStatus, type ReviewTurnInput } from "../src/core/review-status.ts";
 
 const base: ReviewTurnInput = { latestVersion: 1, latestSent: false, delivered: false, draftComments: 0, agentListening: false };
 

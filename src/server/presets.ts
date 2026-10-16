@@ -1,21 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { PresetStyle, PresetSummary } from "../shared/types.ts";
+import type { PresetCatalog } from "../core/store.ts";
+import type { LoadedPreset as CoreLoadedPreset, PresetFilter, PresetStyle, PresetSummary } from "../core/types.ts";
 import { safeJoin } from "./files.ts";
 import { builtinPresetsDir, PREVIEW_BASE_URL } from "./paths.ts";
-import type { PresetCatalog } from "./store.ts";
 
-export interface PresetFilter {
-  mood?: string;
-  pacing?: string;
-  format?: string;
-  query?: string;
-}
-
-export interface LoadedPreset {
-  style: PresetStyle;
+/** A preset in a folder on this computer. */
+export interface LoadedPreset extends CoreLoadedPreset {
   dir: string;
-  builtin: boolean;
 }
 
 const TEXT_EXTENSIONS = new Set([".html", ".css", ".js", ".json", ".md", ".txt", ".svg"]);

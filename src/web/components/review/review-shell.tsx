@@ -7,7 +7,8 @@ import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
 import { CommentList } from "@/components/review/comment-list";
 import { Handoff } from "@/components/review/dock";
 import type { ReviewState } from "@/components/review/use-review";
-import { api, copyText, relativeTime, videoUrl, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
+import { copyText, relativeTime, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
+import type { ReviewDataSource } from "@/lib/data-source";
 import { cn } from "@/lib/utils";
 
 /** Below this width the sidebar slides over the stage instead of taking a column. */
@@ -114,7 +115,7 @@ function markPickerBlocked() {
  * Saves a copy of a version's render where the user picks. Chromium browsers (Chrome, Edge, Cursor's built-in
  * browser) show their own save dialog; elsewhere the server opens the system's, or saves to Downloads without one.
  */
-async function downloadVideo(review: Review, version: ReviewVersion) {
+async function downloadVideo(data: ReviewDataSource, review: Review, version: ReviewVersion) {
   const ext = version.videoPath?.match(/\.\w+$/)?.[0] ?? ".mp4";
   const suggestedName = `${review.title} v${version.number}`.replace(/[\\/:*?"<>|]+/g, "-").trim() || "video";
   const picker = (window as { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker;
@@ -128,7 +129,7 @@ async function downloadVideo(review: Review, version: ReviewVersion) {
         // The picker exists but isn't allowed here: let the server ask instead.
       }
       if (handle) {
-        const res = await fetch(videoUrl(review.id, version.number));
+        const res = await fetch(data.videoUrl(review.id, version.number));
         if (!res.ok || !res.body) throw new Error("Couldn't read the video");
         let writable: FileSystemWritableFileStream | undefined;
         try {
@@ -146,7 +147,7 @@ async function downloadVideo(review: Review, version: ReviewVersion) {
         }
       }
     }
-    const saved = await api.downloadVideo(review.id, version.number);
+    const saved = await data.downloadVideo(review.id, version.number);
     if ("cancelled" in saved) return;
     toast.success(saved.chosen ? "Video saved" : "Saved to Downloads", { description: saved.path });
   } catch (e) {
@@ -155,7 +156,7 @@ async function downloadVideo(review: Review, version: ReviewVersion) {
 }
 
 /** Icon button beside Finish review that saves a copy of the version's video. */
-export function DownloadButton({ review, version }: { review: Review; version: ReviewVersion }) {
+export function DownloadButton({ data, review, version }: { data: ReviewDataSource; review: Review; version: ReviewVersion }) {
   const [saving, setSaving] = useState(false);
   return (
     <button
@@ -166,7 +167,7 @@ export function DownloadButton({ review, version }: { review: Review; version: R
       disabled={saving}
       onClick={async () => {
         setSaving(true);
-        await downloadVideo(review, version);
+        await downloadVideo(data, review, version);
         setSaving(false);
       }}
       data-testid="download-video"
@@ -217,7 +218,7 @@ export function ReviewHeader({
           icon={<Copy className="fc-i sm" />}
           onSelect={async () => {
             try {
-              await copyText(await api.prompt(review.id, version.number));
+              await copyText(await r.data.prompt(review.id, version.number));
               toast.success("Comments copied as text", { description: "Paste them into any agent chat." });
             } catch (e) {
               toast.error((e as Error).message);
@@ -227,7 +228,7 @@ export function ReviewHeader({
           Copy comments as text
         </MenuItem>
         {version.videoPath && (
-          <MenuItem icon={<Download className="fc-i sm" />} onSelect={() => void downloadVideo(review, version)}>
+          <MenuItem icon={<Download className="fc-i sm" />} onSelect={() => void downloadVideo(r.data, review, version)}>
             Download video
           </MenuItem>
         )}

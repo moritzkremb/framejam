@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { api, copyText, handoffMessage, type Review, type ReviewComment } from "@/lib/api";
+import { copyText, handoffMessage, type Review, type ReviewComment } from "@/lib/api";
+import type { ReviewDataSource } from "@/lib/data-source";
 
 /** Width of whichever element the returned ref is attached to (the page swaps roots while loading). */
 export function useWidth<T extends HTMLElement>() {
@@ -20,7 +21,7 @@ export function useWidth<T extends HTMLElement>() {
  * A review kept live over SSE, the version on screen, and the round actions (finish, reopen, edit, delete).
  * `onNewVersion` runs when the agent ships a version while you're following the latest one.
  */
-export function useReview(id: string, onNewVersion?: () => void) {
+export function useReview(id: string, data: ReviewDataSource, onNewVersion?: () => void) {
   const [review, setReview] = useState<Review | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [activeVersion, setActiveVersion] = useState<number | null>(null);
@@ -35,7 +36,7 @@ export function useReview(id: string, onNewVersion?: () => void) {
 
   const load = useCallback(async () => {
     try {
-      const r = await api.review(id);
+      const r = await data.review(id);
       setReview(r);
       setLoadError(null);
       const latest = r.versions.at(-1)!;
@@ -51,17 +52,15 @@ export function useReview(id: string, onNewVersion?: () => void) {
     } catch (e) {
       setLoadError(e);
     }
-  }, [id]);
+  }, [id, data]);
 
   useEffect(() => {
     knownLatest.current = 0;
     setReview(null);
     setActiveVersion(null);
     void load();
-    const es = new EventSource(`/api/reviews/${id}/events`);
-    es.addEventListener("changed", () => void load());
-    return () => es.close();
-  }, [id, load]);
+    return data.subscribe(id, () => void load());
+  }, [id, data, load]);
 
   const version = review?.versions.find((v) => v.number === activeVersion) ?? review?.versions.at(-1);
   const latest = review?.versions.at(-1);
@@ -72,7 +71,7 @@ export function useReview(id: string, onNewVersion?: () => void) {
     if (!review || finishing) return;
     setFinishing(true);
     try {
-      const res = await api.submit(review.id);
+      const res = await data.submit(review.id);
       const n = res.batch.commentIds.length;
       if (res.agentListening) {
         toast.success("Your agent has your comments", { description: `${n} comment${n === 1 ? "" : "s"}, handed over instantly.` });
@@ -96,7 +95,7 @@ export function useReview(id: string, onNewVersion?: () => void) {
   const reopen = async () => {
     if (!review) return;
     try {
-      const res = await api.reopen(review.id);
+      const res = await data.reopen(review.id);
       setReview(res.review);
       setAutoCopied(false);
       toast.success("Review reopened", {
@@ -110,7 +109,7 @@ export function useReview(id: string, onNewVersion?: () => void) {
   const saveComment = async (c: ReviewComment, text: string) => {
     if (!review) return;
     try {
-      await api.updateComment(review.id, c.id, { text });
+      await data.updateComment(review.id, c.id, { text });
       await load();
     } catch (e) {
       toast.error((e as Error).message);
@@ -120,14 +119,14 @@ export function useReview(id: string, onNewVersion?: () => void) {
   const deleteComment = async (c: ReviewComment) => {
     if (!review) return;
     try {
-      await api.deleteComment(review.id, c.id);
+      await data.deleteComment(review.id, c.id);
       await load();
     } catch (e) {
       toast.error((e as Error).message);
     }
   };
 
-  return { review, loadError, load, version, latest, isLatest, isOpen, setActiveVersion, finishing, finish, autoCopied, reopen, saveComment, deleteComment };
+  return { data, review, loadError, load, version, latest, isLatest, isOpen, setActiveVersion, finishing, finish, autoCopied, reopen, saveComment, deleteComment };
 }
 
 export type ReviewState = ReturnType<typeof useReview>;

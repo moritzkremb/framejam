@@ -1,15 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
-import { validatePlaybook } from "../shared/playbooks.ts";
-import type { Playbook, PlaybookSummary } from "../shared/types.ts";
+import { validatePlaybook } from "../core/playbooks.ts";
+import type { PlaybookCatalog } from "../core/store.ts";
+import type { LoadedPlaybook as CoreLoadedPlaybook, Playbook, PlaybookSummary } from "../core/types.ts";
 import { safeJoin } from "./files.ts";
 import { builtinPlaybooksDir, PLAYBOOK_PREVIEW_BASE_URL } from "./paths.ts";
-import type { PlaybookCatalog } from "./store.ts";
 
-export interface LoadedPlaybook {
-  playbook: Playbook;
+/** A playbook in a folder on this computer. */
+export interface LoadedPlaybook extends CoreLoadedPlaybook {
   dir: string;
-  builtin: boolean;
 }
 
 const MAX_FILES = 400;

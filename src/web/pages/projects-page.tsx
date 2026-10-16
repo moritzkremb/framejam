@@ -8,7 +8,7 @@ import { isOffline, Offline } from "@/components/states";
 import { UpdateNotice } from "@/components/update-notice";
 import { agentLabel, api, posterUrl, relativeTime, type Health, type ReviewListItem } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { reviewStatus } from "../../shared/review-status";
+import { reviewStatus } from "../../core/review-status";
 
 function Poster({ review }: { review: ReviewListItem }) {
   const [shape, setShape] = useState<"tall" | "wide">("wide");

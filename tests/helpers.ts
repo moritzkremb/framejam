@@ -6,7 +6,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { JsonStore } from "../src/server/json-store.ts";
 import { createMcpServer, type McpContext } from "../src/server/mcp.ts";
 import { builtinPresetsDir } from "../src/server/paths.ts";
-import type { Playbook } from "../src/shared/types.ts";
+import type { Playbook } from "../src/core/types.ts";
 
 export const BASE_URL = "http://localhost:2400";
 export const fixturePreset = path.join(builtinPresetsDir, "data-story");

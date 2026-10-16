@@ -237,3 +237,24 @@ export interface PlaybookSummary extends Omit<Playbook, "featuredStyles" | "exam
   featuredStyles: PlaybookStyleSummary[];
   examples: PlaybookExampleSummary[];
 }
+
+export interface PresetFilter {
+  mood?: string;
+  pacing?: string;
+  format?: string;
+  query?: string;
+}
+
+/** A style preset as a store loads it. `dir` is its folder when it lives on this computer. */
+export interface LoadedPreset {
+  style: PresetStyle;
+  dir?: string;
+  builtin: boolean;
+}
+
+/** A playbook as a store loads it. `dir` is its folder when it lives on this computer. */
+export interface LoadedPlaybook {
+  playbook: Playbook;
+  dir?: string;
+  builtin: boolean;
+}

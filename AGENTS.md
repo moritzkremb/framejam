@@ -98,10 +98,15 @@ it. The only step the user has to do is `npm publish`, because it needs their 2F
  `.claude-plugin/marketplace.json` (Claude) and `.agents/plugins/marketplace.json` (ChatGPT). Cursor also loads plugins installed in Claude
  Code, so it only gets its own copy (`~/.cursor/plugins/local/framejam`, from the npm package) when Claude Code doesn't
  have FrameJam; otherwise Cursor would list it twice.
-- `src/server/mcp.ts`: MCP tools. `src/server/app.ts`: HTTP routes. Both only use the `Store` interface in
- `src/server/store.ts` (reviews, comments, picks, state, presets, playbooks); `src/server/json-store.ts` is its JSON
- implementation in `~/.framejam`. Any new store must pass the contract suite in `tests/store-contract.ts`.
-- `src/web/`: the UI. `src/web/components/setup-steps.tsx` has the setup prompt.
+- `src/core/`: code that runs anywhere, with no Node or filesystem imports (the web typecheck and `tests/core.test.ts`
+ enforce it): types, playbook display helpers, feedback formatting, the MCP tools (`core/mcp.ts`, given a store and
+ base URL) and the `Store` interface (`core/store.ts`: reviews, comments, picks, state, presets, playbooks).
+ `src/server/mcp.ts` adds the local skill version; `src/server/app.ts`: HTTP routes. Both only use `Store`;
+ `src/server/json-store.ts` is its JSON implementation in `~/.framejam`. Any new store must pass the contract suite
+ in `tests/store-contract.ts`.
+- `src/web/`: the UI. `src/web/components/setup-steps.tsx` has the setup prompt. The review screens read and write
+ through a `ReviewDataSource` (`src/web/lib/data-source.ts`), never `/api` directly; `localDataSource` is the local
+ server. `tests/web/` renders them with a fake one.
 - `skills/framejam/SKILL.md`: the agent skill. `.cursor/rules/framejam.mdc` is generated from it.
 - `playbooks/`: the built-in playbooks, one folder each: `playbook.json` (schema in `src/shared/types.ts`, checked by
  `validatePlaybook` in `src/shared/playbooks.ts`), `SKILL.md` (the method), optional `references/`, `scripts/`,

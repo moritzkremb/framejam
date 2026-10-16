@@ -8,7 +8,7 @@ import { NotHere } from "@/components/states";
 import { VideoBackdrop } from "@/components/video-backdrop";
 import { api, type PlaybookSummary, type PresetSummary, type VideoPick } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { costBadge } from "../../shared/playbooks";
+import { costBadge } from "../../core/playbooks";
 
 type Kind = "playbook" | "style";
 

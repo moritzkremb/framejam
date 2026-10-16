@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../shared/types.ts";
+import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../core/types.ts";
 import { safeJoin } from "./files.ts";
 import { dataDir, setupInfo } from "./paths.ts";
 import { PlaybookLibrary } from "./playbooks.ts";
@@ -12,16 +12,19 @@ import {
   LISTEN_GRACE_MS,
   type MediaInput,
   type NewCommentInput,
-  newId,
   type OpenReviewInput,
   type PanelInput,
   PICK_IDLE_MS,
   type PicksChoice,
   type Store,
   StoreError,
-} from "./store.ts";
+} from "../core/store.ts";
 
 const now = () => new Date().toISOString();
+
+export function newId(prefix: string): string {
+  return `${prefix}_${randomBytes(5).toString("hex")}`;
+}
 
 const hashCache = new Map<string, { mtimeMs: number; hash: string }>();
 
@@ -289,7 +292,7 @@ export class JsonStore implements Store {
     return fs.existsSync(file) ? file : undefined;
   }
 
-  savePoster(reviewId: string, version: number, jpeg: Buffer): string {
+  savePoster(reviewId: string, version: number, jpeg: Uint8Array): string {
     const file = this.posterPath(reviewId, version);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, jpeg);
@@ -366,7 +369,7 @@ export class JsonStore implements Store {
     fs.rmSync(path.join(this.thumbsDir(reviewId), `${commentId}.jpg`), { force: true });
   }
 
-  saveThumbnail(reviewId: string, commentId: string, jpeg: Buffer): string {
+  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array): string {
     const file = `${commentId}.jpg`;
     fs.mkdirSync(this.thumbsDir(reviewId), { recursive: true });
     fs.writeFileSync(path.join(this.thumbsDir(reviewId), file), jpeg);
