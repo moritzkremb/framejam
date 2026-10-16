@@ -104,7 +104,9 @@ it. The only step the user has to do is `npm publish`, because it needs their 2F
  `src/server/mcp.ts` adds the local skill version; `src/server/app.ts`: HTTP routes. Both only use `Store`;
  `src/server/json-store.ts` is its JSON implementation in `~/.framejam`. Any new store must pass the contract suite
  in `tests/store-contract.ts`.
-- `src/web/`: the UI. `src/web/components/setup-steps.tsx` has the setup prompt.
+- `src/web/`: the UI. `src/web/components/setup-steps.tsx` has the setup prompt. The review screens read and write
+ through a `ReviewDataSource` (`src/web/lib/data-source.ts`), never `/api` directly; `localDataSource` is the local
+ server. `tests/web/` renders them with a fake one.
 - `skills/framejam/SKILL.md`: the agent skill. `.cursor/rules/framejam.mdc` is generated from it.
 - `playbooks/`: the built-in playbooks, one folder each: `playbook.json` (schema in `src/shared/types.ts`, checked by
  `validatePlaybook` in `src/shared/playbooks.ts`), `SKILL.md` (the method), optional `references/`, `scripts/`,
