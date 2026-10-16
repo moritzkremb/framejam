@@ -9,7 +9,7 @@ import { createMcpServer } from "./mcp.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
 import { DEFAULT_PORT, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
-import type { Store } from "./store.ts";
+import type { Store } from "../core/store.ts";
 import { VERSION, compareVersions } from "./version.ts";
 
 const HELP = `framejam — review videos and storyboards from your coding agent, and pick style presets, over MCP

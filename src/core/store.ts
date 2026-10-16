@@ -1,18 +1,18 @@
-import { randomBytes } from "node:crypto";
 import type {
   AgentInfo,
   CommentKind,
   FeedbackBatch,
+  LoadedPlaybook,
+  LoadedPreset,
   PickKind,
   PlaybookSummary,
+  PresetFilter,
   PresetSummary,
   Review,
   ReviewComment,
   ReviewVersion,
   VideoPick,
-} from "../shared/types.ts";
-import type { LoadedPlaybook } from "./playbooks.ts";
-import type { LoadedPreset, PresetFilter } from "./presets.ts";
+} from "./types.ts";
 
 export class StoreError extends Error {
   constructor(
@@ -21,10 +21,6 @@ export class StoreError extends Error {
   ) {
     super(message);
   }
-}
-
-export function newId(prefix: string): string {
-  return `${prefix}_${randomBytes(5).toString("hex")}`;
 }
 
 export const LISTEN_HEARTBEAT_MS = 4_000;
@@ -88,7 +84,8 @@ export interface PresetCatalog {
   /** Text files of the example composition, as paths relative to its folder. */
   templateFiles(p: LoadedPreset): string[];
   templateSource(p: LoadedPreset): { path: string; content: string }[];
-  templateDir(p: LoadedPreset): string;
+  /** The example composition's folder, when the preset lives on this computer. */
+  templateDir(p: LoadedPreset): string | undefined;
   /** The example video, when the preset ships one locally. */
   previewFile(p: LoadedPreset): string | undefined;
   /** A file inside the preset's folder; undefined when `rel` points outside it. The file may not exist. */
@@ -146,7 +143,7 @@ export interface Store {
   panelFileFor(reviewId: string, version: ReviewVersion, panel: number): MaybePromise<string | undefined>;
   /** The cached poster frame of a version, if one was saved. */
   posterFile(reviewId: string, version: number): MaybePromise<string | undefined>;
-  savePoster(reviewId: string, version: number, jpeg: Buffer): MaybePromise<string>;
+  savePoster(reviewId: string, version: number, jpeg: Uint8Array): MaybePromise<string>;
 
   // --- Comments ---
   addComment(reviewId: string, input: NewCommentInput): MaybePromise<ReviewComment>;
@@ -154,10 +151,10 @@ export interface Store {
   /** Deletes a draft comment and its frame image. */
   deleteComment(reviewId: string, commentId: string): MaybePromise<void>;
   /** Saves a comment's frame image and links it to the comment. Returns the image's file name. */
-  saveThumbnail(reviewId: string, commentId: string, jpeg: Buffer): MaybePromise<string>;
+  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array): MaybePromise<string>;
   /** A frame image by file name: its path, undefined when it doesn't exist, null when the name points outside the review. */
   thumbnailFile(reviewId: string, file: string): MaybePromise<string | null | undefined>;
-  readThumbnail(reviewId: string, file: string): MaybePromise<Buffer | undefined>;
+  readThumbnail(reviewId: string, file: string): MaybePromise<Uint8Array | undefined>;
   resolveComments(reviewId: string, ids: string[], note?: string): MaybePromise<{ resolved: string[]; missing: string[] }>;
 
   // --- Rounds: "Finish review" and delivery to the agent ---

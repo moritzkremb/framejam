@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { StoreError, type Store } from "../src/server/store.ts";
+import { StoreError, type Store } from "../src/core/store.ts";
 
 /** Timestamps have millisecond resolution; "newest first" needs them to differ. */
 const tick = () => new Promise((resolve) => setTimeout(resolve, 20));

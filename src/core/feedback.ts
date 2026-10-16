@@ -1,4 +1,4 @@
-import type { Review, ReviewComment } from "../shared/types.ts";
+import type { Review, ReviewComment } from "./types.ts";
 import type { Store } from "./store.ts";
 
 export function formatTime(seconds: number): string {

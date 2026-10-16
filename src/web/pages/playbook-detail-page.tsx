@@ -9,8 +9,8 @@ import { api, copyText, type PlaybookSummary } from "@/lib/api";
 import { PickBanner } from "@/components/pick-banner";
 import { VideoBackdrop } from "@/components/video-backdrop";
 import { cn } from "@/lib/utils";
-import type { PlaybookNeed } from "../../shared/types";
-import { costBadge, needTag, playbookPrompt, projectLabel, sortNeeds, stylesPredicate } from "../../shared/playbooks";
+import type { PlaybookNeed } from "../../core/types";
+import { costBadge, needTag, playbookPrompt, projectLabel, sortNeeds, stylesPredicate } from "../../core/playbooks";
 
 async function copy(text: string, what: string) {
   try {

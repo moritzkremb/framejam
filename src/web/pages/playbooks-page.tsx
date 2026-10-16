@@ -6,7 +6,7 @@ import { isOffline, Offline } from "@/components/states";
 import { api, type PlaybookSummary } from "@/lib/api";
 import { PickBanner } from "@/components/pick-banner";
 import { VideoBackdrop } from "@/components/video-backdrop";
-import { costBadge } from "../../shared/playbooks";
+import { costBadge } from "../../core/playbooks";
 
 const FORMATS = ["All", "16:9", "9:16"] as const;
 
