@@ -300,6 +300,24 @@ export function createApp(ctx: McpContext) {
     return c.json(await store.resolvePick(c.req.param("id"), { playbookId, styleId }));
   });
 
+  // --- Edit memory ---------------------------------------------------------
+  app.get("/api/memory", async (c) => {
+    const memories = await store.listMemories();
+    const projects: Record<string, string> = {};
+    for (const id of new Set(memories.flatMap((m) => m.sources.map((s) => s.reviewId)))) {
+      const review = await store.findReview(id);
+      if (review) projects[id] = review.title;
+    }
+    return c.json({ memories, projects });
+  });
+
+  app.patch("/api/memory/:id", async (c) => {
+    const { text } = (await c.req.json()) as { text?: string };
+    return c.json((await store.remember({ id: c.req.param("id"), text: text ?? "" })).memory);
+  });
+
+  app.delete("/api/memory/:id", async (c) => c.json(await store.forget(c.req.param("id"))));
+
   // --- MCP over streamable HTTP (stateless: one server per request) --------
   app.all("/mcp", async (c) => {
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });

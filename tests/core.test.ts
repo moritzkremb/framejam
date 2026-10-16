@@ -28,6 +28,9 @@ const TOOLS = [
   "get_selected_playbook",
   "open_picker",
   "wait_for_pick",
+  "get_memory",
+  "remember",
+  "forget",
 ];
 
 async function connect(ctx: CoreContext) {

@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { FeedbackBatch, Review, ReviewComment } from "./types.ts";
+import { memoryClients, relevantMemories } from "./memory.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
 import { costBadge, projectLabel, stylesSentence } from "./playbooks.ts";
 import { LISTEN_HEARTBEAT_MS, PICK_HEARTBEAT_MS, type Store } from "./store.ts";
@@ -44,6 +45,7 @@ Loop: build the video with the project's own tool (or whatever fits) -> render t
 Pass videoPath (the render) for every tool; the user always reviews the rendered file. Don't convert the project to another tool.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
+Edit memory: get_memory returns what the user (and a client) liked in earlier videos; open_review includes it too. The user's current request beats memory, memory beats style and playbook defaults, and tentative memories are only hints. After a round, call remember for any comment that is a general preference rather than a fix for this video, and tell the user once in one line what you'll remember. If they say "forget that", call forget.
 When talking to the user, call a review a "project" (that's what the FrameJam UI calls it).
 If the user says "apply my FrameJam feedback" (with or without a review id), call get_feedback.${skillLine(ctx)}`;
 
@@ -68,11 +70,18 @@ const panelsDirSchema = z
   .optional()
   .describe("Storyboard: absolute path to a folder of panel images (sorted by file name), or the base folder for relative panel paths");
 
+const MEMORY_NOTE =
+  " If a comment is a general preference rather than a fix for this video (\"hard cuts only\", \"Acme: logo bottom right\"), call remember with it, the reviewId and its comment id.";
 const DONE_NOTE = " If the comments only say it's done or approved, don't make another version: confirm with the user and stop waiting.";
 const nextStep = (review: Review) =>
   (review.versions.at(-1)?.panels?.length
     ? "Apply every comment to the panels, update the images, call add_version with the new panels (or the same panelsDir) and a note, then wait_for_feedback again."
-    : "Apply every comment to the video, re-render to a new file, call add_version with the new render and a note, then wait_for_feedback again.") + DONE_NOTE;
+    : "Apply every comment to the video, re-render to a new file, call add_version with the new render and a note, then wait_for_feedback again.") +
+  MEMORY_NOTE +
+  DONE_NOTE;
+
+const MEMORY_USE =
+  "What the user (and this client) liked in earlier videos. Use it quietly as your defaults: the user's current request beats a memory, and a memory beats style and playbook defaults. Tentative ones were seen once, so treat them as hints. Don't ask the user about them.";
 
 function json(data: unknown): CallToolResult["content"][number] {
   return { type: "text", text: JSON.stringify(data, null, 2) };
@@ -147,6 +156,15 @@ export function createMcpServer(ctx: CoreContext): McpServer {
     return content;
   };
 
+  const memoryPayload = async (client?: string) => {
+    const all = await store.listMemories();
+    return {
+      memories: relevantMemories(all, { client }).map((m) => ({ id: m.id, scope: m.scope, client: m.client, text: m.text, confidence: m.confidence })),
+      clients: memoryClients(all),
+      howToUse: MEMORY_USE,
+    };
+  };
+
   server.registerTool(
     "open_review",
     {
@@ -164,13 +182,15 @@ export function createMcpServer(ctx: CoreContext): McpServer {
         note: z.string().optional().describe("What changed in this version"),
         playbookId: z.string().optional().describe("The playbook picked for this video, so later versions and new chats keep it"),
         styleId: z.string().optional().describe("The style picked for this video, so later versions and new chats keep it"),
+        client: z.string().optional().describe("Who the video is for, if it's for a client, so their memories come back too"),
       },
     },
-    async ({ playbookId, styleId, ...args }) => {
+    async ({ playbookId, styleId, client, ...args }) => {
       try {
         const opened = await store.openReview(args);
         const review = playbookId || styleId ? await store.setReviewPicks(opened.review.id, { playbookId, styleId }) : opened.review;
         const { version, created } = opened;
+        const memory = await memoryPayload(client);
         return {
           content: [
             json({
@@ -179,6 +199,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
               version: version.number,
               created,
               next: "Open the url in the harness's built-in browser and post it in chat as a clickable markdown link (e.g. [Open the video in FrameJam](url)), then call wait_for_feedback with this reviewId right away — don't end your turn first, or the user's feedback has nobody to go to.",
+              ...(memory.memories.length ? { memory: { memories: memory.memories, howToUse: memory.howToUse } } : {}),
             }),
           ],
         };
@@ -695,6 +716,81 @@ export function createMcpServer(ctx: CoreContext): McpServer {
           }),
         ],
       };
+    },
+  );
+
+  server.registerTool(
+    "get_memory",
+    {
+      title: "Get what the user likes",
+      description:
+        "Return the user's edit memory: short rules learned from their comments on earlier videos (\"hard cuts only\"), plus a client's when you name one. Call it when you start a new video. At most 20, confident first. Also lists the clients that have memories.",
+      inputSchema: {
+        client: z.string().optional().describe("Who the video is for, if it's for a client"),
+      },
+    },
+    async ({ client }) => ({ content: [json({ ...(await memoryPayload(client)), memoryUrl: `${ctx.baseUrl}/memory` })] }),
+  );
+
+  server.registerTool(
+    "remember",
+    {
+      title: "Remember a preference",
+      description:
+        "Save a general preference for future videos, in one plain sentence: the user's own taste (scope 'me', e.g. 'No fades between shots, hard cuts only') or a client's (scope 'client' with the client's name, e.g. 'Logo bottom right, never on red'). " +
+        "Only for preferences that hold beyond this video, never for fixes like 'move the logo left'. Pass the reviewId and comment ids it came from. Saying the same thing again adds the new comments to the existing memory; it becomes confident once it shows up in two projects, or right away when the user asked you to remember it. Tell the user once in one line what you'll remember.",
+      inputSchema: {
+        text: z.string().describe("One plain sentence"),
+        scope: z.enum(["me", "client"]).optional().describe("me (default): the user's own taste; client: someone they make videos for"),
+        client: z.string().optional().describe("The client's name. Required for scope 'client'"),
+        reviewId: z.string().optional().describe("The project the comments are from"),
+        commentIds: z.array(z.string()).optional().describe("The comments it came from"),
+        userAsked: z.boolean().optional().describe("True when the user said to remember it, rather than you noticing it in comments"),
+        id: z.string().optional().describe("Update this memory instead (a rewording, or new evidence for it)"),
+      },
+    },
+    async ({ text, scope, client, reviewId, commentIds, userAsked, id }) => {
+      try {
+        if (commentIds?.length && !reviewId) throw new Error("Pass the reviewId the comments are from");
+        if (reviewId && commentIds?.length) {
+          const review = await store.getReview(reviewId);
+          const missing = commentIds.filter((cid) => !review.comments.some((c) => c.id === cid));
+          if (missing.length) throw new Error(`No such comments in ${reviewId}: ${missing.join(", ")}`);
+        }
+        const sources = reviewId ? (commentIds ?? []).map((commentId) => ({ reviewId, commentId })) : [];
+        const { memory, created } = await store.remember({ text, scope, client, sources, confident: userAsked, id });
+        return {
+          content: [
+            json({
+              memory,
+              created,
+              memoryUrl: `${ctx.baseUrl}/memory`,
+              next: created
+                ? `Tell the user once, in one line: "I'll remember: ${memory.text}". They can see and edit memories in FrameJam.`
+                : "This adds to a memory you already had; no need to mention it again.",
+            }),
+          ],
+        };
+      } catch (err) {
+        return errorResult(err);
+      }
+    },
+  );
+
+  server.registerTool(
+    "forget",
+    {
+      title: "Forget a preference",
+      description: "Delete a memory by id (from get_memory or open_review), e.g. when the user says \"forget that\" or a memory is wrong.",
+      inputSchema: { id: z.string() },
+    },
+    async ({ id }) => {
+      try {
+        const memory = await store.forget(id);
+        return { content: [json({ forgotten: memory, next: "Tell the user in one line that you forgot it." })] };
+      } catch (err) {
+        return errorResult(err);
+      }
     },
   );
 

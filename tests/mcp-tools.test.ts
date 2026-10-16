@@ -39,6 +39,9 @@ describe("tool registry", () => {
         "resolve_comments",
         "wait_for_feedback",
         "wait_for_pick",
+        "get_memory",
+        "remember",
+        "forget",
       ].sort(),
     );
   });
