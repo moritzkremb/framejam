@@ -8,9 +8,8 @@ import { createApp } from "./app.ts";
 import { createMcpServer } from "./mcp.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
 import { DEFAULT_PORT, dataDir, env, setupInfo } from "./paths.ts";
-import { PlaybookLibrary } from "./playbooks.ts";
-import { PresetLibrary } from "./presets.ts";
-import { Store } from "./store.ts";
+import { JsonStore } from "./json-store.ts";
+import type { Store } from "./store.ts";
 import { VERSION, compareVersions } from "./version.ts";
 
 const HELP = `framejam — review videos and storyboards from your coding agent, and pick style presets, over MCP
@@ -181,10 +180,8 @@ async function runInstall(): Promise<never> {
 if (positionals[0] === "start") await start();
 if (positionals[0] === "install") await runInstall();
 
-const store = new Store();
-const presets = PresetLibrary.forStore(store.userPresetsDir);
-const playbooks = PlaybookLibrary.forStore(store.userPlaybooksDir);
-const ctx = { store, presets, playbooks, baseUrl };
+const store: Store = new JsonStore();
+const ctx = { store, baseUrl };
 
 function startHttp(): Promise<boolean> {
   return new Promise((resolve) => {

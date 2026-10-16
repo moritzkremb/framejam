@@ -1,39 +1,27 @@
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type {
-  AgentInfo,
-  CommentKind,
-  FeedbackBatch,
-  PickKind,
-  Review,
-  ReviewComment,
-  ReviewVersion,
-  StoryboardPanel,
-  VideoPick,
-} from "../shared/types.ts";
+import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../shared/types.ts";
+import { safeJoin } from "./files.ts";
 import { dataDir, setupInfo } from "./paths.ts";
-
-export class StoreError extends Error {
-  constructor(
-    message: string,
-    readonly status: 400 | 404 | 409 = 400,
-  ) {
-    super(message);
-  }
-}
-
-export function newId(prefix: string): string {
-  return `${prefix}_${randomBytes(5).toString("hex")}`;
-}
+import { PlaybookLibrary } from "./playbooks.ts";
+import { PresetLibrary } from "./presets.ts";
+import {
+  type AppState,
+  isPickListening,
+  LISTEN_GRACE_MS,
+  type MediaInput,
+  type NewCommentInput,
+  newId,
+  type OpenReviewInput,
+  type PanelInput,
+  PICK_IDLE_MS,
+  type PicksChoice,
+  type Store,
+  StoreError,
+} from "./store.ts";
 
 const now = () => new Date().toISOString();
-
-export const LISTEN_HEARTBEAT_MS = 4_000;
-const LISTEN_GRACE_MS = 15_000;
-/** How long a pick counts as waiting after the agent last listened (it touches it every few seconds while it does). */
-export const PICK_IDLE_MS = 30_000;
-export const PICK_HEARTBEAT_MS = 5_000;
 
 const hashCache = new Map<string, { mtimeMs: number; hash: string }>();
 
@@ -74,49 +62,22 @@ function readJson<T>(file: string): T | undefined {
   }
 }
 
-/** A panel image path (absolute, or relative to panelsDir), optionally with a title and caption. */
-export type PanelInput = string | { path: string; title?: string; caption?: string };
-
-export interface MediaInput {
-  videoPath?: string;
-  panels?: PanelInput[];
-  panelsDir?: string;
-}
-
-export interface OpenReviewInput extends MediaInput {
-  title?: string;
-  reviewId?: string;
-  note?: string;
-}
-
 const PANEL_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]);
-
-export interface NewCommentInput {
-  version?: number;
-  kind?: CommentKind;
-  time: number;
-  endTime?: number;
-  x?: number;
-  y?: number;
-  panel?: number;
-  wholeVideo?: boolean;
-  text: string;
-}
-
-interface AppState {
-  agent?: AgentInfo;
-}
 
 /**
  * JSON-file store. Every call re-reads from disk so several FrameJam processes
  * (e.g. one stdio MCP server per harness plus the web server) stay consistent.
  */
-export class Store {
+export class JsonStore implements Store {
   readonly root: string;
+  readonly presets: PresetLibrary;
+  readonly playbooks: PlaybookLibrary;
 
   constructor(root = dataDir()) {
     this.root = root;
     fs.mkdirSync(this.reviewsDir, { recursive: true });
+    this.presets = PresetLibrary.forStore(this.userPresetsDir);
+    this.playbooks = PlaybookLibrary.forStore(this.userPlaybooksDir);
   }
 
   get reviewsDir() {
@@ -318,6 +279,23 @@ export class Store {
     return version.videoPath && fs.existsSync(version.videoPath) ? version.videoPath : undefined;
   }
 
+  private posterPath(reviewId: string, version: number) {
+    this.reviewFile(reviewId);
+    return path.join(this.reviewsDir, reviewId, `poster-v${version}.jpg`);
+  }
+
+  posterFile(reviewId: string, version: number): string | undefined {
+    const file = this.posterPath(reviewId, version);
+    return fs.existsSync(file) ? file : undefined;
+  }
+
+  savePoster(reviewId: string, version: number, jpeg: Buffer): string {
+    const file = this.posterPath(reviewId, version);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, jpeg);
+    return file;
+  }
+
   addComment(reviewId: string, input: NewCommentInput): ReviewComment {
     const text = input.text?.trim();
     if (!text) throw new StoreError("Comment text is required");
@@ -394,6 +372,17 @@ export class Store {
     fs.writeFileSync(path.join(this.thumbsDir(reviewId), file), jpeg);
     this.updateComment(reviewId, commentId, { thumbnail: file });
     return file;
+  }
+
+  thumbnailFile(reviewId: string, file: string): string | null | undefined {
+    const full = safeJoin(this.thumbsDir(reviewId), file);
+    if (!full) return null;
+    return fs.existsSync(full) && fs.statSync(full).isFile() ? full : undefined;
+  }
+
+  readThumbnail(reviewId: string, file: string): Buffer | undefined {
+    const full = this.thumbnailFile(reviewId, file);
+    return full ? fs.readFileSync(full) : undefined;
   }
 
   /**
@@ -583,12 +572,8 @@ export class Store {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
-  /**
-   * Whether an agent is still waiting on a pick: it was opened or listened to within `idleMs`. An agent that stopped
-   * waiting (its turn ended, the user interrupted it) stops counting after that.
-   */
   isListening(pick: VideoPick, idleMs = PICK_IDLE_MS): boolean {
-    return pick.status === "waiting" && Date.now() - Date.parse(pick.listenedAt ?? pick.createdAt) < idleMs;
+    return isPickListening(pick, idleMs);
   }
 
   /** The newest pick an agent is still waiting on. */
@@ -612,7 +597,7 @@ export class Store {
     return done;
   }
 
-  resolvePick(id: string, choice: { playbookId?: string | null; styleId?: string | null }): VideoPick {
+  resolvePick(id: string, choice: PicksChoice): VideoPick {
     const pick = this.getPick(id);
     if (pick.status !== "waiting")
       throw new StoreError(
@@ -635,7 +620,7 @@ export class Store {
   }
 
   /** Remembers the playbook and style picked for a project, so later versions and new chats keep them. */
-  setReviewPicks(reviewId: string, picks: { playbookId?: string | null; styleId?: string | null }) {
+  setReviewPicks(reviewId: string, picks: PicksChoice): Review {
     const review = this.getReview(reviewId);
     if (picks.playbookId !== undefined) review.playbookId = picks.playbookId ?? undefined;
     if (picks.styleId !== undefined) review.styleId = picks.styleId ?? undefined;

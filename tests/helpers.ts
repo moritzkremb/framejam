@@ -3,11 +3,9 @@ import os from "node:os";
 import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { JsonStore } from "../src/server/json-store.ts";
 import { createMcpServer, type McpContext } from "../src/server/mcp.ts";
 import { builtinPresetsDir } from "../src/server/paths.ts";
-import { PlaybookLibrary } from "../src/server/playbooks.ts";
-import { PresetLibrary } from "../src/server/presets.ts";
-import { Store } from "../src/server/store.ts";
 import type { Playbook } from "../src/shared/types.ts";
 
 export const BASE_URL = "http://localhost:2400";
@@ -25,7 +23,7 @@ export function parse(result: ToolResult) {
 /** Fresh data dir plus an agent "project" with a composition and a render. */
 export function makeFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "framejam-test-"));
-  const store = new Store(path.join(root, "data"));
+  const store = new JsonStore(path.join(root, "data"));
   const project = path.join(root, "project");
   fs.cpSync(path.join(fixturePreset, "composition"), path.join(project, "composition"), { recursive: true });
   fs.mkdirSync(path.join(project, "renders"));
@@ -33,8 +31,6 @@ export function makeFixture() {
   fs.copyFileSync(path.join(fixturePreset, "preview.mp4"), video);
   const ctx: McpContext = {
     store,
-    presets: PresetLibrary.forStore(store.userPresetsDir),
-    playbooks: PlaybookLibrary.forStore(store.userPlaybooksDir),
     baseUrl: BASE_URL,
     waitSeconds: 2,
     pollMs: 20,

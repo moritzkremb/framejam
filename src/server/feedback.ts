@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import type { Review, ReviewComment } from "../shared/types.ts";
 import type { Store } from "./store.ts";
 
@@ -46,10 +44,11 @@ function commentAt(review: Review, c: ReviewComment) {
   return c.endTime !== undefined ? `${formatTime(c.time)}–${formatTime(c.endTime)}` : formatTime(c.time);
 }
 
-export function toAgentComment(store: Store, baseUrl: string, review: Review, c: ReviewComment): AgentComment {
-  const thumbPath = c.thumbnail ? path.join(store.thumbsDir(review.id), c.thumbnail) : undefined;
+export async function toAgentComment(store: Store, baseUrl: string, review: Review, c: ReviewComment): Promise<AgentComment> {
+  const thumbPath = c.thumbnail ? await store.thumbnailFile(review.id, c.thumbnail) : undefined;
   const version = review.versions.find((v) => v.number === c.version);
   const panel = c.panel !== undefined && version ? version.panels?.[c.panel - 1] : undefined;
+  const panelImage = panel && version ? await store.panelFileFor(review.id, version, c.panel!) : undefined;
   return {
     id: c.id,
     version: c.version,
@@ -65,10 +64,10 @@ export function toAgentComment(store: Store, baseUrl: string, review: Review, c:
         : undefined,
     panel:
       panel && version
-        ? { number: c.panel!, title: panel.title, caption: panel.caption, imagePath: store.panelFileFor(review.id, version, c.panel!) }
+        ? { number: c.panel!, title: panel.title, caption: panel.caption, imagePath: panelImage }
         : undefined,
     text: c.text,
-    thumbnailPath: thumbPath && fs.existsSync(thumbPath) ? thumbPath : undefined,
+    thumbnailPath: thumbPath ?? undefined,
     thumbnailUrl: c.thumbnail ? `${baseUrl}/api/reviews/${review.id}/thumbs/${c.thumbnail}` : undefined,
     resolution: c.resolution,
   };
@@ -82,13 +81,13 @@ export function describePosition(x: number, y: number, of = "frame"): string {
 }
 
 /** Markdown used by the "Copy as prompt" button and returned to agents alongside JSON. */
-export function feedbackPrompt(
+export async function feedbackPrompt(
   store: Store,
   baseUrl: string,
   review: Review,
   comments: ReviewComment[],
   opts: { message?: string } = {},
-): string {
+): Promise<string> {
   const latest = review.versions.at(-1)!;
   const storyboard = Boolean(latest.panels?.length);
   const lines: string[] = [];
@@ -112,15 +111,15 @@ export function feedbackPrompt(
   const sorted = [...comments].sort(
     (a, b) => Number(!!b.wholeVideo) - Number(!!a.wholeVideo) || (a.panel ?? 0) - (b.panel ?? 0) || a.time - b.time,
   );
-  sorted.forEach((c, i) => {
-    const a = toAgentComment(store, baseUrl, review, c);
+  for (const [i, c] of sorted.entries()) {
+    const a = await toAgentComment(store, baseUrl, review, c);
     const ver = c.version !== latest.number ? ` (on v${c.version})` : "";
     lines.push(`${i + 1}. **[${a.at}]**${ver} ${c.text}`);
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
     if (a.panel?.caption) lines.push(`  - Panel caption: ${a.panel.caption}`);
     if (a.thumbnailPath) lines.push(`  - ${a.panel ? "Panel" : "Frame"}${a.position ? " with pin" : ""}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
     lines.push(`  - Comment id: \`${c.id}\``);
-  });
+  }
   lines.push("");
   lines.push(
     storyboard
