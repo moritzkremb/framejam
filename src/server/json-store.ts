@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../core/types.ts";
+import type { FeedbackBatch, Memory, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../core/types.ts";
+import { applyRemember, type RememberInput } from "../core/memory.ts";
 import { safeJoin } from "./files.ts";
 import { dataDir, setupInfo } from "./paths.ts";
 import { PlaybookLibrary } from "./playbooks.ts";
@@ -620,6 +621,31 @@ export class JsonStore implements Store {
 
   private savePick(pick: VideoPick) {
     writeJsonAtomic(this.pickFile(pick.id), pick);
+  }
+
+  // --- Edit memory ---
+
+  private get memoryFile() {
+    return path.join(this.root, "memory.json");
+  }
+
+  listMemories(): Memory[] {
+    const memories = readJson<{ memories?: Memory[] }>(this.memoryFile)?.memories ?? [];
+    return memories.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }
+
+  remember(input: RememberInput): { memory: Memory; created: boolean } {
+    const { memories, memory, created } = applyRemember(this.listMemories(), input, { id: () => newId("mem"), now: now() });
+    writeJsonAtomic(this.memoryFile, { memories });
+    return { memory, created };
+  }
+
+  forget(id: string): Memory {
+    const memories = this.listMemories();
+    const memory = memories.find((m) => m.id === id);
+    if (!memory) throw new StoreError(`No memory ${id}`, 404);
+    writeJsonAtomic(this.memoryFile, { memories: memories.filter((m) => m.id !== id) });
+    return memory;
   }
 
   /** Remembers the playbook and style picked for a project, so later versions and new chats keep them. */

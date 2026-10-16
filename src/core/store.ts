@@ -4,6 +4,7 @@ import type {
   FeedbackBatch,
   LoadedPlaybook,
   LoadedPreset,
+  Memory,
   PickKind,
   PlaybookSummary,
   PresetFilter,
@@ -13,6 +14,7 @@ import type {
   ReviewVersion,
   VideoPick,
 } from "./types.ts";
+import type { RememberInput } from "./memory.ts";
 
 export class StoreError extends Error {
   constructor(
@@ -106,7 +108,7 @@ export interface PlaybookCatalog {
 
 /**
  * Everything FrameJam keeps: projects (reviews) with their versions, comments, frame images and feedback batches,
- * the agent's listening heartbeat, picks, app state, and the preset and playbook libraries. The HTTP routes and MCP
+ * the agent's listening heartbeat, picks, app state, edit memory, and the preset and playbook libraries. The HTTP routes and MCP
  * tools only talk to this. `JsonStore` (files in ~/.framejam) is the implementation today.
  *
  * Media paths (videoPath, panels) are files on this computer; methods that return a file give a local path.
@@ -189,4 +191,12 @@ export interface Store {
   dismissPick(id: string): MaybePromise<VideoPick>;
   /** Throws a 409 StoreError when the pick isn't waiting any more. */
   resolvePick(id: string, choice: PicksChoice): MaybePromise<VideoPick>;
+
+  // --- Edit memory: what the user and their clients like, learned from comments (rules in memory.ts) ---
+  /** Newest change first. */
+  listMemories(): MaybePromise<Memory[]>;
+  /** Adds a memory, or updates the one it repeats (see applyRemember). */
+  remember(input: RememberInput): MaybePromise<{ memory: Memory; created: boolean }>;
+  /** Throws a 404 StoreError when there's no such memory. */
+  forget(id: string): MaybePromise<Memory>;
 }

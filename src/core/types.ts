@@ -258,3 +258,26 @@ export interface LoadedPlaybook {
   dir?: string;
   builtin: boolean;
 }
+
+/** Edit memory: "me" is the user's own taste, "client" a person or company they make videos for. */
+export type MemoryScope = "me" | "client";
+
+/** A comment a memory was learned from. */
+export interface MemorySource {
+  reviewId: string;
+  commentId: string;
+}
+
+/** One lesson about taste that holds beyond a single video, in one plain sentence. */
+export interface Memory {
+  id: string;
+  scope: MemoryScope;
+  /** The client's name, for client memories. */
+  client?: string;
+  text: string;
+  /** tentative: seen once, only a hint. confident: seen in two projects, or the user asked for it. */
+  confidence: "tentative" | "confident";
+  sources: MemorySource[];
+  createdAt: string;
+  updatedAt: string;
+}

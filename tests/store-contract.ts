@@ -271,6 +271,53 @@ export function storeContract(name: string, create: (dataDir: string) => Store |
       });
     });
 
+    describe("edit memory", () => {
+      it("saves a memory once, and grows confident when a second project repeats it", async () => {
+        expect(await store.listMemories()).toEqual([]);
+        const first = await store.remember({ text: " Hard cuts only,  no fades. ", sources: [{ reviewId: "rev_a", commentId: "c1" }] });
+        expect(first.created).toBe(true);
+        expect(first.memory).toMatchObject({ scope: "me", text: "Hard cuts only, no fades.", confidence: "tentative" });
+        expect(first.memory.client).toBeUndefined();
+
+        await tick();
+        const sameProject = await store.remember({ text: "hard cuts only, no fades", sources: [{ reviewId: "rev_a", commentId: "c2" }] });
+        expect(sameProject).toMatchObject({ created: false, memory: { id: first.memory.id, confidence: "tentative" } });
+
+        const otherProject = await store.remember({ text: "Hard cuts only, no fades.", sources: [{ reviewId: "rev_b", commentId: "c1" }] });
+        expect(otherProject.memory).toMatchObject({ id: first.memory.id, confidence: "confident", text: "Hard cuts only, no fades." });
+        expect(otherProject.memory.sources).toHaveLength(3);
+        expect(await store.listMemories()).toHaveLength(1);
+      });
+
+      it("keeps client memories apart, matches client names loosely, and trusts what the user asked for", async () => {
+        const me = await store.remember({ text: "Logo bottom right" });
+        const acme = await store.remember({ text: "Logo bottom right", scope: "client", client: "Acme", confident: true });
+        expect(acme).toMatchObject({ created: true, memory: { scope: "client", client: "Acme", confidence: "confident" } });
+        expect(acme.memory.id).not.toBe(me.memory.id);
+        const again = await store.remember({ text: "logo bottom right", scope: "client", client: " acme " });
+        expect(again).toMatchObject({ created: false, memory: { id: acme.memory.id } });
+        expect((await thrown(() => store.remember({ text: "Never red", scope: "client" }))).message).toMatch(/client's name/);
+        expect((await thrown(() => store.remember({ text: "  " }))).status).toBe(400);
+        expect((await thrown(() => store.remember({ text: "x".repeat(281) }))).message).toMatch(/one short sentence/);
+      });
+
+      it("rewords a memory by id, lists newest changes first, and forgets", async () => {
+        const a = await store.remember({ text: "Cut faster" });
+        await tick();
+        const b = await store.remember({ text: "Captions in the lower third" });
+        expect((await store.listMemories()).map((m) => m.id)).toEqual([b.memory.id, a.memory.id]);
+        await tick();
+        const edited = await store.remember({ id: a.memory.id, text: "Cut faster than you think" });
+        expect(edited).toMatchObject({ created: false, memory: { id: a.memory.id, text: "Cut faster than you think", scope: "me" } });
+        expect((await store.listMemories()).map((m) => m.id)).toEqual([a.memory.id, b.memory.id]);
+        expect((await thrown(() => store.remember({ id: "mem_missing", text: "x" }))).status).toBe(404);
+
+        expect((await store.forget(b.memory.id)).text).toBe("Captions in the lower third");
+        expect((await store.listMemories()).map((m) => m.id)).toEqual([a.memory.id]);
+        expect((await thrown(() => store.forget(b.memory.id))).status).toBe(404);
+      });
+    });
+
     describe("presets and playbooks", () => {
       it("lists the built-in styles and keeps file access inside a preset", () => {
         const p = store.presets.get("data-story")!;
