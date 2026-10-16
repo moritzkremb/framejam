@@ -10,7 +10,8 @@ import { CommentsRail, DownloadButton, ReviewBottom, ReviewHeader, ReviewSidebar
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
-import { api, formatTime, videoUrl, type ReviewComment } from "@/lib/api";
+import { formatTime, type ReviewComment } from "@/lib/api";
+import { localDataSource, type ReviewDataSource } from "@/lib/data-source";
 import { cn, FINISH_KEYS, MOD_KEY, SHIFT_KEY } from "@/lib/utils";
 
 const FPS = 30;
@@ -47,10 +48,10 @@ function isAt(c: ReviewComment, t: number) {
 }
 
 /** Loads the review, then shows the video or storyboard view for the version on screen. */
-export function ReviewPage() {
+export function ReviewPage({ data = localDataSource }: { data?: ReviewDataSource }) {
   const { id = "" } = useParams();
   const resumeTime = useRef(0);
-  const r = useReview(id, () => {
+  const r = useReview(id, data, () => {
     resumeTime.current = 0;
   });
   const { ref: rootRef, width } = useWidth<HTMLDivElement>();
@@ -93,7 +94,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const review = r.review!;
   const version = r.version!;
   const latest = r.latest!;
-  const { isOpen, load } = r;
+  const { data, isOpen, load } = r;
   const [ctrl, setCtrl] = useState<MediaController | null>(null);
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -207,7 +208,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
     setAdding(true);
     try {
       const t = anchor.kind === "time" ? (ctrl?.getTime() ?? time) : anchor.time;
-      const c = await api.addComment(review.id, {
+      const c = await data.addComment(review.id, {
         version: version.number,
         time: t,
         endTime: !whole && anchor.kind === "range" ? anchor.endTime : undefined,
@@ -268,7 +269,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const src = videoUrl(review.id, version.number);
+  const src = data.videoUrl(review.id, version.number);
   const draftCount = comments.filter((c) => c.status === "draft").length;
   const subline = [
     review.versions.length > 1 ? `Version ${version.number} of ${review.versions.length}` : `Version ${version.number}`,
@@ -310,7 +311,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       }}
       onAdd={() => void addComment()}
       onFinish={() => void finish()}
-      beforeFinish={version.videoPath ? <DownloadButton review={review} version={version} /> : undefined}
+      beforeFinish={version.videoPath ? <DownloadButton data={data} review={review} version={version} /> : undefined}
     />
   );
 
@@ -375,7 +376,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
               markers={markers}
               range={isOpen && !whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
               selectedId={selectedId}
-              frameSource={version.videoPath ? videoUrl(review.id, version.number) : undefined}
+              frameSource={version.videoPath ? data.videoUrl(review.id, version.number) : undefined}
               canSelectRange={isOpen}
               wholeActive={isOpen && whole}
               onSeek={seek}
