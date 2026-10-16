@@ -439,7 +439,8 @@ npm run lint
 | --- | --- |
 | `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/server/mcp.ts` | MCP tool definitions. |
-| `src/server/store.ts` | JSON file store. Every call re-reads from disk, so several processes can share `~/.framejam`. |
+| `src/server/store.ts` | The `Store` interface: everything FrameJam keeps (projects, comments, picks, state, styles, playbooks). The HTTP routes and MCP tools only use this. |
+| `src/server/json-store.ts` | `JsonStore`, the JSON file implementation. Every call re-reads from disk, so several processes can share `~/.framejam`. |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). |
 | `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |

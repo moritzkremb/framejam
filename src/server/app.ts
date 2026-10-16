@@ -8,14 +8,15 @@ import { sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
 import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
 import { chooseSavePath } from "./save-dialog.ts";
-import { StoreError, type NewCommentInput } from "./store.ts";
+import { isPickListening, StoreError, type NewCommentInput } from "./store.ts";
 import { extractFrame } from "./thumbs.ts";
 import { skillStatus } from "./skill.ts";
 import { createUpdateChecker } from "./update.ts";
 import { VERSION } from "./version.ts";
 
 export function createApp(ctx: McpContext) {
-  const { store, presets, playbooks } = ctx;
+  const { store } = ctx;
+  const { presets, playbooks } = store;
   const app = new Hono();
   const checkUpdate = createUpdateChecker(ctx.fetchLatestVersion);
 
@@ -33,7 +34,7 @@ export function createApp(ctx: McpContext) {
     return c.json({ error: err.message || "Internal error" }, 500);
   });
 
-  app.get("/api/health", (c) =>
+  app.get("/api/health", async (c) =>
     c.json({
       ok: true,
       app: "framejam",
@@ -41,7 +42,7 @@ export function createApp(ctx: McpContext) {
       pid: process.pid,
       dataDir: store.root,
       baseUrl: ctx.baseUrl,
-      agent: store.getState().agent ?? null,
+      agent: (await store.getState()).agent ?? null,
       setup: setupInfo(),
     }),
   );
@@ -51,61 +52,73 @@ export function createApp(ctx: McpContext) {
   app.get("/api/skill-status", (c) => c.json(skillStatus(ctx.skillDirs)));
 
   // --- Reviews -------------------------------------------------------------
-  app.get("/api/reviews", (c) =>
+  app.get("/api/reviews", async (c) =>
     c.json(
-      store.listReviews().map((r) => {
-        const latest = r.versions.at(-1)!;
-        const batch = latest.batchId ? r.batches.find((b) => b.id === latest.batchId) : undefined;
-        return {
-          id: r.id,
-          title: r.title,
-          createdAt: r.createdAt,
-          updatedAt: r.updatedAt,
-          versions: r.versions.length,
-          latestVersion: latest.number,
-          latestSent: Boolean(latest.sentAt),
-          delivered: Boolean(batch?.deliveredAt),
-          draftComments: r.comments.filter((x) => x.version === latest.number && x.status === "draft").length,
-          agentListening: store.agentListening(r.id),
-          hasVideo: r.versions.some((v) => v.videoPath),
-          panels: latest.panels?.length ?? 0,
-        };
-      }),
+      await Promise.all(
+        (await store.listReviews()).map(async (r) => {
+          const latest = r.versions.at(-1)!;
+          const batch = latest.batchId ? r.batches.find((b) => b.id === latest.batchId) : undefined;
+          return {
+            id: r.id,
+            title: r.title,
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt,
+            versions: r.versions.length,
+            latestVersion: latest.number,
+            latestSent: Boolean(latest.sentAt),
+            delivered: Boolean(batch?.deliveredAt),
+            draftComments: r.comments.filter((x) => x.version === latest.number && x.status === "draft").length,
+            agentListening: await store.agentListening(r.id),
+            hasVideo: r.versions.some((v) => v.videoPath),
+            panels: latest.panels?.length ?? 0,
+          };
+        }),
+      ),
     ),
   );
 
   /** A frame of the latest render (or a storyboard's first panel), for the review card. Cached per version; 404 without a render or ffmpeg. */
   app.get("/api/reviews/:id/poster", async (c) => {
     const id = c.req.param("id");
-    const review = store.getReview(id);
+    const review = await store.getReview(id);
     const latest = review.versions.at(-1)!;
     if (latest.panels?.length) {
-      const file = store.panelFileFor(id, latest, 1);
+      const file = await store.panelFileFor(id, latest, 1);
       return file ? sendFile(file, c.req.raw) : c.text("No panel", 404);
     }
-    const version = [...review.versions].reverse().find((v) => store.videoFileFor(id, v));
-    if (!version) return c.text("No render", 404);
-    const cached = path.join(store.reviewsDir, id, `poster-v${version.number}.jpg`);
-    if (!fs.existsSync(cached)) {
-      const jpeg = await extractFrame(store.videoFileFor(id, version)!, 1);
-      if (!jpeg) return c.text("No frame", 404);
-      fs.mkdirSync(path.dirname(cached), { recursive: true });
-      fs.writeFileSync(cached, jpeg);
+    let render: { number: number; file: string } | undefined;
+    for (const v of [...review.versions].reverse()) {
+      const file = await store.videoFileFor(id, v);
+      if (file) {
+        render = { number: v.number, file };
+        break;
+      }
     }
-    return sendFile(cached, c.req.raw);
+    if (!render) return c.text("No render", 404);
+    let poster = await store.posterFile(id, render.number);
+    if (!poster) {
+      const jpeg = await extractFrame(render.file, 1);
+      if (!jpeg) return c.text("No frame", 404);
+      poster = await store.savePoster(id, render.number, jpeg);
+    }
+    return sendFile(poster, c.req.raw);
   });
 
-  const reviewJson = (id: string) => ({ ...store.getReview(id), agentListening: store.agentListening(id), agentOutdated: store.agentOutdated() });
+  const reviewJson = async (id: string) => ({
+    ...(await store.getReview(id)),
+    agentListening: await store.agentListening(id),
+    agentOutdated: await store.agentOutdated(),
+  });
 
-  app.get("/api/reviews/:id", (c) => c.json(reviewJson(c.req.param("id"))));
+  app.get("/api/reviews/:id", async (c) => c.json(await reviewJson(c.req.param("id"))));
 
-  app.get("/api/reviews/:id/events", (c) => {
+  app.get("/api/reviews/:id/events", async (c) => {
     const id = c.req.param("id");
-    store.getReview(id);
+    await store.getReview(id);
     // The listening flag can expire without any file changing, so it's part of the fingerprint.
-    const fingerprint = () => `${store.reviewMtime(id)}:${store.agentListening(id)}:${store.agentOutdated()}`;
+    const fingerprint = async () => `${await store.reviewMtime(id)}:${await store.agentListening(id)}:${await store.agentOutdated()}`;
     return streamSSE(c, async (stream) => {
-      let last = fingerprint();
+      let last = await fingerprint();
       let alive = true;
       stream.onAbort(() => {
         alive = false;
@@ -113,7 +126,7 @@ export function createApp(ctx: McpContext) {
       await stream.writeSSE({ event: "ready", data: last });
       while (alive) {
         await stream.sleep(700);
-        const f = fingerprint();
+        const f = await fingerprint();
         if (f !== last) {
           last = f;
           await stream.writeSSE({ event: "changed", data: f });
@@ -125,67 +138,68 @@ export function createApp(ctx: McpContext) {
   app.post("/api/reviews/:id/comments", async (c) => {
     const id = c.req.param("id");
     const body = (await c.req.json()) as NewCommentInput & { thumbnailDataUrl?: string };
-    const comment = store.addComment(id, body);
+    const comment = await store.addComment(id, body);
     const thumb = body.thumbnailDataUrl?.match(/^data:image\/jpeg;base64,(.+)$/)?.[1];
     if (thumb) {
-      store.saveThumbnail(id, comment.id, Buffer.from(thumb, "base64"));
+      await store.saveThumbnail(id, comment.id, Buffer.from(thumb, "base64"));
     } else {
-      const review = store.getReview(id);
+      const review = await store.getReview(id);
       const version = review.versions.find((v) => v.number === comment.version);
-      const panelFile = version && comment.panel !== undefined ? store.panelFileFor(id, version, comment.panel) : undefined;
-      const file = version && (panelFile ?? store.videoFileFor(id, version));
+      const panelFile = version && comment.panel !== undefined ? await store.panelFileFor(id, version, comment.panel) : undefined;
+      const file = version && (panelFile ?? (await store.videoFileFor(id, version)));
       if (panelFile) {
         const jpeg = await extractFrame(panelFile, 0);
-        if (jpeg) store.saveThumbnail(id, comment.id, jpeg);
+        if (jpeg) await store.saveThumbnail(id, comment.id, jpeg);
       } else if (file) {
         const at = comment.endTime !== undefined ? (comment.time + comment.endTime) / 2 : comment.time;
         const jpeg = await extractFrame(file, at);
-        if (jpeg) store.saveThumbnail(id, comment.id, jpeg);
+        if (jpeg) await store.saveThumbnail(id, comment.id, jpeg);
       }
     }
-    return c.json(store.getReview(id).comments.find((x) => x.id === comment.id), 201);
+    return c.json((await store.getReview(id)).comments.find((x) => x.id === comment.id), 201);
   });
 
   app.patch("/api/reviews/:id/comments/:cid", async (c) => {
     const body = (await c.req.json()) as { text?: string };
-    return c.json(store.updateComment(c.req.param("id"), c.req.param("cid"), { text: body.text }));
+    return c.json(await store.updateComment(c.req.param("id"), c.req.param("cid"), { text: body.text }));
   });
 
-  app.delete("/api/reviews/:id/comments/:cid", (c) => {
-    store.deleteComment(c.req.param("id"), c.req.param("cid"));
+  app.delete("/api/reviews/:id/comments/:cid", async (c) => {
+    await store.deleteComment(c.req.param("id"), c.req.param("cid"));
     return c.json({ ok: true });
   });
 
   app.post("/api/reviews/:id/submit", async (c) => {
     const body = (await c.req.json().catch(() => ({}))) as { message?: string };
     const id = c.req.param("id");
-    const batch = store.submit(id, body.message);
-    return c.json({ batch, agentListening: store.agentListening(id) });
+    const batch = await store.submit(id, body.message);
+    return c.json({ batch, agentListening: await store.agentListening(id) });
   });
 
-  app.post("/api/reviews/:id/reopen", (c) => {
+  app.post("/api/reviews/:id/reopen", async (c) => {
     const id = c.req.param("id");
-    const { wasDelivered } = store.reopen(id);
-    return c.json({ wasDelivered, review: reviewJson(id) });
+    const { wasDelivered } = await store.reopen(id);
+    return c.json({ wasDelivered, review: await reviewJson(id) });
   });
 
-  app.get("/api/reviews/:id/prompt", (c) => {
-    const review = store.getReview(c.req.param("id"));
+  app.get("/api/reviews/:id/prompt", async (c) => {
+    const review = await store.getReview(c.req.param("id"));
     const version = Number(c.req.query("version"));
     const comments = version ? versionComments(review, version) : latestComments(review);
-    return c.text(feedbackPrompt(store, ctx.baseUrl, review, comments));
+    return c.text(await feedbackPrompt(store, ctx.baseUrl, review, comments));
   });
 
-  app.get("/api/reviews/:id/thumbs/:file", (c) => {
-    const file = safeJoin(store.thumbsDir(c.req.param("id")), c.req.param("file"));
-    return file ? sendFile(file, c.req.raw) : c.text("Forbidden", 403);
+  app.get("/api/reviews/:id/thumbs/:file", async (c) => {
+    const file = await store.thumbnailFile(c.req.param("id"), c.req.param("file"));
+    if (file === null) return c.text("Forbidden", 403);
+    return file ? sendFile(file, c.req.raw) : new Response("Not found", { status: 404 });
   });
 
-  app.get("/api/reviews/:id/versions/:n/video", (c) => {
+  app.get("/api/reviews/:id/versions/:n/video", async (c) => {
     const id = c.req.param("id");
-    const review = store.getReview(id);
+    const review = await store.getReview(id);
     const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
-    const file = version && store.videoFileFor(id, version);
+    const file = version && (await store.videoFileFor(id, version));
     if (!file) return c.text("This version has no rendered video", 404);
     return sendFile(file, c.req.raw);
   });
@@ -196,9 +210,9 @@ export function createApp(ctx: McpContext) {
    */
   app.post("/api/reviews/:id/versions/:n/download", async (c) => {
     const id = c.req.param("id");
-    const review = store.getReview(id);
+    const review = await store.getReview(id);
     const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
-    const file = version && store.videoFileFor(id, version);
+    const file = version && (await store.videoFileFor(id, version));
     if (!version || !file) return c.json({ error: "This version has no rendered video" }, 404);
     const dir = ctx.downloadsDir ?? downloadsDir();
     fs.mkdirSync(dir, { recursive: true });
@@ -221,11 +235,11 @@ export function createApp(ctx: McpContext) {
     }
   });
 
-  app.get("/api/reviews/:id/versions/:n/panels/:panel", (c) => {
+  app.get("/api/reviews/:id/versions/:n/panels/:panel", async (c) => {
     const id = c.req.param("id");
-    const review = store.getReview(id);
+    const review = await store.getReview(id);
     const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
-    const file = version && store.panelFileFor(id, version, Number(c.req.param("panel")));
+    const file = version && (await store.panelFileFor(id, version, Number(c.req.param("panel"))));
     if (!file) return c.text("No such panel", 404);
     return sendFile(file, c.req.raw);
   });
@@ -246,7 +260,7 @@ export function createApp(ctx: McpContext) {
     const p = presets.get(c.req.param("id"));
     if (!p) return c.text("Preset not found", 404);
     const rel = c.req.path.slice(`/api/presets/${encodeURIComponent(p.style.id)}/files/`.length);
-    const file = safeJoin(p.dir, rel);
+    const file = presets.file(p, rel);
     return file ? sendFile(file, c.req.raw) : c.text("Forbidden", 403);
   });
 
@@ -265,25 +279,25 @@ export function createApp(ctx: McpContext) {
     const p = playbooks.get(c.req.param("id"));
     if (!p) return c.text("Playbook not found", 404);
     const rel = c.req.path.slice(`/api/playbooks/${encodeURIComponent(p.playbook.id)}/files/`.length);
-    const file = safeJoin(p.dir, rel);
+    const file = playbooks.file(p, rel);
     return file ? sendFile(file, c.req.raw) : c.text("Forbidden", 403);
   });
 
   // --- Picks: the agent waits while the user picks a playbook and style for one video ---
-  app.get("/api/picks/active", (c) => c.json(store.activePick()));
+  app.get("/api/picks/active", async (c) => c.json(await store.activePick()));
 
-  app.get("/api/picks/:id", (c) => {
-    const pick = store.getPick(c.req.param("id"));
-    return c.json({ ...pick, listening: store.isListening(pick) });
+  app.get("/api/picks/:id", async (c) => {
+    const pick = await store.getPick(c.req.param("id"));
+    return c.json({ ...pick, listening: isPickListening(pick) });
   });
 
-  app.post("/api/picks/:id/dismiss", (c) => c.json(store.dismissPick(c.req.param("id"))));
+  app.post("/api/picks/:id/dismiss", async (c) => c.json(await store.dismissPick(c.req.param("id"))));
 
   app.post("/api/picks/:id", async (c) => {
     const { playbookId, styleId } = (await c.req.json()) as { playbookId?: string | null; styleId?: string | null };
     if (playbookId && !playbooks.get(playbookId)) return c.json({ error: "Playbook not found" }, 404);
     if (styleId && !presets.get(styleId)) return c.json({ error: "Style not found" }, 404);
-    return c.json(store.resolvePick(c.req.param("id"), { playbookId, styleId }));
+    return c.json(await store.resolvePick(c.req.param("id"), { playbookId, styleId }));
   });
 
   // --- MCP over streamable HTTP (stateless: one server per request) --------

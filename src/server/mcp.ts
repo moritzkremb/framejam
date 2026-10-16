@@ -1,22 +1,16 @@
-import fs from "node:fs";
-import path from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { FeedbackBatch, Review, ReviewComment } from "../shared/types.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
 import { costBadge, projectLabel, stylesSentence } from "../shared/playbooks.ts";
-import type { PlaybookLibrary } from "./playbooks.ts";
 import { currentSkillVersion } from "./skill.ts";
 import { UPDATE_COMMAND } from "./update.ts";
-import type { PresetLibrary } from "./presets.ts";
 import type { ChooseSavePath } from "./save-dialog.ts";
 import { LISTEN_HEARTBEAT_MS, PICK_HEARTBEAT_MS, type Store } from "./store.ts";
 
 export interface McpContext {
   store: Store;
-  presets: PresetLibrary;
-  playbooks: PlaybookLibrary;
   baseUrl: string;
   /** Upper bound for one wait_for_feedback call before it returns `pending`. */
   waitSeconds?: number;
@@ -111,18 +105,19 @@ const sleep = (ms: number, signal?: AbortSignal) =>
   });
 
 export function createMcpServer(ctx: McpContext): McpServer {
-  const { store, presets, playbooks } = ctx;
+  const { store } = ctx;
+  const { presets, playbooks } = store;
   const server = new McpServer(
     { name: "framejam", version: "0.1.0" },
     { instructions: serverInstructions(ctx.baseUrl), capabilities: { logging: {} } },
   );
   server.server.oninitialized = () => {
     const client = server.server.getClientVersion();
-    store.recordAgent(client?.name, client?.version);
+    Promise.resolve(store.recordAgent(client?.name, client?.version)).catch((err) => console.error("[framejam]", err));
   };
 
-  const feedbackContent = (review: Review, comments: ReviewComment[], extra: Record<string, unknown>, message?: string) => {
-    const agentComments = comments.map((c) => toAgentComment(store, ctx.baseUrl, review, c));
+  const feedbackContent = async (review: Review, comments: ReviewComment[], extra: Record<string, unknown>, message?: string) => {
+    const agentComments = await Promise.all(comments.map((c) => toAgentComment(store, ctx.baseUrl, review, c)));
     const latest = review.versions.at(-1)!;
     const content: CallToolResult["content"] = [
       json({
@@ -139,11 +134,14 @@ export function createMcpServer(ctx: McpContext): McpServer {
         message,
         comments: agentComments,
       }),
-      { type: "text", text: feedbackPrompt(store, ctx.baseUrl, review, comments, { message }) },
+      { type: "text", text: await feedbackPrompt(store, ctx.baseUrl, review, comments, { message }) },
     ];
+    const thumbnails = new Map(comments.map((c) => [c.id, c.thumbnail]));
     for (const c of agentComments.filter((c) => c.thumbnailPath).slice(0, MAX_IMAGES)) {
+      const jpeg = await store.readThumbnail(review.id, thumbnails.get(c.id)!);
+      if (!jpeg) continue;
       content.push({ type: "text", text: `${c.panel ? "Panel" : "Frame"}${c.position ? " (pin marked)" : ""} for comment ${c.id} at ${c.at}:` });
-      content.push({ type: "image", mimeType: "image/jpeg", data: fs.readFileSync(c.thumbnailPath!).toString("base64") });
+      content.push({ type: "image", mimeType: "image/jpeg", data: jpeg.toString("base64") });
     }
     return content;
   };
@@ -169,8 +167,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
     },
     async ({ playbookId, styleId, ...args }) => {
       try {
-        const opened = store.openReview(args);
-        const review = playbookId || styleId ? store.setReviewPicks(opened.review.id, { playbookId, styleId }) : opened.review;
+        const opened = await store.openReview(args);
+        const review = playbookId || styleId ? await store.setReviewPicks(opened.review.id, { playbookId, styleId }) : opened.review;
         const { version, created } = opened;
         return {
           content: [
@@ -204,7 +202,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     },
     async ({ reviewId, timeoutSeconds }, extra) => {
       try {
-        store.getReview(reviewId);
+        await store.getReview(reviewId);
       } catch (err) {
         return errorResult(err);
       }
@@ -217,17 +215,17 @@ export function createMcpServer(ctx: McpContext): McpServer {
       let lastBeat = started;
       // A `pending` result keeps the heartbeat so the UI still says "listening" until the agent calls again.
       let timedOut = false;
-      store.setAgentWaiting(reviewId, true);
+      await store.setAgentWaiting(reviewId, true);
       try {
         while (!extra.signal.aborted) {
-          const batches = store.undeliveredBatches(reviewId);
+          const batches = await store.undeliveredBatches(reviewId);
           if (batches.length) {
-            store.markDelivered(reviewId, batches.map((b) => b.id));
-            const review = store.getReview(reviewId);
+            await store.markDelivered(reviewId, batches.map((b) => b.id));
+            const review = await store.getReview(reviewId);
             const ids = new Set(batches.flatMap((b) => b.commentIds));
             const comments = review.comments.filter((c) => ids.has(c.id));
             return {
-              content: feedbackContent(
+              content: await feedbackContent(
                 review,
                 comments,
                 {
@@ -246,7 +244,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
           }
           if (Date.now() - lastBeat >= LISTEN_HEARTBEAT_MS) {
             lastBeat = Date.now();
-            store.setAgentWaiting(reviewId, true);
+            await store.setAgentWaiting(reviewId, true);
           }
           if (progressToken !== undefined && Date.now() - lastProgress >= progressEvery) {
             lastProgress = Date.now();
@@ -260,7 +258,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
           await sleep(Math.min(pollMs, timeoutMs - elapsed), extra.signal);
         }
       } finally {
-        if (!timedOut) store.setAgentWaiting(reviewId, false);
+        if (!timedOut) await store.setAgentWaiting(reviewId, false);
       }
       return {
         content: [
@@ -276,8 +274,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
   );
 
   /** The review the user most likely means by "apply my feedback": unsent-to-agent first, then unsent drafts, then most recent. */
-  const pickReview = (): Review | undefined => {
-    const all = store.listReviews();
+  const pickReview = async (): Promise<Review | undefined> => {
+    const all = await store.listReviews();
     return (
       all.find((r) => r.batches.some((b) => !b.deliveredAt)) ??
       all.find((r) => {
@@ -303,26 +301,26 @@ export function createMcpServer(ctx: McpContext): McpServer {
     },
     async ({ reviewId, include }) => {
       try {
-        let review = reviewId ? store.getReview(reviewId) : pickReview();
+        let review = reviewId ? await store.getReview(reviewId) : await pickReview();
         if (!review) {
           return { content: [json({ status: "empty", next: "No reviews yet. Build a video and call open_review." })] };
         }
         const versions = review.versions.map((v) => ({ number: v.number, note: v.note, sent: Boolean(v.sentAt) }));
         if (include === "all") {
-          return { content: feedbackContent(review, review.comments, { status: review.comments.length ? "feedback" : "empty", versions }) };
+          return { content: await feedbackContent(review, review.comments, { status: review.comments.length ? "feedback" : "empty", versions }) };
         }
         let batches = review.batches.filter((b) => !b.deliveredAt);
         const latest = review.versions.at(-1)!;
         if (!batches.length && !latest.sentAt && versionComments(review, latest.number).some((c) => c.status === "draft")) {
-          store.submit(review.id);
-          review = store.getReview(review.id);
+          await store.submit(review.id);
+          review = await store.getReview(review.id);
           batches = review.batches.filter((b) => !b.deliveredAt);
         }
         if (batches.length) {
-          store.markDelivered(review.id, batches.map((b) => b.id));
+          await store.markDelivered(review.id, batches.map((b) => b.id));
           const ids = new Set(batches.flatMap((b) => b.commentIds));
           return {
-            content: feedbackContent(
+            content: await feedbackContent(
               review,
               review.comments.filter((c) => ids.has(c.id)),
               {
@@ -337,7 +335,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
         }
         const last = latestComments(review);
         return {
-          content: feedbackContent(review, last, {
+          content: await feedbackContent(review, last, {
             status: last.length ? "already_delivered" : "empty",
             versions,
             next: last.length
@@ -360,7 +358,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
       inputSchema: {},
     },
     async () => {
-      const list = store.listReviews().map((r) => {
+      const list = (await store.listReviews()).map((r) => {
         const latest = r.versions.at(-1)!;
         const batch = latest.batchId ? r.batches.find((b) => b.id === latest.batchId) : undefined;
         const drafts = r.comments.filter((c) => c.version === latest.number && c.status === "draft").length;
@@ -399,8 +397,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
     },
     async ({ reviewId, ids, note }) => {
       try {
-        const result = store.resolveComments(reviewId, ids, note);
-        const review = store.getReview(reviewId);
+        const result = await store.resolveComments(reviewId, ids, note);
+        const review = await store.getReview(reviewId);
         return { content: [json({ ...result, stillOpen: review.comments.filter((c) => c.status === "sent").length })] };
       } catch (err) {
         return errorResult(err);
@@ -425,7 +423,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     },
     async ({ reviewId, videoPath, panels, panelsDir, note }) => {
       try {
-        const review = store.addVersion(reviewId, { videoPath, panels, panelsDir, note });
+        const review = await store.addVersion(reviewId, { videoPath, panels, panelsDir, note });
         const v = review.versions.at(-1)!;
         return {
           content: [json({ reviewId, version: v.number, url: reviewUrl(ctx.baseUrl, reviewId), next: `Tell the user version ${v.number} is ready, with the url as a clickable markdown link (e.g. [Open v${v.number} in FrameJam](url)) and a one-line summary of what changed, then call wait_for_feedback.` })],
@@ -472,10 +470,10 @@ export function createMcpServer(ctx: McpContext): McpServer {
       example: p.style.example,
       howToUse: STYLE_USE,
       presetDir: p.dir,
-      templateDir: path.join(p.dir, "composition"),
+      templateDir: presets.templateDir(p),
       templateFiles: presets.templateFiles(p),
       ...(includeTemplate ? { templateSource: presets.templateSource(p) } : {}),
-      previewVideo: fs.existsSync(path.join(p.dir, "preview.mp4")) ? path.join(p.dir, "preview.mp4") : undefined,
+      previewVideo: presets.previewFile(p),
       galleryUrl: `${ctx.baseUrl}/styles/${id}`,
     };
   };
@@ -611,7 +609,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
       },
     },
     async ({ kinds, title }) => {
-      const pick = store.createPick(kinds ?? ["playbook", "style"], title);
+      const pick = await store.createPick(kinds ?? ["playbook", "style"], title);
       return {
         content: [
           json({
@@ -638,7 +636,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     },
     async ({ pickId, timeoutSeconds }, extra) => {
       try {
-        store.getPick(pickId);
+        await store.getPick(pickId);
       } catch (err) {
         return errorResult(err);
       }
@@ -648,10 +646,10 @@ export function createMcpServer(ctx: McpContext): McpServer {
       let touched = 0;
       while (!extra.signal.aborted && Date.now() - started < timeoutMs) {
         if (Date.now() - touched >= PICK_HEARTBEAT_MS) {
-          store.touchPick(pickId);
+          await store.touchPick(pickId);
           touched = Date.now();
         }
-        const pick = store.getPick(pickId);
+        const pick = await store.getPick(pickId);
         if (pick.status === "cancelled") {
           return { content: [json({ status: "cancelled", next: "This pick was replaced by a newer one. Use the newest pickId, or ask the user in chat." })] };
         }

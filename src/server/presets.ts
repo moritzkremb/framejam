@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { PresetStyle, PresetSummary } from "../shared/types.ts";
+import { safeJoin } from "./files.ts";
 import { builtinPresetsDir, PREVIEW_BASE_URL } from "./paths.ts";
+import type { PresetCatalog } from "./store.ts";
 
 export interface PresetFilter {
   mood?: string;
@@ -19,7 +21,7 @@ export interface LoadedPreset {
 const TEXT_EXTENSIONS = new Set([".html", ".css", ".js", ".json", ".md", ".txt", ".svg"]);
 const MAX_SOURCE_BYTES = 200_000;
 
-export class PresetLibrary {
+export class PresetLibrary implements PresetCatalog {
   constructor(private readonly dirs: { dir: string; builtin: boolean }[]) {}
 
   static forStore(userPresetsDir: string) {
@@ -85,6 +87,19 @@ export class PresetLibrary {
     };
   }
 
+  templateDir(p: LoadedPreset): string {
+    return path.join(p.dir, "composition");
+  }
+
+  previewFile(p: LoadedPreset): string | undefined {
+    const file = path.join(p.dir, "preview.mp4");
+    return fs.existsSync(file) ? file : undefined;
+  }
+
+  file(p: LoadedPreset, rel: string): string | undefined {
+    return safeJoin(p.dir, rel);
+  }
+
   /** Text files of the example composition, as paths relative to its folder. */
   templateFiles(p: LoadedPreset): string[] {
     return this.templateSource(p).map((f) => f.path);
@@ -92,7 +107,7 @@ export class PresetLibrary {
 
   /** Source of the example composition: a reference for how the look's techniques are built. */
   templateSource(p: LoadedPreset): { path: string; content: string }[] {
-    const root = path.join(p.dir, "composition");
+    const root = this.templateDir(p);
     const out: { path: string; content: string }[] = [];
     let budget = MAX_SOURCE_BYTES;
     const walk = (dir: string) => {

@@ -2,7 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { validatePlaybook } from "../shared/playbooks.ts";
 import type { Playbook, PlaybookSummary } from "../shared/types.ts";
+import { safeJoin } from "./files.ts";
 import { builtinPlaybooksDir, PLAYBOOK_PREVIEW_BASE_URL } from "./paths.ts";
+import type { PlaybookCatalog } from "./store.ts";
 
 export interface LoadedPlaybook {
   playbook: Playbook;
@@ -38,7 +40,7 @@ function previewShape(poster: string, format: Playbook["format"]): PlaybookSumma
   return format === "9:16" ? "tall" : format === "1:1" ? "square" : "wide";
 }
 
-export class PlaybookLibrary {
+export class PlaybookLibrary implements PlaybookCatalog {
   constructor(private readonly dirs: { dir: string; builtin: boolean }[]) {}
 
   static forStore(userPlaybooksDir: string) {
@@ -107,6 +109,10 @@ export class PlaybookLibrary {
         return { ...x, previewUrl: previewUrl(`${dir}/preview.mp4`), posterUrl: posterUrl(`${dir}/poster.jpg`) };
       }),
     };
+  }
+
+  file(p: LoadedPlaybook, rel: string): string | undefined {
+    return safeJoin(p.dir, rel);
   }
 
   skillText(p: LoadedPlaybook): string {
