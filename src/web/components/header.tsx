@@ -29,6 +29,7 @@ const NAV = [
   { to: "/playbooks", label: "Playbooks", end: false },
   { to: "/styles", label: "Styles", end: false },
   { to: "/", label: "Projects", end: true },
+  { to: "/memory", label: "Memory", end: false },
 ];
 
 /** Shown only while an agent waits for the user to pick a playbook and style for a video. */

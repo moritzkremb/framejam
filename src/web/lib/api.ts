@@ -1,6 +1,6 @@
-import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../../core/types";
+import type { AgentInfo, Memory, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../../core/types";
 
-export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick };
+export type { AgentInfo, Memory, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick };
 
 export interface ReviewListItem {
   id: string;
@@ -95,6 +95,9 @@ export const api = {
   dismissPick: (id: string) => request<VideoPick>(`/api/picks/${id}/dismiss`, { method: "POST" }),
   sendPick: (id: string, body: { playbookId?: string | null; styleId?: string | null }) =>
     request<VideoPick>(`/api/picks/${id}`, { method: "POST", body: JSON.stringify(body) }),
+  memory: () => request<{ memories: Memory[]; projects: Record<string, string> }>("/api/memory"),
+  updateMemory: (id: string, text: string) => request<Memory>(`/api/memory/${id}`, { method: "PATCH", body: JSON.stringify({ text }) }),
+  forget: (id: string) => request<Memory>(`/api/memory/${id}`, { method: "DELETE" }),
 };
 
 export function videoUrl(reviewId: string, version: number) {

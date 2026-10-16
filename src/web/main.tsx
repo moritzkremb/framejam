@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
+import { MemoryPage } from "@/pages/memory-page";
 import { NotFoundPage } from "@/pages/not-found-page";
 import { PickPage } from "@/pages/pick-page";
 import { PlaybookDetailPage } from "@/pages/playbook-detail-page";
@@ -43,6 +44,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/styles/:id" element={<StyleDetailPage />} />
         <Route path="/playbooks" element={<PlaybooksPage />} />
         <Route path="/playbooks/:id" element={<PlaybookDetailPage />} />
+        <Route path="/memory" element={<MemoryPage />} />
         <Route path="/pick/:id" element={<PickPage />} />
         <Route path="/review/:id" element={<ReviewPage />} />
         <Route path="/reviews" element={<Navigate to="/" replace />} />

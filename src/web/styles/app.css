@@ -444,3 +444,7 @@ a { color: inherit; }
 .fc-pstrip img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .fc-pstrip .n { position: absolute; left: 4px; bottom: 4px; padding: 2px 5px; border-radius: 6px; background: var(--overlay); color: var(--on-video); font: 600 10px/1 var(--font-mono); }
 .fc-pstrip .cc { top: 3px; right: 3px; min-width: 16px; height: 16px; font-size: 9px; }
+
+/* Memory page: one memory per row, no number column */
+.fc-memory .fc-item { grid-template-columns: 1fr auto; cursor: default; }
+.fc-memory .fc-item .ctx a { color: inherit; }
