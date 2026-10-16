@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { FeedbackDock } from "@/components/review/dock";
 import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
 import type { ReviewState } from "@/components/review/use-review";
-import { api, panelUrl, type ReviewComment, type StoryboardPanel } from "@/lib/api";
+import type { ReviewComment, StoryboardPanel } from "@/lib/api";
 import { drawPin } from "@/lib/pin";
 import { cn, FINISH_KEYS, SHIFT_KEY } from "@/lib/utils";
 
@@ -95,7 +95,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
   const review = r.review!;
   const version = r.version!;
   const latest = r.latest!;
-  const { isOpen, load } = r;
+  const { data, isOpen, load } = r;
   const panels: StoryboardPanel[] = version.panels ?? [];
   const [view, setView] = useState<View>("board");
   const [current, setCurrent] = useState(1);
@@ -176,7 +176,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
     if (!text.trim() || adding) return;
     setAdding(true);
     try {
-      const c = await api.addComment(review.id, {
+      const c = await data.addComment(review.id, {
         version: version.number,
         time: 0,
         panel: whole ? undefined : panel,
@@ -341,7 +341,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
             <li key={p.image || n}>
               <button type="button" className="fc-bcard" data-testid="storyboard-panel" onClick={() => openPanel(n)}>
                 <span className="img">
-                  <img src={panelUrl(review.id, version.number, n)} alt={p.title ?? `Panel ${n}`} loading="lazy" />
+                  <img src={data.panelUrl(review.id, version.number, n)} alt={p.title ?? `Panel ${n}`} loading="lazy" />
                   <span className="pins">
                     <PanelPins comments={list} indexOf={indexOf} selectedId={selectedId} onPinClick={selectById} />
                   </span>
@@ -372,7 +372,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
               key={`${version.number}-${panel}`}
               ref={imgRef}
               className="fc-media fc-panel-img"
-              src={panelUrl(review.id, version.number, panel)}
+              src={data.panelUrl(review.id, version.number, panel)}
               alt={shown?.title ?? `Panel ${panel}`}
               onLoad={(e) => setNative({ width: e.currentTarget.naturalWidth || 16, height: e.currentTarget.naturalHeight || 9 })}
             />
@@ -427,7 +427,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
               aria-current={n === panel}
               onClick={() => openPanel(n)}
             >
-              <img src={panelUrl(review.id, version.number, n)} alt="" loading="lazy" />
+              <img src={data.panelUrl(review.id, version.number, n)} alt="" loading="lazy" />
               <span className="n">{n}</span>
               {count > 0 && <span className={cn("cc", isOpen ? "draft" : "sent")}>{count}</span>}
             </button>
