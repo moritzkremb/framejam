@@ -24,6 +24,9 @@ The core of the app, and what every change should be judged against:
  the look; playbooks set how it's made. The user names one, or picks on a page (`/framejam playbook` → `open_picker`,
  then `wait_for_pick`). Each playbook is an agent skill
  folder plus a `playbook.json` with a creator, so outside creators can submit their own later.
+- **Edit memory.** When a comment is about taste rather than one video ("hard cuts only"), the agent saves it with
+ `remember`, for the user or a client (`~/.framejam/memory.json`, rules in `src/core/memory.ts`). `get_memory` and
+ `open_review` hand it back as defaults; the user's request always wins. The Memory page lists, edits and forgets them.
 - **Any video tool.** FrameJam always reviews the rendered file. It doesn't care how the video was made.
 
 **Styles vs playbooks.** A playbook is what you're making and how (inputs, steps, tools, length, story arc,
@@ -108,8 +111,8 @@ it. The only step the user has to do is `npm publish`, because it needs their 2F
  through a `ReviewDataSource` (`src/web/lib/data-source.ts`), never `/api` directly; `localDataSource` is the local
  server. `tests/web/` renders them with a fake one.
 - `skills/framejam/SKILL.md`: the agent skill. `.cursor/rules/framejam.mdc` is generated from it.
-- `playbooks/`: the built-in playbooks, one folder each: `playbook.json` (schema in `src/shared/types.ts`, checked by
- `validatePlaybook` in `src/shared/playbooks.ts`), `SKILL.md` (the method), optional `references/`, `scripts/`,
+- `playbooks/`: the built-in playbooks, one folder each: `playbook.json` (schema in `src/core/types.ts`, checked by
+ `validatePlaybook` in `src/core/playbooks.ts`), `SKILL.md` (the method), optional `references/`, `scripts/`,
  `engine/` or `template/`, and `poster.jpg`. Like styles, their `preview.mp4` lives only on the website
  (`../framejam-site/public/playbooks/<id>/`). Users' own playbooks go in `~/.framejam/playbooks/`.
 - `presets/`: the 30 built-in styles. Their `preview.mp4` files aren't in the npm package; the app streams them from
@@ -174,7 +177,7 @@ Push to `main` only after the npm release is live if the README or website alrea
 - **Styles:** adding or removing a built-in preset also means adding or removing its folder in
  `../framejam-site/public/presets` (preview.mp4, poster.jpg and style.json) and updating the counts and lists in `README.md`.
 - **Playbooks:** the same for `../framejam-site/public/playbooks` (preview.mp4, poster.jpg and an identical
- playbook.json, plus `previews/<id>/preview.mp4` and `poster.jpg` for each featured style and example) and the list in `README.md`. The display helpers in `src/shared/playbooks.ts` (needs groups, cost badge,
+ playbook.json, plus `previews/<id>/preview.mp4` and `poster.jpg` for each featured style and example) and the list in `README.md`. The display helpers in `src/core/playbooks.ts` (needs groups, cost badge,
  styles sentence, copy prompt) have a copy in `../framejam-site/lib/playbooks.ts`; change both together.
 
 ## Writing

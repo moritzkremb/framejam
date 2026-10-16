@@ -4,8 +4,8 @@ FrameJam helps you make videos with your coding agent. Pick a style or a playboo
 any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg or screen recordings), then review the render: click a moment
 or a spot in the frame, say what to change, press **Finish review**, and the agent makes the next version.
 
-Everything runs on your computer. There's no account, and your videos and comments are never uploaded; projects are
-saved in `~/.framejam`.
+Everything runs on your computer. There's no account, and your videos and comments are never uploaded; projects, and
+what your agent learns about your taste, are saved in `~/.framejam`.
 
 What leaves your computer, and only to framejam.ai or npm:
 

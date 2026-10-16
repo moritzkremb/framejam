@@ -40,6 +40,9 @@ from the render, with your pin drawn where you clicked.
 **Go round by round.** Each new version from the agent is a fresh round. Old versions keep their comments, so
 you can always see what changed and why.
 
+**Remembers your taste.** When a comment is about how you like things rather than one video ("hard cuts only"), the
+agent saves it, for you or for a client, and uses it as a default next time. See, edit or forget it on the Memory page.
+
 **Runs on your machine.** One local Node process, no account, no upload. Your projects are plain JSON files in
 `~/.framejam`. Your videos and comments never leave your machine. The Styles and Playbooks pages stream their example
 videos from framejam.ai, and the **Feedback** button sends the note you write; nothing else goes out.
@@ -402,7 +405,7 @@ for v2 and v1 still shows what it was.
 
 | Tool | What it does |
 | --- | --- |
-| `open_review({ title?, videoPath?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again with the same title adds v2, v3, and so on. |
+| `open_review({ title?, videoPath?, panels?, panelsDir?, reviewId?, note?, client? })` | Opens a review and returns `{ reviewId, url, version }`, plus the user's memory (and the client's, with `client`) when there is some. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again with the same title adds v2, v3, and so on. |
 | `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again, up to 12 times in a row, then stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. |
 | `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
 | `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
@@ -414,6 +417,9 @@ for v2 and v1 still shows what it was.
 | `get_playbook({ id, styleId? })` | Returns `playbook.json`, the full `SKILL.md` method, the playbook's local folder and file list, how a style combines with it, and the styles made for it (with their ready settings when `styleId` is one of them). |
 | `open_picker({ kinds?, title? })` | Opens a page where the user picks a playbook and/or style for this video, or none. Returns `{ pickId, url }`. |
 | `wait_for_pick({ pickId })` | Waits for the user's pick and returns the playbook and style (or `null` for none). Returns `pending` after about 50s; call it again. |
+| `get_memory({ client? })` | Returns what the user likes, learned from their comments (at most 20, confident first), plus the client's when named, and the clients that have memories. |
+| `remember({ text, scope?, client?, reviewId?, commentIds?, userAsked?, id? })` | Saves a preference in one sentence, for the user (`me`) or a client, with the comments it came from. Repeating it adds evidence; it's a hint until a second project repeats it or the user asked for it. Saved in `~/.framejam/memory.json`. |
+| `forget({ id })` | Deletes a memory. |
 | `get_selected_preset()`, `get_selected_playbook()` | Kept for older skills; they point the agent to `open_picker`. |
 
 Feedback comes back three ways: as JSON (`comments[]` with `at`, `time`, `endTime`, `position`, `thumbnailPath`), as a
