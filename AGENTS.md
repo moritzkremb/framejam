@@ -98,7 +98,9 @@ it. The only step the user has to do is `npm publish`, because it needs their 2F
  `.claude-plugin/marketplace.json` (Claude) and `.agents/plugins/marketplace.json` (ChatGPT). Cursor also loads plugins installed in Claude
  Code, so it only gets its own copy (`~/.cursor/plugins/local/framejam`, from the npm package) when Claude Code doesn't
  have FrameJam; otherwise Cursor would list it twice.
-- `src/server/mcp.ts`: MCP tools. `src/server/store.ts`: JSON store in `~/.framejam`. `src/server/app.ts`: HTTP routes.
+- `src/server/mcp.ts`: MCP tools. `src/server/app.ts`: HTTP routes. Both only use the `Store` interface in
+ `src/server/store.ts` (reviews, comments, picks, state, presets, playbooks); `src/server/json-store.ts` is its JSON
+ implementation in `~/.framejam`. Any new store must pass the contract suite in `tests/store-contract.ts`.
 - `src/web/`: the UI. `src/web/components/setup-steps.tsx` has the setup prompt.
 - `skills/framejam/SKILL.md`: the agent skill. `.cursor/rules/framejam.mdc` is generated from it.
 - `playbooks/`: the built-in playbooks, one folder each: `playbook.json` (schema in `src/shared/types.ts`, checked by
