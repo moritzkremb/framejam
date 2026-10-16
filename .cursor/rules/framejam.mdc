@@ -6,7 +6,7 @@ alwaysApply: false
 
 # FrameJam: styles, playbooks + one-click video and storyboard review
 
-Skill version: 4
+Skill version: 5
 
 FrameJam runs next to your chat at http://localhost:2400. It gives you three things the chat is bad at:
 **choosing a style** (a structured `style.json` that describes a look, plus an example video), **following a playbook**
@@ -66,7 +66,7 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
      to their pages.
    - A `null` playbook or style means the user chose none. Pass `playbookId` and `styleId` to `open_review` so later
      versions keep them; existing projects return them from `get_feedback` and `wait_for_feedback`.
-1. **Follow the playbook and the style.**
+1. **Follow the playbook and the style**, with the user's memory as defaults (see Memory below).
    - **Playbook:** its `skill` is a recipe for this kind of video, with defaults the user's request overrides. Use the
      loop below for every render. Read files in `playbookDir` when the method points to them, and copy its scripts, engine or
      template into the project before using them; never edit `playbookDir`. `stylesSentence` says how the style
@@ -107,6 +107,7 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    - The frame image for a pinned comment has the pin drawn on it: look at what's under the pin, then find that element
      in your source at that time.
    - `wholeVideo: true` means a global note (pacing, colour, music, and so on).
+   - If a comment is a general preference rather than a fix for this video, `remember` it (see Memory below).
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
    `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`).
    The `note` is a one-line summary of what you changed; the user sees it when the new version arrives and in the version menu.
@@ -115,6 +116,22 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    Each version is one round: the user's "Finish review" locked the previous version, and the new one starts with no
    comments. If you couldn't address a comment, say why in chat and in the note.
 8. Go back to step 5.
+
+## Memory
+
+FrameJam remembers what the user likes, learned from their comments, so first drafts get closer over time.
+
+- **Read it:** when you start a new video, call `get_memory()` (pass `client` when the video is for a client;
+  `clients` lists the names it knows). `open_review` returns the same memories. Use them quietly as defaults: the
+  user's current request beats memory, memory beats style and playbook defaults, and `tentative` memories are only
+  hints. Don't ask the user about them.
+- **Write it:** after a round, if a comment holds beyond this video ("no fades, hard cuts only", "Acme: logo bottom
+  right"), call `remember({ text, scope, client, reviewId, commentIds })` with one plain sentence. Fixes for this video
+  ("move the logo left") are not memories. Scope `me` is the user's own taste; `client` needs the client's name. When
+  the user says "remember that…", pass `userAsked: true`. Tell the user once, in one line: "I'll remember: hard cuts
+  only."
+- **Forget it:** if the user says "forget that" or a memory is wrong, call `forget({ id })`. They can also edit and
+  forget memories on FrameJam's Memory page.
 
 ## Hyperframes
 
