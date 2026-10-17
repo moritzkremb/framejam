@@ -11,7 +11,8 @@ const template = path.join(pb, "template");
 
 const has = (cmd: string, args: string[]) => spawnSync(cmd, args, { encoding: "utf8" }).status === 0;
 const havePython = has("python3", ["-c", "import numpy"]);
-const haveFfmpeg = has("ffmpeg", ["-hide_banner", "-filters"]) && spawnSync("ffmpeg", ["-hide_banner", "-filters"], { encoding: "utf8" }).stdout.includes(" ass ");
+const haveFfmpeg = has("ffmpeg", ["-hide_banner", "-filters"]);
+const havePillow = has("python3", ["-c", "import PIL.ImageFont"]);
 
 type Plan = Record<string, any>;
 
@@ -153,7 +154,7 @@ describe.skipIf(!havePython)("anchor-overlay: make_captions.py", () => {
   });
 });
 
-describe.skipIf(!havePython || !haveFfmpeg)("anchor-overlay: render.py and check_render.py", () => {
+describe.skipIf(!havePython || !havePillow || !haveFfmpeg)("anchor-overlay: render.py and check_render.py", () => {
   const ff = (args: string[]) => {
     const r = spawnSync("ffmpeg", ["-v", "error", "-y", ...args], { encoding: "utf8" });
     expect(r.status, r.stderr).toBe(0);
@@ -216,14 +217,33 @@ describe.skipIf(!havePython || !haveFfmpeg)("anchor-overlay: render.py and check
     expect(c.out).toMatch(/black frames/);
   });
 
-  it("renders text with libass using the bundled fonts", () => {
+  it("draws the text with the bundled fonts, on its frames only, with no libass or drawtext", () => {
     const { dir, plan } = tiny({ kind: "thumb" });
+    const noText = py("render.py", ["--draft", "--out", "plain.mp4"], dir);
+    expect(noText.code, noText.out).toBe(0);
+
     plan.big = [{ text: "five", at: 0.2, end: 0.9 }];
     plan.labels = [{ text: "1. first", at: 2.2, end: 3.5 }];
     fs.writeFileSync(path.join(dir, "edit.json"), JSON.stringify(plan));
     fs.writeFileSync(path.join(dir, "captions.json"), JSON.stringify([{ start: 1.2, end: 1.9, text: "Hello", words: [{ text: "Hello", orig: "Hello", start: 1.2 }] }]));
     const r = py("render.py", ["--draft", "--out", "t.mp4"], dir);
     expect(r.code, r.out).toBe(0);
-    expect(r.out).not.toMatch(/fontselect|failed/i);
+    expect(r.out).not.toMatch(/fontselect|failed|No such filter/i);
+
+    const band = (file: string, t: number, crop: string) => {
+      const f = spawnSync("ffmpeg", ["-v", "error", "-ss", String(t), "-i", path.join(dir, file), "-frames:v", "1", "-vf", `crop=${crop},format=gray`, "-f", "rawvideo", "-"], { maxBuffer: 1 << 26 });
+      expect(f.status, String(f.stderr)).toBe(0);
+      return f.stdout as Buffer;
+    };
+    const diff = (a: Buffer, b: Buffer) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0) / a.length;
+    const chest = "540:90:0:570";
+    const top = "540:60:0:170";
+    const mid = "540:120:0:330";
+    expect(diff(band("t.mp4", 1.5, chest), band("plain.mp4", 1.5, chest))).toBeGreaterThan(3);
+    expect(diff(band("t.mp4", 2.05, chest), band("plain.mp4", 2.05, chest))).toBeLessThan(1);
+    expect(diff(band("t.mp4", 0.5, mid), band("plain.mp4", 0.5, mid))).toBeGreaterThan(3);
+    expect(diff(band("t.mp4", 1.05, mid), band("plain.mp4", 1.05, mid))).toBeLessThan(1);
+    expect(diff(band("t.mp4", 2.8, top), band("plain.mp4", 2.8, top))).toBeGreaterThan(3);
+    expect(diff(band("t.mp4", 3.7, top), band("plain.mp4", 3.7, top))).toBeLessThan(1);
   });
 });

@@ -8,8 +8,9 @@
                                                              # a first look straight from a raw clip (see below)
 
 The anchor (aroll) fills the frame all the time; overlays, big words, labels, asides and captions are drawn over it
-with hard cuts, and punch-ins re-frame the anchor around aroll.origin. Text is drawn by ffmpeg's libass from an .ass
-file made here. Needs ffmpeg with libass (standard Homebrew and Ubuntu builds have it).
+with hard cuts, and punch-ins re-frame the anchor around aroll.origin. Text is drawn by Pillow into transparent PNGs
+(textlayer.py) that ffmpeg overlays as one image sequence, so any ffmpeg works: no libass, no drawtext, no freetype.
+Needs Python 3 with NumPy and Pillow, and ffmpeg.
 
 --quick skips the cut: it takes the raw window as it is, transcribes it (--words, or local whisper through
 `npx hyperframes transcribe`), puts a punch-in on sentence starts, and gives every long content word a plain grey
@@ -21,26 +22,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import anchorlib as L  # noqa: E402
+import textlayer as TL  # noqa: E402
 
 STOP = set("""about above after again also always because before being between could every first found great having
 here himself itself just know like little make might more most much never other over really right shall should since
 still such than that their them then there these they thing things think those through today under until very want
 were what when where which while whole will with would your yours""".split())
-
-
-def ass_color(hex_):
-    h = hex_.lstrip("#")
-    r, g, b = h[0:2], h[2:4], h[4:6]
-    return f"&H00{b}{g}{r}".upper()
-
-
-def ass_time(t):
-    cs = int(round(max(0, t) * 100))
-    return f"{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}"
-
-
-def ass_text(s):
-    return str(s).replace("\\", "").replace("{", "(").replace("}", ")").replace("\n", "\\N")
 
 
 def subtract(span, cuts):
@@ -60,57 +47,54 @@ def subtract(span, cuts):
     return [(a, b) for a, b in pieces if b - a >= 0.1]
 
 
-def make_ass(plan, caps, path):
+def text_events(plan, caps):
+    """Every text on screen as {start, end, layer, kind, text, x, y, anchor, size, theme}; higher layers draw on top."""
     t = plan["theme"]
     m = L.Measurer(plan)
-    sw = t["captionStrokeWidth"]
-    styles = [
-        ("Cap", t["captionFont"], t["captionSize"], t["captionColor"], t["captionStroke"], sw),
-        ("Big", t["bigFont"], t["bigSize"], t.get("bigColor", "#FFFFFF"), t.get("bigStroke", "#000000"), t.get("bigStrokeWidth", 6)),
-        ("Label", t["labelFont"], t["labelSize"], t.get("labelColor", "#FFFFFF"), t.get("labelStroke", "#000000"), t.get("labelStrokeWidth", 4)),
-        ("Aside", t["asideFont"], t["asideSize"], t.get("asideColor", "#FFFFFF"), t.get("asideStroke", "#000000"), t.get("asideStrokeWidth", 3)),
-    ]
-    out = [f"[Script Info]\nScriptType: v4.00+\nPlayResX: {L.W}\nPlayResY: {L.H}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n",
-           "[V4+ Styles]",
-           "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding"]
-    for name, font, size, col, stroke, w in styles:
-        out.append(f"Style: {name},{font},{size},{ass_color(col)},{ass_color(col)},{ass_color(stroke)},&H00000000,0,0,0,0,100,100,0,0,1,{w},0,5,0,0,0,1")
-    out += ["", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
     ev = []
+
+    def add(start, end, layer, kind, text, x, y, size, anchor="c"):
+        ev.append({"start": float(start), "end": float(end), "layer": layer, "kind": kind, "text": text,
+                   "x": x, "y": y, "size": size, "anchor": anchor, "theme": t})
+
     big_spans = [(float(b["at"]), float(b["end"])) for b in plan["big"]]
     for c in caps or []:
         for a, b in subtract((c["start"], c["end"]), big_spans):
-            txt = L.style_text(t, "caption", c["text"])
-            ev.append((a, 0, f"Dialogue: 0,{ass_time(a)},{ass_time(b)},Cap,,0,0,0,,{{\\an5\\pos({L.W // 2},{t['captionY']})}}{ass_text(txt)}"))
+            add(a, b, 0, "caption", L.style_text(t, "caption", c["text"]), L.W // 2, t["captionY"], t["captionSize"])
     for b in plan["big"]:
         r, size = L.text_rect(plan, m, "big", b["text"], size=t["bigSize"], width_cap=t["bigMaxWidth"])
-        txt = L.style_text(t, "big", b["text"])
-        ev.append((float(b["at"]), 1, f"Dialogue: 1,{ass_time(b['at'])},{ass_time(b['end'])},Big,,0,0,0,,{{\\an5\\pos({L.W // 2},{t['bigY']})\\fs{int(size)}}}{ass_text(txt)}"))
+        add(b["at"], b["end"], 1, "big", L.style_text(t, "big", b["text"]), L.W // 2, t["bigY"], int(size))
     rects = [(float(o["at"]), float(o["end"]), r) for o in plan["overlays"] for r in L.overlay_rects(plan, o)]
     for l in plan["labels"]:
         r, size = L.text_rect(plan, m, "label", l["text"], width_cap=960)
         cuts = [(a, b) for a, b, rr in rects if L.rects_hit(r, rr, pad=8)]
         txt = L.style_text(t, "label", l["text"])
         for a, b in subtract((float(l["at"]), float(l["end"])), cuts):
-            ev.append((a, 2, f"Dialogue: 2,{ass_time(a)},{ass_time(b)},Label,,0,0,0,,{{\\an5\\pos({L.W // 2},{t['labelY']})\\fs{int(size)}}}{ass_text(txt)}"))
+            add(a, b, 2, "label", txt, L.W // 2, t["labelY"], int(size))
     for a in plan["asides"]:
-        ev.append((float(a["at"]), 3, f"Dialogue: 3,{ass_time(a['at'])},{ass_time(a['end'])},Aside,,0,0,0,,{{\\an5\\pos({L.W // 2},{t['asideY']})}}{ass_text(a['text'])}"))
+        add(a["at"], a["end"], 3, "aside", a["text"], L.W // 2, t["asideY"], t["asideSize"])
     for o in plan["overlays"]:
         if o.get("aside"):
             x, y, w, h = L.overlay_rects(plan, o)[0]
-            ev.append((float(o["at"]), 3, f"Dialogue: 3,{ass_time(o['at'])},{ass_time(o['end'])},Aside,,0,0,0,,{{\\an1\\pos({x},{y - 12})}}{ass_text(o['aside'])}"))
-    out += [e for _, _, e in sorted(ev, key=lambda e: (e[0], e[1]))]
-    Path(path).write_text("\n".join(out) + "\n", encoding="utf-8")
+            add(o["at"], o["end"], 3, "aside", o["aside"], x, y - 12, t["asideSize"], anchor="bl")
+    return ev
 
 
 def make_placeholder(plan, o, tmp):
+    from PIL import Image, ImageDraw
+    TL.need_pillow()
     w, h = (o.get("size") or [800, 600])[:2]
-    word = L.style_text({"x": "upper"}, "x", str(o.get("word") or o.get("id") or "picture")).replace("'", "").replace(":", " ")
-    font = plan["_root"] / plan["theme"]["captionFontFile"]
+    word = L.style_text({"x": "upper"}, "x", str(o.get("word") or o.get("id") or "picture"))
+    fonts = TL.Fonts(plan["_root"])
+    file = plan["theme"]["captionFontFile"]
+    img = Image.new("RGB", (w, h), (0x4A, 0x4A, 0x4A))
+    d = ImageDraw.Draw(img)
+    big, _ = fonts.get(file, max(24, int(w / max(6, len(word)) * 1.4)))
+    small, _ = fonts.get(file, 28)
+    d.text((w / 2, h / 2), word, font=big, fill=(255, 255, 255), anchor="mm")
+    d.text((24, 20), "PLACEHOLDER", font=small, fill=(0xDD, 0xDD, 0xDD), anchor="la")
     out = Path(tmp) / f"placeholder-{o['id']}.png"
-    vf = (f"drawtext=fontfile={font}:text='{word}':fontcolor=white:fontsize={max(24, int(w / max(6, len(word)) * 1.4))}:x=(w-text_w)/2:y=(h-text_h)/2,"
-          f"drawtext=fontfile={font}:text='PLACEHOLDER':fontcolor=0xdddddd:fontsize=28:x=24:y=20")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"color=c=0x4a4a4a:s={w}x{h}", "-vf", vf, "-frames:v", "1", str(out)], check=True)
+    img.save(out)
     return out
 
 
@@ -142,15 +126,11 @@ def build_command(plan, caps, out, draft, tmp):
             last = f"v{k + 1}"
             idx += 1
             k += 1
-    ass = Path(tmp) / "text.ass"
-    make_ass(plan, caps, ass)
-    fonts = Path(tmp) / "fonts"
-    fonts.mkdir(exist_ok=True)
-    for key in ("captionFontFile", "bigFontFile", "labelFontFile", "asideFontFile"):
-        src = plan["_root"] / plan["theme"][key]
-        if src.exists():
-            shutil.copy(src, fonts / src.name)
-    tail = f"[{last}]ass={ass.as_posix()}:fontsdir={fonts.as_posix()}"
+    seq = TL.write_sequence(text_events(plan, caps), plan["duration"], fps, plan["_root"], tmp)
+    cmd += ["-f", "concat", "-safe", "0", "-i", str(seq)]
+    filters.append(f"[{idx}:v]fps={fps},format=rgba,setpts=PTS-STARTPTS[txt]")
+    idx += 1
+    tail = f"[{last}][txt]overlay=0:0:eof_action=pass:format=auto"
     if draft:
         tail += f",scale={L.W // 2}:{L.H // 2}:flags=bilinear"
     filters.append(tail + ",format=yuv420p[vout]")
@@ -167,7 +147,7 @@ def build_command(plan, caps, out, draft, tmp):
     graph = Path(tmp) / "graph.txt"
     graph.write_text(";\n".join(filters + af) + "\n")
     enc = ["-c:v", "libx264", "-preset", "ultrafast", "-crf", "28"] if draft else ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20"]
-    cmd += ["-filter_complex_script", str(graph), "-map", "[vout]", "-map", amap, "-t", L.num(plan["duration"]), "-r", str(fps), *enc,
+    cmd += ["-filter_complex", graph.read_text().strip(), "-map", "[vout]", "-map", amap, "-t", L.num(plan["duration"]), "-r", str(fps), *enc,
             "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(out)]
     return cmd, graph
 
@@ -234,7 +214,7 @@ def main():
     ap.add_argument("--words")
     ap.add_argument("--media")
     ap.add_argument("--print-cmd", action="store_true")
-    ap.add_argument("--keep", action="store_true", help="keep the temporary graph and .ass files")
+    ap.add_argument("--keep", action="store_true", help="keep the temporary graph and text images")
     a = ap.parse_args()
     t0 = time.time()
     tmp = tempfile.mkdtemp(prefix="anchor-render-")

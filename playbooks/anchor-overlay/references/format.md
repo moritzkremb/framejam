@@ -37,9 +37,10 @@ leaves at least 120 px at the top or the bottom. At most two overlays at once.
 | Label | Anton 52 px, all caps, centred at y 400: "1. First thing". Stays up from its item's first word to the next item's first word; hidden while an overlay covers it |
 | Aside | Inter ExtraBold 44 px in parentheses, centred at y 330, or on a card's top-left corner 12 px above it (`aside` on the overlay) |
 
-Caption, big word, label and aside text is drawn by libass from a generated `.ass` file, so fonts must be TrueType or
-OpenType files (`theme.captionFontFile` and the others), and the family name in `theme.captionFont` must match the font
-file's family name.
+Caption, big word, label and aside text is drawn by Pillow (`scripts/textlayer.py`) into transparent PNGs, so fonts must
+be TrueType or OpenType files (`theme.captionFontFile` and the others). A size is the height of the line box (ascent plus
+descent), as in subtitle files, and the stroke is drawn outside the glyphs. `theme.captionFont` and the other family
+names are only labels; the file decides the look.
 
 A different caption taste is a theme change, not a different format: for three-word all-caps captions set
 `"captionCase": "upper"` and `"captionMaxWords": 3` in `theme` and run
@@ -100,10 +101,11 @@ own levels. `music: false` turns it off. Put `turnAt` on the first word of the s
 
 ## The ffmpeg recipe, for another tool
 
-`render.py` builds one `filter_complex` script. In words: scale and crop the anchor to 1080×1920, split off a copy
+`render.py` builds one `filter_complex` graph. In words: scale and crop the anchor to 1080×1920, split off a copy
 per distinct punch-in zoom (`scale` then `crop` around the origin) and overlay each copy with
 `enable='between(t,a,b)+between(t,c,d)'`; overlay every picture at its rectangle with `enable='between(t,at,end)'`
-(looped stills with `-loop 1`, clips with `-ss start -t length`); burn the text with `ass=file.ass:fontsdir=fonts/`;
-mix the voice and the gained music with `amix=normalize=0` and a limiter. Text events use `\an5\pos(x,y)` so a
-caption, big word or label is centred where it should be. Any tool that follows the geometry above gives the same
+(looped stills with `-loop 1`, clips with `-ss start -t length`); draw the text as one transparent full-frame layer
+(`-f concat` over PNGs that change on the frames where a text starts or ends, then `overlay=0:0:eof_action=pass`) so
+it needs no libass or drawtext; mix the voice and the gained music with `amix=normalize=0` and a limiter. Every text
+is centred on its x and y (an aside on a card's corner sits on its left edge). Any tool that follows the geometry above gives the same
 reel.

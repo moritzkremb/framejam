@@ -52,8 +52,8 @@ Work these out from the request and the files. Where nothing is said, use the de
 - **Rights.** Only media the user may use.
 - A request to make the video already allows local renders; don't ask again.
 
-Requirements: Python 3 with NumPy (Pillow is optional: it makes text-width checks exact), and ffmpeg with libass
-(standard Homebrew and Ubuntu builds have both).
+Requirements: Python 3 with NumPy and Pillow (`python3 -m pip install numpy pillow`), and any ffmpeg with libx264 and
+AAC (Homebrew, apt, a static build). The renderer draws text with Pillow, so ffmpeg needs no libass, drawtext or freetype.
 
 ## Setup
 
@@ -155,7 +155,7 @@ python3 scripts/render.py --out renders/draft-01.mp4                # full size
 ```
 
 Everything is one ffmpeg command: the anchor and its punch-in copies, overlays switched on with `enable`, text drawn
-by libass from a generated `.ass` file, voice and music mixed. A 1-minute reel renders in about half a minute on a
+by Pillow into transparent PNGs that ffmpeg overlays as one image sequence, voice and music mixed. A 1-minute reel renders in about half a minute on a
 laptop. `render.py --quick --input source/raw.mp4 --sample 0:15` skips the cut: it transcribes the window, puts a
 punch-in on sentence starts and a grey "PLACEHOLDER" card on every long content word (or your picture, if
 `--media pics/` has one named after the word). It is only for judging rhythm before the real plan exists, and

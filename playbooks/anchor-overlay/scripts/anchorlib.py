@@ -1,5 +1,5 @@
 """Shared geometry, defaults and filter graphs for the anchor-overlay scripts (render.py, check_plan.py,
-check_render.py). Plain Python 3 and ffmpeg; Pillow is used only to measure text when it is installed.
+check_render.py). Python 3 and ffmpeg; Pillow measures text here when it is installed and draws it in render.py (textlayer.py).
 
 Everything numeric here is a default: `edit.json` -> `theme` and `edit.json` -> `checks` override it, and the user's
 request overrides both.
@@ -158,7 +158,7 @@ class Measurer:
         return self._fonts[key]
 
     def width(self, text, file, size, stroke=0):
-        """ASS font size `size` is the height of the line box, so scale the em to match it."""
+        """`size` is the height of the line box (as in subtitle files), so scale the em to match it."""
         if self.pil:
             f = self._font(file, size)
             if f is not None:
