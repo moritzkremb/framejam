@@ -1,0 +1,194 @@
+{
+ "duration": 26.61,
+ "fps": 30,
+ "aroll": {
+  "src": "assets/speech.mp4",
+  "eyeY": 720,
+  "origin": [
+   0.5,
+   0.36
+  ]
+ },
+ "theme": {},
+ "checks": {},
+ "punches": [
+  {
+   "at": 3.261,
+   "zoom": 1.12
+  },
+  {
+   "at": 8.268,
+   "zoom": 1.0
+  },
+  {
+   "at": 10.613,
+   "zoom": 1.12
+  },
+  {
+   "at": 13.232,
+   "zoom": 1.0
+  },
+  {
+   "at": 23.886,
+   "zoom": 1.12
+  }
+ ],
+ "overlays": [
+  {
+   "id": "o1",
+   "kind": "card",
+   "word": "timeline",
+   "src": "assets/vis/timeline.png",
+   "size": [
+    800,
+    1000
+   ],
+   "at": 4.243,
+   "end": 5.643
+  },
+  {
+   "id": "o2",
+   "kind": "thumb",
+   "word": "clip",
+   "src": "assets/vis/clip.png",
+   "size": [
+    800,
+    450
+   ],
+   "at": 6.305,
+   "end": 7.305
+  },
+  {
+   "id": "o3",
+   "kind": "card",
+   "word": "thing",
+   "src": "assets/vis/screen.png",
+   "size": [
+    800,
+    1000
+   ],
+   "at": 11.143,
+   "end": 12.493
+  },
+  {
+   "id": "o4",
+   "kind": "thumb",
+   "word": "coffee",
+   "src": "assets/vis/coffee.png",
+   "size": [
+    800,
+    450
+   ],
+   "at": 13.466,
+   "end": 14.348
+  },
+  {
+   "id": "o5",
+   "kind": "thumb",
+   "word": "camera",
+   "src": "assets/vis/camera.png",
+   "size": [
+    800,
+    450
+   ],
+   "at": 14.348,
+   "end": 15.24
+  },
+  {
+   "id": "o6",
+   "kind": "card",
+   "word": "chart",
+   "src": "assets/vis/chart.png",
+   "size": [
+    800,
+    1000
+   ],
+   "at": 15.24,
+   "end": 16.24,
+   "aside": "(numbers go up)"
+  },
+  {
+   "id": "o7",
+   "kind": "thumb",
+   "word": "picture",
+   "src": "assets/vis/picture.png",
+   "size": [
+    800,
+    450
+   ],
+   "at": 17.653,
+   "end": 18.903
+  },
+  {
+   "id": "o8",
+   "kind": "card",
+   "word": "screen",
+   "src": "assets/vis/screen.png",
+   "size": [
+    800,
+    1000
+   ],
+   "at": 20.458,
+   "end": 21.758
+  },
+  {
+   "id": "o9",
+   "kind": "thumb",
+   "word": "reel",
+   "src": "assets/vis/clip.png",
+   "size": [
+    800,
+    450
+   ],
+   "at": 21.742,
+   "end": 22.942
+  }
+ ],
+ "big": [
+  {
+   "text": "slow",
+   "at": 1.895,
+   "end": 2.695
+  },
+  {
+   "text": "faster",
+   "at": 9.321,
+   "end": 10.121
+  },
+  {
+   "text": "alive",
+   "at": 22.961,
+   "end": 23.811
+  },
+  {
+   "text": "format",
+   "at": 25.476,
+   "end": 26.376
+  }
+ ],
+ "labels": [
+  {
+   "text": "1. the slow way",
+   "at": 0.3,
+   "end": 3.161
+  },
+  {
+   "text": "2. the fast way",
+   "at": 8.318,
+   "end": 10.513
+  }
+ ],
+ "asides": [
+  {
+   "text": "(yes, really)",
+   "at": 3.361,
+   "end": 4.193
+  }
+ ],
+ "music": {
+  "src": "assets/music.wav",
+  "turnAt": 8.27,
+  "calmDb": -22,
+  "driveDb": -16
+ }
+}
