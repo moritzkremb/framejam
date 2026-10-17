@@ -16,7 +16,7 @@
   "project": "any",
   "needs": [
     { "name": "Render and check scripts, example plan and fonts", "where": "included" },
-    { "name": "Python 3 with NumPy, and ffmpeg", "where": "computer" },
+    { "name": "Python 3 with NumPy and Pillow, and ffmpeg", "where": "computer" },
     { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
   ],
   "styles": "parts",
