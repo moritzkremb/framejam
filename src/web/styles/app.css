@@ -386,6 +386,8 @@ a { color: inherit; }
 .fc-zoom-bar:active .thumb { cursor: grabbing; }
 .fc-zoom-bar:hover .thumb { background: var(--text-2); }
 .fc-zoom { display: flex; align-items: center; gap: 2px; }
+.fc-rate { min-width: 44px; padding: 0 6px; font: 500 12px/1 var(--font-mono); color: var(--text-2); }
+.fc-rate.on { color: var(--text); }
 .fc-zoom .lvl { min-width: 36px; padding: 0 6px; font: 500 11px/1 var(--font-mono); color: var(--text-2); }
 .fc-hover-time { position: absolute; bottom: calc(100% + 4px); z-index: 4; transform: translateX(-50%); padding: 2px 6px; border-radius: 6px; background: var(--surface-3); color: var(--text); font: 500 11px/14px var(--font-mono); pointer-events: none; white-space: nowrap; }
 .fc-scale { gap: 8px; align-items: center; }

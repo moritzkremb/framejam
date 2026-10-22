@@ -15,8 +15,10 @@ import { localDataSource, type ReviewDataSource } from "@/lib/data-source";
 import { cn, FINISH_KEYS, MOD_KEY, SHIFT_KEY } from "@/lib/utils";
 
 const FPS = 30;
+const RATES = [1, 1.5, 2, 0.5];
 const SHORTCUTS: Shortcut[] = [
   ["Play or pause", ["Space"]],
+  ["Change playback speed", ["S"]],
   ["Previous or next frame", ["←", "→"]],
   ["Jump 1 second", [SHIFT_KEY, "←", "→"]],
   ["Comment at this moment", ["C"]],
@@ -98,6 +100,8 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const [ctrl, setCtrl] = useState<MediaController | null>(null);
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [rate, setRate] = useState(1);
+  const rateRef = useRef(1);
   const [anchor, setAnchor] = useState<Anchor>({ kind: "time" });
   const [whole, setWhole] = useState(false);
   const [text, setText] = useState("");
@@ -127,6 +131,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
         return c;
       });
       if (c && resumeTime.current) c.seek(Math.min(resumeTime.current, c.duration));
+      c?.setRate(rateRef.current);
     },
     [resumeTime],
   );
@@ -171,6 +176,13 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
     if (!ctrl) return;
     if (ctrl.isPlaying()) ctrl.pause();
     else ctrl.play();
+  };
+
+  const cycleRate = () => {
+    const next = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    rateRef.current = next;
+    setRate(next);
+    ctrl?.setRate(next);
   };
 
   const selectComment = (c: ReviewComment, opts: { openSidebar?: boolean } = {}) => {
@@ -245,6 +257,9 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       if (e.key === " " || e.key === "k") {
         e.preventDefault();
         togglePlay();
+      } else if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        cycleRate();
       } else if (e.key === "ArrowLeft" || e.key === ",") {
         e.preventDefault();
         step(e.shiftKey ? -FPS : -1);
@@ -361,6 +376,16 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
                 {formatTime(time)} <span>/ {formatTime(duration)}</span>
               </span>
               <span className="fc-grow" />
+              <button
+                type="button"
+                className={cn("fc-btn ghost sm fc-rate", rate !== 1 && "on")}
+                aria-label={`Playback speed ${rate}×`}
+                title="Playback speed (S)"
+                onClick={cycleRate}
+                disabled={!ctrl}
+              >
+                {rate}×
+              </button>
               <ZoomControls zoom={zoom} time={time} />
               <button type="button" className="fc-btn ghost icon sm round" aria-label="Previous frame" onClick={() => step(-1)}>
                 <ChevronLeft className="fc-i sm" />

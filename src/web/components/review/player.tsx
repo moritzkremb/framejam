@@ -12,6 +12,7 @@ export interface MediaController {
   seek(t: number): void;
   getTime(): number;
   isPlaying(): boolean;
+  setRate(rate: number): void;
   /** The current frame as a JPEG data URL, with a pin drawn at `pin` (normalized) when given. */
   captureFrame(pin?: { x: number; y: number }): string | undefined;
 }
@@ -65,6 +66,9 @@ function videoController(video: HTMLVideoElement): MediaController {
     },
     getTime: () => video.currentTime,
     isPlaying: () => !video.paused && !video.ended,
+    setRate: (rate) => {
+      video.playbackRate = rate;
+    },
     captureFrame: (pin) => {
       try {
         const scale = Math.min(1, 640 / (video.videoWidth || 640));
