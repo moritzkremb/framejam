@@ -375,7 +375,6 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
               <span className="fc-readout">
                 {formatTime(time)} <span>/ {formatTime(duration)}</span>
               </span>
-              <span className="fc-grow" />
               <button
                 type="button"
                 className={cn("fc-btn ghost sm fc-rate", rate !== 1 && "on")}
@@ -386,6 +385,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
               >
                 {rate}×
               </button>
+              <span className="fc-grow" />
               <ZoomControls zoom={zoom} time={time} />
               <button type="button" className="fc-btn ghost icon sm round" aria-label="Previous frame" onClick={() => step(-1)}>
                 <ChevronLeft className="fc-i sm" />
