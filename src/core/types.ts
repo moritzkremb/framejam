@@ -194,6 +194,8 @@ export interface Playbook {
   tagline: string;
   description: string;
   version: string;
+  /** Oldest FrameJam (major.minor.patch) that can use this playbook. Apps older than this skip a downloaded copy. */
+  minAppVersion?: string;
   creator: PlaybookCreator;
   inspiredBy?: { name: string; url?: string }[];
   license?: string;
