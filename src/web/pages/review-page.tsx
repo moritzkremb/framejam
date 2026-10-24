@@ -112,7 +112,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const watchRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
-  const side = useSidebar(width);
+  const side = useSidebar(width, fullscreen);
 
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement) && document.fullscreenElement === watchRef.current);
@@ -173,7 +173,10 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   };
   const toggleFullscreen = () => {
     if (document.fullscreenElement) exitFullscreen();
-    else void watchRef.current?.requestFullscreen().catch(() => {});
+    else {
+      side.openForFullscreen();
+      void watchRef.current?.requestFullscreen().catch(() => {});
+    }
   };
 
   const focusBox = () => requestAnimationFrame(() => boxRef.current?.focus());

@@ -23,12 +23,15 @@ function readCollapsed() {
 }
 
 /** Open/closed state of the comments sidebar: remembered as a column, transient as an overlay. */
-export function useSidebar(width: number) {
+/** In full screen the sidebar has its own open state: it starts open and isn't saved. */
+export function useSidebar(width: number, fullscreen = false) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [overlayOpen, setOverlayOpen] = useState(false);
+  const [fullscreenOpen, setFullscreenOpen] = useState(true);
   const overlay = width > 0 && width < OVERLAY_BELOW;
-  const open = overlay ? overlayOpen : !collapsed;
+  const open = fullscreen ? fullscreenOpen : overlay ? overlayOpen : !collapsed;
   const setOpen = (next: boolean) => {
+    if (fullscreen) return setFullscreenOpen(next);
     if (overlay) return setOverlayOpen(next);
     setCollapsed(!next);
     try {
@@ -37,7 +40,7 @@ export function useSidebar(width: number) {
       /* private mode */
     }
   };
-  return { overlay, open, setOpen };
+  return { overlay, open, setOpen, openForFullscreen: () => setFullscreenOpen(true) };
 }
 
 export type SidebarState = ReturnType<typeof useSidebar>;
