@@ -89,6 +89,9 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    quality bar, if there is one) with whatever you can check yourself, and fix what you find.
 4. **Open the review:** `open_review({ title, videoPath: "<abs>/renders/v1.mp4" })`. Use an absolute path, and the same
    `title` every time so later renders become new versions of this project.
+   **Speech in the video?** If you already have its word timings (captions you burned in, a voiceover with
+   timestamps, a transcription you ran), add `transcriptPath` (an `.srt`, `.vtt` or word-timings JSON such as
+   Whisper's). The user then reads along under the timeline and can comment on words. Don't transcribe only for this.
    Open the returned `url` in the built-in browser (step 0), and **always post it in chat as a clickable markdown link**,
    for example `[Open v1 in FrameJam](http://localhost:2400/review/rev_…)`, so the user can open it from the chat if the
    browser isn't showing it. Then tell them in one line:
@@ -110,8 +113,10 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    - The frame image for a pinned comment has the pin drawn on it: look at what's under the pin, then find that element
      in your source at that time.
    - `wholeVideo: true` means a global note (pacing, colour, music, and so on).
+   - With a transcript, `spoken` quotes the words in a range comment and `spokenAround` those near a moment.
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
-   `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`).
+   `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`), plus a new
+   `transcriptPath` if the timing of the speech changed.
    The `note` is a one-line summary of what you changed; the user sees it when the new version arrives and in the version menu.
    In chat, say the version is ready and **post the returned `url` as a clickable link** again, e.g.
    `[Open v2 in FrameJam](http://localhost:2400/review/rev_…)`, with the same one-line summary.

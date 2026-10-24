@@ -45,6 +45,8 @@ export interface ReviewVersion {
   panels?: StoryboardPanel[];
   /** Folder the panels came from; add_version re-reads it when given nothing new. */
   panelsDir?: string;
+  /** What's said in the video, parsed into timed words and kept as a file inside the review folder. */
+  transcript?: { file: string; sourcePath?: string; words: number };
   note?: string;
   createdAt: string;
   /** Set when the user pressed Send on this version. A sent version is locked: no new or edited comments. */

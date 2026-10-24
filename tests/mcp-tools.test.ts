@@ -137,6 +137,20 @@ describe("wait_for_feedback", () => {
     expect(next.status).toBe("pending");
   });
 
+  it("quotes what was said when the version has a transcript", async () => {
+    const transcriptPath = path.join(fx.root, "v1.srt");
+    fs.writeFileSync(transcriptPath, "1\n00:00:00,000 --> 00:00:02,000\nWelcome to the launch.\n\n2\n00:00:03,000 --> 00:00:04,000\nShip it.\n");
+    const { reviewId } = await open({ transcriptPath });
+    fx.store.addComment(reviewId, { time: 0.1, endTime: 1.9, text: "Say it warmer" });
+    fx.store.addComment(reviewId, { time: 3.5, text: "Too fast" });
+    fx.store.submit(reviewId);
+    const result = await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 });
+    const { comments } = parse(result);
+    expect(comments.find((c: { text: string }) => c.text === "Say it warmer").spoken).toBe("Welcome to the launch.");
+    expect(comments.find((c: { text: string }) => c.text === "Too fast").spokenAround).toBe("Ship it.");
+    expect(result.content[1].text).toContain("  - Spoken in this range: “Welcome to the launch.”");
+  });
+
   it("returns immediately when feedback was sent before the agent started waiting", async () => {
     const { reviewId } = await open();
     fx.store.addComment(reviewId, { time: 0.5, text: "Logo is too small" });

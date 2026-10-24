@@ -44,6 +44,7 @@ export function useSidebar(width: number, fullscreen = false) {
 }
 
 export type SidebarState = ReturnType<typeof useSidebar>;
+export type SidebarTab = "comments" | "transcript";
 
 /** A label and the keys that trigger it, shown one key per chip. */
 export type Shortcut = [label: string, keys: string[]];
@@ -282,6 +283,9 @@ export function ReviewSidebar({
   emptyState,
   label,
   footer,
+  transcript,
+  tab = "comments",
+  onTab,
   onSelect,
 }: {
   r: ReviewState;
@@ -292,21 +296,42 @@ export function ReviewSidebar({
   label?(c: ReviewComment): string;
   /** Pinned under the comment list (the comment box, in full screen). */
   footer?: ReactNode;
+  /** With a transcript the sidebar has two tabs: comments and the transcript. */
+  transcript?: ReactNode;
+  tab?: SidebarTab;
+  onTab?(tab: SidebarTab): void;
   onSelect(c: ReviewComment): void;
 }) {
   if (!side.open) return null;
+  const count = comments.length > 0 && <span className={cn("fc-count", r.isOpen ? "draft" : "sent")}>{comments.length}</span>;
+  const showTranscript = Boolean(transcript) && tab === "transcript";
   return (
-    <aside className={cn("fc-side", side.overlay && "overlay")} aria-label="Comments">
+    <aside className={cn("fc-side", side.overlay && "overlay")} aria-label={showTranscript ? "Transcript" : "Comments"}>
       <div className="fc-side-h">
-        <span className="fc-h3">Comments</span>
-        {comments.length > 0 && <span className={cn("fc-count", r.isOpen ? "draft" : "sent")}>{comments.length}</span>}
+        {transcript ? (
+          <div className="fc-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={!showTranscript} onClick={() => onTab?.("comments")}>
+              Comments {count}
+            </button>
+            <button type="button" role="tab" aria-selected={showTranscript} onClick={() => onTab?.("transcript")}>
+              Transcript
+            </button>
+          </div>
+        ) : (
+          <>
+            <span className="fc-h3">Comments</span>
+            {count}
+          </>
+        )}
         <span className="fc-grow" />
         <button type="button" className="fc-btn ghost icon sm round" aria-label="Hide comments" onClick={() => side.setOpen(false)}>
           {side.overlay ? <X className="fc-i sm" /> : <ChevronRight className="fc-i sm" />}
         </button>
       </div>
       <div className="fc-side-body">
-        {comments.length ? (
+        {showTranscript ? (
+          transcript
+        ) : comments.length ? (
           <CommentList
             comments={comments}
             editable={r.isOpen}

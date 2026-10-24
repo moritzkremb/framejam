@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../core/types.ts";
+import { isTranscriptError, parseTranscript, type Transcript } from "../core/transcript.ts";
 import { safeJoin } from "./files.ts";
 import { dataDir, setupInfo } from "./paths.ts";
 import { PlaybookLibrary } from "./playbooks.ts";
@@ -154,6 +155,7 @@ export class JsonStore implements Store {
    */
   openReview(input: OpenReviewInput): { review: Review; version: ReviewVersion; created: boolean } {
     const media = resolveMedia(input);
+    const transcript = loadTranscript(input.transcriptPath, media);
     const title = (input.title ?? "").trim().toLowerCase();
     const projectKey = media.panelsDir ? `panels:${media.panelsDir}` : `title:${title}`;
     const keyed = Boolean(media.panelsDir || title);
@@ -174,9 +176,11 @@ export class JsonStore implements Store {
         !latest.sentAt;
       if (unchanged && latest) {
         // Re-opening with identical media is idempotent until feedback has been sent on it.
-        return { review: existing, version: latest, created: false };
+        if (!transcript) return { review: existing, version: latest, created: false };
+        const review = this.setTranscript(existing.id, latest.number, transcript.transcript, transcript.sourcePath);
+        return { review, version: review.versions.at(-1)!, created: false };
       }
-      const review = this.addResolvedVersion(existing.id, media, input.note);
+      const review = this.addResolvedVersion(existing.id, media, input.note, transcript);
       if (input.title && input.title !== review.title) {
         review.title = input.title;
         this.save(review);
@@ -187,6 +191,7 @@ export class JsonStore implements Store {
     const id = newId("rev");
     this.snapshotVideo(id, version);
     this.snapshotPanels(id, version);
+    if (transcript) this.writeTranscript(id, version, transcript.transcript, transcript.sourcePath);
     const review: Review = {
       id,
       title: input.title?.trim() || defaultTitle(media),
@@ -219,10 +224,10 @@ export class JsonStore implements Store {
     } else {
       media = resolveMedia(input);
     }
-    return this.addResolvedVersion(reviewId, media, input.note);
+    return this.addResolvedVersion(reviewId, media, input.note, loadTranscript(input.transcriptPath, media));
   }
 
-  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string): Review {
+  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string, transcript?: LoadedTranscript): Review {
     return this.update(reviewId, (review) => {
       const prev = review.versions.at(-1);
       const version: ReviewVersion = {
@@ -233,6 +238,7 @@ export class JsonStore implements Store {
       };
       this.snapshotVideo(reviewId, version);
       this.snapshotPanels(reviewId, version);
+      if (transcript) this.writeTranscript(reviewId, version, transcript.transcript, transcript.sourcePath);
       // Comments belong to the version they were written on. Unsent ones (the agent shipped a new
       // version before the user pressed Send) move forward so they aren't stranded on an old version.
       for (const c of review.comments) {
@@ -280,6 +286,27 @@ export class JsonStore implements Store {
       if (fs.existsSync(snap)) return snap;
     }
     return version.videoPath && fs.existsSync(version.videoPath) ? version.videoPath : undefined;
+  }
+
+  private writeTranscript(reviewId: string, version: ReviewVersion, transcript: Transcript, sourcePath?: string) {
+    const file = `v${version.number}-transcript.json`;
+    writeJsonAtomic(path.join(this.reviewsDir, reviewId, "versions", file), transcript);
+    version.transcript = { file, sourcePath, words: transcript.words.length };
+  }
+
+  transcriptFor(reviewId: string, version: ReviewVersion): Transcript | undefined {
+    if (!version.transcript) return undefined;
+    const file = safeJoin(path.join(this.reviewsDir, reviewId, "versions"), version.transcript.file);
+    return file ? readJson<Transcript>(file) : undefined;
+  }
+
+  setTranscript(reviewId: string, versionNumber: number, transcript: Transcript, sourcePath?: string): Review {
+    return this.update(reviewId, (review) => {
+      const version = review.versions.find((v) => v.number === versionNumber);
+      if (!version) throw new StoreError(`Unknown version ${versionNumber}`, 404);
+      if (version.panels?.length) throw new StoreError("Transcripts are for videos, not storyboards");
+      this.writeTranscript(reviewId, version, transcript, sourcePath);
+    });
   }
 
   private posterPath(reviewId: string, version: number) {
@@ -633,6 +660,20 @@ export class JsonStore implements Store {
 }
 
 type ResolvedMedia = Pick<ReviewVersion, "videoPath" | "panels" | "panelsDir">;
+type LoadedTranscript = { transcript: Transcript; sourcePath: string };
+
+function loadTranscript(transcriptPath: string | undefined, media: ResolvedMedia): LoadedTranscript | undefined {
+  if (!transcriptPath) return undefined;
+  if (media.panels?.length) throw new StoreError("Transcripts are for videos, not storyboards");
+  const file = path.resolve(transcriptPath);
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new StoreError(`transcriptPath does not exist: ${file}`);
+  try {
+    return { transcript: parseTranscript(fs.readFileSync(file, "utf8"), file), sourcePath: file };
+  } catch (err) {
+    if (isTranscriptError(err)) throw new StoreError(`${err.message}: ${file}`);
+    throw err;
+  }
+}
 
 function resolveMedia(input: MediaInput): ResolvedMedia {
   if (input.panels?.length || input.panelsDir) {

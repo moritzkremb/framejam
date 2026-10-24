@@ -204,6 +204,15 @@ export function createApp(ctx: McpContext) {
     return sendFile(file, c.req.raw);
   });
 
+  app.get("/api/reviews/:id/versions/:n/transcript", async (c) => {
+    const id = c.req.param("id");
+    const review = await store.getReview(id);
+    const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
+    const transcript = version && (await store.transcriptFor(id, version));
+    if (!transcript) return c.json({ error: "This version has no transcript" }, 404);
+    return c.json(transcript);
+  });
+
   /**
    * Saves a copy of a version's render where the user picks in the system's save dialog (which asks before
    * replacing a file). With no dialog available it goes to Downloads as "<title> v<n>.mp4", never overwriting.

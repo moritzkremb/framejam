@@ -1,6 +1,7 @@
 import { ZoomIn, ZoomOut } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
-import { formatTime } from "@/lib/api";
+import { formatTime, type TranscriptWord } from "@/lib/api";
+import { wordIndexAt } from "./transcript";
 import { cn, MOD_KEY } from "@/lib/utils";
 
 export interface Marker {
@@ -139,6 +140,8 @@ interface FilmstripProps {
   range: { start: number; end: number } | null;
   selectedId: string | null;
   frameSource?: string;
+  /** Spoken words, shown in a lane under the strip. */
+  words?: TranscriptWord[];
   /** Dragging across the strip picks a range (only while the version is open). */
   canSelectRange: boolean;
   /** The comment box is set to "Whole video". */
@@ -151,6 +154,12 @@ interface FilmstripProps {
 }
 
 const COUNT = 12;
+/** Below this average width (px) per word, the lane asks you to zoom in instead of drawing a solid bar. */
+const MIN_WORD_PX = 3;
+/** Rough width of one character in the lane, to leave out words that wouldn't fit their chip. */
+const WORD_CHAR_PX = 6;
+/** Most words the lane draws at once; it re-renders with the playhead. */
+const MAX_WORDS = 500;
 const MARKER_GAP = 21;
 /** How close (px) the pointer must be to a range edge or the playhead to grab it. */
 const GRAB = 8;
@@ -183,7 +192,7 @@ const ZONE_CURSOR: Record<Zone, string> = { start: "ew-resize", end: "ew-resize"
  * Zoomed in, it shows `zoom.start` to `zoom.start + zoom.span`: horizontal scrolling and the bar underneath pan,
  * and the view follows the playhead.
  */
-export function Filmstrip({ duration, time, zoom, markers, range, selectedId, frameSource, canSelectRange, wholeActive, onSeek, onScrubStart, onRange, onClearRange, onSelect }: FilmstripProps) {
+export function Filmstrip({ duration, time, zoom, markers, range, selectedId, frameSource, words, canSelectRange, wholeActive, onSeek, onScrubStart, onRange, onClearRange, onSelect }: FilmstripProps) {
   const timed = markers.filter((m) => !m.whole);
   const whole = markers.filter((m) => m.whole);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -293,7 +302,8 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
     if (e.button !== 0 || (e.target as HTMLElement).closest("[data-marker]")) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     const onKnob = !!(e.target as HTMLElement).closest("[data-head]");
-    const t = onKnob ? time : timeAt(e.clientX);
+    const wordStart = (e.target as HTMLElement).closest<HTMLElement>("[data-start]")?.dataset.start;
+    const t = onKnob ? time : wordStart !== undefined ? Number(wordStart) : timeAt(e.clientX);
     const zone = zoneAt(t);
     onScrubStart();
     const base = { x0: e.clientX, t0: t, fixed: t, from: null, live: null, moved: false };
@@ -360,8 +370,15 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
 
   const rangeBox = shownRange && clip(shownRange.start, shownRange.end);
 
+  const shownWords: { w: TranscriptWord; i: number }[] = [];
+  words?.forEach((w, i) => {
+    if (w.end >= viewStart && w.start <= viewStart + span) shownWords.push({ w, i });
+  });
+  const wordsFit = shownWords.length <= Math.min(MAX_WORDS, stripWidth / MIN_WORD_PX);
+  const spoken = words ? wordIndexAt(words, time) : -1;
+
   return (
-    <div ref={rootRef} className="fc-timeline" style={{ userSelect: "none" }}>
+    <div ref={rootRef} className={cn("fc-timeline", words?.length && "has-words")} style={{ userSelect: "none" }}>
       <div
         ref={stripRef}
         className={cn("fc-strip", zoomed && "zoomed")}
@@ -387,6 +404,38 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
         )}
         {!shownRange && (wholeActive || whole.some((m) => m.id === selectedId)) && <div className="fc-whole-outline" />}
       </div>
+      {words?.length ? (
+        <div
+          className="fc-words"
+          style={{ cursor: drag ? cursor : "pointer" }}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={() => setDrag(null)}
+        >
+          {wordsFit ? (
+            shownWords.map(({ w, i }) => {
+              const box = clip(w.start, Math.max(w.end, w.start + 0.05));
+              if (!box) return null;
+              const on = i === spoken && time < w.end + 0.3;
+              const fits = ((Math.max(w.end, w.start + 0.05) - w.start) / span) * stripWidth >= w.text.length * WORD_CHAR_PX + 10;
+              return (
+                <span
+                  key={i}
+                  data-start={w.start}
+                  title={w.text}
+                  className={cn("w", on && "on", shownRange && w.end > shownRange.start && w.start < shownRange.end && "sel")}
+                  style={on ? { left: box.style.left, minWidth: box.style.width } : box.style}
+                >
+                  {fits || on ? w.text : null}
+                </span>
+              );
+            })
+          ) : (
+            <span className="fc-words-hint">Zoom in to read the words</span>
+          )}
+        </div>
+      ) : null}
       {zoomed && (
         <div
           ref={barRef}

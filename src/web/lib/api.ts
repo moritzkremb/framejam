@@ -1,6 +1,7 @@
+import type { Transcript, TranscriptWord } from "../../core/transcript";
 import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../../core/types";
 
-export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick };
+export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, Transcript, TranscriptWord, VideoPick };
 
 export interface ReviewListItem {
   id: string;
@@ -82,6 +83,7 @@ export const api = {
   reopen: (id: string) => request<{ wasDelivered: boolean; review: Review }>(`/api/reviews/${id}/reopen`, { method: "POST" }),
   downloadVideo: (id: string, version: number) =>
     request<{ path: string; chosen: boolean } | { cancelled: true }>(`/api/reviews/${id}/versions/${version}/download`, { method: "POST" }),
+  transcript: (id: string, version: number) => request<Transcript>(`/api/reviews/${id}/versions/${version}/transcript`),
   prompt: (id: string, version?: number) => request<string>(`/api/reviews/${id}/prompt${version ? `?version=${version}` : ""}`),
   presets: () => request<{ presets: PresetSummary[] }>("/api/presets"),
   preset: (id: string) =>

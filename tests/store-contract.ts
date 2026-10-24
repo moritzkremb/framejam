@@ -116,6 +116,22 @@ export function storeContract(name: string, create: (dataDir: string) => Store |
         expect(after.styleId).toBeUndefined();
       });
 
+      it("keeps a transcript per version and attaches one to an unchanged version", async () => {
+        const srt = writeVideo("v1.srt", "1\n00:00:00,000 --> 00:00:02,000\nHello there.\n");
+        const video = writeVideo("v1.mp4", "one");
+        const { review, version } = await store.openReview({ title: "Talk", videoPath: video, transcriptPath: srt });
+        expect(version.transcript).toMatchObject({ words: 2, sourcePath: srt });
+        expect((await store.transcriptFor(review.id, version))?.words.map((w) => w.text)).toEqual(["Hello", "there."]);
+        const plain = await store.addVersion(review.id, { videoPath: writeVideo("v2.mp4", "two") });
+        expect(plain.versions[1].transcript).toBeUndefined();
+        const json = writeVideo("v2.json", JSON.stringify([{ text: "Hi", start: 0.5, end: 0.9 }]));
+        const again = await store.openReview({ title: "Talk", videoPath: plain.versions[1].videoPath, transcriptPath: json });
+        expect(again.version).toMatchObject({ number: 2, transcript: { words: 1 } });
+        expect((await store.transcriptFor(review.id, plain.versions[0]))?.words).toHaveLength(2);
+        expect((await thrown(() => store.addVersion(review.id, { videoPath: video, transcriptPath: writeVideo("bad.json", "{}") }))).message).toMatch(/No timed words/);
+        expect((await thrown(() => store.openReview({ panelsDir: writePanels("board", ["01.png"]), transcriptPath: srt }))).message).toMatch(/storyboards/);
+      });
+
       it("saves and serves a poster per version", async () => {
         const { review } = await store.openReview({ title: "Launch", videoPath: writeVideo("v1.mp4", "one") });
         expect(await store.posterFile(review.id, 1)).toBeUndefined();

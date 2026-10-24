@@ -5,6 +5,7 @@ import type { FeedbackBatch, Review, ReviewComment } from "./types.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
 import { costBadge, projectLabel, stylesSentence } from "./playbooks.ts";
 import { LISTEN_HEARTBEAT_MS, PICK_HEARTBEAT_MS, type Store } from "./store.ts";
+import { TRANSCRIPT_FORMATS } from "./transcript.ts";
 
 /** What the MCP tools need: a store and the base URL of the FrameJam UI. */
 export interface CoreContext {
@@ -43,6 +44,7 @@ A style is a look, not a starting video: plan the video from the user's request,
 Loop: build the video with the project's own tool (or whatever fits) -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending", but stop after 12 pending results in a row, about 10 minutes, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
 Pass videoPath (the render) for every tool; the user always reviews the rendered file. Don't convert the project to another tool.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
+If the video has speech and you have its timings (captions, a voiceover script with timestamps, a Whisper run), pass transcriptPath with the render; the user can then comment on what's said.
 Storyboards: open_review with panelsDir (a folder of images, sorted by name) or panels [{ path, title, caption }]. Comments then say which panel ("panel 3") instead of a time. Update the images and call add_version for the next round.
 When talking to the user, call a review a "project" (that's what the FrameJam UI calls it).
 If the user says "apply my FrameJam feedback" (with or without a review id), call get_feedback.${skillLine(ctx)}`;
@@ -67,6 +69,13 @@ const panelsDirSchema = z
   .string()
   .optional()
   .describe("Storyboard: absolute path to a folder of panel images (sorted by file name), or the base folder for relative panel paths");
+
+const transcriptPathSchema = z
+  .string()
+  .optional()
+  .describe(
+    `Videos with speech: absolute path to a transcript of this render, ${TRANSCRIPT_FORMATS}. The user reads it under the timeline and can comment on words; comments then quote what was said. Pass a new one with each render whose timing changed`,
+  );
 
 const DONE_NOTE = " If the comments only say it's done or approved, don't make another version: confirm with the user and stop waiting.";
 const nextStep = (review: Review) =>
@@ -160,6 +169,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
         videoPath: z.string().optional().describe("Absolute path to the rendered video (mp4/webm/mov), from any tool"),
         panels: panelsSchema,
         panelsDir: panelsDirSchema,
+        transcriptPath: transcriptPathSchema,
         reviewId: z.string().optional().describe("Force adding a version to this existing review"),
         note: z.string().optional().describe("What changed in this version"),
         playbookId: z.string().optional().describe("The playbook picked for this video, so later versions and new chats keep it"),
@@ -419,12 +429,13 @@ export function createMcpServer(ctx: CoreContext): McpServer {
         videoPath: z.string().optional().describe("Absolute path to the new render. Required for a video"),
         panels: panelsSchema,
         panelsDir: panelsDirSchema,
+        transcriptPath: transcriptPathSchema,
         note: z.string().optional().describe("What changed"),
       },
     },
-    async ({ reviewId, videoPath, panels, panelsDir, note }) => {
+    async ({ reviewId, videoPath, panels, panelsDir, transcriptPath, note }) => {
       try {
-        const review = await store.addVersion(reviewId, { videoPath, panels, panelsDir, note });
+        const review = await store.addVersion(reviewId, { videoPath, panels, panelsDir, transcriptPath, note });
         const v = review.versions.at(-1)!;
         return {
           content: [json({ reviewId, version: v.number, url: reviewUrl(ctx.baseUrl, reviewId), next: `Tell the user version ${v.number} is ready, with the url as a clickable markdown link (e.g. [Open v${v.number} in FrameJam](url)) and a one-line summary of what changed, then call wait_for_feedback.` })],
