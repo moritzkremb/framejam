@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createPrivateKey, createPublicKey } from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
@@ -376,5 +377,66 @@ describe("throwaway signer", () => {
     expect((await verifyCatalog(folderSource(out), [signer.publicKey])).index.keyId).toBe(signer.keyId);
     await expect(verifyCatalog(folderSource(out), trust)).rejects.toMatchObject({ code: "unknown-key" });
     expect(() => verifyIndex(fs.readFileSync(path.join(out, "index.json")), fs.readFileSync(path.join(out, "index.json.sig"), "utf8"))).toThrow(CatalogError);
+  });
+});
+
+describe("catalog-only playbooks", () => {
+  const playbooksDir = path.join(packageRoot, "playbooks");
+  const manifest = (dir: string) => JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8")) as { files: string[] };
+  const excludedIds = (files: string[]) => files.flatMap((f) => (/^!playbooks\/([^*/]+)$/.exec(f) ? [f.slice("!playbooks/".length)] : []));
+  const packed = (cwd: string): string[] => {
+    const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    return (JSON.parse(out) as { files: { path: string }[] }[])[0]!.files.map((f) => f.path);
+  };
+
+  it("are in the catalog and left out of the package, and every other playbook is packed", () => {
+    const inCatalog = new Set(buildCatalog(input(playbooksDir)).index.items.map((i) => i.id));
+    const excluded = excludedIds(manifest(packageRoot).files);
+    for (const id of excluded) expect(inCatalog.has(id), `${id} is excluded from npm but not in the catalog`).toBe(true);
+    const files = packed(packageRoot);
+    for (const id of excluded) expect(files.filter((f) => f.startsWith(`playbooks/${id}/`)), id).toEqual([]);
+    for (const id of inCatalog) {
+      if (!excluded.includes(id)) expect(files, `${id} is neither bundled nor excluded`).toContain(`playbooks/${id}/playbook.json`);
+    }
+    expect(files.some((f) => f.endsWith("preview.mp4"))).toBe(false);
+  });
+
+  it("only lists playbook folders that exist", () => {
+    for (const id of excludedIds(manifest(packageRoot).files)) expect(fs.existsSync(path.join(playbooksDir, id, "playbook.json")), id).toBe(true);
+  });
+
+  it("are left out by a '!playbooks/<id>' line and nothing else", () => {
+    const dir = tmp();
+    fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name: "x", version: "1.0.0", files: ["playbooks", "!playbooks/*/preview.mp4", "!playbooks/hidden"] }));
+    for (const id of ["hidden", "shown"]) {
+      writePlaybook(dir + "/playbooks", samplePlaybook(id, { minAppVersion: "0.6.0" }), { preview: true });
+    }
+    const files = packed(dir);
+    expect(files).toContain("playbooks/shown/playbook.json");
+    expect(files.filter((f) => f.startsWith("playbooks/hidden/"))).toEqual([]);
+    expect(files.some((f) => f.endsWith("preview.mp4"))).toBe(false);
+    expect(excludedIds(manifest(dir).files)).toEqual(["hidden"]);
+  });
+});
+
+describe("documentation", () => {
+  const text = (file: string) => fs.readFileSync(path.join(packageRoot, file), "utf8");
+
+  it("names every catalog setting where users and the directory reviewer look", () => {
+    for (const name of ["FRAMEJAM_CATALOG_URL", "FRAMEJAM_NO_UPDATE_CHECK"]) {
+      expect(text("README.md"), `README.md ${name}`).toContain(name);
+      expect(text("plugin/README.md"), `plugin/README.md ${name}`).toContain(name);
+    }
+    for (const name of ["FRAMEJAM_CATALOG_URL", "FRAMEJAM_NO_UPDATE_CHECK", "FRAMEJAM_CATALOG_PUBLIC_KEY"]) expect(text("docs/catalog.md")).toContain(name);
+    expect(text("plugin/README.md")).toContain("framejam.ai/catalog/v1");
+  });
+
+  it("walks through the one-time steps with the commands that exist", () => {
+    const guide = text("docs/catalog.md");
+    const scripts = JSON.parse(text("package.json")).scripts as Record<string, string>;
+    for (const command of ["npm run catalog:keygen", "npm run catalog", "--check", "--verify-remote", "--test-key"]) expect(guide).toContain(command);
+    expect(scripts.catalog).toBeTruthy();
+    expect(scripts["catalog:keygen"]).toBeTruthy();
+    expect(text("AGENTS.md")).toContain("docs/catalog.md");
   });
 });
