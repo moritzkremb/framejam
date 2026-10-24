@@ -63,6 +63,9 @@ function useFrames(url: string | undefined, count: number) {
 /** Narrowest window (seconds) the timeline zooms into. */
 const MIN_SPAN = 1;
 
+/** A focused range takes up at most this share of the timeline. */
+const FOCUS_FILL = 0.7;
+
 type View = { zoom: number; start: number };
 
 function fitView(v: View, d: number): View {
@@ -105,7 +108,16 @@ export function useTimelineZoom(duration: number) {
       }),
     [d, update],
   );
-  return { zoom: view.zoom, start: view.start, span: d / view.zoom, maxZoom: Math.max(1, d / MIN_SPAN), zoomAt, panBy, panTo, reveal };
+  /** Centers `a`–`b` (or the moment `a`), zooming out when the span doesn't fit. */
+  const focus = useCallback(
+    (a: number, b = a) =>
+      update((cur) => {
+        const zoom = b - a > (d / cur.zoom) * FOCUS_FILL ? Math.max(1, (d * FOCUS_FILL) / (b - a)) : cur.zoom;
+        return { zoom, start: (a + b) / 2 - d / zoom / 2 };
+      }),
+    [d, update],
+  );
+  return { zoom: view.zoom, start: view.start, span: d / view.zoom, maxZoom: Math.max(1, d / MIN_SPAN), zoomAt, panBy, panTo, reveal, focus };
 }
 
 export type TimelineZoom = ReturnType<typeof useTimelineZoom>;
@@ -154,12 +166,61 @@ interface FilmstripProps {
 }
 
 const COUNT = 12;
-/** Below this average width (px) per word, the lane asks you to zoom in instead of drawing a solid bar. */
-const MIN_WORD_PX = 3;
-/** Rough width of one character in the lane, to leave out words that wouldn't fit their chip. */
+/** Rough width of one character in the lane. */
 const WORD_CHAR_PX = 6;
-/** Most words the lane draws at once; it re-renders with the playhead. */
-const MAX_WORDS = 500;
+/** Chip padding plus a little air, in px. */
+const CHIP_PAD = 12;
+/** A phrase may end at a sentence once it's this wide, and always ends at this width (px). */
+const PHRASE_MIN_PX = 70;
+const PHRASE_MAX_PX = 180;
+/** A pause this wide on screen (px) ends a phrase that's already readable. */
+const PAUSE_PX = 10;
+/** Chips narrower than this show no text. */
+const MIN_TEXT_PX = 18;
+
+const SENTENCE_END = /[.!?…]["'”’)\]]*$/;
+
+interface Chip {
+  from: number;
+  to: number;
+  start: number;
+  end: number;
+  text: string;
+  px: number;
+}
+
+/**
+ * The words in view, grouped so each chip can show its text: zoomed in, one chip per word; zoomed out, words merge
+ * into phrases that end at a sentence or a pause once they're wide enough.
+ */
+function wordChips(words: TranscriptWord[], viewStart: number, span: number, width: number): Chip[] {
+  const pxPerSec = width / span;
+  const chips: Chip[] = [];
+  let cur: Chip | null = null;
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    if (w.end < viewStart) continue;
+    if (w.start > viewStart + span) break;
+    const end = Math.max(w.end, w.start + 0.05);
+    if (cur) {
+      cur.to = i;
+      cur.end = end;
+      cur.text += ` ${w.text}`;
+    } else {
+      cur = { from: i, to: i, start: w.start, end, text: w.text, px: 0 };
+    }
+    cur.px = (cur.end - cur.start) * pxPerSec;
+    const next = words[i + 1];
+    const pause = next ? (next.start - w.end) * pxPerSec : Infinity;
+    const readable = cur.px >= cur.text.length * WORD_CHAR_PX + CHIP_PAD;
+    if (readable || cur.px >= PHRASE_MAX_PX || (cur.px >= PHRASE_MIN_PX && SENTENCE_END.test(w.text)) || (pause >= PAUSE_PX && cur.px >= MIN_TEXT_PX * 2)) {
+      chips.push(cur);
+      cur = null;
+    }
+  }
+  if (cur) chips.push(cur);
+  return chips;
+}
 const MARKER_GAP = 21;
 /** How close (px) the pointer must be to a range edge or the playhead to grab it. */
 const GRAB = 8;
@@ -370,12 +431,8 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
 
   const rangeBox = shownRange && clip(shownRange.start, shownRange.end);
 
-  const shownWords: { w: TranscriptWord; i: number }[] = [];
-  words?.forEach((w, i) => {
-    if (w.end >= viewStart && w.start <= viewStart + span) shownWords.push({ w, i });
-  });
-  const wordsFit = shownWords.length <= Math.min(MAX_WORDS, stripWidth / MIN_WORD_PX);
   const spoken = words ? wordIndexAt(words, time) : -1;
+  const chips = words ? wordChips(words, viewStart, span, stripWidth) : [];
 
   return (
     <div ref={rootRef} className={cn("fc-timeline", words?.length && "has-words")} style={{ userSelect: "none" }}>
@@ -413,27 +470,24 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
           onPointerUp={onUp}
           onPointerCancel={() => setDrag(null)}
         >
-          {wordsFit ? (
-            shownWords.map(({ w, i }) => {
-              const box = clip(w.start, Math.max(w.end, w.start + 0.05));
-              if (!box) return null;
-              const on = i === spoken && time < w.end + 0.3;
-              const fits = ((Math.max(w.end, w.start + 0.05) - w.start) / span) * stripWidth >= w.text.length * WORD_CHAR_PX + 10;
-              return (
-                <span
-                  key={i}
-                  data-start={w.start}
-                  title={w.text}
-                  className={cn("w", on && "on", shownRange && w.end > shownRange.start && w.start < shownRange.end && "sel")}
-                  style={on ? { left: box.style.left, minWidth: box.style.width } : box.style}
-                >
-                  {fits || on ? w.text : null}
-                </span>
-              );
-            })
-          ) : (
-            <span className="fc-words-hint">Zoom in to read the words</span>
-          )}
+          {chips.map((c) => {
+            const box = clip(c.start, c.end);
+            if (!box) return null;
+            const on = spoken >= c.from && spoken <= c.to && time < words[spoken].end + 0.3;
+            // A single spoken word may grow past its chip so it can be read.
+            const grow = on && c.from === c.to;
+            return (
+              <span
+                key={c.from}
+                data-start={c.start}
+                title={c.text}
+                className={cn("w", c.from !== c.to && "phrase", on && "on", grow && "grow", shownRange && c.end > shownRange.start && c.start < shownRange.end && "sel")}
+                style={grow ? { left: box.style.left, minWidth: box.style.width } : box.style}
+              >
+                {c.px >= MIN_TEXT_PX || grow ? c.text : null}
+              </span>
+            );
+          })}
         </div>
       ) : null}
       {zoomed && (

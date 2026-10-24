@@ -479,10 +479,15 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
                 playing={playing}
                 canComment={isOpen}
                 range={isOpen && !whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
-                onSeek={seek}
+                onSeek={(t) => {
+                  seek(t);
+                  zoom.focus(t);
+                  setAnchor((a) => (a.kind === "range" ? { kind: "time" } : a));
+                }}
                 onRange={(start, end) => {
                   ctrl?.pause();
                   seek(start);
+                  zoom.focus(start, end);
                   commentOnRange(start, end);
                 }}
               />
