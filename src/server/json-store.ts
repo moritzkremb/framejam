@@ -3,9 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../core/types.ts";
 import { safeJoin } from "./files.ts";
-import { dataDir, setupInfo } from "./paths.ts";
+import { type CatalogConfig, type CatalogSnapshot, catalogConfig, readSnapshot } from "./catalog.ts";
+import { catalogDir, dataDir, setupInfo } from "./paths.ts";
 import { PlaybookLibrary } from "./playbooks.ts";
 import { PresetLibrary } from "./presets.ts";
+import { VERSION } from "./version.ts";
 import {
   type AppState,
   isPickListening,
@@ -76,11 +78,17 @@ export class JsonStore implements Store {
   readonly presets: PresetLibrary;
   readonly playbooks: PlaybookLibrary;
 
-  constructor(root = dataDir()) {
+  constructor(root = dataDir(), options: { catalog?: CatalogConfig } = {}) {
     this.root = root;
     fs.mkdirSync(this.reviewsDir, { recursive: true });
     this.presets = PresetLibrary.forStore(this.userPresetsDir);
-    this.playbooks = PlaybookLibrary.forStore(this.userPlaybooksDir);
+    this.playbooks = PlaybookLibrary.forStore(this.userPlaybooksDir, this.catalogReader(options.catalog));
+  }
+
+  /** Reads the downloaded catalog, or nothing when it's switched off (so the bundled playbooks show alone). */
+  private catalogReader(config: CatalogConfig = catalogConfig()): (() => CatalogSnapshot | undefined) | undefined {
+    if (!config.enabled) return undefined;
+    return () => readSnapshot(catalogDir(this.root), { appVersion: VERSION, extraKeys: config.extraKeys });
   }
 
   get reviewsDir() {

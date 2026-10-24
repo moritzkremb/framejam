@@ -259,4 +259,8 @@ export interface LoadedPlaybook {
   playbook: Playbook;
   dir?: string;
   builtin: boolean;
+  /** Where this copy came from. Catalog copies count as built in. */
+  source?: "bundled" | "catalog" | "user";
+  /** Set on a user's own copy when the app has a higher version of the same playbook. */
+  newerVersion?: string;
 }
