@@ -278,6 +278,7 @@ export function ReviewSidebar({
   selectedId,
   emptyState,
   label,
+  footer,
   onSelect,
 }: {
   r: ReviewState;
@@ -286,6 +287,8 @@ export function ReviewSidebar({
   selectedId: string | null;
   emptyState: ReactNode;
   label?(c: ReviewComment): string;
+  /** Pinned under the comment list (the comment box, in full screen). */
+  footer?: ReactNode;
   onSelect(c: ReviewComment): void;
 }) {
   if (!side.open) return null;
@@ -318,6 +321,7 @@ export function ReviewSidebar({
           </p>
         )}
       </div>
+      {footer && <div className="fc-side-foot">{footer}</div>}
     </aside>
   );
 }

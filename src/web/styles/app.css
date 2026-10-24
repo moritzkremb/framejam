@@ -313,12 +313,17 @@ a { color: inherit; }
 .fc-review { --side-w: clamp(280px, 30vw, 380px); position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) var(--side-w); overflow: hidden; }
 .fc-review.railed { grid-template-columns: minmax(0, 1fr) 56px; }
 .fc-stage { min-width: 0; min-height: 0; display: flex; flex-direction: column; justify-content: safe center; gap: var(--space-3); padding: var(--space-4); overflow: hidden auto; }
-.fc-stage > :not(.fc-watch), .fc-watch > * { flex: none; width: 100%; max-width: var(--content-w, 1100px); margin-left: auto; margin-right: auto; }
-.fc-stage > .fc-player, .fc-watch > .fc-player { max-width: none; }
-.fc-watch { display: contents; }
-.fc-watch:fullscreen { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); background: var(--bg); }
-.fc-watch:fullscreen > * { max-width: none; }
-.fc-watch:fullscreen > .fc-player { flex: 1 1 auto !important; min-height: 0; aspect-ratio: auto !important; }
+.fc-stage > * { flex: none; width: 100%; max-width: var(--content-w, 1100px); margin-left: auto; margin-right: auto; }
+.fc-stage > .fc-player { max-width: none; }
+.fc-review:fullscreen { background: var(--bg); }
+.fc-review:fullscreen .fc-stage > * { max-width: none; }
+.fc-review:fullscreen .fc-stage > .fc-player { flex: 1 1 auto !important; min-height: 0; aspect-ratio: auto !important; }
+.fc-side-foot { flex: none; padding: 12px; border-top: 1px solid var(--border); }
+.fc-side-foot .fc-dock { position: static; padding: 0; background: none; }
+.fc-side-foot .fc-dock .box { box-shadow: inset 0 0 0 1px var(--border); }
+.fc-side-foot .fc-dock .box:focus-within { box-shadow: inset 0 0 0 1.5px var(--border-strong); }
+.fc-side-foot .fc-dock .send { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; margin-top: 10px; }
+.fc-side-foot .fc-dock .send .fc-agent { flex-basis: 100%; }
 .fc-stage .fc-dock { position: static; padding: 0; background: none; }
 .fc-stage .fc-dock .box { box-shadow: inset 0 0 0 1px var(--border); }
 .fc-stage .fc-dock .box:focus-within { box-shadow: inset 0 0 0 1.5px var(--border-strong); }
