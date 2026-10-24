@@ -1,0 +1,35 @@
+{
+  "id": "editorial-reel",
+  "name": "Editorial Reel",
+  "tagline": "A raw talking-head recording goes in, a vertical reel with magazine-style serif titles, chat pop-ups and word-by-word captions comes out.",
+  "description": "A reel that keeps moving around you: big serif headlines behind your head in the hook, a prompt box that types, app icons crossed out, a magazine cover, a grid of results, giant words landing, and a comment-keyword ending with a follow button. Pauses and earlier takes are cut out, captions light up word by word, and a lo-fi beat and sound effects are made for you.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@justyn.ai", "url": "https://www.instagram.com/reel/DeUUFJQu8cw/" }],
+  "license": "MIT",
+  "bring": [
+    "Your raw recording of you talking to camera; a plain background helps",
+    "Optional: screen recordings, screenshots or clips of what you talk about",
+    "Optional: the word people should comment to get your link"
+  ],
+  "get": "A 30–60 s vertical reel with serif titles, pop-ups, word-by-word captions, music and sound effects",
+  "format": "9:16",
+  "project": "any",
+  "needs": [
+    { "name": "Reel template, starter scene and sound scripts", "where": "included" },
+    { "name": "Python 3, ffmpeg and Node", "where": "computer" },
+    { "name": "Hyperframes, which also cuts you out of the background", "where": "computer" },
+    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "colors, fonts and captions",
+  "steps": [
+    "Cut the pauses and keep the last take of every line",
+    "Plan a graphic for every second or so of speech",
+    "Cut you out for the headline, big-word and magazine shots",
+    "Build it from the template with captions, music and sound effects",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["talking head", "reels", "instagram", "short", "motion graphics", "kinetic type", "serif", "captions", "cut-out"],
+  "skill": "SKILL.md"
+}

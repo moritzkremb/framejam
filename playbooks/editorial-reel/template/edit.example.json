@@ -1,0 +1,104 @@
+{
+  "duration": 24.2,
+  "speaker": "assets/speech.mp4",
+  "narration": "assets/speech-norm.wav",
+  "music": { "src": "assets/music.wav", "volume": 0.1 },
+  "theme": {},
+  "emphasis": ["agent", "magazine", "huge", "bigger", "reel"],
+  "beats": [
+    {
+      "id": "b01",
+      "start": 0,
+      "layout": "hook",
+      "cutout": "assets/cutouts/speaker.webm",
+      "cutoutStart": 0,
+      "cards": [
+        { "at": 0, "lines": ["I DIDN’T", "EDIT"], "font": "serif" },
+        { "at": 1.05, "lines": ["A SINGLE", "SECOND"], "font": "sans", "timecode": true },
+        { "at": 2.55, "lines": ["My agent did."], "font": "italic", "accent": "did." }
+      ]
+    },
+    { "id": "b02", "start": 3.7, "layout": "speaker", "zoom": 1.0, "in": "blur" },
+    { "id": "b03", "start": 5.75, "layout": "speaker", "zoom": 1.16, "punches": [{ "at": 7.3, "zoom": 1.05 }] },
+    {
+      "id": "b04",
+      "start": 8.0,
+      "layout": "magazine",
+      "cutout": "assets/cutouts/speaker.webm",
+      "cutoutStart": 8.0,
+      "masthead": "The Reel",
+      "y": 470,
+      "issue": "No. 01 · October 2026 · Edited by an agent",
+      "kicker": "One sentence",
+      "coverlines": ["The whole video.", "edited."]
+    },
+    {
+      "id": "b05",
+      "start": 9.8,
+      "layout": "grid",
+      "tiles": [
+        "assets/vis/tile-1.png", "assets/vis/tile-2.png", "assets/vis/tile-3.png",
+        "assets/vis/tile-4.png", "speaker", "assets/vis/tile-6.png",
+        "assets/vis/tile-7.png", "assets/vis/tile-8.png", "assets/vis/tile-9.png"
+      ]
+    },
+    {
+      "id": "b06",
+      "start": 11.4,
+      "layout": "word",
+      "zoom": 1.08,
+      "cutout": "assets/cutouts/speaker.webm",
+      "cutoutStart": 11.4,
+      "lead": "the difference is",
+      "leadAt": 11.45,
+      "word": "huge",
+      "at": 12.2
+    },
+    { "id": "b07", "start": 12.9, "layout": "speaker", "zoom": 1.0, "in": "blur" },
+    { "id": "b08", "start": 15.2, "layout": "speaker", "zoom": 1.16 },
+    { "id": "b09", "start": 17.6, "layout": "speaker", "zoom": 1.0, "punches": [{ "at": 18.9, "zoom": 1.12 }] },
+    { "id": "b10", "start": 20.1, "layout": "speaker", "zoom": 1.0, "in": "blur" },
+    { "id": "b11", "start": 22.8, "layout": "speaker", "zoom": 1.16 }
+  ],
+  "pops": [
+    {
+      "type": "icons",
+      "at": 3.75,
+      "until": 5.7,
+      "strike": true,
+      "items": [
+        { "src": "assets/vis/app-1.png", "label": "Timeline", "at": 3.8 },
+        { "src": "assets/vis/app-2.png", "label": "Editor", "at": 4.7 }
+      ]
+    },
+    {
+      "type": "chat",
+      "at": 5.6,
+      "until": 7.95,
+      "label": "TO YOUR AGENT",
+      "text": "make the titles look like a magazine",
+      "cps": 30,
+      "done": "Done. Titles updated."
+    },
+    {
+      "type": "screen",
+      "at": 12.95,
+      "until": 15.15,
+      "src": "assets/vis/storyboard.png",
+      "title": "storyboard.md",
+      "focus": [{ "at": 14.0, "x": 0.35, "y": 0.3, "zoom": 1.55 }]
+    },
+    { "type": "timer", "at": 15.3, "until": 17.5, "label": "Edit time", "from": "60:00", "to": "10:00" },
+    { "type": "stack", "at": 17.75, "until": 20.0, "top": "Bigger", "bottom": "captions." },
+    {
+      "type": "comment",
+      "at": 20.15,
+      "until": 22.75,
+      "headline": "Comment \u201cREEL\u201d and I'll send you the playbook",
+      "keyword": "REEL",
+      "handle": "framejam",
+      "reply": "Sending it now."
+    },
+    { "type": "follow", "at": 22.85, "until": 24.2, "handle": "framejam", "sub": "Video tips with your agent" }
+  ]
+}
