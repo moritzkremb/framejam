@@ -359,10 +359,18 @@ Like styles, the npm package leaves out `preview.mp4`; the Playbooks page stream
 - **What plays.** Always the render. Each version keeps a snapshot of its mp4, so older versions look as they did then.
 - **Timeline zoom.** Pinch on the timeline, `⌘`+scroll (`Ctrl`+scroll), or use the zoom buttons to pick ranges on long
   videos. Scroll sideways or drag the bar under the filmstrip to move along.
+- **Transcript.** For videos with speech, the words run along under the timeline and as text in the sidebar's
+  *Transcript* tab. Click a word to jump there; select words to comment on them, and the agent gets the quote with the
+  comment. The agent can attach a transcript (`transcriptPath`); otherwise FrameJam transcribes each version on your
+  computer with [whisper.cpp](https://github.com/ggml-org/whisper.cpp) if it's installed (`brew install whisper-cpp`).
+  It uses a whisper.cpp model you already have, or downloads one (574 MB) from Hugging Face the first time you press
+  **Transcribe**. Your video is never uploaded.
+- **Playback speed and full screen.** The speed button next to the time cycles 1×, 1.5×, 2× and 0.5×. Full screen
+  shows the video with the comments sidebar, and moves the comment box into it.
 - **Download.** The download button next to **Finish review** (or *Download video* in the version menu) saves a copy of
   the version's video wherever you choose.
 - **Keys.** `Space` play/pause, `←/→` step one frame, `Shift+←/→` step one second, `C` focus the comment box,
-  `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
+  `S` playback speed, `F` full screen, `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
 
 </details>
@@ -450,7 +458,8 @@ npm run lint
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), `FRAMEJAM_PUBLIC_URL` (the base URL used in links), and
 `FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), `FRAMEJAM_PLAYBOOK_PREVIEW_URL` (the
-same for the Playbooks page), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't
+same for the Playbooks page), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and model
+for transcripts, when they aren't found on their own), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't
 look for a newer version on npm).
 
 </details>

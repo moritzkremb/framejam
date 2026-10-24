@@ -7,7 +7,7 @@ import { FeedbackDock, type Anchor } from "@/components/review/dock";
 import { Filmstrip, useTimelineZoom, ZoomControls, type Marker } from "@/components/review/filmstrip";
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
 import { CommentsRail, DownloadButton, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
-import { TranscriptPanel, useTranscript } from "@/components/review/transcript";
+import { TranscriptionState, TranscriptPanel, useTranscript, useTranscription } from "@/components/review/transcript";
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
@@ -116,6 +116,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const side = useSidebar(width, fullscreen);
   const [sideTab, setSideTab] = useState<SidebarTab>("comments");
   const transcript = useTranscript(data, review.id, version);
+  const transcription = useTranscription(data, review.id, version);
 
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement) && document.fullscreenElement === watchRef.current);
@@ -472,7 +473,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
           emptyState={emptyState}
           footer={bottomInSide ? bottom : undefined}
           transcript={
-            transcript && (
+            transcript ? (
               <TranscriptPanel
                 transcript={transcript}
                 time={time}
@@ -491,6 +492,8 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
                   commentOnRange(start, end);
                 }}
               />
+            ) : (
+              transcription ? <TranscriptionState transcription={transcription} /> : version?.transcript && <div className="fc-transcript" />
             )
           }
           tab={sideTab}

@@ -36,6 +36,20 @@ export interface StoryboardPanel {
   caption?: string;
 }
 
+/** Local transcription of one version (see `src/server/transcribe.ts`). */
+export type TranscriptionStatus =
+  | { state: "done"; local: boolean }
+  /** Storyboards, or a version that doesn't exist. */
+  | { state: "unavailable" }
+  | { state: "ready" }
+  /** whisper.cpp (or ffmpeg) isn't installed. */
+  | { state: "no-tool"; ffmpeg: boolean }
+  /** whisper.cpp is there but no model: starting downloads one this size. */
+  | { state: "no-model"; modelSize: string }
+  /** `downloading` is the model download's progress (0–1) while it runs first. */
+  | { state: "queued" | "running"; progress?: number; downloading?: number }
+  | { state: "failed"; error?: string };
+
 export interface ReviewVersion {
   number: number;
   videoPath?: string;
@@ -46,6 +60,7 @@ export interface ReviewVersion {
   /** Folder the panels came from; add_version re-reads it when given nothing new. */
   panelsDir?: string;
   /** What's said in the video, parsed into timed words and kept as a file inside the review folder. */
+  /** Without `sourcePath`, FrameJam transcribed the render itself. */
   transcript?: { file: string; sourcePath?: string; words: number };
   note?: string;
   createdAt: string;

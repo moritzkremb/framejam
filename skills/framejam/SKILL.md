@@ -89,7 +89,8 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    `title` every time so later renders become new versions of this project.
    **Speech in the video?** If you already have its word timings (captions you burned in, a voiceover with
    timestamps, a transcription you ran), add `transcriptPath` (an `.srt`, `.vtt` or word-timings JSON such as
-   Whisper's). The user then reads along under the timeline and can comment on words. Don't transcribe only for this.
+   Whisper's). The user then reads along under the timeline and can comment on words. Without one, FrameJam
+   transcribes the render itself when whisper.cpp is installed, so don't transcribe only for this.
    Open the returned `url` in the built-in browser (step 0), and **always post it in chat as a clickable markdown link**,
    for example `[Open v1 in FrameJam](http://localhost:2400/review/rev_…)`, so the user can open it from the chat if the
    browser isn't showing it. Then tell them in one line:

@@ -7,13 +7,15 @@ or a spot in the frame, say what to change, press **Finish review**, and the age
 Everything runs on your computer. There's no account, and your videos and comments are never uploaded; projects are
 saved in `~/.framejam`.
 
-What leaves your computer, and only to framejam.ai or npm:
+What leaves your computer, and only to framejam.ai, npm or Hugging Face:
 
 - The Styles and Playbooks pages stream their example videos from framejam.ai.
 - The app asks the npm registry whether a newer FrameJam is out (at most every 6 hours; set
   `FRAMEJAM_NO_UPDATE_CHECK=1` to turn it off).
 - The **Feedback** button sends the note you write, and your email if you add one, to framejam.ai.
 - The **Get updates** form sends the email you enter to framejam.ai, to send you release news.
+- If you press **Transcribe** and have no speech model yet, the app downloads one (574 MB) from Hugging Face.
+  Transcription itself runs on your computer; your videos are never uploaded.
 
 Nothing is sent from your agent's conversation.
 

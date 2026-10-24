@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import type { ReviewVersion, Transcript, TranscriptWord } from "@/lib/api";
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import type { ReviewVersion, Transcript, TranscriptionStatus, TranscriptWord } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
 import { cn } from "@/lib/utils";
 
@@ -128,10 +128,138 @@ export function TranscriptPanel({ transcript, time, playing, canComment, range, 
     userScrolled.current = Date.now();
   };
 
+  if (!words.length) {
+    return (
+      <div className="fc-transcript">
+        <p className="fc-caption hint">No speech in this version.</p>
+      </div>
+    );
+  }
+
   return (
     <div ref={rootRef} className="fc-transcript" onMouseUp={onMouseUp} onWheel={hold} onTouchMove={hold}>
       <p className="fc-caption hint">{canComment ? "Click a word to jump there. Select words to comment on them." : "Click a word to jump there."}</p>
       {body}
     </div>
   );
+}
+
+const started = new Set<string>();
+
+/**
+ * Local transcription for a video version without a transcript: starts on its own when whisper.cpp and a model are
+ * installed, and reports progress. Null when the version has a transcript, is a storyboard, or the source can't.
+ */
+export function useTranscription(data: ReviewDataSource, reviewId: string, version: ReviewVersion | undefined) {
+  const n = version && !version.transcript && !version.panels?.length && data.transcription ? version.number : undefined;
+  const key = n === undefined ? null : `${reviewId}:${n}`;
+  const [status, setStatus] = useState<{ key: string; status: TranscriptionStatus } | null>(null);
+  // Bumped by the buttons: `start` asks the server to transcribe, otherwise it just looks again.
+  const [request, setRequest] = useState({ seq: 0, start: false });
+
+  useEffect(() => {
+    if (!key || n === undefined) return;
+    let cancelled = false;
+    let timer: number | undefined;
+    const poll = async (start: boolean) => {
+      try {
+        let s = start ? await data.transcribe!(reviewId, n) : await data.transcription!(reviewId, n);
+        // Transcribing is free and stays on this computer, so it starts by itself when everything is installed.
+        if (s.state === "ready" && !started.has(key)) {
+          started.add(key);
+          s = await data.transcribe!(reviewId, n);
+        }
+        if (cancelled) return;
+        setStatus({ key, status: s });
+        if (s.state === "queued" || s.state === "running") timer = window.setTimeout(() => void poll(false), 1000);
+      } catch {
+        /* the server went away; the review page shows that */
+      }
+    };
+    void poll(request.start);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [data, reviewId, n, key, request]);
+
+  if (!key) return null;
+  return {
+    status: status?.key === key ? status.status : null,
+    /** Starts transcribing (downloading the model first if needed), or retries after a failure. */
+    start: () => setRequest((r) => ({ seq: r.seq + 1, start: true })),
+    /** Looks again, e.g. after installing whisper.cpp. */
+    recheck: () => setRequest((r) => ({ seq: r.seq + 1, start: false })),
+  };
+}
+
+const pct = (p: number | undefined) => (p === undefined ? "" : ` ${Math.round(p * 100)}%`);
+
+/** What the Transcript tab shows while there's no transcript yet. */
+export function TranscriptionState({ transcription }: { transcription: NonNullable<ReturnType<typeof useTranscription>> }) {
+  const { status, start, recheck } = transcription;
+  if (!status) return <div className="fc-transcript" />;
+  const mac = /Mac/.test(navigator.platform);
+  let body: ReactNode;
+  switch (status.state) {
+    case "ready":
+    case "queued":
+    case "running": {
+      const downloading = status.state !== "ready" && status.downloading !== undefined;
+      const progress = status.state === "ready" ? undefined : downloading ? status.downloading : status.progress;
+      body = (
+        <>
+          <p>{downloading ? `Downloading the speech model…${pct(progress)}` : `Transcribing on this computer…${pct(progress)}`}</p>
+          <div className="fc-progress">
+            <span style={{ width: `${(progress ?? 0) * 100}%` }} />
+          </div>
+        </>
+      );
+      break;
+    }
+    case "no-model":
+      body = (
+        <>
+          <p>Transcribe this video to see what's said and comment on words.</p>
+          <p className="hint">
+            The first time, FrameJam downloads a speech model ({status.modelSize}) from Hugging Face. Your video stays on this computer.
+          </p>
+          <button type="button" className="fc-btn sm" onClick={start}>
+            Transcribe
+          </button>
+        </>
+      );
+      break;
+    case "no-tool":
+      body = (
+        <>
+          <p>To see what's said, install {status.ffmpeg ? "whisper.cpp" : "ffmpeg and whisper.cpp"}. FrameJam then transcribes each version on this computer.</p>
+          {mac ? (
+            <code>brew install {status.ffmpeg ? "" : "ffmpeg "}whisper-cpp</code>
+          ) : (
+            <a href="https://github.com/ggml-org/whisper.cpp#quick-start" target="_blank" rel="noreferrer">
+              How to install whisper.cpp
+            </a>
+          )}
+          <p className="hint">Or ask your agent to attach a transcript.</p>
+          <button type="button" className="fc-btn ghost sm" onClick={recheck}>
+            Check again
+          </button>
+        </>
+      );
+      break;
+    case "failed":
+      body = (
+        <>
+          <p>Couldn't transcribe this version{status.error ? `: ${status.error}` : "."}</p>
+          <button type="button" className="fc-btn sm" onClick={start}>
+            Try again
+          </button>
+        </>
+      );
+      break;
+    default:
+      body = null;
+  }
+  return <div className="fc-transcript fc-transcribe">{body}</div>;
 }
