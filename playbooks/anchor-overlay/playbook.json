@@ -1,0 +1,33 @@
+{
+  "id": "anchor-overlay",
+  "name": "Anchor and Overlay Reel",
+  "tagline": "A talking-head recording goes in, a vertical reel where you stay on screen and a picture pops up for every thing you name comes out.",
+  "description": "You stay full-frame the whole time, and small pictures pop in over the top of the screen for each thing you say: a product, a number, a place. One-word captions follow your voice, the odd big word lands in the middle, numbered labels and little asides sit at the top, and something changes about every second. Pauses and earlier takes are cut out, and the music turns up at the pivot.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "license": "MIT",
+  "bring": [
+    "Your raw recording of you talking to camera, shot vertically or with room to crop to 9:16",
+    "Screenshots, product photos or short clips of the things you talk about (or let the agent find public ones)",
+    "Optional: a music track you may use (the playbook makes a simple one otherwise)"
+  ],
+  "get": "A 30–90 s vertical reel with you always on screen, a picture for every named thing, one-word captions, punch-ins and music",
+  "format": "9:16",
+  "project": "any",
+  "needs": [
+    { "name": "Render and check scripts, example plan and fonts", "where": "included" },
+    { "name": "Python 3 with NumPy and Pillow, and ffmpeg", "where": "computer" },
+    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "caption, big-word and label fonts and colours, and a border round the pictures",
+  "steps": [
+    "Cut the pauses and keep the last take of every line",
+    "Mark every thing you name and pick a picture for it",
+    "Write the plan and check it before rendering",
+    "Make captions and music, then render with ffmpeg",
+    "Check the render, then review each version in FrameJam until it's right"
+  ],
+  "tags": ["talking head", "reels", "overlays", "captions", "punch-in", "short", "ffmpeg"],
+  "skill": "SKILL.md"
+}
