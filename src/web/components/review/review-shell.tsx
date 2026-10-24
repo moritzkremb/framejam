@@ -324,7 +324,7 @@ export function ReviewSidebar({
           </>
         )}
         <span className="fc-grow" />
-        <button type="button" className="fc-btn ghost icon sm round" aria-label="Hide comments" onClick={() => side.setOpen(false)}>
+        <button type="button" className="fc-btn ghost icon sm round" aria-label="Hide comments" title="Hide comments (L)" onClick={() => side.setOpen(false)}>
           {side.overlay ? <X className="fc-i sm" /> : <ChevronRight className="fc-i sm" />}
         </button>
       </div>
@@ -357,7 +357,7 @@ export function ReviewSidebar({
 export function CommentsRail({ side, count, open }: { side: SidebarState; count: number; open: boolean }) {
   return (
     <div className="fc-rail">
-      <button type="button" className="fc-railbtn" aria-label="Show comments" onClick={() => side.setOpen(true)}>
+      <button type="button" className="fc-railbtn" aria-label="Show comments" title="Show comments (L)" onClick={() => side.setOpen(true)}>
         <ChevronLeft className="fc-i sm" />
       </button>
       <button type="button" className="fc-railbtn" aria-label={`${count} comments`} onClick={() => side.setOpen(true)}>

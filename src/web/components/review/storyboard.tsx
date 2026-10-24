@@ -11,6 +11,7 @@ import { cn, FINISH_KEYS, SHIFT_KEY } from "@/lib/utils";
 const SHORTCUTS: Shortcut[] = [
   ["Previous or next panel", ["←", "→"]],
   ["Whole board, or back to the panel", ["B"]],
+  ["Show or hide comments", ["L"]],
   ["Comment", ["C"]],
   ["Add comment", ["↩"]],
   ["New line in a comment", [SHIFT_KEY, "↩"]],
@@ -215,6 +216,9 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
       } else if (e.key === "b" || e.key === "B") {
         setView((v) => (v === "board" ? "panel" : "board"));
         setSpot(null);
+      } else if (e.key === "l" || e.key === "L") {
+        e.preventDefault();
+        side.setOpen(!side.open);
       } else if ((e.key === "c" || e.key === "C") && isOpen) {
         e.preventDefault();
         focusBox();
