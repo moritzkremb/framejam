@@ -230,11 +230,14 @@ export function paragraphStarts(words: TranscriptWord[]): number[] {
 }
 
 /** The words spoken between two times (any overlap counts), joined as text. */
+/** Longer quotes keep their first and last half, so long ranges don't flood the feedback. */
+const MAX_QUOTE_WORDS = 30;
+
 export function wordsBetween(t: Transcript | undefined, start: number, end: number): string | undefined {
   if (!t) return undefined;
-  const text = t.words
-    .filter((w) => w.end > start && w.start < end)
-    .map((w) => w.text)
-    .join(" ");
-  return text || undefined;
+  const words = t.words.filter((w) => w.end > start && w.start < end).map((w) => w.text);
+  if (!words.length) return undefined;
+  if (words.length <= MAX_QUOTE_WORDS) return words.join(" ");
+  const half = MAX_QUOTE_WORDS / 2;
+  return `${words.slice(0, half).join(" ")} … ${words.slice(-half).join(" ")}`;
 }

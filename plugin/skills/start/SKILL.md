@@ -113,7 +113,8 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    - The frame image for a pinned comment has the pin drawn on it: look at what's under the pin, then find that element
      in your source at that time.
    - `wholeVideo: true` means a global note (pacing, colour, music, and so on).
-   - With a transcript, `spoken` quotes the words in a range comment and `spokenAround` those near a moment.
+   - With a transcript, `spoken` quotes the words in a range comment and `spokenAround` those near a moment. They
+     come from the transcript, so names and rare words may be misheard: use them to find the spot, not as the script.
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
    `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`), plus a new
    `transcriptPath` if the timing of the speech changed.

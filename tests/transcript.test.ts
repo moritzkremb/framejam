@@ -59,5 +59,9 @@ describe("paragraphs and ranges", () => {
     expect(wordsBetween(t, 0.9, 2.1)).toBe("b c");
     expect(wordsBetween(t, 5, 6)).toBeUndefined();
     expect(wordsBetween(undefined, 0, 1)).toBeUndefined();
+    const long = { words: Array.from({ length: 40 }, (_, i) => ({ text: `w${i}`, start: i, end: i + 0.5 })), paragraphs: [0] };
+    const quote = wordsBetween(long, 0, 40)!;
+    expect(quote.split(" ").length).toBe(31);
+    expect(quote).toMatch(/^w0 .* w14 … w25 .* w39$/);
   });
 });
