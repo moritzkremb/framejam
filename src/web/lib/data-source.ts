@@ -1,4 +1,4 @@
-import { api, panelUrl, videoUrl, type Review, type ReviewComment } from "@/lib/api";
+import { api, panelUrl, videoUrl, type Review, type ReviewComment, type Transcript, type TranscriptionStatus } from "@/lib/api";
 
 export type NewComment = Partial<ReviewComment> & { text: string; time: number; thumbnailDataUrl?: string };
 
@@ -12,6 +12,11 @@ export interface ReviewDataSource {
   deleteComment(id: string, commentId: string): Promise<unknown>;
   submit(id: string): Promise<{ batch: { id: string; commentIds: string[] }; agentListening: boolean }>;
   reopen(id: string): Promise<{ wasDelivered: boolean; review: Review }>;
+  /** Only called for versions that have one (`version.transcript`). */
+  transcript(id: string, version: number): Promise<Transcript>;
+  /** Transcribing on this computer, for versions without one. Optional: without it there's no local transcription. */
+  transcription?(id: string, version: number): Promise<TranscriptionStatus>;
+  transcribe?(id: string, version: number): Promise<TranscriptionStatus>;
   /** The version's comments as text to paste into an agent chat. */
   prompt(id: string, version?: number): Promise<string>;
   /** Saves the video when the browser can't: `chosen` is false when it went to Downloads without asking. */
@@ -33,6 +38,9 @@ export const localDataSource: ReviewDataSource = {
   deleteComment: api.deleteComment,
   submit: (id) => api.submit(id),
   reopen: api.reopen,
+  transcript: api.transcript,
+  transcription: api.transcription,
+  transcribe: api.transcribe,
   prompt: api.prompt,
   downloadVideo: api.downloadVideo,
   videoUrl,

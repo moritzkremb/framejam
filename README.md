@@ -372,10 +372,18 @@ turn it off. How it's built and published: [docs/catalog.md](docs/catalog.md).
 - **What plays.** Always the render. Each version keeps a snapshot of its mp4, so older versions look as they did then.
 - **Timeline zoom.** Pinch on the timeline, `⌘`+scroll (`Ctrl`+scroll), or use the zoom buttons to pick ranges on long
   videos. Scroll sideways or drag the bar under the filmstrip to move along.
+- **Transcript.** For videos with speech, the words run along under the timeline and as text in the sidebar's
+  *Transcript* tab. Click a word to jump there; select words to comment on them, and the agent gets the quote with the
+  comment. The agent can attach a transcript (`transcriptPath`); otherwise FrameJam transcribes each version on your
+  computer with [whisper.cpp](https://github.com/ggml-org/whisper.cpp) if it's installed (`brew install whisper-cpp`).
+  It uses a whisper.cpp model you already have, or downloads one (574 MB) from Hugging Face the first time you press
+  **Transcribe**. Your video is never uploaded.
+- **Playback speed and full screen.** The speed button next to the time cycles 1×, 1.5×, 2× and 0.5×. Full screen
+  shows the video with the comments sidebar, and moves the comment box into it.
 - **Download.** The download button next to **Finish review** (or *Download video* in the version menu) saves a copy of
   the version's video wherever you choose.
 - **Keys.** `Space` play/pause, `←/→` step one frame, `Shift+←/→` step one second, `C` focus the comment box,
-  `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
+  `S` playback speed, `F` full screen, `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
 
 </details>
@@ -415,11 +423,11 @@ for v2 and v1 still shows what it was.
 
 | Tool | What it does |
 | --- | --- |
-| `open_review({ title?, videoPath?, panels?, panelsDir?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. Calling it again with the same title adds v2, v3, and so on. |
+| `open_review({ title?, videoPath?, panels?, panelsDir?, transcriptPath?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. `transcriptPath` (an `.srt`, `.vtt` or word-timings JSON such as Whisper's) shows what's said under the timeline and in the sidebar. Calling it again with the same title adds v2, v3, and so on. |
 | `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again, up to 12 times in a row, then stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. |
 | `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
 | `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
-| `add_version({ reviewId, videoPath?, panels?, panelsDir?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
+| `add_version({ reviewId, videoPath?, panels?, panelsDir?, transcriptPath?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
@@ -464,8 +472,9 @@ Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_H
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), `FRAMEJAM_PUBLIC_URL` (the base URL used in links), and
 `FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), `FRAMEJAM_PLAYBOOK_PREVIEW_URL` (the
 same for the Playbooks page), `FRAMEJAM_CATALOG_URL` (where playbook updates come from; `off` turns them off, see
-[docs/catalog.md](docs/catalog.md)), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't look for a newer version on npm or for
-playbook updates).
+[docs/catalog.md](docs/catalog.md)), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and
+model for transcripts, when they aren't found on their own), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't look for a newer
+version on npm or for playbook updates).
 
 </details>
 

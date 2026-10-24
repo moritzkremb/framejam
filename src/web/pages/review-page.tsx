@@ -6,7 +6,8 @@ import { BackHeader } from "@/components/header";
 import { FeedbackDock, type Anchor } from "@/components/review/dock";
 import { Filmstrip, useTimelineZoom, ZoomControls, type Marker } from "@/components/review/filmstrip";
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
-import { CommentsRail, DownloadButton, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
+import { CommentsRail, DownloadButton, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
+import { TranscriptionState, TranscriptPanel, useTranscript, useTranscription } from "@/components/review/transcript";
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
@@ -113,6 +114,9 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const watchRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const side = useSidebar(width, fullscreen);
+  const [sideTab, setSideTab] = useState<SidebarTab>("comments");
+  const transcript = useTranscript(data, review.id, version);
+  const transcription = useTranscription(data, review.id, version);
 
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement) && document.fullscreenElement === watchRef.current);
@@ -207,12 +211,22 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
 
   const selectComment = (c: ReviewComment, opts: { openSidebar?: boolean } = {}) => {
     setSelectedId(c.id);
-    if (opts.openSidebar) side.setOpen(true);
+    if (opts.openSidebar) {
+      side.setOpen(true);
+      setSideTab("comments");
+    }
     if (!c.wholeVideo) {
       ctrl?.pause();
       seek(c.time);
     }
   };
+  const commentOnRange = (start: number, end: number) => {
+    setAnchor({ kind: "range", time: start, endTime: end });
+    setWhole(false);
+    setSelectedId(null);
+    focusBox();
+  };
+
   const selectById = (cid: string) => {
     const c = review.comments.find((x) => x.id === cid);
     if (c) selectComment(c, { openSidebar: true });
@@ -438,16 +452,12 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
               range={isOpen && !whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
               selectedId={selectedId}
               frameSource={version.videoPath ? data.videoUrl(review.id, version.number) : undefined}
+              words={transcript?.words}
               canSelectRange={isOpen}
               wholeActive={isOpen && whole}
               onSeek={seek}
               onScrubStart={() => ctrl?.pause()}
-              onRange={(start, end) => {
-                setAnchor({ kind: "range", time: start, endTime: end });
-                setWhole(false);
-                setSelectedId(null);
-                focusBox();
-              }}
+              onRange={commentOnRange}
               onClearRange={() => setAnchor((a) => (a.kind === "range" ? { kind: "time" } : a))}
               onSelect={selectById}
             />
@@ -462,6 +472,32 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
           selectedId={selectedId}
           emptyState={emptyState}
           footer={bottomInSide ? bottom : undefined}
+          transcript={
+            transcript ? (
+              <TranscriptPanel
+                transcript={transcript}
+                time={time}
+                playing={playing}
+                canComment={isOpen}
+                range={isOpen && !whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
+                onSeek={(t) => {
+                  seek(t);
+                  zoom.focus(t);
+                  setAnchor((a) => (a.kind === "range" ? { kind: "time" } : a));
+                }}
+                onRange={(start, end) => {
+                  ctrl?.pause();
+                  seek(start);
+                  zoom.focus(start, end);
+                  commentOnRange(start, end);
+                }}
+              />
+            ) : (
+              transcription ? <TranscriptionState transcription={transcription} /> : version?.transcript && <div className="fc-transcript" />
+            )
+          }
+          tab={sideTab}
+          onTab={setSideTab}
           onSelect={(c) => selectComment(c)}
         />
       </div>

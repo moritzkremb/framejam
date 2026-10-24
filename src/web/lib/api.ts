@@ -1,6 +1,7 @@
-import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../../core/types";
+import type { Transcript, TranscriptWord } from "../../core/transcript";
+import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, TranscriptionStatus, VideoPick } from "../../core/types";
 
-export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick };
+export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, Transcript, TranscriptionStatus, TranscriptWord, VideoPick };
 
 /** From `/api/catalog`: whether playbooks update from framejam.ai, and how the last check went. */
 export interface CatalogStatus {
@@ -93,6 +94,10 @@ export const api = {
   reopen: (id: string) => request<{ wasDelivered: boolean; review: Review }>(`/api/reviews/${id}/reopen`, { method: "POST" }),
   downloadVideo: (id: string, version: number) =>
     request<{ path: string; chosen: boolean } | { cancelled: true }>(`/api/reviews/${id}/versions/${version}/download`, { method: "POST" }),
+  transcript: (id: string, version: number) => request<Transcript>(`/api/reviews/${id}/versions/${version}/transcript`),
+  transcription: (id: string, version: number) => request<TranscriptionStatus>(`/api/reviews/${id}/versions/${version}/transcription`),
+  transcribe: (id: string, version: number) =>
+    request<TranscriptionStatus>(`/api/reviews/${id}/versions/${version}/transcription`, { method: "POST", body: "{}" }),
   prompt: (id: string, version?: number) => request<string>(`/api/reviews/${id}/prompt${version ? `?version=${version}` : ""}`),
   presets: () => request<{ presets: PresetSummary[] }>("/api/presets"),
   preset: (id: string) =>

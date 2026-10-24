@@ -63,6 +63,7 @@ function fakeSource(initial: Review) {
     deleteComment: async () => ({}),
     submit: async () => ({ batch: { id: "b1", commentIds: [] }, agentListening: true }),
     reopen: async () => ({ wasDelivered: false, review }),
+    transcript: async () => ({ words: [], paragraphs: [] }),
     prompt: async () => "",
     downloadVideo: async () => ({ cancelled: true }),
     videoUrl: (id, v) => `fake://${id}/v${v}.mp4`,

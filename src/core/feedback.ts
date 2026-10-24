@@ -1,5 +1,6 @@
 import type { Review, ReviewComment } from "./types.ts";
 import type { Store } from "./store.ts";
+import { wordsBetween } from "./transcript.ts";
 
 export function formatTime(seconds: number): string {
   const s = Math.max(0, seconds);
@@ -24,11 +25,17 @@ export interface AgentComment {
   position?: { x: number; y: number; description: string };
   /** Storyboards: the panel the comment is on, with the image as it was when the user commented. */
   panel?: { number: number; title?: string; caption?: string; imagePath?: string };
+  /** From the version's transcript: the words in a range comment, or those around a comment's moment. */
+  spoken?: string;
+  spokenAround?: string;
   text: string;
   thumbnailPath?: string;
   thumbnailUrl?: string;
   resolution?: ReviewComment["resolution"];
 }
+
+/** How far either side of a point comment its "spoken around" words reach, in seconds. */
+const AROUND = 1;
 
 export function isStoryboard(review: Review, versionNumber?: number) {
   const v = versionNumber ? review.versions.find((x) => x.number === versionNumber) : review.versions.at(-1);
@@ -49,6 +56,8 @@ export async function toAgentComment(store: Store, baseUrl: string, review: Revi
   const version = review.versions.find((v) => v.number === c.version);
   const panel = c.panel !== undefined && version ? version.panels?.[c.panel - 1] : undefined;
   const panelImage = panel && version ? await store.panelFileFor(review.id, version, c.panel!) : undefined;
+  const transcript = version?.transcript && !c.wholeVideo && !panel ? await store.transcriptFor(review.id, version) : undefined;
+  const range = c.endTime !== undefined;
   return {
     id: c.id,
     version: c.version,
@@ -66,6 +75,8 @@ export async function toAgentComment(store: Store, baseUrl: string, review: Revi
       panel && version
         ? { number: c.panel!, title: panel.title, caption: panel.caption, imagePath: panelImage }
         : undefined,
+    spoken: range ? wordsBetween(transcript, c.time, c.endTime!) : undefined,
+    spokenAround: range ? undefined : wordsBetween(transcript, c.time - AROUND, c.time + AROUND),
     text: c.text,
     thumbnailPath: thumbPath ?? undefined,
     thumbnailUrl: c.thumbnail ? `${baseUrl}/api/reviews/${review.id}/thumbs/${c.thumbnail}` : undefined,
@@ -117,6 +128,8 @@ export async function feedbackPrompt(
     lines.push(`${i + 1}. **[${a.at}]**${ver} ${c.text}`);
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
     if (a.panel?.caption) lines.push(`  - Panel caption: ${a.panel.caption}`);
+    if (a.spoken) lines.push(`  - Spoken in this range: “${a.spoken}”`);
+    if (a.spokenAround) lines.push(`  - Spoken around then: “${a.spokenAround}”`);
     if (a.thumbnailPath) lines.push(`  - ${a.panel ? "Panel" : "Frame"}${a.position ? " with pin" : ""}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
     lines.push(`  - Comment id: \`${c.id}\``);
   }

@@ -11,6 +11,7 @@ import { chooseSavePath } from "./save-dialog.ts";
 import { isPickListening, StoreError, type NewCommentInput } from "../core/store.ts";
 import { extractFrame } from "./thumbs.ts";
 import { skillStatus } from "./skill.ts";
+import { createTranscriber } from "./transcribe.ts";
 import { createUpdateChecker } from "./update.ts";
 import { VERSION } from "./version.ts";
 
@@ -19,6 +20,7 @@ export function createApp(ctx: McpContext) {
   const { presets, playbooks } = store;
   const app = new Hono();
   const checkUpdate = createUpdateChecker(ctx.fetchLatestVersion);
+  const transcriber = createTranscriber(store);
 
   // Without these headers browsers keep stale playbook data and posters after the files change on disk.
   app.use("/api/*", async (c, next) => {
@@ -204,6 +206,24 @@ export function createApp(ctx: McpContext) {
     const file = version && (await store.videoFileFor(id, version));
     if (!file) return c.text("This version has no rendered video", 404);
     return sendFile(file, c.req.raw);
+  });
+
+  app.get("/api/reviews/:id/versions/:n/transcript", async (c) => {
+    const id = c.req.param("id");
+    const review = await store.getReview(id);
+    const version = review.versions.find((v) => v.number === Number(c.req.param("n")));
+    const transcript = version && (await store.transcriptFor(id, version));
+    if (!transcript) return c.json({ error: "This version has no transcript" }, 404);
+    return c.json(transcript);
+  });
+
+  app.get("/api/reviews/:id/versions/:n/transcription", async (c) => c.json(await transcriber.status(c.req.param("id"), Number(c.req.param("n")))));
+
+  /** Transcribes the render on this computer (downloading the speech model first if there's none). */
+  app.post("/api/reviews/:id/versions/:n/transcription", async (c) => {
+    // A JSON content type can't be sent cross-site without a preflight, so other sites can't start a download.
+    if (!c.req.header("content-type")?.includes("application/json")) return c.json({ error: "Expected JSON" }, 415);
+    return c.json(await transcriber.start(c.req.param("id"), Number(c.req.param("n"))));
   });
 
   /**

@@ -13,6 +13,7 @@ import type {
   ReviewVersion,
   VideoPick,
 } from "./types.ts";
+import type { Transcript } from "./transcript.ts";
 
 export class StoreError extends Error {
   constructor(
@@ -36,6 +37,8 @@ export interface MediaInput {
   videoPath?: string;
   panels?: PanelInput[];
   panelsDir?: string;
+  /** A transcript of the video (.srt, .vtt or word-timings JSON). Videos only. */
+  transcriptPath?: string;
 }
 
 export interface OpenReviewInput extends MediaInput {
@@ -144,6 +147,10 @@ export interface Store {
   /** The cached poster frame of a version, if one was saved. */
   posterFile(reviewId: string, version: number): MaybePromise<string | undefined>;
   savePoster(reviewId: string, version: number, jpeg: Uint8Array): MaybePromise<string>;
+  /** The version's transcript, if it has one. */
+  transcriptFor(reviewId: string, version: ReviewVersion): MaybePromise<Transcript | undefined>;
+  /** Gives a video version a transcript, replacing any it had. */
+  setTranscript(reviewId: string, version: number, transcript: Transcript, sourcePath?: string): MaybePromise<Review>;
 
   // --- Comments ---
   addComment(reviewId: string, input: NewCommentInput): MaybePromise<ReviewComment>;
