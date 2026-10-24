@@ -4,6 +4,7 @@
   "tagline": "Give it your logo and a few things to show off, get a short motion piece cut to the beat.",
   "description": "A 12–25 second show-off video for a product, a brand or your own motion skills. One shape from your brand, like the logo mark, stays on screen and does a new trick every bar: clicks, trails, colour floods, words that land on the beat, 3D type and grids, then it lands as your logo. It comes with a ready project that's already timed to the music.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": {
     "id": "moritz",
     "name": "Moritz Kremb",

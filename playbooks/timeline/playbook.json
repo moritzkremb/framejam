@@ -4,6 +4,7 @@
   "tagline": "Dates and milestones go in, a fast story told one milestone at a time comes out.",
   "description": "A 20–60 second story of how something got here: a company, a product, a person or a year. Each milestone gets its own beat with a big year or number, a headline of a few words and one simple picture, and a progress bar moves along as time passes. Good for origin stories, anniversaries, year-in-review posts and biographies.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",
   "bring": [

@@ -4,6 +4,7 @@
   "tagline": "A song about a scene's memes goes in, a cartoon music video that explains every joke comes out, for a few dollars.",
   "description": "A meme-dense music video drawn as a 2000s TV cartoon: one illustrated character lives through the song's story, a still per line with push-ins cut on the beat, every lyric on screen, and stamps, counters and a running HUD that explain each joke. Made from still illustrations only, so it needs no video generation and costs a few dollars. Good for songs about the AI timeline, a job market, a scene's in-jokes.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",
   "bring": [

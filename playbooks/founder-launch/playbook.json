@@ -4,6 +4,7 @@
   "tagline": "A founder talking to camera and screen recordings go in, a tight launch video for X comes out.",
   "description": "The launch video founders post when they ship: a cold open that makes people stay, why you built it, the product working on screen, proof or the offer, and one link. Your best takes are kept, the pauses and retakes go, and big words, captions and brand cards are added on top. It sounds like you on a good day.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "inspiredBy": [{ "name": "@gabriel1", "url": "https://x.com/gabriel1/status/2085418582192841147" }],
   "license": "MIT",
