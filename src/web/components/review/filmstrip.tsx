@@ -193,7 +193,7 @@ interface Chip {
  * The words in view, grouped so each chip can show its text: zoomed in, one chip per word; zoomed out, words merge
  * into phrases that end at a sentence or a pause once they're wide enough.
  */
-function wordChips(words: TranscriptWord[], viewStart: number, span: number, width: number, range?: { start: number; end: number } | null): Chip[] {
+function wordChips(words: TranscriptWord[], viewStart: number, span: number, width: number): Chip[] {
   const pxPerSec = width / span;
   const chips: Chip[] = [];
   let cur: Chip | null = null;
@@ -201,12 +201,6 @@ function wordChips(words: TranscriptWord[], viewStart: number, span: number, wid
     const w = words[i];
     if (w.end < viewStart) continue;
     if (w.start > viewStart + span) break;
-    // Phrases break at the range's edges, so the selected chips line up with the range above them.
-    const prev = words[i - 1];
-    if (cur && range && prev && ((prev.end <= range.start && w.end > range.start) || (prev.start < range.end && w.start >= range.end))) {
-      chips.push(cur);
-      cur = null;
-    }
     const end = Math.max(w.end, w.start + 0.05);
     if (cur) {
       cur.to = i;
@@ -438,7 +432,14 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
   const rangeBox = shownRange && clip(shownRange.start, shownRange.end);
 
   const spoken = words ? wordIndexAt(words, time) : -1;
-  const chips = words ? wordChips(words, viewStart, span, stripWidth, shownRange) : [];
+  const chips = words ? wordChips(words, viewStart, span, stripWidth) : [];
+  /** Where the range falls inside a chip, in px from the chip's left edge. */
+  const litPart = (c: Chip, r: { start: number; end: number }) => {
+    const chipL = Math.max(0, rel(c.start));
+    const l = Math.max(chipL, rel(r.start));
+    const rr = Math.min(1, rel(c.end), rel(r.end));
+    return { left: (l - chipL) * stripWidth, width: Math.max(0, rr - l) * stripWidth, cutL: r.start > c.start, cutR: r.end < c.end };
+  };
 
   return (
     <div ref={rootRef} className={cn("fc-timeline", words?.length && "has-words")} style={{ userSelect: "none" }}>
@@ -482,15 +483,18 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
             const on = spoken >= c.from && spoken <= c.to && time < words[spoken].end + 0.3;
             // A single spoken word may grow past its chip so it can be read.
             const grow = on && c.from === c.to;
+            // Only the part of the chip inside the range is lit, so it matches the range above it exactly.
+            const lit = shownRange && c.end > shownRange.start && c.start < shownRange.end ? litPart(c, shownRange) : null;
             return (
               <span
                 key={c.from}
                 data-start={c.start}
                 title={c.text}
-                className={cn("w", c.from !== c.to && "phrase", on && "on", grow && "grow", shownRange && c.end > shownRange.start && c.start < shownRange.end && "sel")}
+                className={cn("w", c.from !== c.to && "phrase", on && "on", grow && "grow", lit && "sel")}
                 style={grow ? { left: box.style.left, minWidth: box.style.width } : box.style}
               >
-                {c.px >= MIN_TEXT_PX || grow ? c.text : null}
+                {lit && <i className={cn("lit", lit.cutL && "cut-l", lit.cutR && "cut-r")} style={{ left: lit.left, width: lit.width }} />}
+                {(c.px >= MIN_TEXT_PX || grow) && <span className="t">{c.text}</span>}
               </span>
             );
           })}
