@@ -154,6 +154,8 @@ export class PlaybookLibrary implements PlaybookCatalog {
     return {
       ...p.playbook,
       builtin: p.builtin,
+      source: p.source,
+      newerVersion: p.newerVersion,
       previewShape: previewShape(path.join(p.dir, "poster.jpg"), p.playbook.format),
       hasPreview: localPreview || p.builtin,
       previewUrl: previewUrl("preview.mp4"),

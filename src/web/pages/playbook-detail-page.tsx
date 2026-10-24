@@ -1,4 +1,4 @@
-import { ArrowUpRight, ChevronRight, Copy, Loader2 } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Copy, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { PickBanner } from "@/components/pick-banner";
 import { VideoBackdrop } from "@/components/video-backdrop";
 import { cn } from "@/lib/utils";
 import type { PlaybookNeed } from "../../core/types";
-import { costBadge, needTag, playbookPrompt, projectLabel, sortNeeds, stylesPredicate } from "../../core/playbooks";
+import { costBadge, needTag, playbookPrompt, playbookUpdateNotice, projectLabel, sortNeeds, stylesPredicate } from "../../core/playbooks";
 
 async function copy(text: string, what: string) {
   try {
@@ -218,6 +218,12 @@ export function PlaybookDetailPage() {
       <BackHeader to="/playbooks" title={p.name} sub={`Playbook · by ${p.creator.name}`} />
       <main className="fc-main fc-style-page">
         <PickBanner playbook={p.id} style={shownStyle?.id} />
+        {p.newerVersion && (
+          <div className="fc-banner" role="status" data-testid="playbook-update">
+            <RefreshCw className="fc-i sm" aria-hidden />
+            <span>{playbookUpdateNotice(p, p.newerVersion)}</span>
+          </div>
+        )}
         <ExampleVideo key={`${p.id}:${picked.id}`} p={example} />
         <Variants
           options={options}
@@ -237,6 +243,11 @@ export function PlaybookDetailPage() {
               <span className="fc-badge">{p.project === "new" ? "New project" : "Any project"}</span>
               <span className="fc-badge">v{p.version}</span>
             </div>
+            {p.source === "catalog" && (
+              <p className="fc-caption" data-testid="playbook-updated" style={{ marginTop: 8 }}>
+                Updated from framejam.ai
+              </p>
+            )}
           </div>
           <div className="actions">
             <button type="button" className="fc-btn primary" onClick={() => void copy(prompt, "prompt for your agent")}>

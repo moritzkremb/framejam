@@ -49,6 +49,8 @@ export function createApp(ctx: McpContext) {
 
   app.get("/api/update", async (c) => c.json(await checkUpdate()));
 
+  app.get("/api/catalog", (c) => c.json(ctx.catalog?.() ?? { enabled: false, url: "" }));
+
   app.get("/api/skill-status", (c) => c.json(skillStatus(ctx.skillDirs)));
 
   // --- Reviews -------------------------------------------------------------

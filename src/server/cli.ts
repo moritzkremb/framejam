@@ -6,7 +6,7 @@ import { serve } from "@hono/node-server";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createApp } from "./app.ts";
 import { createMcpServer } from "./mcp.ts";
-import { startCatalog } from "./catalog.ts";
+import { type CatalogClient, catalogConfig, catalogStatus, startCatalog } from "./catalog.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
 import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
@@ -182,7 +182,9 @@ if (positionals[0] === "start") await start();
 if (positionals[0] === "install") await runInstall();
 
 const store: Store = new JsonStore();
-const ctx = { store, baseUrl };
+const catalogSettings = catalogConfig();
+let catalogClient: CatalogClient | undefined;
+const ctx = { store, baseUrl, catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient) };
 
 function startHttp(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -205,7 +207,7 @@ function startHttp(): Promise<boolean> {
 if (stdio) {
   const transport = new StdioServerTransport();
   await createMcpServer(ctx).connect(transport);
-  startCatalog(catalogDir(store.root), log);
+  catalogClient = startCatalog(catalogDir(store.root), log, catalogSettings);
   if (!(await startHttp())) {
     const updated = await replaceOlderUI();
     if (updated) {
@@ -226,5 +228,5 @@ if (stdio) {
     );
     process.exit(1);
   }
-  startCatalog(catalogDir(store.root), log);
+  catalogClient = startCatalog(catalogDir(store.root), log, catalogSettings);
 }

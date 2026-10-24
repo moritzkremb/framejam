@@ -231,6 +231,10 @@ export interface PlaybookExampleSummary extends PlaybookExample {
 
 export interface PlaybookSummary extends Omit<Playbook, "featuredStyles" | "examples"> {
   builtin: boolean;
+  /** Where this copy came from. "catalog" means it was updated from framejam.ai. */
+  source?: "bundled" | "catalog" | "user";
+  /** Set when this is the user's own copy and the app has a higher version of it. */
+  newerVersion?: string;
   /** The example video's shape, read from its poster. */
   previewShape: "wide" | "tall" | "square";
   hasPreview: boolean;
