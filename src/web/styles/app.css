@@ -393,9 +393,10 @@ a { color: inherit; }
 .fc-words { position: relative; height: 26px; margin-top: 4px; overflow: hidden; touch-action: none; }
 .fc-words .w { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding: 0 5px; border-radius: 6px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--border); color: var(--text-2); font: 500 11px/1 var(--font-sans); white-space: nowrap; overflow: hidden; clip-path: inset(0 1px round 6px); }
 .fc-words .w:hover { color: var(--text); }
-.fc-words .w.sel { background: rgba(212, 255, 58, .16); box-shadow: inset 0 0 0 1px var(--accent); color: var(--text); }
 .fc-words .w.phrase { display: block; line-height: 26px; text-overflow: ellipsis; }
 .fc-words .w.on { background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--border-strong); color: var(--text); }
+.fc-words .w.sel { background: rgba(212, 255, 58, .16); box-shadow: inset 0 0 0 1px var(--accent); color: var(--text); }
+.fc-words .w.sel.on { background: rgba(212, 255, 58, .3); }
 .fc-words .w.grow { z-index: 1; overflow: visible; clip-path: none; }
 .fc-timeline.has-words .fc-head { height: 92px; }
 .fc-transcript { display: flex; flex-direction: column; gap: 12px; padding: 2px 4px; }
@@ -404,8 +405,9 @@ a { color: inherit; }
 .fc-transcript [data-i] { border-radius: 4px; cursor: pointer; }
 .fc-transcript [data-i]:hover { background: var(--surface-2); }
 .fc-transcript .filler { font-style: italic; color: var(--text-3); }
-.fc-transcript .sel { background: rgba(212, 255, 58, .18); }
 .fc-transcript .on { background: var(--surface-3); box-shadow: 0 0 0 1px var(--surface-3); }
+.fc-transcript [data-i].sel { background: rgba(212, 255, 58, .18); box-shadow: none; }
+.fc-transcript [data-i].sel.on { background: rgba(212, 255, 58, .32); box-shadow: 0 0 0 1px rgba(212, 255, 58, .32); }
 .fc-side-h .fc-tabs { align-self: stretch; align-items: flex-end; gap: 18px; border-bottom: 0; }
 .fc-side-h .fc-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 0 0 14px; font-size: 13px; }
 .fc-zoom-bar { position: relative; height: 6px; margin-top: 6px; border-radius: var(--radius-full); background: var(--surface-2); cursor: pointer; touch-action: none; }

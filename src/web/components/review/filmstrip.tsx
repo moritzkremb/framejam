@@ -193,7 +193,7 @@ interface Chip {
  * The words in view, grouped so each chip can show its text: zoomed in, one chip per word; zoomed out, words merge
  * into phrases that end at a sentence or a pause once they're wide enough.
  */
-function wordChips(words: TranscriptWord[], viewStart: number, span: number, width: number): Chip[] {
+function wordChips(words: TranscriptWord[], viewStart: number, span: number, width: number, range?: { start: number; end: number } | null): Chip[] {
   const pxPerSec = width / span;
   const chips: Chip[] = [];
   let cur: Chip | null = null;
@@ -201,6 +201,12 @@ function wordChips(words: TranscriptWord[], viewStart: number, span: number, wid
     const w = words[i];
     if (w.end < viewStart) continue;
     if (w.start > viewStart + span) break;
+    // Phrases break at the range's edges, so the selected chips line up with the range above them.
+    const prev = words[i - 1];
+    if (cur && range && prev && ((prev.end <= range.start && w.end > range.start) || (prev.start < range.end && w.start >= range.end))) {
+      chips.push(cur);
+      cur = null;
+    }
     const end = Math.max(w.end, w.start + 0.05);
     if (cur) {
       cur.to = i;
@@ -432,7 +438,7 @@ export function Filmstrip({ duration, time, zoom, markers, range, selectedId, fr
   const rangeBox = shownRange && clip(shownRange.start, shownRange.end);
 
   const spoken = words ? wordIndexAt(words, time) : -1;
-  const chips = words ? wordChips(words, viewStart, span, stripWidth) : [];
+  const chips = words ? wordChips(words, viewStart, span, stripWidth, shownRange) : [];
 
   return (
     <div ref={rootRef} className={cn("fc-timeline", words?.length && "has-words")} style={{ userSelect: "none" }}>
