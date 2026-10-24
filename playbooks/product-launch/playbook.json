@@ -4,6 +4,7 @@
   "tagline": "Your product goes in, a polished launch video with the real app on screen comes out.",
   "description": "The 20–60 second launch video SaaS teams post on X: a hook that names the pain, the name landing on the beat drop, your real app shown working in floating windows, proof, and a clean end card. Everything is cut to one music grid and reads with the sound off. Only real screens and real facts, never a mocked interface.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",
   "bring": [

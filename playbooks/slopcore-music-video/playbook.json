@@ -4,6 +4,7 @@
   "tagline": "A song full of a scene's in-jokes goes in, a music video with one star, every lyric on screen and a graphic explaining every line comes out.",
   "description": "A lyric music video made the way anabology and Claude made ESCAPE VELOCITY, CLODYSSEY and BLISS: one photographic lead (Claudia, the open character, or your own) in Midjourney plates, Seedance shots with lip sync measured from the song, and motion design drawn in code over it: every sung word on screen at its time, a graphic that explains each line, and a countdown or counter that escalates to the end. Made for songs about a scene's memes, like the AI timeline.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": {
     "id": "moritz",
     "name": "Moritz Kremb",

@@ -4,6 +4,7 @@
   "tagline": "A math or science idea goes in, a calm animated explainer in the style of 3Blue1Brown comes out.",
   "description": "A narrated video where equations morph, graphs draw themselves and shapes rearrange until the idea clicks. It's for teachers, students and anyone explaining something technical. What makes it good: one clear insight, shown as a picture before the formula, with the voice paced to every move.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": {
     "id": "moritz",
     "name": "Moritz Kremb",
