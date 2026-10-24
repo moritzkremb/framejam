@@ -4,6 +4,7 @@
   "tagline": "A raw talking-head recording goes in, a vertical reel with magazine-style serif titles, chat pop-ups and word-by-word captions comes out.",
   "description": "A reel that keeps moving around you: big serif headlines behind your head in the hook, a prompt box that types, app icons crossed out, a magazine cover, a grid of results, giant words landing, and a comment-keyword ending with a follow button. Pauses and earlier takes are cut out, captions light up word by word, and a lo-fi beat and sound effects are made for you.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "inspiredBy": [{ "name": "@justyn.ai", "url": "https://www.instagram.com/reel/DeUUFJQu8cw/" }],
   "license": "MIT",
