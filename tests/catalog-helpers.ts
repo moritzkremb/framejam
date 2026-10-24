@@ -79,3 +79,37 @@ export function makeCatalog(
   const indexBytes = Buffer.from(JSON.stringify({ ...index, ...options.overrides }, null, 2));
   return { index, indexBytes, signature: signBytes(indexBytes, key.privateKey), blobs };
 }
+
+export const FAKE_URL = "https://catalog.test/v1";
+
+export interface FakeServer {
+  catalog: TestCatalog;
+  /** Every path asked for, relative to the catalog URL. */
+  requests: string[];
+  /** When set, every request fails like a network error. */
+  offline: boolean;
+  /** Changes what a path returns, to break things on purpose. */
+  respond?: (rel: string, body: Buffer) => Buffer | Response | undefined;
+  fetch: typeof fetch;
+}
+
+/** A fetch that serves a catalog from memory. */
+export function fakeServer(catalog: TestCatalog): FakeServer {
+  const server: FakeServer = {
+    catalog,
+    requests: [],
+    offline: false,
+    fetch: async (input) => {
+      const rel = String(input).slice(FAKE_URL.length + 1);
+      server.requests.push(rel);
+      if (server.offline) throw new TypeError("fetch failed");
+      const c = server.catalog;
+      const body = rel === "index.json" ? c.indexBytes : rel === "index.json.sig" ? Buffer.from(`${c.signature}\n`) : c.blobs.get(rel.replace(/^blobs\//, ""));
+      if (!body) return new Response("not found", { status: 404 });
+      const changed = server.respond?.(rel, body);
+      if (changed instanceof Response) return changed;
+      return new Response(new Uint8Array(changed ?? body));
+    },
+  };
+  return server;
+}

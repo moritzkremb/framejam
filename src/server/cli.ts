@@ -6,8 +6,9 @@ import { serve } from "@hono/node-server";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createApp } from "./app.ts";
 import { createMcpServer } from "./mcp.ts";
+import { startCatalog } from "./catalog.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
-import { DEFAULT_PORT, dataDir, env, setupInfo } from "./paths.ts";
+import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
 import type { Store } from "../core/store.ts";
 import { VERSION, compareVersions } from "./version.ts";
@@ -204,6 +205,7 @@ function startHttp(): Promise<boolean> {
 if (stdio) {
   const transport = new StdioServerTransport();
   await createMcpServer(ctx).connect(transport);
+  startCatalog(catalogDir(store.root), log);
   if (!(await startHttp())) {
     const updated = await replaceOlderUI();
     if (updated) {
@@ -224,4 +226,5 @@ if (stdio) {
     );
     process.exit(1);
   }
+  startCatalog(catalogDir(store.root), log);
 }
