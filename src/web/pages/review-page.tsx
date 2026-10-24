@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, MessageSquarePlus, MousePointerClick, MoveHorizontal, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, MessageSquarePlus, Minimize, MousePointerClick, MoveHorizontal, Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MutableRefObject } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ const RATES = [1, 1.5, 2, 0.5];
 const SHORTCUTS: Shortcut[] = [
   ["Play or pause", ["Space"]],
   ["Change playback speed", ["S"]],
+  ["Full screen", ["F"]],
   ["Previous or next frame", ["←", "→"]],
   ["Jump 1 second", [SHIFT_KEY, "←", "→"]],
   ["Comment at this moment", ["C"]],
@@ -109,7 +110,15 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [frameWidth, setFrameWidth] = useState(0);
   const boxRef = useRef<HTMLTextAreaElement>(null);
+  const watchRef = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const side = useSidebar(width);
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(Boolean(document.fullscreenElement) && document.fullscreenElement === watchRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
 
   // Follow the playhead.
   useEffect(() => {
@@ -159,7 +168,19 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
 
   const markers: Marker[] = comments.map((c) => ({ id: c.id, index: indexOf.get(c.id)!, time: c.time, endTime: c.endTime, whole: c.wholeVideo, sent: c.status !== "draft" }));
 
-  const focusBox = () => requestAnimationFrame(() => boxRef.current?.focus());
+  const exitFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+  };
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) exitFullscreen();
+    else void watchRef.current?.requestFullscreen().catch(() => {});
+  };
+
+  // The comment box isn't shown in full screen, so commenting leaves it.
+  const focusBox = () => {
+    exitFullscreen();
+    requestAnimationFrame(() => boxRef.current?.focus());
+  };
 
   const seek = (t: number) => {
     ctrl?.seek(t);
@@ -260,6 +281,9 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       } else if (e.key === "s" || e.key === "S") {
         e.preventDefault();
         cycleRate();
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
       } else if (e.key === "ArrowLeft" || e.key === ",") {
         e.preventDefault();
         step(e.shiftKey ? -FPS : -1);
@@ -353,68 +377,80 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       <ReviewHeader r={r} subline={subline} shortcuts={SHORTCUTS} onPickVersion={pickVersion} />
       <div className={cn("fc-review", (!side.open || side.overlay) && "railed")}>
         <div className="fc-stage" style={{ "--content-w": `${Math.max(frameWidth, 520)}px` } as CSSProperties}>
-          <Player
-            src={src}
-            pins={pins}
-            floating={floating}
-            newPin={isOpen && !whole && anchor.kind === "spot" ? anchor : null}
-            selectedId={selectedId}
-            showHint={isOpen && comments.length === 0 && anchor.kind === "time" && !playing}
-            interactive={isOpen}
-            style={{ flex: "0 1 auto", width: "100%", aspectRatio: `${ctrl ? ctrl.width / ctrl.height : 16 / 9}`, minHeight: 160 }}
-            onController={handleController}
-            onFrameClick={onFrameClick}
-            onPinClick={selectById}
-            onFrameWidth={setFrameWidth}
-          />
-          <div>
-            <div className="fc-controls">
-              <button type="button" className="fc-play" aria-label={playing ? "Pause" : "Play"} onClick={togglePlay} disabled={!ctrl}>
-                {playing ? <Pause className="fc-i fill" /> : <Play className="fc-i fill" />}
-              </button>
-              <span className="fc-readout">
-                {formatTime(time)} <span>/ {formatTime(duration)}</span>
-              </span>
-              <button
-                type="button"
-                className={cn("fc-btn ghost sm fc-rate", rate !== 1 && "on")}
-                aria-label={`Playback speed ${rate}×`}
-                title="Playback speed (S)"
-                onClick={cycleRate}
-                disabled={!ctrl}
-              >
-                {rate}×
-              </button>
-              <span className="fc-grow" />
-              <ZoomControls zoom={zoom} time={time} />
-              <button type="button" className="fc-btn ghost icon sm round" aria-label="Previous frame" onClick={() => step(-1)}>
-                <ChevronLeft className="fc-i sm" />
-              </button>
-              <button type="button" className="fc-btn ghost icon sm round" aria-label="Next frame" onClick={() => step(1)}>
-                <ChevronRight className="fc-i sm" />
-              </button>
-            </div>
-            <Filmstrip
-              duration={duration}
-              time={time}
-              zoom={zoom}
-              markers={markers}
-              range={isOpen && !whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
+          <div ref={watchRef} className="fc-watch">
+            <Player
+              src={src}
+              pins={pins}
+              floating={floating}
+              newPin={isOpen && !whole && anchor.kind === "spot" ? anchor : null}
               selectedId={selectedId}
-              frameSource={version.videoPath ? data.videoUrl(review.id, version.number) : undefined}
-              canSelectRange={isOpen}
-              wholeActive={isOpen && whole}
-              onSeek={seek}
-              onScrubStart={() => ctrl?.pause()}
-              onRange={(start, end) => {
-                setAnchor({ kind: "range", time: start, endTime: end });
-                setWhole(false);
-                setSelectedId(null);
-                focusBox();
-              }}
-              onClearRange={() => setAnchor((a) => (a.kind === "range" ? { kind: "time" } : a))}
-              onSelect={selectById}
+              showHint={isOpen && comments.length === 0 && anchor.kind === "time" && !playing}
+              interactive={isOpen}
+              style={{ flex: "0 1 auto", width: "100%", aspectRatio: `${ctrl ? ctrl.width / ctrl.height : 16 / 9}`, minHeight: 160 }}
+              onController={handleController}
+              onFrameClick={onFrameClick}
+              onPinClick={selectById}
+              onFrameWidth={setFrameWidth}
             />
+            <div>
+              <div className="fc-controls">
+                <button type="button" className="fc-play" aria-label={playing ? "Pause" : "Play"} onClick={togglePlay} disabled={!ctrl}>
+                  {playing ? <Pause className="fc-i fill" /> : <Play className="fc-i fill" />}
+                </button>
+                <span className="fc-readout">
+                  {formatTime(time)} <span>/ {formatTime(duration)}</span>
+                </span>
+                <button
+                  type="button"
+                  className={cn("fc-btn ghost sm fc-rate", rate !== 1 && "on")}
+                  aria-label={`Playback speed ${rate}×`}
+                  title="Playback speed (S)"
+                  onClick={cycleRate}
+                  disabled={!ctrl}
+                >
+                  {rate}×
+                </button>
+                <span className="fc-grow" />
+                <ZoomControls zoom={zoom} time={time} />
+                <button type="button" className="fc-btn ghost icon sm round" aria-label="Previous frame" onClick={() => step(-1)}>
+                  <ChevronLeft className="fc-i sm" />
+                </button>
+                <button type="button" className="fc-btn ghost icon sm round" aria-label="Next frame" onClick={() => step(1)}>
+                  <ChevronRight className="fc-i sm" />
+                </button>
+                <button
+                  type="button"
+                  className="fc-btn ghost icon sm round"
+                  aria-label={fullscreen ? "Exit full screen" : "Full screen"}
+                  title={fullscreen ? "Exit full screen (F)" : "Full screen (F)"}
+                  onClick={toggleFullscreen}
+                  disabled={!ctrl}
+                >
+                  {fullscreen ? <Minimize className="fc-i sm" /> : <Maximize className="fc-i sm" />}
+                </button>
+              </div>
+              <Filmstrip
+                duration={duration}
+                time={time}
+                zoom={zoom}
+                markers={markers}
+                range={isOpen && !whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
+                selectedId={selectedId}
+                frameSource={version.videoPath ? data.videoUrl(review.id, version.number) : undefined}
+                canSelectRange={isOpen}
+                wholeActive={isOpen && whole}
+                onSeek={seek}
+                onScrubStart={() => ctrl?.pause()}
+                onRange={(start, end) => {
+                  setAnchor({ kind: "range", time: start, endTime: end });
+                  setWhole(false);
+                  setSelectedId(null);
+                  focusBox();
+                }}
+                onClearRange={() => setAnchor((a) => (a.kind === "range" ? { kind: "time" } : a))}
+                onSelect={selectById}
+              />
+            </div>
           </div>
           <ReviewBottom r={r} comments={comments} dock={dock} onLatest={() => pickVersion(latest.number)} />
         </div>
