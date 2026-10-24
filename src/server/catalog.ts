@@ -420,6 +420,15 @@ export class CatalogClient {
   }
 }
 
+/** What `/api/catalog` returns: whether the catalog is on, and when it last refreshed. */
+export function catalogStatus(root: string, config: CatalogConfig, client?: CatalogClient, appVersion: string = VERSION): CatalogStatus {
+  const base = { enabled: config.enabled, url: config.url, ...(config.reason ? { reason: config.reason } : {}) };
+  if (!config.enabled) return base;
+  if (client) return { ...base, ...client.status() };
+  const snapshot = readSnapshot(root, { appVersion, extraKeys: config.extraKeys });
+  return { ...base, checkedAt: snapshot?.checkedAt, generatedAt: snapshot?.generatedAt, sourceCommit: snapshot?.sourceCommit };
+}
+
 /** Starts the background refresh for this process when the catalog is on. */
 export function startCatalog(root: string, log: (message: string) => void, config: CatalogConfig = catalogConfig()): CatalogClient | undefined {
   if (!config.enabled) return undefined;

@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type CoreContext, createMcpServer as createCoreMcpServer } from "../core/mcp.ts";
 import type { ChooseSavePath } from "./save-dialog.ts";
+import type { CatalogStatus } from "./catalog.ts";
 import { currentSkillVersion } from "./skill.ts";
 import { UPDATE_COMMAND } from "./update.ts";
 
@@ -14,6 +15,8 @@ export interface McpContext extends Omit<CoreContext, "skillVersion" | "updateCo
   chooseSavePath?: ChooseSavePath;
   /** Folders checked for installed copies of the skill. Defaults to the global skill folders (tests). */
   skillDirs?: string[];
+  /** The playbook catalog's state for `/api/catalog`. Absent means the catalog isn't set up (tests). */
+  catalog?: () => CatalogStatus;
 }
 
 /** The MCP server for this computer: the core tools with the installed skill's version. */

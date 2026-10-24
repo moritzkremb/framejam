@@ -55,6 +55,11 @@ export function stylesSentence(p: Pick<Playbook, "styles" | "stylesNote">, style
 }
 
 /** What "Copy prompt" puts on the clipboard; the user adds their input after it. With a style, it asks for that look. */
+/** The line shown when a user's own copy hides a newer version. `folder` is where their copy lives. */
+export function playbookUpdateNotice(p: Pick<Playbook, "id" | "version">, newerVersion: string, folder = `~/.framejam/playbooks/${p.id}`): string {
+  return `Your copy is ${p.version}. Version ${newerVersion} is available; remove ${folder} to use it.`;
+}
+
 export function playbookPrompt(p: Pick<Playbook, "id" | "name">, style?: { id: string; name: string }): string {
   if (style)
     return `Make a video with the FrameJam playbook "${p.name}" (id: ${p.id}) in the style "${style.name}" (id: ${style.id}). Call get_playbook with id "${p.id}" and styleId "${style.id}" and follow it. [Add more context here]`;

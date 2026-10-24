@@ -2,6 +2,17 @@ import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, 
 
 export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick };
 
+/** From `/api/catalog`: whether playbooks update from framejam.ai, and how the last check went. */
+export interface CatalogStatus {
+  enabled: boolean;
+  url: string;
+  reason?: string;
+  checkedAt?: string;
+  generatedAt?: string;
+  sourceCommit?: string;
+  lastError?: { at: string; message: string };
+}
+
 export interface ReviewListItem {
   id: string;
   title: string;
@@ -88,6 +99,7 @@ export const api = {
     request<{ preset: PresetSummary; files: { path: string; content: string }[] }>(
       `/api/presets/${id}`,
     ),
+  catalog: () => request<CatalogStatus>("/api/catalog"),
   playbooks: () => request<{ playbooks: PlaybookSummary[] }>("/api/playbooks"),
   playbook: (id: string) => request<{ playbook: PlaybookSummary }>(`/api/playbooks/${id}`),
   activePick: () => request<VideoPick | null>("/api/picks/active"),

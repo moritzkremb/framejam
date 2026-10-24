@@ -3,7 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { FeedbackBatch, Review, ReviewComment } from "./types.ts";
 import { feedbackPrompt, latestComments, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
-import { costBadge, projectLabel, stylesSentence } from "./playbooks.ts";
+import { costBadge, playbookUpdateNotice, projectLabel, stylesSentence } from "./playbooks.ts";
 import { LISTEN_HEARTBEAT_MS, PICK_HEARTBEAT_MS, type Store } from "./store.ts";
 
 /** What the MCP tools need: a store and the base URL of the FrameJam UI. */
@@ -544,6 +544,11 @@ export function createMcpServer(ctx: CoreContext): McpServer {
     const picked = styleId ? featured.find((s) => s.id === styleId) : undefined;
     return {
       playbook: p.playbook,
+      ...(p.newerVersion
+        ? {
+            updateNotice: `${playbookUpdateNotice(p.playbook, p.newerVersion, p.dir)} Tell the user once; don't change or delete their folder yourself.`,
+          }
+        : {}),
       playbookDir: p.dir,
       files: playbooks.files(p),
       project: projectLabel(p.playbook.project),
