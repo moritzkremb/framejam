@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HomeHeader } from "@/components/header";
 import { isOffline, Offline } from "@/components/states";
-import { api, type PlaybookSummary } from "@/lib/api";
+import { api, type CatalogStatus, type PlaybookSummary } from "@/lib/api";
 import { PickBanner } from "@/components/pick-banner";
 import { VideoBackdrop } from "@/components/video-backdrop";
-import { costBadge } from "../../core/playbooks";
+import { costBadge, playbookUpdateNotice } from "../../core/playbooks";
 
 const FORMATS = ["All", "16:9", "9:16"] as const;
 
@@ -55,6 +55,15 @@ function PlaybookCard({ playbook }: { playbook: PlaybookSummary }) {
         </div>
         <div className="tagline">{playbook.tagline}</div>
         <div className="fc-caption fc-truncate">by {playbook.creator.name}</div>
+        {playbook.newerVersion ? (
+          <div className="fc-caption fc-truncate" data-testid="playbook-update" title={playbookUpdateNotice(playbook, playbook.newerVersion)}>
+            Version {playbook.newerVersion} is available
+          </div>
+        ) : playbook.source === "catalog" ? (
+          <div className="fc-caption fc-truncate" data-testid="playbook-updated">
+            Updated from framejam.ai
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -65,6 +74,14 @@ export function PlaybooksPage() {
   const [error, setError] = useState<unknown>(null);
   const [format, setFormat] = useState<string>("All");
   const [query, setQuery] = useState("");
+  const [catalog, setCatalog] = useState<CatalogStatus | null>(null);
+
+  useEffect(() => {
+    api
+      .catalog()
+      .then(setCatalog)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     api
@@ -92,6 +109,15 @@ export function PlaybooksPage() {
           <p className="fc-lede">
             A playbook is how a kind of video gets made: what you bring, the steps and the tools. Styles set the look. Name one when you ask your agent for a video, type /framejam:playbook to pick on a page, or copy a prompt from a playbook's page.
           </p>
+          {catalog?.enabled && catalog.lastError ? (
+            <p className="fc-caption" data-testid="catalog-status">
+              Couldn't check framejam.ai for new playbooks: {catalog.lastError.message}
+            </p>
+          ) : catalog?.enabled && catalog.checkedAt ? (
+            <p className="fc-caption" data-testid="catalog-status">
+              Checked framejam.ai for new playbooks on {new Date(catalog.checkedAt).toLocaleDateString()}.
+            </p>
+          ) : null}
         </div>
         {error && !data ? (
           isOffline(error) ? <Offline /> : <p className="fc-caption">{String((error as Error).message)}</p>

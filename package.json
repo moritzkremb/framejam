@@ -53,10 +53,12 @@
     "test": "vitest run",
     "render:presets": "tsx scripts/render-presets.ts",
     "e2e": "tsx scripts/e2e.ts",
+    "catalog": "tsx scripts/catalog.ts",
+    "catalog:keygen": "tsx scripts/catalog-keygen.ts",
     "sync:rule": "tsx scripts/sync-rule.ts",
     "sync:plugin": "tsx scripts/sync-plugin.ts",
     "version": "tsx scripts/sync-rule.ts --release && tsx scripts/sync-plugin.ts && git add skills/framejam/versions.json .cursor/rules/framejam.mdc plugin",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && FRAMEJAM_RELEASE_CHECK=1 npm test"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.3",

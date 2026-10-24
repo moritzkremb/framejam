@@ -4,7 +4,9 @@ import { validatePlaybook } from "../core/playbooks.ts";
 import type { PlaybookCatalog } from "../core/store.ts";
 import type { LoadedPlaybook as CoreLoadedPlaybook, Playbook, PlaybookSummary } from "../core/types.ts";
 import { safeJoin } from "./files.ts";
+import type { CatalogSnapshot } from "./catalog.ts";
 import { builtinPlaybooksDir, PLAYBOOK_PREVIEW_BASE_URL } from "./paths.ts";
+import { compareVersions } from "./version.ts";
 
 /** A playbook in a folder on this computer. */
 export interface LoadedPlaybook extends CoreLoadedPlaybook {
@@ -39,36 +41,93 @@ function previewShape(poster: string, format: Playbook["format"]): PlaybookSumma
   return format === "9:16" ? "tall" : format === "1:1" ? "square" : "wide";
 }
 
-export class PlaybookLibrary implements PlaybookCatalog {
-  constructor(private readonly dirs: { dir: string; builtin: boolean }[]) {}
+function readPlaybook(playbookDir: string, fallbackId: string): Playbook | undefined {
+  const file = path.join(playbookDir, "playbook.json");
+  if (!fs.existsSync(file)) return undefined;
+  try {
+    const playbook = JSON.parse(fs.readFileSync(file, "utf8")) as Playbook;
+    playbook.id ||= fallbackId;
+    playbook.skill ||= "SKILL.md";
+    const errors = validatePlaybook(playbook);
+    if (errors.length) throw new Error(errors.join("; "));
+    return playbook;
+  } catch (err) {
+    console.error(`[framejam] Skipping playbook ${playbookDir}: ${(err as Error).message}`);
+    return undefined;
+  }
+}
 
-  static forStore(userPlaybooksDir: string) {
-    return new PlaybookLibrary([
-      { dir: builtinPlaybooksDir, builtin: true },
-      { dir: userPlaybooksDir, builtin: false },
-    ]);
+/**
+ * Where playbooks come from, lowest priority first: the copies shipped with the app (`builtin: true` folders), the
+ * downloaded catalog, then the user's own folder (`builtin: false`).
+ *
+ * - A catalog copy replaces the bundled one only when its version is higher; a tie keeps the bundled copy.
+ * - A user's copy always wins. When the app has a higher version of it, the copy gets `newerVersion`.
+ * - A withdrawn catalog id only hides the catalog copy; the bundled one still shows.
+ */
+export class PlaybookLibrary implements PlaybookCatalog {
+  constructor(
+    private readonly dirs: { dir: string; builtin: boolean }[],
+    private readonly catalog?: () => CatalogSnapshot | undefined,
+  ) {}
+
+  static forStore(userPlaybooksDir: string, catalog?: () => CatalogSnapshot | undefined) {
+    return new PlaybookLibrary(
+      [
+        { dir: builtinPlaybooksDir, builtin: true },
+        { dir: userPlaybooksDir, builtin: false },
+      ],
+      catalog,
+    );
   }
 
-  all(): LoadedPlaybook[] {
+  private scan(dirs: { dir: string; builtin: boolean }[]): Map<string, LoadedPlaybook> {
     const byId = new Map<string, LoadedPlaybook>();
-    for (const { dir, builtin } of this.dirs) {
+    for (const { dir, builtin } of dirs) {
       if (!fs.existsSync(dir)) continue;
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         if (!entry.isDirectory()) continue;
         const playbookDir = path.join(dir, entry.name);
-        const file = path.join(playbookDir, "playbook.json");
-        if (!fs.existsSync(file)) continue;
-        try {
-          const playbook = JSON.parse(fs.readFileSync(file, "utf8")) as Playbook;
-          playbook.id ||= entry.name;
-          playbook.skill ||= "SKILL.md";
-          const errors = validatePlaybook(playbook);
-          if (errors.length) throw new Error(errors.join("; "));
-          byId.set(playbook.id, { playbook, dir: playbookDir, builtin });
-        } catch (err) {
-          console.error(`[framejam] Skipping playbook ${playbookDir}: ${(err as Error).message}`);
-        }
+        const playbook = readPlaybook(playbookDir, entry.name);
+        if (playbook) byId.set(playbook.id, { playbook, dir: playbookDir, builtin, source: builtin ? "bundled" : "user" });
       }
+    }
+    return byId;
+  }
+
+  private catalogCopies(): Map<string, LoadedPlaybook> {
+    const out = new Map<string, LoadedPlaybook>();
+    let snapshot: CatalogSnapshot | undefined;
+    try {
+      snapshot = this.catalog?.();
+    } catch {
+      return out;
+    }
+    for (const [id, { item, dir }] of snapshot?.playbooks ?? []) {
+      const playbook = readPlaybook(dir, id);
+      if (!playbook) continue;
+      if (playbook.id !== id || playbook.version !== item.version) {
+        console.error(`[framejam] Skipping catalog playbook ${dir}: playbook.json doesn't match the catalog entry`);
+        continue;
+      }
+      out.set(id, { playbook, dir, builtin: true, source: "catalog" });
+    }
+    return out;
+  }
+
+  all(): LoadedPlaybook[] {
+    const bundled = this.scan(this.dirs.filter((d) => d.builtin));
+    const user = this.scan(this.dirs.filter((d) => !d.builtin));
+    const available = new Map(bundled);
+    for (const [id, copy] of this.catalogCopies()) {
+      const have = available.get(id);
+      if (!have || compareVersions(copy.playbook.version, have.playbook.version) > 0) available.set(id, copy);
+    }
+    const byId = new Map(available);
+    for (const [id, mine] of user) {
+      const app = available.get(id);
+      const newer = app && compareVersions(app.playbook.version, mine.playbook.version) > 0 ? app.playbook.version : undefined;
+      byId.set(id, newer ? { ...mine, newerVersion: newer } : mine);
     }
     return [...byId.values()].sort((a, b) => a.playbook.name.localeCompare(b.playbook.name));
   }
@@ -95,6 +154,8 @@ export class PlaybookLibrary implements PlaybookCatalog {
     return {
       ...p.playbook,
       builtin: p.builtin,
+      source: p.source,
+      newerVersion: p.newerVersion,
       previewShape: previewShape(path.join(p.dir, "poster.jpg"), p.playbook.format),
       hasPreview: localPreview || p.builtin,
       previewUrl: previewUrl("preview.mp4"),

@@ -4,6 +4,7 @@
   "tagline": "A song goes in, a music video where the lyrics, graphics and illustrated characters move on every beat comes out.",
   "description": "A 2-minute music video where illustrated characters, bold animated lyrics and real footage hit every beat and every sung word. Good for parody songs, brand anthems and launch videos. It needs no generated video: still drawings come alive as moving cut-outs.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",
   "bring": [

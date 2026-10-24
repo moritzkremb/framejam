@@ -194,6 +194,8 @@ export interface Playbook {
   tagline: string;
   description: string;
   version: string;
+  /** Oldest FrameJam (major.minor.patch) that can use this playbook. Apps older than this skip a downloaded copy. */
+  minAppVersion?: string;
   creator: PlaybookCreator;
   inspiredBy?: { name: string; url?: string }[];
   license?: string;
@@ -229,6 +231,10 @@ export interface PlaybookExampleSummary extends PlaybookExample {
 
 export interface PlaybookSummary extends Omit<Playbook, "featuredStyles" | "examples"> {
   builtin: boolean;
+  /** Where this copy came from. "catalog" means it was updated from framejam.ai. */
+  source?: "bundled" | "catalog" | "user";
+  /** Set when this is the user's own copy and the app has a higher version of it. */
+  newerVersion?: string;
   /** The example video's shape, read from its poster. */
   previewShape: "wide" | "tall" | "square";
   hasPreview: boolean;
@@ -257,4 +263,8 @@ export interface LoadedPlaybook {
   playbook: Playbook;
   dir?: string;
   builtin: boolean;
+  /** Where this copy came from. Catalog copies count as built in. */
+  source?: "bundled" | "catalog" | "user";
+  /** Set on a user's own copy when the app has a higher version of the same playbook. */
+  newerVersion?: string;
 }

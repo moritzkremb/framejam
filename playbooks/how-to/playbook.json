@@ -4,6 +4,7 @@
   "tagline": "A process goes in, a short step-by-step video that's clear even with the sound off comes out.",
   "description": "A 30–90 second video that walks through a recipe, a setup or any process with a handful of steps. One scene stays on screen and changes step by step, a step card says where you are, and every step shows its one action with the exact amount or setting. Good for tutorials, onboarding and recipes.",
   "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",
   "bring": [

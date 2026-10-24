@@ -55,6 +55,11 @@ export function stylesSentence(p: Pick<Playbook, "styles" | "stylesNote">, style
 }
 
 /** What "Copy prompt" puts on the clipboard; the user adds their input after it. With a style, it asks for that look. */
+/** The line shown when a user's own copy hides a newer version. `folder` is where their copy lives. */
+export function playbookUpdateNotice(p: Pick<Playbook, "id" | "version">, newerVersion: string, folder = `~/.framejam/playbooks/${p.id}`): string {
+  return `Your copy is ${p.version}. Version ${newerVersion} is available; remove ${folder} to use it.`;
+}
+
 export function playbookPrompt(p: Pick<Playbook, "id" | "name">, style?: { id: string; name: string }): string {
   if (style)
     return `Make a video with the FrameJam playbook "${p.name}" (id: ${p.id}) in the style "${style.name}" (id: ${style.id}). Call get_playbook with id "${p.id}" and styleId "${style.id}" and follow it. [Add more context here]`;
@@ -65,6 +70,7 @@ const WHERE = new Set(["included", "computer", "service"]);
 const COST = new Set(["free", "free tier", "paid"]);
 const STYLES = new Set(["all", "parts", "inspiration", "none"]);
 const FORMATS = new Set(["16:9", "9:16", "1:1", "any"]);
+export const SEMVER = /^\d+\.\d+\.\d+$/;
 
 /** Problems with a playbook.json, as plain messages. Empty when it's valid. */
 export function validatePlaybook(p: Partial<Playbook>): string[] {
@@ -73,6 +79,8 @@ export function validatePlaybook(p: Partial<Playbook>): string[] {
     if (typeof p[key] !== "string" || !p[key]) errors.push(`${key} is required`);
   }
   if (p.id && !/^[a-z0-9][a-z0-9-]*$/.test(p.id)) errors.push("id must be lowercase letters, numbers and dashes");
+  if (p.minAppVersion !== undefined && (typeof p.minAppVersion !== "string" || !SEMVER.test(p.minAppVersion)))
+    errors.push("minAppVersion must look like 0.6.0");
   if (!p.creator?.id || !p.creator?.name) errors.push("creator needs an id and a name");
   if (!Array.isArray(p.bring) || !p.bring.length) errors.push("bring needs at least one item");
   if (!Array.isArray(p.steps) || !p.steps.length) errors.push("steps needs at least one item");
