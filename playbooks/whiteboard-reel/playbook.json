@@ -1,0 +1,35 @@
+{
+  "id": "whiteboard-reel",
+  "name": "Whiteboard Reel",
+  "tagline": "A raw talking-head recording goes in, a vertical reel comes out where every idea you explain is drawn on a white board above you.",
+  "description": "For sharing a tool, a method or a lesson to camera. When you explain something, a clean white board drops over the top of the frame and the idea draws itself on it: numbered steps, a tree, a mind map, a fan of cards revealed one by one, a title with a hand-drawn underline. Your results and the people you learned from pop up as cards, a series badge names your show, and the reel ends on a comment keyword. Pauses and earlier takes are cut out, lowercase captions run the whole way, and a light music bed and quiet sound effects are made for you.",
+  "version": "1.0.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@aiwithremy", "url": "https://www.instagram.com/reels/DeeroIoRpnr/" }],
+  "license": "MIT",
+  "bring": [
+    "Your raw recording of you explaining or sharing something to camera",
+    "Optional: screenshots of the real things you mention (thumbnails, profiles, your analytics)",
+    "Optional: your series name and the word people should comment to get your link"
+  ],
+  "get": "A 30–60 s vertical reel with whiteboard diagrams, pop-up cards, captions, music and sound effects",
+  "format": "9:16",
+  "project": "any",
+  "needs": [
+    { "name": "Reel template, starter scene and sound scripts", "where": "included" },
+    { "name": "Python 3, ffmpeg and Node", "where": "computer" },
+    { "name": "Hyperframes", "where": "computer" },
+    { "name": "Speech to text", "where": "service", "cost": "free", "examples": ["whisper on your computer (free)", "ElevenLabs Scribe (paid)", "OpenAI (paid)"] }
+  ],
+  "styles": "parts",
+  "stylesNote": "board colours, accent and fonts",
+  "steps": [
+    "Cut the pauses and keep the last take of every line",
+    "Mark every explanation and pick a diagram for it",
+    "Build each diagram so it draws itself as the words are said",
+    "Add the badge, proof cards, captions, music and sound effects",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["talking head", "reels", "instagram", "short", "whiteboard", "diagrams", "explainer", "captions"],
+  "skill": "SKILL.md"
+}

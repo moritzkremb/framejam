@@ -298,6 +298,7 @@ video. FrameJam ships with 16:
 | **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. Comes with three styles made for it: Pop Zine, Midnight Glow and Mono Plex. |
 | **Anchor and Overlay Reel** | A raw talking-head recording goes in, a vertical reel where you stay on screen and a picture pops up for every thing you name comes out. |
 | **Editorial Reel** | A raw talking-head recording goes in, a vertical reel with magazine-style serif titles, chat pop-ups and word-by-word captions comes out. |
+| **Whiteboard Reel** | A raw talking-head recording goes in, a vertical reel comes out where every idea you explain is drawn on a white board above you. |
 | **Clean Cut** | A raw recording goes in, the same video as a tight, fast-paced jump cut without pauses, fillers and retakes comes out. |
 | **Product Launch** | Your product goes in, a polished launch video with the real app on screen comes out. |
 | **Founder Launch** | A founder talking to camera and screen recordings go in, a tight launch video comes out. |
