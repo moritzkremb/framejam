@@ -1,9 +1,9 @@
 ---
 name: talking-head-short
-description: Turn a raw talking-head recording into a vertical show-and-tell short - the speaker in the bottom 60%, animated scenes in the top 40% that show what is being said as it is said (the real product, logos, results, typed prompts, steps), a title and captions on the seam. Removes dead air and earlier takes (keeps the last take). Works with whatever video tool the project uses; Hyperframes is the default for new projects.
+description: Turn a raw talking-head recording into a vertical split-screen short - the speaker in the bottom 60%, animated scenes in the top 40% that show what is being said as it is said (the real product, logos, results, typed prompts, steps), a title and captions on the seam. Removes dead air and earlier takes (keeps the last take). Works with whatever video tool the project uses; Hyperframes is the default for new projects.
 ---
 
-# Show & Tell Short
+# Split Screen Short
 
 > **How to use this playbook.** It's a recipe, not a set of rules: every format, length, pace and formula below is a
 > default, and whatever the user asks for wins. Don't open with questions: use the defaults, build, and mention the

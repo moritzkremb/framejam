@@ -294,7 +294,7 @@ video. FrameJam ships with 16:
 | **Kinetic Music Video** | A song goes in, a music video where the lyrics, graphics and illustrated characters move on every beat comes out. |
 | **Slopcore Music Video** | A song full of a scene's in-jokes goes in, a music video with one star, every lyric on screen and a graphic explaining every line comes out. Made the way anabology made ESCAPE VELOCITY with Claudia (claudia.gallery). |
 | **Slopcore Cartoon** | A song about a scene's memes goes in, a cartoon music video that explains every joke comes out, from still illustrations only, for a few dollars. |
-| **Show & Tell Short** | Raw talking-head clips go in, a tight vertical short that shows what you talk about while you say it comes out. Comes with two styles made for it: Midnight Glow and Paper Marker. |
+| **Split Screen Short** | Raw talking-head clips go in, a tight vertical short that shows what you talk about while you say it comes out. Comes with two styles made for it: Midnight Glow and Paper Marker. |
 | **Dynamic Layout Short** | A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out. Comes with three styles made for it: Pop Zine, Midnight Glow and Mono Plex. |
 | **Anchor and Overlay Reel** | A raw talking-head recording goes in, a vertical reel where you stay on screen and a picture pops up for every thing you name comes out. |
 | **Editorial Reel** | A raw talking-head recording goes in, a vertical reel with magazine-style serif titles, chat pop-ups and word-by-word captions comes out. |
