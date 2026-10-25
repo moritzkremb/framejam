@@ -84,8 +84,13 @@ lines.
    approval, and it goes to `security -i` over stdin, so it never appears in a command line or on disk.
 3. It prints only the key id and the public key. Run it again with `--spare` for the spare key.
 4. Check both exist without showing them: `security find-generic-password -s framejam-catalog-signing -a <keyId>`.
-5. Nothing else to back up: Time Machine covers the login keychain. If both keys are ever lost, a release with new
-   public keys is the recovery, because the app trusts only the keys built into the npm package.
+5. Backup: Time Machine covers the login keychain, and the spare key (`afd98895`) is also in 1Password ("FrameJam
+   catalog spare key"), copied by hand from Keychain Access. The active key (`1c6a8f72`) stays on this Mac only. If
+   this Mac is lost, add the spare from 1Password to a new Mac's login keychain with
+   `security add-generic-password -s framejam-catalog-signing -a afd98895 -T "" -w` (it asks for the value), set
+   `ACTIVE_KEY_ID` to it, and sign with it; no release is needed. Then release a version with a new spare. If both
+   keys are ever lost, a release with new public keys is the recovery, because the app trusts only the keys built
+   into the npm package.
 
 ### B. Embed the public keys (before releasing 0.6.0)
 
