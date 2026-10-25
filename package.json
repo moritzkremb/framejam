@@ -68,7 +68,7 @@
     "@modelcontextprotocol/sdk": "^1.31.0",
     "gsap": "^3.15.0",
     "hono": "^4.13.12",
-    "zod": "^4.6.5"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@fontsource-variable/geist": "^5.3.0",
