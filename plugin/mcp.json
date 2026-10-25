@@ -6,7 +6,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "framejam@0.5.0",
+        "framejam@0.6.0",
         "--stdio"
       ]
     }

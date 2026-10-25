@@ -1,7 +1,7 @@
 {
   "name": "framejam",
   "displayName": "FrameJam",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.",
   "author": {
     "name": "Moritz Kremb",
@@ -23,7 +23,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "framejam@0.5.0",
+        "framejam@0.6.0",
         "--stdio"
       ]
     }
