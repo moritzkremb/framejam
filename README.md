@@ -334,13 +334,14 @@ Like styles, the npm package leaves out `preview.mp4`; the Playbooks page stream
 `https://www.framejam.ai/playbooks/<id>/preview.mp4`. The full format is on
 [framejam.ai/docs/playbooks](https://www.framejam.ai/docs/playbooks).
 
-**Playbook updates.** Playbooks also come from a signed catalog at `https://www.framejam.ai/catalog/v1/`, so a new or
-fixed playbook (scripts included) reaches you without a new FrameJam release. The app checks at start and every 6
-hours, verifies the signature and every file against keys built into the app, and keeps the result in
-`~/.framejam/catalog/`. Offline, or if anything fails to verify, it uses the last good copy and then the playbooks that
-came with the app. Your own copy in `~/.framejam/playbooks/<id>` always wins; when a newer version exists, the
-Playbooks page says so and nothing in your folder changes. Some playbooks are catalog-only: they aren't in the npm
-package and show up once the app has been online. Set `FRAMEJAM_CATALOG_URL=off` or `FRAMEJAM_NO_UPDATE_CHECK=1` to
+**Playbook and style updates.** Playbooks and styles also come from a signed catalog at
+`https://www.framejam.ai/catalog/v1/`, so a new or fixed playbook (scripts included) or style reaches you without a new
+FrameJam release. The app checks at start and every 6 hours, verifies the signature and every file against keys built
+into the app, and keeps the result in `~/.framejam/catalog/`. Offline, or if anything fails to verify, it uses the last
+good copy and then the ones that came with the app. Your own copy in `~/.framejam/playbooks/<id>` or
+`~/.framejam/presets/<id>` always wins; for playbooks, when a newer version exists, the Playbooks page says so and
+nothing in your folder changes. Some playbooks and styles are catalog-only: they aren't in the npm package and show up
+once the app has been online. Set `FRAMEJAM_CATALOG_URL=off` or `FRAMEJAM_NO_UPDATE_CHECK=1` to
 turn it off. How it's built and published: [docs/catalog.md](docs/catalog.md).
 
 </details>
@@ -471,7 +472,7 @@ npm run lint
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),
 `--data-dir` / `FRAMEJAM_HOME` (default `~/.framejam`), `FRAMEJAM_PUBLIC_URL` (the base URL used in links), and
 `FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), `FRAMEJAM_PLAYBOOK_PREVIEW_URL` (the
-same for the Playbooks page), `FRAMEJAM_CATALOG_URL` (where playbook updates come from; `off` turns them off, see
+same for the Playbooks page), `FRAMEJAM_CATALOG_URL` (where playbook and style updates come from; `off` turns them off, see
 [docs/catalog.md](docs/catalog.md)), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and
 model for transcripts, when they aren't found on their own), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't look for a newer
 version on npm or for playbook updates).

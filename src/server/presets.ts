@@ -2,46 +2,89 @@ import fs from "node:fs";
 import path from "node:path";
 import type { PresetCatalog } from "../core/store.ts";
 import type { LoadedPreset as CoreLoadedPreset, PresetFilter, PresetStyle, PresetSummary } from "../core/types.ts";
+import { layerCopies, type CatalogSnapshot } from "./catalog.ts";
 import { safeJoin } from "./files.ts";
 import { builtinPresetsDir, PREVIEW_BASE_URL } from "./paths.ts";
 
 /** A preset in a folder on this computer. */
 export interface LoadedPreset extends CoreLoadedPreset {
   dir: string;
+  source: "bundled" | "catalog" | "user";
 }
 
 const TEXT_EXTENSIONS = new Set([".html", ".css", ".js", ".json", ".md", ".txt", ".svg"]);
 const MAX_SOURCE_BYTES = 200_000;
 
-export class PresetLibrary implements PresetCatalog {
-  constructor(private readonly dirs: { dir: string; builtin: boolean }[]) {}
+function readStyle(presetDir: string, fallbackId: string): PresetStyle | undefined {
+  const file = path.join(presetDir, "style.json");
+  if (!fs.existsSync(file)) return undefined;
+  try {
+    const style = JSON.parse(fs.readFileSync(file, "utf8")) as PresetStyle;
+    style.id ||= fallbackId;
+    return style;
+  } catch (err) {
+    console.error(`[framejam] Skipping style ${presetDir}: ${(err as Error).message}`);
+    return undefined;
+  }
+}
 
-  static forStore(userPresetsDir: string) {
-    return new PresetLibrary([
-      { dir: builtinPresetsDir, builtin: true },
-      { dir: userPresetsDir, builtin: false },
-    ]);
+/**
+ * Where styles come from, with the same rules as playbooks: the copies shipped with the app, the downloaded catalog
+ * (only when its version is higher), then the user's own folder, which always wins.
+ */
+export class PresetLibrary implements PresetCatalog {
+  constructor(
+    private readonly dirs: { dir: string; builtin: boolean }[],
+    private readonly catalog?: () => CatalogSnapshot | undefined,
+  ) {}
+
+  static forStore(userPresetsDir: string, catalog?: () => CatalogSnapshot | undefined) {
+    return new PresetLibrary(
+      [
+        { dir: builtinPresetsDir, builtin: true },
+        { dir: userPresetsDir, builtin: false },
+      ],
+      catalog,
+    );
   }
 
-  all(): LoadedPreset[] {
+  private scan(builtin: boolean): Map<string, LoadedPreset> {
     const byId = new Map<string, LoadedPreset>();
-    for (const { dir, builtin } of this.dirs) {
+    for (const { dir } of this.dirs.filter((d) => d.builtin === builtin)) {
       if (!fs.existsSync(dir)) continue;
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         if (!entry.isDirectory()) continue;
         const presetDir = path.join(dir, entry.name);
-        const styleFile = path.join(presetDir, "style.json");
-        if (!fs.existsSync(styleFile)) continue;
-        try {
-          const style = JSON.parse(fs.readFileSync(styleFile, "utf8")) as PresetStyle;
-          style.id ||= entry.name;
-          byId.set(style.id, { style, dir: presetDir, builtin });
-        } catch (err) {
-          console.error(`[framejam] Skipping preset ${presetDir}: ${(err as Error).message}`);
-        }
+        const style = readStyle(presetDir, entry.name);
+        if (style) byId.set(style.id, { style, dir: presetDir, builtin, source: builtin ? "bundled" : "user" });
       }
     }
-    return [...byId.values()].sort((a, b) => a.style.name.localeCompare(b.style.name));
+    return byId;
+  }
+
+  private catalogCopies(): Map<string, LoadedPreset> {
+    const out = new Map<string, LoadedPreset>();
+    let snapshot: CatalogSnapshot | undefined;
+    try {
+      snapshot = this.catalog?.();
+    } catch {
+      return out;
+    }
+    for (const [id, { item, dir }] of snapshot?.items.style ?? []) {
+      const style = readStyle(dir, id);
+      if (!style) continue;
+      if (style.id !== id || style.version !== item.version) {
+        console.error(`[framejam] Skipping catalog style ${dir}: style.json doesn't match the catalog entry`);
+        continue;
+      }
+      out.set(id, { style, dir, builtin: true, source: "catalog" });
+    }
+    return out;
+  }
+
+  all(): LoadedPreset[] {
+    const layered = layerCopies({ bundled: this.scan(true), catalog: this.catalogCopies(), user: this.scan(false) }, (p) => p.style.version);
+    return [...layered.values()].map(({ copy }) => copy).sort((a, b) => a.style.name.localeCompare(b.style.name));
   }
 
   get(id: string): LoadedPreset | undefined {
@@ -72,6 +115,7 @@ export class PresetLibrary implements PresetCatalog {
     const hasPoster = fs.existsSync(path.join(p.dir, "poster.jpg"));
     return {
       ...p.style,
+      source: p.source,
       hasPreview,
       hasPoster,
       previewUrl: localPreview ? `${base}/files/preview.mp4` : p.builtin ? `${PREVIEW_BASE_URL}/${id}/preview.mp4` : undefined,

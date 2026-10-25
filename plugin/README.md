@@ -10,11 +10,11 @@ saved in `~/.framejam`.
 What leaves your computer, and only to framejam.ai, npm or Hugging Face:
 
 - The Styles and Playbooks pages stream their example videos from framejam.ai.
-- The app downloads playbook updates, including the scripts and files a playbook comes with, from
+- The app downloads playbook and style updates, including the scripts and files they come with, from
   `framejam.ai/catalog/v1` (at start and then every 6 hours). Every file is checked against a signature and hashes
   before it's used, and nothing about you or your projects is sent. Set `FRAMEJAM_CATALOG_URL=off` to turn it off.
 - The app asks the npm registry whether a newer FrameJam is out (at most every 6 hours; set
-  `FRAMEJAM_NO_UPDATE_CHECK=1` to turn it off; that also turns off playbook updates).
+  `FRAMEJAM_NO_UPDATE_CHECK=1` to turn it off; that also turns off playbook and style updates).
 - The **Feedback** button sends the note you write, and your email if you add one, to framejam.ai.
 - The **Get updates** form sends the email you enter to framejam.ai, to send you release news.
 - If you press **Transcribe** and have no speech model yet, the app downloads one (574 MB) from Hugging Face.

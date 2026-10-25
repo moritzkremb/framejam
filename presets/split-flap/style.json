@@ -1,6 +1,8 @@
 {
   "id": "split-flap",
   "name": "Split Flap",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Mechanical split-flap letters that clatter through the alphabet before spelling your message.",
   "description": "Launch and announcement style built on split-flap (Solari) letters. Black flap cells with a hairline split, cream condensed type and amber labels; each character flips through the letters before it, its top half folding down in 3D, staggered across the board, with green and blinking amber status words as the only colour. The preview is a station departure board whose rows shuffle up before it re-flips to spell the product name.",
   "mood": [

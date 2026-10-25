@@ -1,29 +1,48 @@
-# The playbook catalog
+# The catalog
 
-Playbooks reach users two ways: bundled in the npm package, and from a signed catalog at
-`https://www.framejam.ai/catalog/v1/`. A playbook change that only touches `playbooks/` goes out by publishing the
-catalog (step C below), with no npm release. Only Moritz signs, on his Mac.
+Playbooks and styles reach users two ways: bundled in the npm package, and from a signed catalog at
+`https://www.framejam.ai/catalog/v1/`. A change that only touches `playbooks/` or `presets/` goes out by publishing
+the catalog (step C below), with no npm release. Only Moritz signs, on his Mac.
 
 ## How it works
 
-- `npm run catalog` turns `playbooks/` into `framejam-site/public/catalog/v1/`:
-  - `index.json` lists every playbook (id, version, `minAppVersion`, and each file with its sha256, size and mode),
-    plus `withdrawn` ids.
+- `npm run catalog` turns `playbooks/` and `presets/` into `framejam-site/public/catalog/v1/`:
+  - `index.json` lists every item with its `kind` (`playbook` or `style`), id, version, `minAppVersion`, and each
+    file with its sha256, size and mode, plus `withdrawn` entries (kind and id).
   - `index.json.sig` is an Ed25519 signature (base64) of the exact bytes of `index.json`.
   - `blobs/<sha256>` holds every file once, named by its hash.
 - The app (0.6.0 and later) refreshes in the background at start, every 6 hours, and 30 minutes after a failure. It
   verifies the signature with the public keys built into the app, then every file's hash and size. Files that already
   exist (in the bundled copy or an earlier version) are copied, not downloaded. A folder appears in
-  `~/.framejam/catalog/` only when it is complete. If anything fails, the last good catalog stays in use. Offline, the
-  app uses the saved catalog, then the bundled playbooks.
-- Which copy a playbook uses:
-  1. The user's own copy in `~/.framejam/playbooks/<id>` always wins. When the app has a higher version, the
-     Playbooks page and `get_playbook` say so; nothing in the user's folder changes.
+  `~/.framejam/catalog/items/<kind>/<id>/` only when it is complete. If anything fails, the last good catalog stays in
+  use. Offline, the app uses the saved catalog, then the bundled copies.
+- Which copy of a playbook or style the app uses (`layerCopies` in `src/server/catalog.ts`, the same for every kind):
+  1. The user's own copy in `~/.framejam/playbooks/<id>` or `~/.framejam/presets/<id>` always wins. For playbooks,
+     when the app has a higher version, the Playbooks page and `get_playbook` say so; nothing in the user's folder
+     changes.
   2. Otherwise the higher `version` of the catalog and bundled copies. A tie keeps the bundled copy.
   3. An item whose `minAppVersion` is above the app's version is ignored.
   4. A `withdrawn` id hides the catalog copy only; the bundled copy still shows.
-- Folders are named by version and file hash and are removed 7 days after nothing refers to them, so a playbook folder
-  an agent is using never changes during a session.
+- Folders are named by version and file hash and are removed 7 days after nothing refers to them, so a folder an
+  agent is using never changes during a session.
+- Every style and playbook needs `version` and `minAppVersion` in its `style.json` or `playbook.json`. Raise
+  `version` with every change: a catalog copy only replaces the bundled one when its version is higher. Styles are
+  checked by `validateStyle` (`src/core/presets.ts`) and playbooks by `validatePlaybook` when the catalog is built.
+- Preview videos stay out of the catalog, as they do in the npm package: the app streams them from the website
+  (`public/presets/<id>/` and `public/playbooks/<id>/`). Posters and every other file are in it.
+
+## Adding a kind
+
+The format is built so more kinds can follow (for example a library of smaller editing elements). A new kind needs:
+
+1. An entry in `CATALOG_KINDS` (`src/server/catalog-format.ts`) naming its manifest file.
+2. A validator in `VALIDATORS` and its source folder in `scripts/catalog.ts` (and its website folder, if the site
+   shows a copy of the manifest).
+3. A library that reads `snapshot.items.<kind>` and layers it with `layerCopies`, plus a folder in `bundledDirs` in
+   `startCatalog`.
+
+Apps that don't know a kind skip its items and withdrawn entries, so a catalog can carry a new kind before every
+install understands it. Set the new kind's `minAppVersion` to the first release that reads it.
 
 ## Switches
 
@@ -40,14 +59,16 @@ verification. `GET /api/catalog` shows whether it's on, when it last refreshed a
 ## What leaves the computer
 
 One request for `index.json` and `index.json.sig` per refresh, and one per file that isn't already on disk. Nothing
-about the user or their projects is sent. This is a network request that downloads code (playbook scripts), which is
-why every file is signed and verified before use.
+about the user or their projects is sent. This is a network request that downloads code (playbook scripts and the
+HTML and JavaScript of style examples), which is why every file is signed and verified before use.
 
-## Catalog-only playbooks
+## Catalog-only playbooks and styles
 
-A playbook can stay in `playbooks/<id>/` but be left out of the npm package, so users get it only through the catalog.
-Add `"!playbooks/<id>"` to `files` in `package.json`; delete the line to bundle it. A test checks that every excluded
-id is in the catalog and that `npm pack --dry-run` doesn't contain it, while every other playbook is packed.
+A playbook or style can stay in `playbooks/<id>/` or `presets/<id>/` but be left out of the npm package, so users
+get it only through the catalog. Add `"!playbooks/<id>"` or `"!presets/<id>"` to `files` in `package.json`; delete the
+line to bundle it. A test checks that every excluded id is in the catalog and that `npm pack --dry-run` doesn't
+contain it, while every other playbook and style is packed. A new catalog-only style still needs its folder on the
+website (`public/presets/<id>/` with `preview.mp4`, `poster.jpg` and `style.json`).
 
 The first three are Editorial Reel, Anchor & Overlay and Whiteboard Reel. Their pull requests add their exclusion
 lines.
@@ -77,21 +98,23 @@ lines.
 
 ### C. Sign and publish (the first catalog, and every update)
 
-1. In the app repo on `main`, clean, with the playbook changes committed and pushed: `npm run catalog`.
-   - It validates every playbook, hashes the files, builds the index and reads the private key with
+1. In the app repo on `main`, clean, with the playbook and style changes committed and pushed: `npm run catalog`.
+   - It validates every playbook and style, hashes the files, builds the index and reads the private key with
      `security find-generic-password -s framejam-catalog-signing -a <activeKeyId> -w`.
    - macOS asks for the login password: click **Allow**, never **Always Allow**.
    - It signs in memory, writes `../framejam-site/public/catalog/v1/`, copies each `playbook.json` into the site's
-     `public/playbooks/<id>/`, and checks the result against the built-in public key.
+     `public/playbooks/<id>/` and each `style.json` into `public/presets/<id>/`, and checks the result against the
+     built-in public key.
    - It refuses a dirty tree or another branch, signs nothing when nothing changed, and never makes an index older than
      the last one.
 2. `npm run catalog -- --check` should report no drift. It needs no key.
 3. In `../framejam-site`: `npx tsc --noEmit`, `npm run lint`, `npm run build`, then
-   `git add public/catalog public/playbooks && git commit -m "Catalog <short sha>"` and `git push origin main`.
+   `git add public/catalog public/playbooks public/presets && git commit -m "Catalog <short sha>"` and
+   `git push origin main`.
    Vercel deploys it.
 4. After the deploy: `npm run catalog -- --verify-remote`. It fetches the live index and every file and verifies them.
-5. To roll back, publish a higher `version` with the fix, or add the id to the list in `scripts/catalog-withdrawn.json`
-   (for example `["editorial-reel"]`) and publish again.
+5. To roll back, publish a higher `version` with the fix, or add the id under its kind in
+   `scripts/catalog-withdrawn.json` (for example `{ "playbook": ["editorial-reel"], "style": [] }`) and publish again.
 
 To try a catalog without the real key: `npm run catalog -- --test-key --out <folder>` signs with a throwaway key
 into that folder (the website stays untouched) and prints the public key to use with `FRAMEJAM_CATALOG_PUBLIC_KEY`
@@ -104,9 +127,9 @@ and a `FRAMEJAM_CATALOG_URL` pointing at the folder served over http.
 2. Do steps A and B, then step C: the first catalog has every playbook, all with `minAppVersion` 0.6.0. Run
    `--verify-remote`.
 3. Test a packed build: `npm run build && npm pack`, install the tarball into a temp folder, and start it with a
-   throwaway `FRAMEJAM_HOME` and `FRAMEJAM_CATALOG_URL` set. It should show 18 playbooks, with the three catalog-only
-   ones downloaded and the rest seeded from the bundled copy. Turn the network off and start it again: it should
-   still show all 18.
+   throwaway `FRAMEJAM_HOME` and `FRAMEJAM_CATALOG_URL` set. It should show 18 playbooks and 30 styles, with the
+   three catalog-only playbooks downloaded and the rest seeded from the bundled copies. Turn the network off and start
+   it again: it should still show them all.
 4. Release 0.6.0 with the one-line command in `AGENTS.md`. The Anthropic directory reviewer sees the updated
    `plugin/README.md`.
 5. First real use: change one playbook, publish with step C only, and confirm a 0.6.0 install picks it up within 6

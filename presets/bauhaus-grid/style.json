@@ -1,6 +1,8 @@
 {
   "id": "bauhaus-grid",
   "name": "Bauhaus Grid",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Red, blue and black modules that pop, rotate in waves and swap colour on a cream page.",
   "description": "Square design-poster style for events, studios and brand reels. A 4×4 grid of geometric modules (circles, arches, quarters, leaves) pops in from the centre, rotates in staggered waves, swaps colours, then a blue wipe reveals a bouncing lowercase wordmark. Small italic-serif and mono HUD labels frame every scene.",
   "mood": [

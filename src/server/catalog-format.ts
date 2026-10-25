@@ -23,8 +23,30 @@ export interface CatalogFile {
   mode: number;
 }
 
+/**
+ * What the catalog can carry. Each kind is a folder named by its id with a manifest file at the top. A new kind
+ * only needs an entry here and a library that reads it; apps that don't know a kind skip its items.
+ */
+export const CATALOG_KINDS = {
+  playbook: { manifest: "playbook.json" },
+  style: { manifest: "style.json" },
+} as const;
+
+export type CatalogKind = keyof typeof CATALOG_KINDS;
+
+export const KIND_LIST = Object.keys(CATALOG_KINDS) as CatalogKind[];
+
+export const isCatalogKind = (kind: unknown): kind is CatalogKind => typeof kind === "string" && Object.hasOwn(CATALOG_KINDS, kind);
+
+export const manifestOf = (kind: CatalogKind): string => CATALOG_KINDS[kind].manifest;
+
+/** One empty value per kind, for maps that must cover every kind. */
+export function perKind<T>(make: (kind: CatalogKind) => T): Record<CatalogKind, T> {
+  return Object.fromEntries(KIND_LIST.map((kind) => [kind, make(kind)])) as Record<CatalogKind, T>;
+}
+
 export interface CatalogItem {
-  kind: "playbook";
+  kind: CatalogKind;
   id: string;
   version: string;
   minAppVersion: string;
@@ -32,7 +54,7 @@ export interface CatalogItem {
 }
 
 export interface CatalogWithdrawn {
-  kind: "playbook";
+  kind: CatalogKind;
   id: string;
 }
 
@@ -57,7 +79,6 @@ export class CatalogError extends Error {
   }
 }
 
-const KINDS = new Set(["playbook"]);
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 const SHA256 = /^[0-9a-f]{64}$/;
 const KEY_ID = /^[0-9a-f]{8}$/;
@@ -91,9 +112,9 @@ function readFile(raw: unknown, where: string): CatalogFile {
   return { path: p, sha256, size, mode };
 }
 
-function readItem(raw: Record<string, unknown>): CatalogItem {
+function readItem(kind: CatalogKind, raw: Record<string, unknown>): CatalogItem {
   const { id, version, minAppVersion, files } = raw;
-  const where = `item ${String(id)}`;
+  const where = `${kind} ${String(id)}`;
   if (typeof id !== "string" || !ID.test(id)) return bad("an item has an invalid id");
   if (typeof version !== "string" || !SEMVER.test(version)) return bad(`${where} has an invalid version`);
   if (typeof minAppVersion !== "string" || !SEMVER.test(minAppVersion)) return bad(`${where} has an invalid minAppVersion`);
@@ -107,8 +128,8 @@ function readItem(raw: Record<string, unknown>): CatalogItem {
     total += f.size;
   }
   if (total > MAX_ITEM_BYTES) return bad(`${where} is too large`);
-  if (!seen.has("playbook.json")) return bad(`${where} has no playbook.json`);
-  return { kind: "playbook", id, version, minAppVersion, files: list };
+  if (!seen.has(manifestOf(kind))) return bad(`${where} has no ${manifestOf(kind)}`);
+  return { kind, id, version, minAppVersion, files: list };
 }
 
 /**
@@ -137,10 +158,10 @@ export function parseIndex(bytes: Uint8Array): CatalogIndex {
   const seen = new Set<string>();
   for (const entry of items) {
     if (!isObject(entry) || typeof entry.kind !== "string") return bad("an item has no kind");
-    if (!KINDS.has(entry.kind)) continue;
-    const item = readItem(entry);
+    if (!isCatalogKind(entry.kind)) continue;
+    const item = readItem(entry.kind, entry);
     const key = `${item.kind}:${item.id}`;
-    if (seen.has(key)) return bad(`${item.id} is listed twice`);
+    if (seen.has(key)) return bad(`${item.kind} ${item.id} is listed twice`);
     seen.add(key);
     known.push(item);
   }
@@ -148,9 +169,9 @@ export function parseIndex(bytes: Uint8Array): CatalogIndex {
   const gone: CatalogWithdrawn[] = [];
   for (const entry of withdrawn ?? []) {
     if (!isObject(entry) || typeof entry.kind !== "string" || typeof entry.id !== "string") return bad("a withdrawn entry is invalid");
-    if (!KINDS.has(entry.kind)) continue;
+    if (!isCatalogKind(entry.kind)) continue;
     if (!ID.test(entry.id)) return bad("a withdrawn entry has an invalid id");
-    gone.push({ kind: "playbook", id: entry.id });
+    gone.push({ kind: entry.kind, id: entry.id });
   }
 
   return { schema, keyId, generatedAt, sourceCommit, items: known, withdrawn: gone };

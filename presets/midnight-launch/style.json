@@ -1,6 +1,8 @@
 {
   "id": "midnight-launch",
   "name": "Midnight Glow",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "A glowing hero, blur-in type and fanned cards on near-black, with one warm accent.",
   "description": "Dark, polished launch look: near-black with a faint purple glow, a glowing centred hero that focuses in from blur, short lines that crossfade through blur, fans of cards flying out from behind, and one warm accent for the moment of action. The preview is an AI app launch with a prompt that types itself.",
   "mood": [

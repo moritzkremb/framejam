@@ -1,6 +1,8 @@
 {
   "id": "case-file",
   "name": "Case File",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Typed case notes, redaction bars, red string on a corkboard and a rubber stamp that slams onto the file.",
   "description": "Detective-dossier look: grey-green paper with grain and vignette, typewriter notes whose key facts get wiped out by black redaction bars, index cards pinned to a dark corkboard and joined by red string that draws on, one huge serif number, a rubber stamp with ink texture that slams onto the file, and a clean white surface for the resolved moment. Captions type out in a small dark bar at the bottom. The preview tells a docs-tool launch as a case.",
   "mood": [

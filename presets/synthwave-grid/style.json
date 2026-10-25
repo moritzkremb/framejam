@@ -1,6 +1,8 @@
 {
   "id": "synthwave-grid",
   "name": "Synthwave Grid",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "80s outrun: a striped neon sun, an endless scrolling grid, chrome type and VHS glitch cuts.",
   "description": "Retro-futurist style for synth plugins, retro games, music drops and night events. A magenta-to-gold striped sun sinks behind wireframe mountains while a neon perspective grid scrolls toward camera; chrome italic display type and a glowing script subtitle punch in on VHS tracking glitches, under scanlines and a fake camcorder HUD.",
   "mood": [

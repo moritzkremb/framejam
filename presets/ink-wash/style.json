@@ -1,6 +1,8 @@
 {
   "id": "ink-wash",
   "name": "Ink Wash",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "A slow shan-shui landscape in graded ink on rice paper, with a rising moon, drifting mist and a vertical title with a red seal.",
   "description": "Calm Chinese ink-wash look for festivals, poetry, tea and craft brands, travel and mood pieces: graded ink on warm rice paper with ink-bleed stippling, drifting mist, tiny parallax, a vertical serif title with a small red seal, and captions that dissolve in softly. Nothing snaps. The preview paints a mountain landscape with a rising moon, a plum branch, birds and a boat.",
   "mood": [

@@ -1,6 +1,8 @@
 {
   "id": "ui-microstudy",
   "name": "UI Microstudy",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "One crisp interface component morphs into the next while a cursor clicks, drags and hovers, and the colour field changes every beat.",
   "description": "A code-made UI motion study for product tours, feature reels and design-engineering showcases. A single white or near-black pill or card sits dead centre on a flat saturated colour with a few faint circles and bands. A cursor performs a real interaction, the card springs into its next shape, and a circular wipe swaps the background colour on every beat. The preview morphs through ten components, from a button and music player to a stat card, command palette and toast stack.",
   "mood": [

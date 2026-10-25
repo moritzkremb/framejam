@@ -1,6 +1,8 @@
 {
   "id": "acid-chrome",
   "name": "Acid Chrome",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Acid-lime brand reel: heavy all-caps statements, a spinning liquid-chrome knot and hard cuts on every beat.",
   "description": "Portfolio and brand-reel style for studios, agencies, launches and sizzle intros. Backgrounds hard-cut between near-black, acid lime and off-white on the beat; each scene states one huge heavy grotesk all-caps line that ends in a period, with the second line in lime (or a black box on lime). A glossy liquid-chrome object (torus knot, ring, figure-eight, puffy lime star) spins and morphs on the right, framed by a thin mono HUD: scene index 01 — 06, section labels, progress dashes, timecode, arrows and a pulsing beat waveform.",
   "mood": [

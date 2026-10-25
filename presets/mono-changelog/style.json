@@ -1,6 +1,8 @@
 {
   "id": "mono-changelog",
   "name": "Mono Plex",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Black on white, IBM Plex type, rows that fade up one at a time.",
   "description": "Calm, precise black-on-white look: IBM Plex Sans and Mono, thin grey rules, a strict left column, and rows that fade up one at a time, ending on a blinking caret. The preview is a release changelog with a version tag and numbered items.",
   "mood": [

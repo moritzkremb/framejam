@@ -1,8 +1,8 @@
 /**
- * Builds, signs and checks the playbook catalog. See docs/catalog.md for when to run which.
+ * Builds, signs and checks the catalog of playbooks and styles. See docs/catalog.md for when to run which.
  *
  *   npm run catalog                       build and sign with the Keychain key, write ../framejam-site/public/catalog/v1
- *   npm run catalog -- --check            exit 1 when the published catalog doesn't match playbooks/ (no key needed)
+ *   npm run catalog -- --check            exit 1 when the published catalog doesn't match playbooks/ and presets/ (no key needed)
  *   npm run catalog -- --verify-remote    fetch the live catalog and verify it
  *   npm run catalog -- --test-key --out DIR   sign with a throwaway key into DIR, to try a catalog locally
  *
@@ -11,7 +11,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { parseIndex } from "../src/server/catalog-format.ts";
+import { KIND_LIST, parseIndex, type CatalogIndex } from "../src/server/catalog-format.ts";
 import { ACTIVE_KEY_ID, CATALOG_PUBLIC_KEYS } from "../src/server/catalog-keys.ts";
 import { packageRoot } from "../src/server/paths.ts";
 import {
@@ -48,16 +48,25 @@ const fail = (message: string): never => {
 const siteDir = path.resolve(process.env.FRAMEJAM_SITE_DIR ?? path.join(packageRoot, "../framejam-site"));
 const testKey = flag("--test-key");
 const outDir = path.resolve(option("--out") ?? path.join(siteDir, "public/catalog/v1"));
-const siteCopies = path.join(siteDir, "public/playbooks");
+/** Per kind: where its items live in this repo, and where the website keeps a copy of each manifest. */
+const sources = { playbook: path.join(packageRoot, "playbooks"), style: path.join(packageRoot, "presets") };
+const siteCopies = { playbook: path.join(siteDir, "public/playbooks"), style: path.join(siteDir, "public/presets") };
 // With --out the catalog goes somewhere else on purpose, so the website's folders stay untouched.
 const touchSite = !option("--out");
 const extraKeys = option("--public-key") ? [option("--public-key")!] : [];
+
+const NOUNS = { playbook: ["playbook", "playbooks"], style: ["style", "styles"] } as const;
+const counts = (index: CatalogIndex) =>
+  KIND_LIST.map((kind) => {
+    const n = index.items.filter((i) => i.kind === kind).length;
+    return `${n} ${NOUNS[kind][n === 1 ? 0 : 1]}`;
+  }).join(", ");
 
 async function verifyRemote() {
   const url = option("--verify-remote");
   const base = url && !url.startsWith("--") ? url : DEFAULT_REMOTE;
   const { index, files, bytes } = await verifyCatalog(httpSource(base), extraKeys);
-  console.log(`${base} verifies: ${index.items.length} playbooks, ${files} files, ${(bytes / 1e6).toFixed(1)} MB, key ${index.keyId}, generated ${index.generatedAt}.`);
+  console.log(`${base} verifies: ${counts(index)}, ${files} files, ${(bytes / 1e6).toFixed(1)} MB, key ${index.keyId}, generated ${index.generatedAt}.`);
 }
 
 function build(generatedAt: string, keyId: string) {
@@ -69,7 +78,7 @@ function build(generatedAt: string, keyId: string) {
     }
   })();
   return buildCatalog({
-    playbooksDir: path.join(packageRoot, "playbooks"),
+    sources,
     keyId,
     sourceCommit,
     generatedAt,
@@ -81,17 +90,17 @@ async function check() {
   const built = build(new Date().toISOString(), ACTIVE_KEY_ID || "00000000");
   const drift = await checkDrift(outDir, built, extraKeys);
   const reasons = drift.ok ? [] : drift.reasons;
-  for (const id of touchSite ? syncSiteCopies(path.join(packageRoot, "playbooks"), siteCopies, built.index.items, true) : []) {
-    reasons.push(`the website's playbooks/${id}/playbook.json differs from the app's`);
+  for (const item of touchSite ? syncSiteCopies(sources, siteCopies, built.index.items, true) : []) {
+    reasons.push(`the website's copy of ${item} differs from the app's`);
   }
   if (reasons.length) fail(`The catalog has drifted:\n- ${reasons.join("\n- ")}\nRun npm run catalog.`);
-  console.log(`No drift: ${built.index.items.length} playbooks match ${outDir}.`);
+  console.log(`No drift: ${counts(built.index)} match ${outDir}.`);
 }
 
 async function publish() {
   if (testKey && !option("--out")) fail("--test-key needs --out <folder>, so a throwaway catalog never lands in the website.");
   if (!testKey && !flag("--allow-dirty")) {
-    if (git("status", "--porcelain")) fail("The working tree isn't clean. Commit and push your playbook changes first.");
+    if (git("status", "--porcelain")) fail("The working tree isn't clean. Commit and push your playbook and style changes first.");
     if (git("rev-parse", "--abbrev-ref", "HEAD") !== "main") fail("Run this on main, with your changes merged.");
   }
 
@@ -122,21 +131,20 @@ async function publish() {
   }
 
   const built = build(generatedAt, signer.keyId);
-  const playbooksDir = path.join(packageRoot, "playbooks");
   const drift = await checkDrift(outDir, built, extraKeys);
-  const copiesToSync = touchSite ? syncSiteCopies(playbooksDir, siteCopies, built.index.items, true) : [];
+  const copiesToSync = touchSite ? syncSiteCopies(sources, siteCopies, built.index.items, true) : [];
   if (drift.ok && !copiesToSync.length && !flag("--force")) {
     console.log("The catalog is already up to date. Nothing signed.");
     return;
   }
 
   const { blobsWritten } = writeCatalog(outDir, built, signer);
-  const synced = touchSite ? syncSiteCopies(playbooksDir, siteCopies, built.index.items) : [];
+  const synced = touchSite ? syncSiteCopies(sources, siteCopies, built.index.items) : [];
   const { files, bytes } = await verifyCatalog(folderSource(outDir), extraKeys);
   console.log(`Wrote ${outDir}`);
-  console.log(`${built.index.items.length} playbooks, ${files} files (${(bytes / 1e6).toFixed(1)} MB), ${blobsWritten} new blobs, signed with ${signer.keyId}, verified.`);
-  if (synced.length) console.log(`Updated the website's playbook.json for: ${synced.join(", ")}`);
-  if (!testKey) console.log("Next: in framejam-site run tsc, lint and build, then commit public/catalog and public/playbooks and push (docs/catalog.md, step C).");
+  console.log(`${counts(built.index)}, ${files} files (${(bytes / 1e6).toFixed(1)} MB), ${blobsWritten} new blobs, signed with ${signer.keyId}, verified.`);
+  if (synced.length) console.log(`Updated the website's copies of: ${synced.join(", ")}`);
+  if (!testKey) console.log("Next: in framejam-site run tsc, lint and build, then commit public/catalog, public/playbooks and public/presets and push (docs/catalog.md, step C).");
 }
 
 try {

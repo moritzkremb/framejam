@@ -1,6 +1,8 @@
 {
   "id": "parchment-epic",
   "name": "Parchment Epic",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Aged parchment, engraved line drawings that etch themselves, and wide-tracked serif headlines under sunburst rays.",
   "description": "Documentary-explainer style for histories, origin stories and big-idea narratives. Warm parchment with a vignette and grain, thin dark-brown engravings (clock faces, rose windows, arcades, compass geometry) that draw themselves stroke by stroke, Cinzel all-caps headlines with one deep-red accent word, radiating sunburst rays behind the hero, HUD-style corner metadata with an era counter and a red progress rule, and a dark opening scene with a golden glowing title.",
   "mood": [

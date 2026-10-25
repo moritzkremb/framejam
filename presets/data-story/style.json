@@ -1,6 +1,8 @@
 {
   "id": "data-story",
   "name": "Navy Teal",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Navy and teal: bars that grow, a hero number that counts up and a quiet source line.",
   "description": "Calm data look: a deep navy ground, bars that grow in sequence while the one that matters glows teal, giant counting numbers in Space Grotesk, a centred one-line takeaway and a small muted source line. The preview shows review rounds per video falling across a week.",
   "mood": [

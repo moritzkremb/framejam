@@ -1,5 +1,5 @@
 /**
- * Downloads the signed playbook catalog in the background and keeps it in `<data dir>/catalog/`.
+ * Downloads the signed catalog (playbooks and styles) in the background and keeps it in `<data dir>/catalog/`.
  *
  * Nothing is used before it's verified: the index must carry a valid signature from a built-in key, and every file
  * must match the sha256 and size the index names. An item's folder only appears once it is complete (built in a temp
@@ -14,15 +14,18 @@ import {
   MAX_INDEX_BYTES,
   checkFileBytes,
   isCompatible,
+  manifestOf,
+  perKind,
   sha256Hex,
   verifyIndex,
   type CatalogFile,
   type CatalogIndex,
   type CatalogItem,
+  type CatalogKind,
 } from "./catalog-format.ts";
 import { trustedKeys } from "./catalog-keys.ts";
-import { DEFAULT_CATALOG_URL, builtinPlaybooksDir, env, isInstalledCopy } from "./paths.ts";
-import { VERSION } from "./version.ts";
+import { DEFAULT_CATALOG_URL, builtinPlaybooksDir, builtinPresetsDir, env, isInstalledCopy } from "./paths.ts";
+import { VERSION, compareVersions } from "./version.ts";
 
 const OK_TTL_MS = 6 * 60 * 60 * 1000;
 const FAIL_TTL_MS = 30 * 60 * 1000;
@@ -48,7 +51,7 @@ export interface CatalogConfig {
  * Whether the catalog is used, from the environment:
  * - `FRAMEJAM_CATALOG_URL=off` turns it off; any other value replaces the default URL.
  * - `FRAMEJAM_NO_UPDATE_CHECK` turns it off.
- * - A source checkout has every playbook in `playbooks/`, so it's off there unless FRAMEJAM_CATALOG_URL is set.
+ * - A source checkout has every playbook and style in its own folders, so it's off there unless FRAMEJAM_CATALOG_URL is set.
  * - `FRAMEJAM_CATALOG_PUBLIC_KEY` trusts one more key, only in a source checkout. Nothing skips verification.
  */
 export function catalogConfig(read: (name: string) => string | undefined = env, installed: boolean = isInstalledCopy()): CatalogConfig {
@@ -122,28 +125,31 @@ export interface CatalogSnapshot {
   generatedAt: string;
   sourceCommit: string;
   checkedAt: string;
-  /** Playbooks this app can use: compatible, not withdrawn, and fully downloaded. By id. */
-  playbooks: Map<string, CatalogEntry>;
-  /** Ids the catalog hides. The bundled copy still shows. */
-  withdrawn: Set<string>;
+  /** Per kind, the items this app can use: compatible, not withdrawn, and fully downloaded. By id. */
+  items: Record<CatalogKind, Map<string, CatalogEntry>>;
+  /** Per kind, the ids the catalog hides. The bundled copy still shows. */
+  withdrawn: Record<CatalogKind, Set<string>>;
 }
+
+const withdrawnKey = (w: { kind: string; id: string }) => `${w.kind}:${w.id}`;
 
 /**
  * The last good catalog on disk, verified again now. Undefined when there is none or it no longer verifies (for
- * example after the keys changed), so callers fall back to the bundled playbooks.
+ * example after the keys changed), so callers fall back to the bundled copies.
  */
 export function readSnapshot(root: string, options: ReadOptions): CatalogSnapshot | undefined {
   const read = readState(root, options);
   if (!read) return undefined;
   const { state, index } = read;
-  const withdrawn = new Set(index.withdrawn.filter((w) => w.kind === "playbook").map((w) => w.id));
-  const playbooks = new Map<string, CatalogEntry>();
+  const withdrawn = perKind(() => new Set<string>());
+  for (const w of index.withdrawn) withdrawn[w.kind].add(w.id);
+  const items = perKind(() => new Map<string, CatalogEntry>());
   for (const item of index.items) {
-    if (item.kind !== "playbook" || withdrawn.has(item.id) || !isCompatible(item, options.appVersion)) continue;
+    if (withdrawn[item.kind].has(item.id) || !isCompatible(item, options.appVersion)) continue;
     const dir = itemDir(root, item);
-    if (fs.existsSync(path.join(dir, "playbook.json"))) playbooks.set(item.id, { item, dir });
+    if (fs.existsSync(path.join(dir, manifestOf(item.kind)))) items[item.kind].set(item.id, { item, dir });
   }
-  return { generatedAt: index.generatedAt, sourceCommit: index.sourceCommit, checkedAt: state.checkedAt, playbooks, withdrawn };
+  return { generatedAt: index.generatedAt, sourceCommit: index.sourceCommit, checkedAt: state.checkedAt, items, withdrawn };
 }
 
 export type RefreshResult =
@@ -166,8 +172,8 @@ export interface CatalogClientOptions {
   root: string;
   url: string;
   appVersion: string;
-  /** The bundled playbooks folder, to copy unchanged files from instead of downloading them. */
-  bundledDir?: string;
+  /** Per kind, the folder of copies bundled with the app, to copy unchanged files from instead of downloading them. */
+  bundledDirs?: Partial<Record<CatalogKind, string>>;
   extraKeys?: string[];
   fetch?: typeof fetch;
   now?: () => number;
@@ -274,7 +280,7 @@ export class CatalogClient {
       const message = err instanceof Error ? err.message : String(err);
       const code = err instanceof CatalogError ? err.code : "network";
       // One line per run of failures, so being offline doesn't fill a log.
-      if (!this.lastError) this.options.log?.(`framejam: couldn't update playbooks from ${this.options.url}: ${message}`);
+      if (!this.lastError) this.options.log?.(`framejam: couldn't update playbooks and styles from ${this.options.url}: ${message}`);
       this.lastError = { at: new Date(this.now()).toISOString(), message };
       return { ok: false, error: message, code };
     }
@@ -297,8 +303,8 @@ export class CatalogClient {
       throw new CatalogError("bad-index", `the catalog (${index.generatedAt}) is older than the one already saved (${prior.index.generatedAt})`);
     }
 
-    const withdrawn = new Set(index.withdrawn.map((w) => w.id));
-    const wanted = index.items.filter((i) => !withdrawn.has(i.id) && isCompatible(i, appVersion));
+    const withdrawn = new Set(index.withdrawn.map(withdrawnKey));
+    const wanted = index.items.filter((i) => !withdrawn.has(withdrawnKey(i)) && isCompatible(i, appVersion));
     let downloaded = 0;
     let seeded = 0;
     for (const item of wanted) {
@@ -319,7 +325,8 @@ export class CatalogClient {
   private async install(item: CatalogItem): Promise<{ downloaded: number; seeded: number }> {
     const { root } = this.options;
     const finalDir = itemDir(root, item);
-    if (fs.existsSync(path.join(finalDir, "playbook.json"))) return { downloaded: 0, seeded: 0 };
+    const manifest = manifestOf(item.kind);
+    if (fs.existsSync(path.join(finalDir, manifest))) return { downloaded: 0, seeded: 0 };
 
     const parent = path.dirname(finalDir);
     fs.mkdirSync(parent, { recursive: true });
@@ -350,7 +357,7 @@ export class CatalogClient {
         fs.renameSync(tmp, finalDir);
       } catch (err) {
         // Another FrameJam process finished the same folder first: that one is just as good.
-        if (!fs.existsSync(path.join(finalDir, "playbook.json"))) throw err;
+        if (!fs.existsSync(path.join(finalDir, manifest))) throw err;
         fs.rmSync(tmp, { recursive: true, force: true });
       }
     } catch (err) {
@@ -363,7 +370,8 @@ export class CatalogClient {
   /** The same file from the bundled copy, or from an earlier version of this item, if its bytes match exactly. */
   private seed(item: CatalogItem, file: CatalogFile): Buffer | undefined {
     const candidates: string[] = [];
-    if (this.options.bundledDir) candidates.push(path.join(this.options.bundledDir, item.id, file.path));
+    const bundled = this.options.bundledDirs?.[item.kind];
+    if (bundled) candidates.push(path.join(bundled, item.id, file.path));
     const versions = path.join(itemsDir(this.options.root), item.kind, item.id);
     try {
       for (const entry of fs.readdirSync(versions, { withFileTypes: true })) {
@@ -420,6 +428,33 @@ export class CatalogClient {
   }
 }
 
+export type CopySource = "bundled" | "catalog" | "user";
+
+/**
+ * Which copy of each item a library shows, for any kind:
+ * - A catalog copy replaces the bundled one only when its version is higher; a tie keeps the bundled copy.
+ * - A user's copy always wins. When the app has a higher version, `newerVersion` says which.
+ */
+export function layerCopies<T>(
+  copies: { bundled: Map<string, T>; catalog: Map<string, T>; user: Map<string, T> },
+  versionOf: (copy: T) => string | undefined,
+): Map<string, { copy: T; source: CopySource; newerVersion?: string }> {
+  const available = new Map<string, { copy: T; source: CopySource }>();
+  for (const [id, copy] of copies.bundled) available.set(id, { copy, source: "bundled" });
+  for (const [id, copy] of copies.catalog) {
+    const have = available.get(id);
+    if (!have || compareVersions(versionOf(copy) ?? "0.0.0", versionOf(have.copy) ?? "0.0.0") > 0) available.set(id, { copy, source: "catalog" });
+  }
+  const out = new Map<string, { copy: T; source: CopySource; newerVersion?: string }>(available);
+  for (const [id, copy] of copies.user) {
+    const app = available.get(id);
+    const appVersion = app && versionOf(app.copy);
+    const newer = appVersion && compareVersions(appVersion, versionOf(copy) ?? "0.0.0") > 0 ? appVersion : undefined;
+    out.set(id, newer ? { copy, source: "user", newerVersion: newer } : { copy, source: "user" });
+  }
+  return out;
+}
+
 /** What `/api/catalog` returns: whether the catalog is on, and when it last refreshed. */
 export function catalogStatus(root: string, config: CatalogConfig, client?: CatalogClient, appVersion: string = VERSION): CatalogStatus {
   const base = { enabled: config.enabled, url: config.url, ...(config.reason ? { reason: config.reason } : {}) };
@@ -436,7 +471,7 @@ export function startCatalog(root: string, log: (message: string) => void, confi
     root,
     url: config.url,
     appVersion: VERSION,
-    bundledDir: builtinPlaybooksDir,
+    bundledDirs: { playbook: builtinPlaybooksDir, style: builtinPresetsDir },
     extraKeys: config.extraKeys,
     log,
   });

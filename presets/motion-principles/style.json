@@ -1,6 +1,8 @@
 {
   "id": "motion-principles",
   "name": "Motion Principles",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "A blue ball bounces, stretches and leaves ghost trails while handwritten notes name every animation principle.",
   "description": "Clean motion-craft look: white and black scenes hard-cut against each other, one electric-blue element that squashes, stretches and leaves onion-skin ghosts, and handwritten notes with drawn arrows naming what's happening. The preview is a reel about animation principles starring a bouncing ball.",
   "mood": [

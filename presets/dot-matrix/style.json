@@ -1,6 +1,8 @@
 {
   "id": "dot-matrix",
   "name": "Dot Matrix",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Big numbers lit on a dot board that re-lights column by column, with hard cream-to-black cuts.",
   "description": "Hardware dot-board look: everything is spelled or drawn in round dots on a fixed grid, re-lit column by column behind a hot-pink scan line while the background cuts between cream and black, with mono HUD corners and a timecode. The preview is a stat reel of big numbers for a status page.",
   "mood": [

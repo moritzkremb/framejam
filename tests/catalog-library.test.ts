@@ -130,7 +130,7 @@ describe("library with a downloaded catalog", () => {
   it("falls back to the bundled copy when the catalog folder is gone", async () => {
     const { lib, read } = await setup({ bundled: [["a", "1.0.0"]], items: [item("a", "1.1.0")] });
     expect(names(lib)).toEqual({ a: "1.1.0 catalog" });
-    fs.rmSync(read()!.playbooks.get("a")!.dir, { recursive: true });
+    fs.rmSync(read()!.items.playbook.get("a")!.dir, { recursive: true });
     expect(names(lib)).toEqual({ a: "1.0.0 bundled" });
   });
 

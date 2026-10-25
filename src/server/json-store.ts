@@ -82,7 +82,7 @@ export class JsonStore implements Store {
   constructor(root = dataDir(), options: { catalog?: CatalogConfig } = {}) {
     this.root = root;
     fs.mkdirSync(this.reviewsDir, { recursive: true });
-    this.presets = PresetLibrary.forStore(this.userPresetsDir);
+    this.presets = PresetLibrary.forStore(this.userPresetsDir, this.catalogReader(options.catalog));
     this.playbooks = PlaybookLibrary.forStore(this.userPlaybooksDir, this.catalogReader(options.catalog));
   }
 

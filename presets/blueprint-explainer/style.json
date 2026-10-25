@@ -1,6 +1,8 @@
 {
   "id": "blueprint-explainer",
   "name": "Blueprint",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Thin line drawings on a navy grid, a needle that sweeps, a formula that writes itself and calm subtitles.",
   "description": "Calm line-drawing look: white and cyan line art draws itself on a navy blueprint grid, needles and dials settle into place, formulas write on in an italic serif, measurements appear in amber mono, and one subtitle line narrates at the bottom. The preview explains a car's speedometer.",
   "mood": [

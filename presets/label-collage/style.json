@@ -1,6 +1,8 @@
 {
   "id": "label-collage",
   "name": "Label Collage",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Label-maker tape, a hand-cut coral star and grainy night-sky paper, slapped together by hand.",
   "description": "Tactile scrapbook look: warm cream paper and speckled, halftoned indigo night paper, navy Dymo tape with embossed mono text slapped on by hand, rough coral cut-outs and hand-drawn circles, all under a film of grain. The preview is a journaling app with a spinning asterisk, a sketched jar and a circled quote.",
   "mood": [

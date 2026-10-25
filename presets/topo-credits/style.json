@@ -1,6 +1,8 @@
 {
   "id": "topo-credits",
   "name": "Topo Credits",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Self-drawing topographic contours, a bloom of red ink and widely spaced serif type on black letterbox.",
   "description": "Cinematic title-sequence style for films, documentaries, trailers and premium brand intros. Pale contour lines draw themselves on black letterbox while slowly turning, one contour traces in red, blurred red ink blooms grow inside a drawn ring, and wide-tracked serif type resolves from blur, settling over faint contours with a thin red rule. The preview is the opening credits of a mountain film.",
   "mood": [

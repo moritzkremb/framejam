@@ -1,6 +1,8 @@
 {
   "id": "paper-marker",
   "name": "Paper Marker",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Huge kinetic type on paper, marker notes that draw themselves, and hard switches to black.",
   "description": "Hand-made explainer style for product launches and one-idea pitches. Slamming heavy type on a warm paper canvas, red-pen arrows and circles that draw on, a yellow highlighter swipe, and hard cuts between paper and ink-black every 1.5–2 seconds.",
   "mood": [

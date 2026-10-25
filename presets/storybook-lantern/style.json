@@ -1,6 +1,8 @@
 {
   "id": "storybook-lantern",
   "name": "Storybook Lantern",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Hand-cut paper shapes, a warm glow and a slow parallax drift from night to sunset.",
   "description": "Soft illustrated storybook on grainy paper: flat shapes with slightly rough edges, a muted teal, brick red, dusk purple and lamp-yellow palette, and gentle glows. A slow narrative told in layered parallax scenes with soft crossfades, springy icon pops and one handwritten closing line. Made for warm brand stories, app origin tales and gentle explainers. The preview follows a small figure and a glowing teapot spirit.",
   "mood": [

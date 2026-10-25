@@ -64,6 +64,11 @@ function StyleCard({ preset }: { preset: PresetSummary }) {
           </span>
         </div>
         <div className="tagline">{preset.tagline}</div>
+        {preset.source === "catalog" && (
+          <div className="fc-caption fc-truncate" data-testid="style-updated">
+            Updated from framejam.ai
+          </div>
+        )}
       </div>
     </div>
   );

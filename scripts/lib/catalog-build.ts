@@ -1,5 +1,5 @@
 /**
- * Builds the signed playbook catalog from `playbooks/`: collect and validate, hash, write the index, sign it,
+ * Builds the signed catalog from `playbooks/` and `presets/`: collect and validate, hash, write the index, sign it,
  * write `public/catalog/v1/` for the website, and check the result. `scripts/catalog.ts` is the command line.
  * Signing is injected, so tests sign with a throwaway key and only the command reads the Keychain.
  */
@@ -7,7 +7,8 @@ import { createPrivateKey, createPublicKey, generateKeyPairSync, sign as edSign 
 import fs from "node:fs";
 import path from "node:path";
 import { SEMVER, validatePlaybook } from "../../src/core/playbooks.ts";
-import type { Playbook } from "../../src/core/types.ts";
+import { validateStyle } from "../../src/core/presets.ts";
+import type { Playbook, PresetStyle } from "../../src/core/types.ts";
 import {
   CatalogError,
   checkFileBytes,
@@ -17,7 +18,11 @@ import {
   type CatalogFile,
   type CatalogIndex,
   type CatalogItem,
+  type CatalogKind,
   type CatalogWithdrawn,
+  KIND_LIST,
+  isCatalogKind,
+  manifestOf,
 } from "../../src/server/catalog-format.ts";
 import { keyIdOf } from "../../src/server/catalog-keys.ts";
 
@@ -39,8 +44,8 @@ export interface BuiltCatalog {
 const SKIP_DIRS = new Set(["node_modules", "__pycache__"]);
 const SKIP_FILES = new Set([".DS_Store", "preview.mp4"]);
 
-/** Files that ship with a playbook: everything except previews (they live on the website), caches and OS litter. */
-export function playbookFiles(dir: string): string[] {
+/** Files that ship with an item: everything except previews (they live on the website), caches and OS litter. */
+export function itemFiles(dir: string): string[] {
   const out: string[] = [];
   const walk = (current: string) => {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
@@ -61,63 +66,98 @@ export function playbookFiles(dir: string): string[] {
 /** Same bits on every machine: the executable bit is kept, everything else is normalised. */
 const modeOf = (file: string) => ((fs.statSync(file).mode & 0o111) !== 0 ? 0o755 : 0o644);
 
+/** The withdrawn list: `{ "playbook": ["id"], "style": ["id"] }`. A plain list means playbook ids. */
 export function readWithdrawn(file: string): CatalogWithdrawn[] {
   if (!fs.existsSync(file)) return [];
-  const ids = JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
-  if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string")) throw new Error(`${file} must be a list of playbook ids`);
-  return (ids as string[]).map((id) => ({ kind: "playbook" as const, id }));
+  const raw = JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
+  const byKind = Array.isArray(raw) ? { playbook: raw } : raw;
+  const shape = `${file} must map a kind (${KIND_LIST.join(", ")}) to a list of ids`;
+  if (typeof byKind !== "object" || byKind === null) throw new Error(shape);
+  const out: CatalogWithdrawn[] = [];
+  for (const [kind, ids] of Object.entries(byKind)) {
+    if (!isCatalogKind(kind) || !Array.isArray(ids) || ids.some((id) => typeof id !== "string")) throw new Error(shape);
+    for (const id of ids as string[]) out.push({ kind, id });
+  }
+  return out;
 }
 
+/** The kind's own checks of one manifest, as plain messages. The checks every kind shares run after it. */
+type Validator = (manifest: Record<string, unknown>, dir: string) => string[];
+
+const VALIDATORS: Record<CatalogKind, Validator> = {
+  playbook(raw, dir) {
+    const playbook = raw as unknown as Playbook;
+    const errors = validatePlaybook(playbook);
+    if (playbook.skill && !fs.existsSync(path.join(dir, playbook.skill))) errors.push(`${playbook.skill} is missing`);
+    return errors;
+  },
+  style(raw) {
+    return validateStyle(raw as unknown as PresetStyle);
+  },
+};
+
 export interface BuildInput {
-  playbooksDir: string;
+  /** Per kind, the folder holding one folder per item. Kinds left out aren't published. */
+  sources: Partial<Record<CatalogKind, string>>;
   keyId: string;
   sourceCommit: string;
   generatedAt: string;
   withdrawn?: CatalogWithdrawn[];
 }
 
-/** Validates every playbook folder and describes it. Throws one error listing every problem. */
+const byKindThenId = (a: { kind: string; id: string }, b: { kind: string; id: string }) =>
+  KIND_LIST.indexOf(a.kind as CatalogKind) - KIND_LIST.indexOf(b.kind as CatalogKind) || a.id.localeCompare(b.id);
+
+/** Validates every item folder of every kind and describes it. Throws one error listing every problem. */
 export function buildCatalog(input: BuildInput): BuiltCatalog {
   const problems: string[] = [];
   const sources = new Map<string, string>();
   const items: CatalogItem[] = [];
-  const folders = fs
-    .readdirSync(input.playbooksDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && fs.existsSync(path.join(input.playbooksDir, e.name, "playbook.json")))
-    .map((e) => e.name)
-    .sort();
 
-  for (const name of folders) {
-    const dir = path.join(input.playbooksDir, name);
-    let playbook: Playbook;
-    try {
-      playbook = JSON.parse(fs.readFileSync(path.join(dir, "playbook.json"), "utf8")) as Playbook;
-    } catch (err) {
-      problems.push(`${name}: playbook.json isn't valid JSON (${(err as Error).message})`);
-      continue;
+  for (const kind of KIND_LIST) {
+    const root = input.sources[kind];
+    if (!root) continue;
+    const manifest = manifestOf(kind);
+    const folders = fs
+      .readdirSync(root, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && fs.existsSync(path.join(root, e.name, manifest)))
+      .map((e) => e.name)
+      .sort();
+
+    for (const name of folders) {
+      const dir = path.join(root, name);
+      const where = `${kind} ${name}`;
+      let raw: Record<string, unknown>;
+      try {
+        raw = JSON.parse(fs.readFileSync(path.join(dir, manifest), "utf8")) as Record<string, unknown>;
+      } catch (err) {
+        problems.push(`${where}: ${manifest} isn't valid JSON (${(err as Error).message})`);
+        continue;
+      }
+      const errors = VALIDATORS[kind](raw, dir);
+      if (raw.id !== name) errors.push(`id ${String(raw.id)} doesn't match the folder name`);
+      if (!raw.minAppVersion) errors.push("minAppVersion is required in the catalog");
+      if (typeof raw.version !== "string" || !SEMVER.test(raw.version)) errors.push("version must look like 1.0.0");
+      if (errors.length) {
+        problems.push(...[...new Set(errors)].map((e) => `${where}: ${e}`));
+        continue;
+      }
+      const files: CatalogFile[] = itemFiles(dir).map((rel) => {
+        const full = path.join(dir, rel);
+        const bytes = fs.readFileSync(full);
+        const sha256 = sha256Hex(bytes);
+        sources.set(sha256, full);
+        return { path: rel, sha256, size: bytes.length, mode: modeOf(full) };
+      });
+      items.push({ kind, id: name, version: raw.version as string, minAppVersion: raw.minAppVersion as string, files });
     }
-    const errors = validatePlaybook(playbook);
-    if (playbook.id !== name) errors.push(`id ${String(playbook.id)} doesn't match the folder name`);
-    if (!playbook.minAppVersion) errors.push("minAppVersion is required in the catalog");
-    if (!SEMVER.test(playbook.version ?? "")) errors.push("version must look like 1.0.0");
-    if (playbook.skill && !fs.existsSync(path.join(dir, playbook.skill))) errors.push(`${playbook.skill} is missing`);
-    if (errors.length) {
-      problems.push(...errors.map((e) => `${name}: ${e}`));
-      continue;
-    }
-    const files: CatalogFile[] = playbookFiles(dir).map((rel) => {
-      const full = path.join(dir, rel);
-      const bytes = fs.readFileSync(full);
-      const sha256 = sha256Hex(bytes);
-      sources.set(sha256, full);
-      return { path: rel, sha256, size: bytes.length, mode: modeOf(full) };
-    });
-    items.push({ kind: "playbook", id: playbook.id, version: playbook.version, minAppVersion: playbook.minAppVersion!, files });
   }
 
-  const withdrawn = [...(input.withdrawn ?? [])].sort((a, b) => a.id.localeCompare(b.id));
-  for (const w of withdrawn) if (items.some((i) => i.id === w.id)) problems.push(`${w.id} is withdrawn but still in playbooks/`);
-  if (problems.length) throw new Error(`The playbooks aren't ready for the catalog:\n- ${problems.join("\n- ")}`);
+  const withdrawn = [...(input.withdrawn ?? [])].sort(byKindThenId);
+  for (const w of withdrawn) {
+    if (items.some((i) => i.kind === w.kind && i.id === w.id)) problems.push(`${w.kind} ${w.id} is withdrawn but still in its folder`);
+  }
+  if (problems.length) throw new Error(`Some items aren't ready for the catalog:\n- ${problems.join("\n- ")}`);
 
   const index: CatalogIndex = {
     schema: 1,
@@ -214,30 +254,41 @@ export async function checkDrift(outDir: string, built: BuiltCatalog, extraKeys:
     return { ok: false, reasons: [`the published catalog doesn't verify: ${(err as Error).message}`] };
   }
   const reasons: string[] = [];
-  const now = new Map(built.index.items.map((i) => [i.id, i]));
-  const then = new Map(published.items.map((i) => [i.id, i]));
-  for (const [id, item] of now) {
-    const old = then.get(id);
-    if (!old) reasons.push(`${id} isn't in the catalog yet`);
-    else if (JSON.stringify(old) !== JSON.stringify(item)) reasons.push(`${id} changed since the catalog was built`);
+  const label = (i: CatalogItem) => `${i.kind} ${i.id}`;
+  const now = new Map(built.index.items.map((i) => [label(i), i]));
+  const then = new Map(published.items.map((i) => [label(i), i]));
+  for (const [key, item] of now) {
+    const old = then.get(key);
+    if (!old) reasons.push(`${key} isn't in the catalog yet`);
+    else if (JSON.stringify(old) !== JSON.stringify(item)) reasons.push(`${key} changed since the catalog was built`);
   }
-  for (const id of then.keys()) if (!now.has(id)) reasons.push(`${id} is in the catalog but no longer in playbooks/`);
+  for (const key of then.keys()) if (!now.has(key)) reasons.push(`${key} is in the catalog but no longer in its folder`);
   if (JSON.stringify(published.withdrawn) !== JSON.stringify(built.index.withdrawn)) reasons.push("the withdrawn list changed");
   return reasons.length ? { ok: false, reasons } : { ok: true };
 }
 
 /**
- * Copies each `playbook.json` to the website's `public/playbooks/<id>/`, only where that folder exists, so the
- * website's cards always match the catalog. Returns the ids it rewrote (or would, when `check` is set).
+ * Copies each item's manifest (`playbook.json`, `style.json`) to the website's folder for its kind, only where the
+ * item's folder exists there, so the website's cards always match the catalog. Returns `<kind> <id>` for each copy it
+ * rewrote (or would, when `check` is set).
  */
-export function syncSiteCopies(playbooksDir: string, siteDir: string, items: CatalogItem[], check = false): string[] {
+export function syncSiteCopies(
+  sources: Partial<Record<CatalogKind, string>>,
+  siteDirs: Partial<Record<CatalogKind, string>>,
+  items: CatalogItem[],
+  check = false,
+): string[] {
   const changed: string[] = [];
   for (const item of items) {
-    const target = path.join(siteDir, item.id, "playbook.json");
+    const from = sources[item.kind];
+    const to = siteDirs[item.kind];
+    if (!from || !to) continue;
+    const manifest = manifestOf(item.kind);
+    const target = path.join(to, item.id, manifest);
     if (!fs.existsSync(path.dirname(target))) continue;
-    const source = fs.readFileSync(path.join(playbooksDir, item.id, "playbook.json"));
+    const source = fs.readFileSync(path.join(from, item.id, manifest));
     if (fs.existsSync(target) && fs.readFileSync(target).equals(source)) continue;
-    changed.push(item.id);
+    changed.push(`${item.kind} ${item.id}`);
     if (!check) fs.writeFileSync(target, source);
   }
   return changed;

@@ -16,7 +16,7 @@ import {
   folderSource,
   httpSource,
   keychainSigner,
-  playbookFiles,
+  itemFiles,
   readWithdrawn,
   syncSiteCopies,
   verifyCatalog,
@@ -40,7 +40,7 @@ afterEach(() => {
 const testSigner: Signer = { keyId: TEST_KEY.keyId, sign: (bytes) => signBytes(bytes) };
 const trust = [TEST_KEY.publicKey];
 const input = (playbooksDir: string, extra = {}) => ({
-  playbooksDir,
+  sources: { playbook: playbooksDir },
   keyId: TEST_KEY.keyId,
   sourceCommit: "a".repeat(40),
   generatedAt: "2026-11-02T17:00:00.000Z",
@@ -84,13 +84,13 @@ describe("collecting files", () => {
       fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
       fs.writeFileSync(path.join(root, rel), "x");
     }
-    expect(playbookFiles(root)).toEqual(["SKILL.md", "playbook.json", "scripts/run.sh", "template/.gitignore"]);
+    expect(itemFiles(root)).toEqual(["SKILL.md", "playbook.json", "scripts/run.sh", "template/.gitignore"]);
   });
 
   it("refuses symlinks", () => {
     const dir = fixturePlaybooks(["one"]);
     fs.symlinkSync("/etc/hosts", path.join(dir, "one", "link"));
-    expect(() => playbookFiles(path.join(dir, "one"))).toThrow(/not a plain file/);
+    expect(() => itemFiles(path.join(dir, "one"))).toThrow(/not a plain file/);
   });
 
   it("normalises modes to 644 and 755", () => {
@@ -270,13 +270,13 @@ describe("site copies", () => {
     fs.writeFileSync(path.join(site, "one", "playbook.json"), "{}");
     const items = buildCatalog(input(playbooks)).index.items;
 
-    expect(syncSiteCopies(playbooks, site, items, true)).toEqual(["one"]);
+    expect(syncSiteCopies({ playbook: playbooks }, { playbook: site }, items, true)).toEqual(["playbook one"]);
     expect(fs.readFileSync(path.join(site, "one", "playbook.json"), "utf8")).toBe("{}");
 
-    expect(syncSiteCopies(playbooks, site, items)).toEqual(["one"]);
+    expect(syncSiteCopies({ playbook: playbooks }, { playbook: site }, items)).toEqual(["playbook one"]);
     expect(fs.readFileSync(path.join(site, "one", "playbook.json"))).toEqual(fs.readFileSync(path.join(playbooks, "one", "playbook.json")));
     expect(fs.existsSync(path.join(site, "two"))).toBe(false);
-    expect(syncSiteCopies(playbooks, site, items)).toEqual([]);
+    expect(syncSiteCopies({ playbook: playbooks }, { playbook: site }, items)).toEqual([]);
   });
 });
 
@@ -380,10 +380,11 @@ describe("throwaway signer", () => {
   });
 });
 
-describe("catalog-only playbooks", () => {
+describe("catalog-only playbooks and styles", () => {
   const playbooksDir = path.join(packageRoot, "playbooks");
   const manifest = (dir: string) => JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8")) as { files: string[] };
-  const excludedIds = (files: string[]) => files.flatMap((f) => (/^!playbooks\/([^*/]+)$/.exec(f) ? [f.slice("!playbooks/".length)] : []));
+  const excludedIds = (files: string[], folder = "playbooks") =>
+    files.flatMap((f) => (new RegExp(`^!${folder}/([^*/]+)$`).exec(f) ? [f.slice(`!${folder}/`.length)] : []));
   const packed = (cwd: string): string[] => {
     const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
     return (JSON.parse(out) as { files: { path: string }[] }[])[0]!.files.map((f) => f.path);
@@ -399,6 +400,18 @@ describe("catalog-only playbooks", () => {
       if (!excluded.includes(id)) expect(files, `${id} is neither bundled nor excluded`).toContain(`playbooks/${id}/playbook.json`);
     }
     expect(files.some((f) => f.endsWith("preview.mp4"))).toBe(false);
+  });
+
+  it("leaves catalog-only styles out of the package and packs every other style", () => {
+    const presetsDir = path.join(packageRoot, "presets");
+    const inCatalog = new Set(
+      buildCatalog({ ...input(playbooksDir), sources: { style: presetsDir } }).index.items.filter((i) => i.kind === "style").map((i) => i.id),
+    );
+    const excluded = excludedIds(manifest(packageRoot).files, "presets");
+    for (const id of excluded) expect(inCatalog.has(id), `${id} is excluded from npm but not in the catalog`).toBe(true);
+    const files = packed(packageRoot);
+    for (const id of excluded) expect(files.filter((f) => f.startsWith(`presets/${id}/`)), id).toEqual([]);
+    for (const id of inCatalog) if (!excluded.includes(id)) expect(files, `${id} is neither bundled nor excluded`).toContain(`presets/${id}/style.json`);
   });
 
   it("only lists playbook folders that exist", () => {

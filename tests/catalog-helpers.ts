@@ -1,6 +1,6 @@
 import { createHash, createPrivateKey, createPublicKey, sign, type KeyObject } from "node:crypto";
 import { keyIdOf } from "../src/server/catalog-keys.ts";
-import { sha256Hex, type CatalogIndex } from "../src/server/catalog-format.ts";
+import { manifestOf, sha256Hex, type CatalogIndex, type CatalogKind } from "../src/server/catalog-format.ts";
 
 /**
  * A key pair for tests and CI only. It comes from a seed written in this file, so it protects nothing and is
@@ -23,10 +23,12 @@ export interface TestFile {
 }
 
 export interface TestItem {
+  /** Defaults to playbook. */
+  kind?: CatalogKind;
   id: string;
   version?: string;
   minAppVersion?: string;
-  /** path -> content. `playbook.json` is added when missing. */
+  /** path -> content. The kind's manifest (`playbook.json`, `style.json`) is added when missing. */
   files?: Record<string, string | Buffer | TestFile>;
 }
 
@@ -45,7 +47,7 @@ export function signBytes(bytes: Uint8Array, key: KeyObject = TEST_KEY.privateKe
 /** Builds a signed catalog in memory. `overrides` can break the index on purpose. */
 export function makeCatalog(
   items: TestItem[],
-  options: { withdrawn?: string[]; generatedAt?: string; key?: typeof TEST_KEY; keyId?: string; overrides?: Record<string, unknown> } = {},
+  options: { withdrawn?: (string | { kind: CatalogKind; id: string })[]; generatedAt?: string; key?: typeof TEST_KEY; keyId?: string; overrides?: Record<string, unknown> } = {},
 ): TestCatalog {
   const key = options.key ?? TEST_KEY;
   const blobs = new Map<string, Buffer>();
@@ -56,12 +58,13 @@ export function makeCatalog(
     sourceCommit: "0".repeat(40),
     items: items.map((item) => {
       const version = item.version ?? "1.0.0";
+      const kind = item.kind ?? "playbook";
       const entries: Record<string, string | Buffer | TestFile> = {
-        "playbook.json": JSON.stringify({ id: item.id, version }),
+        [manifestOf(kind)]: JSON.stringify({ id: item.id, version }),
         ...item.files,
       };
       return {
-        kind: "playbook" as const,
+        kind,
         id: item.id,
         version,
         minAppVersion: item.minAppVersion ?? "0.6.0",
@@ -74,7 +77,7 @@ export function makeCatalog(
         }),
       };
     }),
-    withdrawn: (options.withdrawn ?? []).map((id) => ({ kind: "playbook" as const, id })),
+    withdrawn: (options.withdrawn ?? []).map((w) => (typeof w === "string" ? { kind: "playbook" as const, id: w } : w)),
   };
   const indexBytes = Buffer.from(JSON.stringify({ ...index, ...options.overrides }, null, 2));
   return { index, indexBytes, signature: signBytes(indexBytes, key.privateKey), blobs };

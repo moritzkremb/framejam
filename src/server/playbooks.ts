@@ -4,9 +4,8 @@ import { validatePlaybook } from "../core/playbooks.ts";
 import type { PlaybookCatalog } from "../core/store.ts";
 import type { LoadedPlaybook as CoreLoadedPlaybook, Playbook, PlaybookSummary } from "../core/types.ts";
 import { safeJoin } from "./files.ts";
-import type { CatalogSnapshot } from "./catalog.ts";
+import { layerCopies, type CatalogSnapshot } from "./catalog.ts";
 import { builtinPlaybooksDir, PLAYBOOK_PREVIEW_BASE_URL } from "./paths.ts";
-import { compareVersions } from "./version.ts";
 
 /** A playbook in a folder on this computer. */
 export interface LoadedPlaybook extends CoreLoadedPlaybook {
@@ -103,7 +102,7 @@ export class PlaybookLibrary implements PlaybookCatalog {
     } catch {
       return out;
     }
-    for (const [id, { item, dir }] of snapshot?.playbooks ?? []) {
+    for (const [id, { item, dir }] of snapshot?.items.playbook ?? []) {
       const playbook = readPlaybook(dir, id);
       if (!playbook) continue;
       if (playbook.id !== id || playbook.version !== item.version) {
@@ -116,20 +115,13 @@ export class PlaybookLibrary implements PlaybookCatalog {
   }
 
   all(): LoadedPlaybook[] {
-    const bundled = this.scan(this.dirs.filter((d) => d.builtin));
-    const user = this.scan(this.dirs.filter((d) => !d.builtin));
-    const available = new Map(bundled);
-    for (const [id, copy] of this.catalogCopies()) {
-      const have = available.get(id);
-      if (!have || compareVersions(copy.playbook.version, have.playbook.version) > 0) available.set(id, copy);
-    }
-    const byId = new Map(available);
-    for (const [id, mine] of user) {
-      const app = available.get(id);
-      const newer = app && compareVersions(app.playbook.version, mine.playbook.version) > 0 ? app.playbook.version : undefined;
-      byId.set(id, newer ? { ...mine, newerVersion: newer } : mine);
-    }
-    return [...byId.values()].sort((a, b) => a.playbook.name.localeCompare(b.playbook.name));
+    const layered = layerCopies(
+      { bundled: this.scan(this.dirs.filter((d) => d.builtin)), catalog: this.catalogCopies(), user: this.scan(this.dirs.filter((d) => !d.builtin)) },
+      (p) => p.playbook.version,
+    );
+    return [...layered.values()]
+      .map(({ copy, newerVersion }) => (newerVersion ? { ...copy, newerVersion } : copy))
+      .sort((a, b) => a.playbook.name.localeCompare(b.playbook.name));
   }
 
   get(id: string): LoadedPlaybook | undefined {

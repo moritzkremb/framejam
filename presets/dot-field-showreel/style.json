@@ -1,6 +1,8 @@
 {
   "id": "dot-field-showreel",
   "name": "Dot Field",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Viewfinder HUD, one-second colour cuts, kinetic type and a dot field that ripples on cue.",
   "description": "Fast, graphic look: hard one-second cuts between near-black, electric blue, orange and lime, huge Archivo Black type with outline echoes and glitch slices, all framed by a camera-viewfinder HUD. The preview is a motion designer's reel with tumbling letters, a frame counter and a rippling dot field.",
   "mood": [

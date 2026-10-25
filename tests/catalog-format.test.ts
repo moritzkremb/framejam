@@ -145,8 +145,8 @@ describe("index shape", () => {
   it("ignores items of unknown kinds and withdrawn entries of unknown kinds", () => {
     const c = makeCatalog([{ id: "one" }]);
     const raw = JSON.parse(c.indexBytes.toString("utf8"));
-    raw.items.push({ kind: "style", id: "Not Valid!", whatever: true });
-    raw.withdrawn = [{ kind: "style", id: "x" }, { kind: "playbook", id: "old" }];
+    raw.items.push({ kind: "future-kind", id: "Not Valid!", whatever: true });
+    raw.withdrawn = [{ kind: "future-kind", id: "x" }, { kind: "playbook", id: "old" }];
     const index = parseIndex(Buffer.from(JSON.stringify(raw)));
     expect(index.items.map((i) => i.id)).toEqual(["one"]);
     expect(index.withdrawn).toEqual([{ kind: "playbook", id: "old" }]);

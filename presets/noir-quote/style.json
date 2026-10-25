@@ -1,6 +1,8 @@
 {
   "id": "noir-quote",
   "name": "Noir Quote",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Letterboxed, grainy and slow. Italic serif words drift in out of the dark.",
   "description": "Cinematic noir look for trailers, quotes and brand films: letterbox bars, animated film grain, a slowly drifting warm light in the dark, and italic serif words that fade in one at a time from a soft blur. The preview is a quote card with an attribution and a tracked title.",
   "mood": [

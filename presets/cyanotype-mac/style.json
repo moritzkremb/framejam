@@ -1,6 +1,8 @@
 {
   "id": "cyanotype-mac",
   "name": "Cyanotype Mac",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Dithered cobalt cyanotype, crisp 1-bit pixel details and stepped, clicky motion.",
   "description": "Retro, dreamy style for minimalist apps, tools and quiet launches. Everything sits on a full-bleed ultramarine cyanotype: cloud noise hard-thresholded into two dither tones, with shapes cut out as dithered prints that cast dark offset shadows. Details are strictly 1-bit black and white (pixel fonts, 2px borders, hard drop shadows, checker fills, striped title bars), changes snap with stepped eases and the camera creeps in slowly. The preview puts a beige 1984 compact computer on that sky, its tiny screen clicking through a writing app before rushing into a pixel title card.",
   "mood": [

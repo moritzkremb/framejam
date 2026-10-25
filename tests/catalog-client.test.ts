@@ -47,7 +47,7 @@ function setup(items: TestItem[] = [reel, clip], options: { bundled?: Record<str
       root,
       url: FAKE_URL,
       appVersion: options.appVersion ?? APP,
-      bundledDir,
+      bundledDirs: bundledDir ? { playbook: bundledDir } : undefined,
       extraKeys: [TEST_KEY.publicKey],
       fetch: server.fetch,
       now: options.now,
@@ -135,8 +135,8 @@ describe("refresh", () => {
     const result = await s.client.refresh();
     expect(result).toMatchObject({ ok: true, changed: true, downloaded: 6, seeded: 0 });
     const snapshot = s.snapshot()!;
-    expect([...snapshot.playbooks.keys()].sort()).toEqual(["clip", "reel"]);
-    const dir = snapshot.playbooks.get("reel")!.dir;
+    expect([...snapshot.items.playbook.keys()].sort()).toEqual(["clip", "reel"]);
+    const dir = snapshot.items.playbook.get("reel")!.dir;
     expect(dir).toBe(itemDir(s.root, itemOf(s, "reel")));
     expect(fs.readFileSync(path.join(dir, "SKILL.md"), "utf8")).toBe("# Reel\n");
     expect(fs.statSync(path.join(dir, "scripts/run.sh")).mode & 0o777).toBe(0o755);
@@ -160,7 +160,7 @@ describe("refresh", () => {
     const result = await s.client.refresh();
     expect(result).toMatchObject({ ok: true, seeded: 2, downloaded: 3 });
     expect(blobRequests(s)).toHaveLength(3);
-    const dir = s.snapshot()!.playbooks.get("reel")!.dir;
+    const dir = s.snapshot()!.items.playbook.get("reel")!.dir;
     expect(fs.readFileSync(path.join(dir, "scripts/run.sh"), "utf8")).toBe("#!/bin/sh\necho hi\n");
     expect(fs.statSync(path.join(dir, "scripts/run.sh")).mode & 0o777).toBe(0o755);
   });
@@ -168,12 +168,12 @@ describe("refresh", () => {
   it("seeds a new version from the previous one and keeps the old folder", async () => {
     const s = setup([reel]);
     await s.client.refresh();
-    const v1 = [...s.snapshot()!.playbooks.values()][0]!.dir;
+    const v1 = [...s.snapshot()!.items.playbook.values()][0]!.dir;
     s.server.catalog = makeCatalog([{ ...reel, version: "1.1.0", files: { ...reel.files, "SKILL.md": "# Reel v2\n" } }], { generatedAt: "2026-11-03T00:00:00.000Z" });
     s.server.requests.length = 0;
     expect(await s.client.refresh()).toMatchObject({ ok: true, changed: true, downloaded: 2, seeded: 3 });
     expect(blobRequests(s)).toHaveLength(2);
-    const v2 = s.snapshot()!.playbooks.get("reel")!;
+    const v2 = s.snapshot()!.items.playbook.get("reel")!;
     expect(v2.item.version).toBe("1.1.0");
     expect(v2.dir).not.toBe(v1);
     expect(fs.existsSync(path.join(v1, "playbook.json"))).toBe(true);
@@ -191,7 +191,7 @@ describe("refresh", () => {
     expect(results.every((r) => r.ok)).toBe(true);
     expect(folders(s.root).sort()).toHaveLength(2);
     expect(fs.readdirSync(path.join(s.root, "items", "playbook", "reel")).every((n) => !n.startsWith(".tmp-"))).toBe(true);
-    expect(s.snapshot()!.playbooks.size).toBe(2);
+    expect(s.snapshot()!.items.playbook.size).toBe(2);
   });
 
   it("works over real HTTP", async () => {
@@ -208,7 +208,7 @@ describe("refresh", () => {
       const url = `http://127.0.0.1:${(server.address() as { port: number }).port}/v1`;
       const client = new CatalogClient({ root, url, appVersion: APP, extraKeys: [TEST_KEY.publicKey] });
       expect(await client.refresh()).toMatchObject({ ok: true, downloaded: 4 });
-      expect(readSnapshot(root, { appVersion: APP, extraKeys: [TEST_KEY.publicKey] })!.playbooks.has("reel")).toBe(true);
+      expect(readSnapshot(root, { appVersion: APP, extraKeys: [TEST_KEY.publicKey] })!.items.playbook.has("reel")).toBe(true);
     } finally {
       server.close();
     }
@@ -248,8 +248,8 @@ describe("verification", () => {
     expect(await s.client.refresh()).toMatchObject({ ok: false, code: "bad-file" });
     expect(folders(s.root)).toEqual([`clip/${path.basename(itemDir(s.root, itemOf(s, "clip")))}`]);
     expect(fs.readFileSync(path.join(s.root, "state.json"), "utf8")).toBe(before);
-    expect(s.snapshot()!.playbooks.has("reel")).toBe(false);
-    expect(s.snapshot()!.playbooks.has("clip")).toBe(true);
+    expect(s.snapshot()!.items.playbook.has("reel")).toBe(false);
+    expect(s.snapshot()!.items.playbook.has("clip")).toBe(true);
   });
 
   it("refuses a blob of the wrong size, and one that is far too large", async () => {
@@ -276,11 +276,11 @@ describe("verification", () => {
   it("ignores items of unknown kinds", async () => {
     const s = setup([clip]);
     const raw = JSON.parse(s.server.catalog.indexBytes.toString("utf8"));
-    raw.items.push({ kind: "style", id: "neon", whatever: true });
+    raw.items.push({ kind: "future-kind", id: "neon", whatever: true });
     const bytes = Buffer.from(JSON.stringify(raw));
     s.server.catalog = { ...s.server.catalog, indexBytes: bytes, signature: (await import("./catalog-helpers.ts")).signBytes(bytes) };
     expect(await s.client.refresh()).toMatchObject({ ok: true });
-    expect([...s.snapshot()!.playbooks.keys()]).toEqual(["clip"]);
+    expect([...s.snapshot()!.items.playbook.keys()]).toEqual(["clip"]);
   });
 
   it("refuses an older index than the one it has (rollback protection)", async () => {
@@ -290,7 +290,7 @@ describe("verification", () => {
     s.server.catalog = makeCatalog([clip, reel], { generatedAt: "2026-11-01T00:00:00.000Z" });
     expect(await s.client.refresh()).toMatchObject({ ok: false, code: "bad-index" });
     expect(s.snapshot()!.generatedAt).toBe("2026-12-01T00:00:00.000Z");
-    expect(s.snapshot()!.playbooks.has("reel")).toBe(false);
+    expect(s.snapshot()!.items.playbook.has("reel")).toBe(false);
   });
 
   it("verifies the saved index again on every read", async () => {
@@ -315,7 +315,7 @@ describe("minAppVersion", () => {
   it("doesn't download an item that needs a newer app, and downloads the rest", async () => {
     const s = setup([clip, { ...reel, minAppVersion: "0.7.0" }]);
     expect(await s.client.refresh()).toMatchObject({ ok: true });
-    expect([...s.snapshot()!.playbooks.keys()]).toEqual(["clip"]);
+    expect([...s.snapshot()!.items.playbook.keys()]).toEqual(["clip"]);
     expect(blobRequests(s).length).toBe(itemOf(s, "clip").files.length);
     expect(folders(s.root).some((f) => f.startsWith("reel/"))).toBe(false);
   });
@@ -323,14 +323,14 @@ describe("minAppVersion", () => {
   it("downloads it once the app is new enough", async () => {
     const s = setup([{ ...reel, minAppVersion: "0.7.0" }], { appVersion: "0.7.0" });
     expect(await s.client.refresh()).toMatchObject({ ok: true });
-    expect(s.snapshot()!.playbooks.has("reel")).toBe(true);
+    expect(s.snapshot()!.items.playbook.has("reel")).toBe(true);
   });
 
   it("checks again when reading, so an older app skips what a newer one downloaded", async () => {
     const s = setup([{ ...reel, minAppVersion: "0.7.0" }], { appVersion: "0.7.0" });
     await s.client.refresh();
-    expect(s.snapshot("0.7.0")!.playbooks.has("reel")).toBe(true);
-    expect(s.snapshot("0.6.9")!.playbooks.has("reel")).toBe(false);
+    expect(s.snapshot("0.7.0")!.items.playbook.has("reel")).toBe(true);
+    expect(s.snapshot("0.6.9")!.items.playbook.has("reel")).toBe(false);
   });
 });
 
@@ -338,20 +338,20 @@ describe("withdrawn items", () => {
   it("hides the cached copy and doesn't download a withdrawn id", async () => {
     const s = setup([reel, clip]);
     await s.client.refresh();
-    expect(s.snapshot()!.playbooks.has("reel")).toBe(true);
+    expect(s.snapshot()!.items.playbook.has("reel")).toBe(true);
     s.server.catalog = makeCatalog([clip], { withdrawn: ["reel"], generatedAt: "2026-11-03T00:00:00.000Z" });
     await s.client.refresh();
     const snapshot = s.snapshot()!;
-    expect(snapshot.playbooks.has("reel")).toBe(false);
-    expect(snapshot.withdrawn.has("reel")).toBe(true);
-    expect(snapshot.playbooks.has("clip")).toBe(true);
+    expect(snapshot.items.playbook.has("reel")).toBe(false);
+    expect(snapshot.withdrawn.playbook.has("reel")).toBe(true);
+    expect(snapshot.items.playbook.has("clip")).toBe(true);
   });
 
   it("withdraws an id that's still listed, and never fetches it", async () => {
     const s = setup([reel, clip]);
     s.server.catalog = makeCatalog([reel, clip], { withdrawn: ["reel"] });
     await s.client.refresh();
-    expect([...s.snapshot()!.playbooks.keys()]).toEqual(["clip"]);
+    expect([...s.snapshot()!.items.playbook.keys()]).toEqual(["clip"]);
     expect(blobRequests(s).length).toBe(itemOf(s, "clip").files.length);
   });
 });
@@ -362,7 +362,7 @@ describe("offline and cache", () => {
     await s.client.refresh();
     s.server.offline = true;
     expect(await s.client.refresh()).toMatchObject({ ok: false, code: "network" });
-    expect(s.snapshot()!.playbooks.has("clip")).toBe(true);
+    expect(s.snapshot()!.items.playbook.has("clip")).toBe(true);
     expect(s.client.status().lastError?.message).toContain("fetch failed");
     expect(s.logs).toHaveLength(1);
     await s.client.refresh();
@@ -405,7 +405,7 @@ describe("retiring old folders", () => {
     now += 2 * DAY;
     await s.client.refresh();
     expect(folders(s.root)).toEqual([`reel/${v2}`]);
-    expect(s.snapshot()!.playbooks.get("reel")!.item.version).toBe("1.1.0");
+    expect(s.snapshot()!.items.playbook.get("reel")!.item.version).toBe("1.1.0");
   });
 
   it("counts the 7 days from when the folder stopped being used, not from when it was made", async () => {
@@ -433,7 +433,7 @@ describe("retiring old folders", () => {
     await s.client.refresh();
     now += 10 * DAY;
     await s.client.refresh();
-    expect(s.snapshot()!.playbooks.get("reel")!.item.version).toBe("1.0.0");
+    expect(s.snapshot()!.items.playbook.get("reel")!.item.version).toBe("1.0.0");
     expect(folders(s.root)).toHaveLength(1);
   });
 

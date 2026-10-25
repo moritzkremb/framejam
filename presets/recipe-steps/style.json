@@ -1,6 +1,8 @@
 {
   "id": "recipe-steps",
   "name": "Soft Outline",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Hand-drawn outlines on cream, a chunky red title and bouncy, elastic motion.",
   "description": "Warm, illustrated look: flat drawings with a soft brown ink outline on cream paper, a chunky red rounded title, white cards, and bouncy, elastic motion in one continuous set where the drawing changes in place. Optional motifs: a step card and numbered progress dots. The preview makes an iced matcha latte step by step.",
   "mood": [

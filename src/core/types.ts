@@ -143,6 +143,10 @@ export interface PresetFont {
 export interface PresetStyle {
   id: string;
   name: string;
+  /** Raised on every change, so the catalog's copy can replace an older bundled one. */
+  version?: string;
+  /** The first app version that can use this style; required for styles in the catalog. */
+  minAppVersion?: string;
   tagline: string;
   description: string;
   mood: string[];
@@ -165,6 +169,8 @@ export interface PresetStyle {
 }
 
 export interface PresetSummary extends PresetStyle {
+  /** Where this copy came from. "catalog" means it was updated from framejam.ai. */
+  source?: "bundled" | "catalog" | "user";
   hasPreview: boolean;
   hasPoster: boolean;
   previewUrl?: string;

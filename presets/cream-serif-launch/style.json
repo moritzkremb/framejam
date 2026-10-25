@@ -1,6 +1,8 @@
 {
   "id": "cream-serif-launch",
   "name": "Cream Serif",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Warm cream, a chunky serif with one coral italic word, soft paper cards and a highlighter sweep.",
   "description": "Friendly editorial look: warm cream, a big Fraunces headline that de-blurs with one coral italic word, soft paper cards with a warm shadow, a coral highlighter sweep, and a tilted coral number that slams in. The preview is a developer-tool launch: a question, a search demo, a before-and-after comparison and a logo with an install command.",
   "mood": [

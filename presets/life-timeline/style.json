@@ -1,6 +1,8 @@
 {
   "id": "life-timeline",
   "name": "Color Wipe",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "A new solid colour wipes in for every beat, with a huge number and springy flat-vector shapes.",
   "description": "Flat-vector look: a new solid colour wipes in for every beat, a huge number and a short bold headline sit beside a springy illustration built from circles, rectangles and simple people, and a thin progress bar can advance along the bottom. The preview tells one person's life milestone by milestone.",
   "mood": [

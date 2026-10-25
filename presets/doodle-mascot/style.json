@@ -1,6 +1,8 @@
 {
   "id": "doodle-mascot",
   "name": "Doodle Mascot",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Boiling ink lines, hatched flat colour and squash-and-stretch cartoon motion on sketchbook paper.",
   "description": "Charming doodle-animation style for release announcements, milestones and thank-you notes. Ink outlines boil like a hand-drawn cartoon, flat fills carry pencil hatching, and everything moves with anticipation, squash and stretch on warm sketchbook paper, with speech bubbles, bunting, confetti and a handwritten sign-off. The preview stars a sticky-note mascot with dot eyes and stubby legs that walks on, jumps and celebrates.",
   "mood": [

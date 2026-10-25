@@ -1,6 +1,8 @@
 {
   "id": "neon-terminal",
   "name": "Neon Terminal",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Typed commands, green phosphor glow, a glitch cut to the logo.",
   "description": "Green-phosphor terminal look: black screen, glowing mono type that types itself with a block cursor, line-by-line readouts with check marks, scanlines over everything and glitch cuts. The preview is a developer-tool launch that types a real command and ends on an install chip.",
   "mood": [

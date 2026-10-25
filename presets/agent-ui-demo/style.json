@@ -1,6 +1,8 @@
 {
   "id": "agent-ui-demo",
   "name": "Airy UI",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Off-white and airy: a floating pill input, shimmering status lines and cards that land with a green check.",
   "description": "Light, airy interface look: an off-white canvas, white surfaces with very soft shadows, a pill input floating on a soft blue glow, short status lines swept by a shimmer while earlier ones dim, and white cards that slide in with a green check that draws itself. The preview shows an assistant booking a table for six.",
   "mood": [

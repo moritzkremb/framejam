@@ -1,6 +1,8 @@
 {
   "id": "dither-serif",
   "name": "Dither Serif",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Bayer-dithered 3D forms, big serif headlines with one cobalt script word, floating UI and a skewed stamp that slams.",
   "description": "Crisp, playful launch style. Black-and-white 3D forms are shaded per pixel with an ordered Bayer threshold and shown as chunky pixels across clean white, vivid cobalt and black scenes. Headlines are a large elegant serif with ONE word swapped to a cobalt handwritten script, white UI cards float on blue, a big skewed cobalt stamp slams across the frame, and cuts use an iris or a halftone dot wipe. The preview follows a dithered mascot through a booking tool's storefront and checkout, ending on a white card with wordmark, tagline, cobalt button and URL.",
   "mood": [

@@ -1,6 +1,8 @@
 {
   "id": "red-band-title",
   "name": "Red Band Title",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Anime-opening title: hard slams, a spinning sunburst and an RGB-split title that lands on a skewed red band.",
   "description": "Anime-opening title style for launches, series intros and brand names. Charcoal, crimson and off-white, a giant word or glyph slamming onto a vignetted cream card with a shake, then a dark sunburst where the title drops in letter by letter with a red/cyan chromatic split, a skewed crimson band slides in behind it, and small letterspaced corner labels lock it up. The preview opens on a kanji.",
   "mood": [

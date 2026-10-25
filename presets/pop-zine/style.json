@@ -1,6 +1,8 @@
 {
   "id": "pop-zine",
   "name": "Pop Zine",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
   "tagline": "Y2K riso zine: hot-pink punch words, halftone navy, sunbursts, a rolling counter and hard cuts.",
   "description": "Loud, printed-paper style for podcasts, explainers and launch-day countdowns. Cream grainy paper and dusty navy halftone panels, huge condensed hot-pink words with a navy outline, a spinning pink-and-cream sunburst, a mechanical LCD digit counter, a dotted chart that draws, and persistent HUD cards (a P(SUCCESS) percentage chip and a LIVE date stamp) that update on every hard cut.",
   "mood": [
