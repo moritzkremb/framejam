@@ -6,6 +6,7 @@
   "version": "1.0.0",
   "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@nolan_killeen", "url": "https://www.instagram.com/reels/DeKpTUoJbJJ/" }],
   "license": "MIT",
   "bring": [
     "Your raw recording of you talking to camera, shot vertically or with room to crop to 9:16",
