@@ -7,6 +7,12 @@ or a spot in the frame, say what to change, press **Finish review**, and the age
 Everything runs on your computer. There's no account, and your videos and comments are never uploaded; projects are
 saved in `~/.framejam`.
 
+Install it in Claude Code:
+
+```
+/plugin install framejam --marketplace moritzkremb/framejam
+```
+
 What leaves your computer, and only to framejam.ai, npm or Hugging Face:
 
 - The Styles and Playbooks pages stream their example videos from framejam.ai.
