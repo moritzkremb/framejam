@@ -1,17 +1,19 @@
 import { createHash, createPublicKey, type KeyObject } from "node:crypto";
 
 /**
- * Public keys that can sign the playbook catalog, by key id (the first 8 hex characters of the sha256 of the
- * SPKI DER). Values are the SPKI DER in base64. Public keys are safe to commit.
+ * Public keys that can sign the catalog, by key id (the first 8 hex characters of the sha256 of the SPKI DER).
+ * Values are the SPKI DER in base64. Public keys are safe to commit.
  *
- * Empty until Moritz runs `npm run catalog:keygen` (docs/catalog.md, steps A and B). With no trusted key every
- * catalog is rejected, so the app only uses its bundled playbooks. A release must carry exactly two keys: the
+ * Made with `npm run catalog:keygen` (docs/catalog.md, steps A and B). A release must carry exactly two keys: the
  * active one and the spare (see `tests/catalog-keys.test.ts`).
  */
-export const CATALOG_PUBLIC_KEYS: Readonly<Record<string, string>> = {};
+export const CATALOG_PUBLIC_KEYS: Readonly<Record<string, string>> = {
+  "1c6a8f72": "MCowBQYDK2VwAyEA160KT0oRfaVT0Hu4pul4sEFp954NhJz5YuqHF+cSMaU=",
+  afd98895: "MCowBQYDK2VwAyEA4X0UOYc50oa28TIengrSd0Vs5CyByz117pkEA+r3oPU=",
+};
 
 /** The key `npm run catalog` signs with. Set together with the table. */
-export const ACTIVE_KEY_ID = "";
+export const ACTIVE_KEY_ID = "1c6a8f72";
 
 export function keyIdOf(spkiBase64: string): string {
   return createHash("sha256").update(Buffer.from(spkiBase64, "base64")).digest("hex").slice(0, 8);
