@@ -9,7 +9,7 @@ import { Handoff } from "@/components/review/dock";
 import type { ReviewState } from "@/components/review/use-review";
 import { copyText, relativeTime, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
-import { cn } from "@/lib/utils";
+import { cn, MOD_KEY } from "@/lib/utils";
 
 /** Below this width the sidebar slides over the stage instead of taking a column. */
 export const OVERLAY_BELOW = 720;
@@ -40,6 +40,15 @@ export function useSidebar(width: number, fullscreen = false) {
       /* private mode */
     }
   };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== "b" || !(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      setOpen(!open);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
   return { overlay, open, setOpen, openForFullscreen: () => setFullscreenOpen(true) };
 }
 
@@ -324,7 +333,7 @@ export function ReviewSidebar({
           </>
         )}
         <span className="fc-grow" />
-        <button type="button" className="fc-btn ghost icon sm round" aria-label="Hide comments" title="Hide comments (L)" onClick={() => side.setOpen(false)}>
+        <button type="button" className="fc-btn ghost icon sm round" aria-label="Hide comments" title={`Hide comments (${MOD_KEY}B)`} onClick={() => side.setOpen(false)}>
           {side.overlay ? <X className="fc-i sm" /> : <ChevronRight className="fc-i sm" />}
         </button>
       </div>
@@ -357,7 +366,7 @@ export function ReviewSidebar({
 export function CommentsRail({ side, count, open }: { side: SidebarState; count: number; open: boolean }) {
   return (
     <div className="fc-rail">
-      <button type="button" className="fc-railbtn" aria-label="Show comments" title="Show comments (L)" onClick={() => side.setOpen(true)}>
+      <button type="button" className="fc-railbtn" aria-label="Show comments" title={`Show comments (${MOD_KEY}B)`} onClick={() => side.setOpen(true)}>
         <ChevronLeft className="fc-i sm" />
       </button>
       <button type="button" className="fc-railbtn" aria-label={`${count} comments`} onClick={() => side.setOpen(true)}>

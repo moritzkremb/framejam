@@ -383,7 +383,7 @@ turn it off. How it's built and published: [docs/catalog.md](docs/catalog.md).
 - **Download.** The download button next to **Finish review** (or *Download video* in the version menu) saves a copy of
   the version's video wherever you choose.
 - **Keys.** `Space` play/pause, `←/→` step one frame, `Shift+←/→` step one second, `C` focus the comment box,
-  `S` playback speed, `F` full screen, `L` show or hide the comments, `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
+  `S` playback speed, `F` full screen, `⌘B` show or hide the comments, `⌘↩` (`Ctrl+Enter`) finish review, `Esc` clear, `?` shortcuts.
 - **Copy comments as text** (version menu) copies a version's comments as markdown for harnesses without MCP.
 
 </details>

@@ -21,7 +21,7 @@ const SHORTCUTS: Shortcut[] = [
   ["Play or pause", ["Space"]],
   ["Change playback speed", ["S"]],
   ["Full screen", ["F"]],
-  ["Show or hide comments", ["L"]],
+  ["Show or hide comments", [MOD_KEY, "B"]],
   ["Previous or next frame", ["←", "→"]],
   ["Jump 1 second", [SHIFT_KEY, "←", "→"]],
   ["Comment at this moment", ["C"]],
@@ -298,9 +298,6 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
       } else if (e.key === "f" || e.key === "F") {
         e.preventDefault();
         toggleFullscreen();
-      } else if (e.key === "l" || e.key === "L") {
-        e.preventDefault();
-        side.setOpen(!side.open);
       } else if (e.key === "ArrowLeft" || e.key === ",") {
         e.preventDefault();
         step(e.shiftKey ? -FPS : -1);
