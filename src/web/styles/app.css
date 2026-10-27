@@ -318,6 +318,9 @@ a { color: inherit; }
 .fc-review:fullscreen { background: var(--bg); }
 .fc-review:fullscreen .fc-stage > * { max-width: none; }
 .fc-review:fullscreen .fc-stage > .fc-player { flex: 1 1 auto !important; min-height: 0; aspect-ratio: auto !important; }
+/* macOS slides the menu bar over the top of a full-screen page on hover, which swallows clicks there. */
+.fc-review:fullscreen .fc-side-h { height: 92px; padding-top: 40px; }
+.fc-review:fullscreen .fc-rail { padding-top: 48px; }
 .fc-side-foot { flex: none; padding: 12px; border-top: 1px solid var(--border); }
 .fc-side-foot .fc-dock { position: static; padding: 0; background: none; }
 .fc-side-foot .fc-dock .box { box-shadow: inset 0 0 0 1px var(--border); }
