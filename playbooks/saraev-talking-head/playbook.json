@@ -1,9 +1,9 @@
 {
   "id": "saraev-talking-head",
   "name": "Saraev-like Talking Head",
-  "tagline": "Raw talking-head footage goes in; a tight, enhanced, captioned cut with a configurable teaser comes out.",
-  "description": "A deterministic talking-head workflow inspired by Nick Saraev's public videos: voice-activity cuts around half-second silences, user-chosen bad-take markers, audio cleanup, a configurable grade, an optional opening teaser, captions and simple graphics, and hardware-accelerated export when the computer supports it. The exact private tools and settings are not assumed.",
-  "version": "1.0.0",
+  "tagline": "Raw talking-head footage goes in; a tight, voice-led cut with a swivel teaser and editorial graphics comes out.",
+  "description": "A deterministic workflow grounded in observed public Nick Saraev videos: Silero voice-activity cuts around half-second silences, Whisper word times and the spoken \"cut cut\" marker, high-pass/EQ/compression to about -16 LUFS, a low-saturation grade, an optional continuous-voice swivel teaser, three graphics modes, no word-by-word captions, and hardware export with a software fallback. Unexposed private settings remain configurable.",
+  "version": "1.1.0",
   "minAppVersion": "0.6.0",
   "creator": {
     "id": "moritz",
@@ -19,10 +19,10 @@
   "license": "MIT",
   "bring": [
     "Your raw talking-head recording",
-    "The exact word or phrase you say after a bad take, if you use one",
+    "Optional: real screenshots, articles, charts or screen recordings for graphics",
     "Optional: an earlier render or locally held reference for side-by-side comparison"
   ],
-  "get": "A clean 16:9 talking-head video, an auditable edit plan, captions, and short comparison renders",
+  "get": "A clean 16:9 talking-head video, an auditable edit plan, optional evidence-backed graphics, and short comparison renders",
   "format": "16:9",
   "project": "any",
   "needs": [
@@ -54,12 +54,12 @@
     }
   ],
   "styles": "parts",
-  "stylesNote": "grade, caption treatment, graphics and teaser treatment",
+  "stylesNote": "grade, graphic panels, labels and teaser treatment",
   "steps": [
     "Inspect and transcribe the raw recording",
     "Detect speech and build an auditable cut around half-second gaps",
-    "Remove marked bad takes using the speaker's configured phrase",
-    "Enhance audio, grade picture, and add the optional teaser, captions and graphics",
+    "Remove marked bad takes when Whisper finds the spoken \"cut cut\"",
+    "Enhance audio, grade picture, and add the optional teaser and evidence-backed graphics",
     "Render short samples, compare them, then export with a supported encoder",
     "Review each version in FrameJam until it is approved"
   ],
@@ -69,7 +69,7 @@
     "vad",
     "silence removal",
     "bad takes",
-    "captions",
+    "editorial graphics",
     "color grade",
     "audio enhancement",
     "hardware acceleration"

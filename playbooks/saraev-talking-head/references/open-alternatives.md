@@ -34,26 +34,32 @@ Both backends emit the same small JSON interface:
 
 ## Transcription
 
-Any local or hosted transcription tool is acceptable when it returns word start and end times. Keep the raw
-transcript, correct proper names and marker phrases, and preserve source times. A transcript does not prove that a
-cut sounds clean.
+Whisper is the observed route for finding `cut cut`. Another local or hosted transcription tool is acceptable when
+it returns word start and end times, but record the substitution. Keep the raw transcript, correct proper names and
+the marker, and preserve source times. A transcript does not prove that a cut sounds clean.
 
 ## Audio
 
-The renderer's default chain is intentionally conventional and conservative: high-pass, low-pass, ffmpeg denoise,
-compression and loudness normalization. Disable a stage that makes the voice metallic or pumps the room tone.
-Dedicated restoration tools are optional; record their name and settings in `VERIFY.md`.
+The observed order is high-pass → EQ → compression → loudness around -16 LUFS, with true peak around -0.4 dB.
+The renderer follows that order. `audio.eq` is empty because the public slide does not expose frequencies or gains;
+set bands from the actual recording. Low-pass and denoise remain optional JSON fields, not defaults. Disable a stage
+that makes the voice metallic or pumps the room tone. The default has no music.
 
 ## Grade
 
-The neutral JSON grade uses ffmpeg's `eq` filter. For log footage or camera matching, grade from the original in a
-color-managed editor and apply the EDL there. Never fit a private LUT from a compressed web video and call it exact.
+The observed mapping uses ffmpeg's `eq` filter at saturation `0.10` and contrast `1.05`, inside the measured
+low-saturation/mild-contrast range. For log footage or camera matching, grade from the original in a color-managed
+editor and apply the EDL there. The LUT hook is optional; never fit a private LUT from a compressed web video and
+call it exact.
 
 ## Teaser, captions and graphics
 
-The included teaser is a repeated source excerpt with a small label and subtle lateral crop motion. It is a
-replaceable approximation. Captions use SRT plus libass; graphics are timed text entries. A project can swap either
-for its existing motion system while keeping the source timeline and checks.
+The teaser keeps one continuous voice/head excerpt for about eight seconds. After about three seconds, optional
+0.3–1.1 s inserts appear over its blurred continuation. The ffmpeg fallback uses bordered, tilted 2D cards; a
+project's existing motion tool can replace them with true 3D cards while preserving timing and audio.
+
+Spoken captions are off. SRT/libass remains an explicit accessibility override. Graphics are timed data entries;
+build real `#fbfdfa` panels, labels, pills, icons, charts, UI and citation strips in the project's normal tool.
 
 ## Export
 

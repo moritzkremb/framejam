@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Turn VAD speech islands and source-time words into an auditable edit plan.
 
-A configured trigger phrase removes the entire VAD speech island containing it. No trigger is guessed or enabled by
-default. Accepted transcript shapes: a word list, {"words": [...]}, or {"segments": [{"words": [...]}]}.
+The observed Saraev workflow uses the spoken marker "cut cut", so that exact phrase is the default. --no-trigger
+disables marker removal and --trigger replaces the default. Accepted transcript shapes: a word list,
+{"words": [...]}, or {"segments": [{"words": [...]}]}.
 """
 import argparse
 import json
@@ -97,10 +98,11 @@ def find_island(islands, start, end):
     return None
 
 
-def pad_and_merge(islands, total, pre_roll, post_roll):
+def pad_and_merge(islands, total, pre_roll, post_roll, opening_lead):
     padded = []
-    for island in islands:
-        start = max(0.0, island["start"] - pre_roll)
+    for index, island in enumerate(islands):
+        lead = opening_lead if index == 0 else pre_roll
+        start = max(0.0, island["start"] - lead)
         end = min(total, island["end"] + post_roll)
         if padded and start <= padded[-1]["end"]:
             padded[-1]["end"] = max(padded[-1]["end"], end)
@@ -150,15 +152,15 @@ def retime(words, clips):
     return {"timebase": "edited_seconds", "words": out, "text": " ".join(word["text"] for word in out)}
 
 
-def teaser_range(value, duration):
+def source_range(value, duration, option):
     if value is None:
         return None
     try:
         start, end = (float(part) for part in value.split(":", 1))
     except (ValueError, TypeError):
-        raise SystemExit("--teaser must be SOURCE_START:SOURCE_END in seconds.")
+        raise SystemExit(f"{option} must be SOURCE_START:SOURCE_END in seconds.")
     if not (0 <= start < end <= duration):
-        raise SystemExit(f"--teaser must be inside the {duration:.3f} s source.")
+        raise SystemExit(f"{option} must be inside the {duration:.3f} s source.")
     return start, end
 
 
@@ -168,11 +170,22 @@ def main():
     parser.add_argument("--vad", required=True)
     parser.add_argument("--words", required=True)
     parser.add_argument("--out", required=True)
-    parser.add_argument("--trigger", action="append", default=[], help="exact marker phrase; repeat for aliases")
-    parser.add_argument("--teaser", help="source-time range START:END to repeat at the opening")
+    parser.add_argument("--trigger", action="append", help='exact marker phrase; default: "cut cut"; repeat for aliases')
+    parser.add_argument("--no-trigger", action="store_true", help="disable spoken marker removal")
+    parser.add_argument("--teaser", help="continuous-voice source range START:END to repeat at the opening")
+    parser.add_argument(
+        "--teaser-card",
+        action="append",
+        default=[],
+        help="0.3-1.1 s source range for the teaser montage; repeat up to eight times",
+    )
     parser.add_argument("--pre-roll", type=float, default=0.08)
     parser.add_argument("--post-roll", type=float, default=0.12)
+    parser.add_argument("--opening-lead", type=float, default=1.2, help="seconds retained before the first main word")
     args = parser.parse_args()
+    if args.no_trigger and args.trigger:
+        raise SystemExit("--no-trigger cannot be combined with --trigger.")
+    triggers = [] if args.no_trigger else (args.trigger or ["cut cut"])
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -195,7 +208,7 @@ def main():
             raise SystemExit("VAD speech ranges overlap; merge them before planning.")
 
     words = load_words(args.words)
-    matches = trigger_matches(words, args.trigger)
+    matches = trigger_matches(words, triggers)
     removed_indexes = set()
     decisions = []
     for match in matches:
@@ -214,10 +227,19 @@ def main():
         decisions.append(decision)
 
     kept = [island for index, island in enumerate(islands) if index not in removed_indexes]
-    kept = pad_and_merge(kept, info["duration"], args.pre_roll, args.post_roll)
+    opening_lead = args.opening_lead if kept and kept[0] == islands[0] else args.pre_roll
+    kept = pad_and_merge(kept, info["duration"], args.pre_roll, args.post_roll, opening_lead)
     if not kept:
         raise SystemExit("No speech remains after marker decisions.")
-    teaser = teaser_range(args.teaser, info["duration"])
+    teaser = source_range(args.teaser, info["duration"], "--teaser")
+    teaser_cards = [source_range(value, info["duration"], "--teaser-card") for value in args.teaser_card]
+    if teaser_cards and teaser is None:
+        raise SystemExit("--teaser-card needs --teaser for the continuous voice and background.")
+    if len(teaser_cards) > 8:
+        raise SystemExit("Use at most eight --teaser-card ranges.")
+    for start, end in teaser_cards:
+        if not 0.3 <= end - start <= 1.1:
+            raise SystemExit("Each --teaser-card range must be 0.3-1.1 seconds.")
     raw_clips = []
     if teaser is not None:
         raw_clips.append(("teaser", teaser[0], teaser[1]))
@@ -244,20 +266,46 @@ def main():
             "postRoll": args.post_roll,
         },
         "clips": clips,
-        "triggers": args.trigger,
+        "mode": "raw",
+        "opening": {
+            "titleCard": False,
+            "firstWordTarget": [1.2, 2.0],
+            "startsMidThought": True,
+            "openingLead": args.opening_lead,
+        },
+        "pace": {
+            "speechWpm": [200, 260],
+            "speechCoverage": [0.99, 1.0],
+            "rawCutsPerMinute": 13,
+            "rawMedianShotSeconds": 3.3,
+            "graphicsCutsPerMinute": 6.6,
+        },
+        "triggers": triggers,
         "audio": {
             "highpassHz": 70,
-            "lowpassHz": 16000,
-            "denoiseDb": -25,
+            "eq": [],
             "compressorThresholdDb": -18,
             "compressorRatio": 3,
-            "loudnessLufs": -14,
-            "truePeakDb": -1.5,
+            "loudnessLufs": -16,
+            "truePeakDb": -0.4,
             "loudnessRange": 11,
+            "music": False,
         },
-        "grade": {"brightness": 0, "contrast": 1, "saturation": 1, "gamma": 1},
-        "teaser": {"enabled": teaser is not None, "label": "COMING UP", "swivel": 0.025},
+        "grade": {"brightness": 0, "contrast": 1.05, "saturation": 0.1, "gamma": 1, "lut": None},
+        "teaser": {
+            "enabled": teaser is not None,
+            "durationTarget": 8.0,
+            "headSeconds": 3.0,
+            "microClipRange": [0.3, 1.1],
+            "microClipTarget": 8,
+            "blurBackground": True,
+            "continuousVoice": True,
+            "cardScale": 0.72,
+            "cardTiltDegrees": -3.0,
+            "microClips": [],
+        },
         "captions": {
+            "enabled": False,
             "font": "DejaVu Sans",
             "size": caption_size,
             "color": "&H00FFFFFF",
@@ -265,15 +313,37 @@ def main():
             "outline": 3,
             "marginV": margin,
         },
+        "graphicStyle": {
+            "panel": "#fbfdfa",
+            "headline": "editorial serif",
+            "label": "letter-spaced all-caps grey",
+            "pill": "black",
+            "icon": "thin olive-green line",
+        },
         "graphics": [],
-        "export": {"encoder": "libx264", "crf": 18},
+        "export": {"encoder": "auto", "preferredMacEncoder": "h264_videotoolbox", "softwareFallback": "libx264", "crf": 18},
     }
+    if teaser is not None:
+        cursor = min(3.0, teaser[1] - teaser[0])
+        for start, end in teaser_cards:
+            if cursor >= teaser[1] - teaser[0]:
+                break
+            card_duration = min(end - start, teaser[1] - teaser[0] - cursor)
+            plan["teaser"]["microClips"].append(
+                {
+                    "sourceStart": start,
+                    "sourceEnd": start + card_duration,
+                    "editedStart": cursor,
+                    "editedEnd": cursor + card_duration,
+                }
+            )
+            cursor += card_duration
     write(out / "edit.json", plan)
     write(
         out / "decisions.json",
         {
             "timebase": "source_seconds",
-            "triggersConfigured": args.trigger,
+            "triggersConfigured": triggers,
             "matches": decisions,
             "removedIslands": [islands[index] for index in sorted(removed_indexes)],
             "unmatched": [decision for decision in decisions if decision["action"] == "unmatched"],

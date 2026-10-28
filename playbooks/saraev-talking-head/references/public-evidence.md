@@ -9,35 +9,43 @@ The task supplied these public Nick Saraev videos:
 3. [“Anthropic Just Announced the End of Capitalism.”](https://www.youtube.com/watch?v=wJu9-KDM41o)
 4. [“How to Use AI Like A Top 0.1% CEO”](https://www.youtube.com/watch?v=He-NyJjzWM0)
 
-In the first video, Saraev publicly describes an automated talking-head pipeline that:
+In the first video, Saraev's own on-screen slide at about 0:31 describes an automated talking-head pipeline that:
 
-- extracts audio;
-- runs a neural voice activity detector, transcribed in the public video as “Solera VAD”;
+- extracts audio to WAV;
+- runs Silero VAD;
 - removes silence gaps with a 0.5-second threshold;
-- reacts to an undisclosed two-word spoken marker by removing a mistaken section;
-- performs audio enhancement and color grading;
-- adds an opening “swivel teaser”;
-- uses hardware acceleration for processing.
+- has Whisper find the spoken marker “cut cut” and remove the mistaken section;
+- processes audio high-pass → EQ → compression → about -16 LUFS;
+- applies an optional LUT grade;
+- inserts a 3D swivel teaser;
+- hardware-encodes with `h264_videotoolbox` on his shown Mac route.
 
-Those are pipeline stages, not sufficient specifications for exact reproduction.
+Local Eyes review of all four public references also found the visible and audible DNA mirrored in
+`template/STYLE_BIBLE.md`: an approximately eight-second continuous-voice swivel teaser, no title card, no
+word-by-word captions, three edit modes, editorial graphic panels, a low-saturation neutral grade, voice-only audio
+and the measured pacing ranges. The evidence IDs are:
+
+- `youtube-s3kdxrioesk`
+- `youtube-2imdodzap7c`
+- `youtube-wju9-kdm41o`
+- `youtube-he-nyjjzwm0`
+
+These are public observations, not sufficient specifications for exact reproduction.
 
 ## What is not public here
 
-- The spoken marker phrase. Never provide a default that could fire on ordinary speech.
-- Whether “Solera” is the exact product name or a transcription/pronunciation of Silero.
 - VAD model version, probability threshold, padding or boundary repair.
 - The rule that decides exactly how much speech precedes a marker and should be removed.
-- Audio filters, order, parameters, loudness target, microphone chain or room treatment.
-- LUT, exposure, white balance, curves, skin-tone treatment or per-camera corrections.
+- EQ bands, compressor values, microphone chain or room treatment.
+- LUT identity, exposure, white balance, curves, skin-tone treatment or per-camera corrections.
 - Geometry, easing, duration or implementation of the “swivel” effect.
-- Caption font, sizes, safe zones, line breaking, graphic system or insertion cadence.
-- GPU, operating system, encoder, decoder or ffmpeg build.
+- Exact fonts, radii, icon set, UI source files or graphics implementation.
+- Hardware decode settings, codec quality settings or ffmpeg build.
 
-The included scripts therefore expose these as settings and use neutral defaults. Describe Silero and ffmpeg as open
-alternatives, not as Saraev's private implementation.
+The included scripts therefore expose these as settings, use observed values only where the evidence supports them,
+and keep software fallbacks. Do not call the open ffmpeg card tilt, EQ or grade his private implementation.
 
 ## Using the other three videos
 
-Treat the last three links as public visual references for a later evidence pass. Do not download or redistribute
-them. Record any observation in `STYLE_BIBLE.md` with a video URL and timestamp, and distinguish a repeated pattern
-from a one-off choice. Until that pass is complete, the template makes no claim about their exact look or pacing.
+Do not download or redistribute the references. Keep the evidence IDs when adapting a finding, distinguish a
+repeated pattern from a one-off choice, and do not claim parity until the pipeline is tested on real raw footage.

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Render an edit plan with ffmpeg: cuts, grade, audio, teaser, captions, graphics and export.
 
-  python3 render.py working/edit-01/edit.json --captions working/edit-01/captions.srt --out renders/draft-01.mp4
-  python3 render.py working/edit-01/edit.json --captions working/edit-01/captions.srt --sample 0:8 --out working/sample.mp4
+  python3 render.py working/edit-01/edit.json --out renders/draft-01.mp4
+  python3 render.py working/edit-01/edit.json --sample 0:8 --out working/sample.mp4
+  python3 render.py working/edit-01/edit.json --captions captions.srt --force-captions --out renders/accessible.mp4
   python3 render.py working/edit-01/edit.json --encoder auto --out renders/draft-hw.mp4
 """
 import argparse
@@ -116,24 +117,36 @@ def validate_plan(plan):
 def build_graph(plan, clips, sample_start, sample_end, captions, tmp, encoder):
     width, height, fps = int(plan["width"]), int(plan["height"]), int(plan["fps"])
     count = len(clips)
+    teaser = plan.get("teaser", {})
+    active_cards = [
+        card
+        for card in teaser.get("microClips", [])
+        if float(card["editedEnd"]) > sample_start and float(card["editedStart"]) < sample_end
+    ]
     graph = []
-    if count == 1:
-        video_sources, audio_sources = ["0:v"], ["0:a"]
+    video_count = count + len(active_cards)
+    if video_count == 1:
+        video_sources, card_sources = ["0:v"], []
     else:
-        video_sources = [f"vs{index}" for index in range(count)]
+        all_video_sources = [f"vs{index}" for index in range(video_count)]
+        video_sources, card_sources = all_video_sources[:count], all_video_sources[count:]
+        graph.append(f"[0:v]split={video_count}" + "".join(f"[{name}]" for name in all_video_sources))
+    if count == 1:
+        audio_sources = ["0:a"]
+    else:
         audio_sources = [f"as{index}" for index in range(count)]
-        graph.append(f"[0:v]split={count}" + "".join(f"[{name}]" for name in video_sources))
         graph.append(f"[0:a]asplit={count}" + "".join(f"[{name}]" for name in audio_sources))
 
     grade = plan.get("grade", {})
-    eq = (
+    grade_filter = (
         f"eq=brightness={num(grade.get('brightness', 0))}:"
         f"contrast={num(grade.get('contrast', 1))}:"
         f"saturation={num(grade.get('saturation', 1))}:"
         f"gamma={num(grade.get('gamma', 1))}"
     )
+    if grade.get("lut"):
+        grade_filter += f",lut3d=file='{filter_path(grade['lut'])}'"
     concat_inputs = []
-    swivel = float(plan.get("teaser", {}).get("swivel", 0.025))
     for index, clip in enumerate(clips):
         duration = clip["sourceEnd"] - clip["sourceStart"]
         base = (
@@ -141,17 +154,10 @@ def build_graph(plan, clips, sample_start, sample_end, captions, tmp, encoder):
             f"setpts=PTS-STARTPTS,fps={fps},"
         )
         if clip["role"] == "teaser":
-            scaled_w = max(width + 2, round(width * 1.06 / 2) * 2)
-            scaled_h = max(height + 2, round(height * 1.06 / 2) * 2)
-            visual = (
-                f"scale={scaled_w}:{scaled_h}:force_original_aspect_ratio=increase,"
-                f"crop={width}:{height}:"
-                f"x='(in_w-out_w)*(0.5+{num(swivel)}*sin(PI*t/{num(max(duration, 0.001))}))':"
-                "y='(in_h-out_h)/2'"
-            )
+            visual = f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}"
         else:
             visual = f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}"
-        graph.append(base + visual + f",setsar=1,{eq}[v{index}]")
+        graph.append(base + visual + f",setsar=1,{grade_filter}[v{index}]")
         graph.append(
             f"[{audio_sources[index]}]atrim=start={num(clip['sourceStart'])}:end={num(clip['sourceEnd'])},"
             f"asetpts=PTS-STARTPTS[a{index}]"
@@ -160,20 +166,65 @@ def build_graph(plan, clips, sample_start, sample_end, captions, tmp, encoder):
     graph.append("".join(concat_inputs) + f"concat=n={count}:v=1:a=1[vcat][acat]")
 
     audio = plan.get("audio", {})
-    chain = (
-        f"highpass=f={num(audio.get('highpassHz', 70))},"
-        f"lowpass=f={num(audio.get('lowpassHz', 16000))},"
-        f"afftdn=nf={num(audio.get('denoiseDb', -25))},"
-        f"acompressor=threshold={num(audio.get('compressorThresholdDb', -18))}dB:"
-        f"ratio={num(audio.get('compressorRatio', 3))}:attack=20:release=250:makeup=4,"
-        f"loudnorm=I={num(audio.get('loudnessLufs', -14))}:"
-        f"TP={num(audio.get('truePeakDb', -1.5))}:"
-        f"LRA={num(audio.get('loudnessRange', 11))},aresample=48000"
+    audio_filters = [f"highpass=f={num(audio.get('highpassHz', 70))}"]
+    if audio.get("lowpassHz"):
+        audio_filters.append(f"lowpass=f={num(audio['lowpassHz'])}")
+    if audio.get("denoiseDb") is not None:
+        audio_filters.append(f"afftdn=nf={num(audio['denoiseDb'])}")
+    for band in audio.get("eq", []):
+        audio_filters.append(
+            f"equalizer=f={num(band['frequencyHz'])}:width_type=q:w={num(band.get('q', 1))}:g={num(band['gainDb'])}"
+        )
+    audio_filters.extend(
+        [
+            f"acompressor=threshold={num(audio.get('compressorThresholdDb', -18))}dB:"
+            f"ratio={num(audio.get('compressorRatio', 3))}:attack=20:release=250:makeup=4",
+            f"loudnorm=I={num(audio.get('loudnessLufs', -16))}:"
+            f"TP={num(audio.get('truePeakDb', -0.4))}:"
+            f"LRA={num(audio.get('loudnessRange', 11))}",
+            "aresample=48000",
+        ]
     )
-    graph.append(f"[acat]{chain}[aout]")
+    graph.append(f"[acat]{','.join(audio_filters)}[aout]")
+
+    visual = "vcat"
+    if active_cards:
+        intervals = []
+        for card in active_cards:
+            local_start = max(float(card["editedStart"]), sample_start) - sample_start
+            local_end = min(float(card["editedEnd"]), sample_end) - sample_start
+            intervals.append(f"between(t,{num(local_start)},{num(local_end)})")
+        graph.append(f"[{visual}]split=2[vclear][vblur]")
+        graph.append("[vblur]boxblur=luma_radius=20:luma_power=2[vblurred]")
+        graph.append(f"[vclear][vblurred]overlay=enable='{'+'.join(intervals)}'[vbg]")
+        visual = "vbg"
+        card_scale = float(teaser.get("cardScale", 0.72))
+        card_width = max(2, round(width * card_scale / 2) * 2)
+        card_height = max(2, round(height * card_scale / 2) * 2)
+        tilt = float(teaser.get("cardTiltDegrees", -3))
+        for index, (card, card_source) in enumerate(zip(active_cards, card_sources)):
+            full_start, full_end = float(card["editedStart"]), float(card["editedEnd"])
+            local_start = max(full_start, sample_start) - sample_start
+            local_end = min(full_end, sample_end) - sample_start
+            source_offset = max(sample_start - full_start, 0)
+            source_start = float(card["sourceStart"]) + source_offset
+            source_end = source_start + (local_end - local_start)
+            graph.append(
+                f"[{card_source}]trim=start={num(source_start)}:end={num(source_end)},"
+                f"setpts=PTS-STARTPTS+{num(local_start)}/TB,fps={fps},"
+                f"scale={card_width}:{card_height}:force_original_aspect_ratio=increase,"
+                f"crop={card_width}:{card_height},format=rgba,"
+                "pad=iw+24:ih+24:12:12:color=0xfbfdfa,"
+                f"rotate={num(tilt)}*PI/180:fillcolor=0x00000000:ow=rotw(iw):oh=roth(ih)[card{index}]"
+            )
+            graph.append(
+                f"[{visual}][card{index}]overlay=x=(main_w-overlay_w)/2:y=(main_h-overlay_h)/2:"
+                f"enable='between(t,{num(local_start)},{num(local_end)})':eof_action=pass[vcard{index}]"
+            )
+            visual = f"vcard{index}"
 
     # Put the sample on the full edit's clock so SRT and graphic times stay valid, then reset at the end.
-    graph.append(f"[vcat]setpts=PTS+{num(sample_start)}/TB[vclock]")
+    graph.append(f"[{visual}]setpts=PTS+{num(sample_start)}/TB[vclock]")
     last = "vclock"
     caption_style = plan.get("captions", {})
     if captions:
@@ -192,19 +243,6 @@ def build_graph(plan, clips, sample_start, sample_end, captions, tmp, encoder):
         last = "vcap"
 
     events = []
-    teaser = plan.get("teaser", {})
-    if teaser.get("enabled"):
-        for clip in plan["clips"]:
-            if clip.get("role") == "teaser":
-                events.append(
-                    {
-                        "start": float(clip["editedStart"]),
-                        "end": float(clip["editedEnd"]),
-                        "text": str(teaser.get("label", "COMING UP")),
-                        "position": "top",
-                        "kind": "teaser",
-                    }
-                )
     for item in plan.get("graphics", []):
         events.append({**item, "kind": "graphic"})
 
@@ -221,7 +259,7 @@ def build_graph(plan, clips, sample_start, sample_end, captions, tmp, encoder):
             y = "(h-text_h)/2"
         else:
             y = str(max(24, round(height * 0.08)))
-        size = int(event.get("size", max(22, round(height * (0.045 if event["kind"] == "teaser" else 0.055)))))
+        size = int(event.get("size", max(22, round(height * 0.055))))
         graph.append(
             f"[{last}]drawtext=textfile='{filter_path(text_path)}':"
             f"font='{caption_style.get('font', 'DejaVu Sans')}':fontsize={size}:"
@@ -245,6 +283,7 @@ def main():
     parser.add_argument("--sample", help="edited-time window START:END")
     parser.add_argument("--out", default="renders/draft.mp4")
     parser.add_argument("--encoder", default=None)
+    parser.add_argument("--force-captions", action="store_true", help="render supplied SRT even when plan captions are disabled")
     parser.add_argument("--vaapi-device", default="/dev/dri/renderD128")
     parser.add_argument("--keep", action="store_true")
     args = parser.parse_args()
@@ -262,9 +301,18 @@ def main():
         source = (plan_path.parent / source).resolve()
     if not source.exists():
         raise SystemExit(f"Source not found: {source}")
+    if plan.get("grade", {}).get("lut"):
+        lut = Path(plan["grade"]["lut"])
+        if not lut.is_absolute():
+            lut = (plan_path.parent / lut).resolve()
+        if not lut.exists():
+            raise SystemExit(f"LUT not found: {lut}")
+        plan["grade"]["lut"] = str(lut)
     captions = Path(args.captions).resolve() if args.captions else None
     if captions and not captions.exists():
         raise SystemExit(f"Captions not found: {captions}")
+    if captions and not (args.force_captions or plan.get("captions", {}).get("enabled", False)):
+        captions = None
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = tempfile.mkdtemp(prefix="saraev-render-")

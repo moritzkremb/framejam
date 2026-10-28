@@ -7,6 +7,20 @@
   "width": 1920,
   "height": 1080,
   "styleBible": "STYLE_BIBLE.md",
+  "mode": "raw",
+  "opening": {
+    "titleCard": false,
+    "firstWordTarget": [1.2, 2.0],
+    "startsMidThought": true,
+    "openingLead": 1.2
+  },
+  "pace": {
+    "speechWpm": [200, 260],
+    "speechCoverage": [0.99, 1.0],
+    "rawCutsPerMinute": 13,
+    "rawMedianShotSeconds": 3.3,
+    "graphicsCutsPerMinute": 6.6
+  },
   "clips": [
     {
       "role": "main",
@@ -16,29 +30,38 @@
       "editedEnd": 42.0
     }
   ],
-  "triggers": [],
+  "triggers": ["cut cut"],
   "audio": {
     "highpassHz": 70,
-    "lowpassHz": 16000,
-    "denoiseDb": -25,
+    "eq": [],
     "compressorThresholdDb": -18,
     "compressorRatio": 3,
-    "loudnessLufs": -14,
-    "truePeakDb": -1.5,
-    "loudnessRange": 11
+    "loudnessLufs": -16,
+    "truePeakDb": -0.4,
+    "loudnessRange": 11,
+    "music": false
   },
   "grade": {
     "brightness": 0,
-    "contrast": 1,
-    "saturation": 1,
-    "gamma": 1
+    "contrast": 1.05,
+    "saturation": 0.1,
+    "gamma": 1,
+    "lut": null
   },
   "teaser": {
     "enabled": false,
-    "label": "COMING UP",
-    "swivel": 0.025
+    "durationTarget": 8,
+    "headSeconds": 3,
+    "microClipRange": [0.3, 1.1],
+    "microClipTarget": 8,
+    "blurBackground": true,
+    "continuousVoice": true,
+    "cardScale": 0.72,
+    "cardTiltDegrees": -3,
+    "microClips": []
   },
   "captions": {
+    "enabled": false,
     "font": "DejaVu Sans",
     "size": 54,
     "color": "&H00FFFFFF",
@@ -46,9 +69,18 @@
     "outline": 3,
     "marginV": 64
   },
+  "graphicStyle": {
+    "panel": "#fbfdfa",
+    "headline": "editorial serif",
+    "label": "letter-spaced all-caps grey",
+    "pill": "black",
+    "icon": "thin olive-green line"
+  },
   "graphics": [],
   "export": {
-    "encoder": "libx264",
+    "encoder": "auto",
+    "preferredMacEncoder": "h264_videotoolbox",
+    "softwareFallback": "libx264",
     "crf": 18
   }
 }

@@ -73,7 +73,7 @@ beforeAll(() => {
         { text: "opening.", start: 0.6, end: 0.95 },
         { text: "mistake", start: 2.0, end: 2.3 },
         { text: "CUT", start: 2.38, end: 2.52 },
-        { text: "NOW", start: 2.54, end: 2.72 },
+        { text: "CUT", start: 2.54, end: 2.72 },
         { text: "A", start: 3.8, end: 3.9 },
         { text: "better", start: 3.92, end: 4.18 },
         { text: "ending.", start: 4.2, end: 4.55 },
@@ -104,7 +104,7 @@ describe.skipIf(!haveFfmpeg)("saraev talking-head pipeline", () => {
     expect(vad.speech.length).toBe(3);
   });
 
-  it("removes only speech islands carrying a configured marker and keeps an auditable map", () => {
+  it('defaults to the observed "cut cut" marker and keeps an auditable map', () => {
     const result = py("plan_edit.py", [
       "--input",
       "raw.mp4",
@@ -112,8 +112,6 @@ describe.skipIf(!haveFfmpeg)("saraev talking-head pipeline", () => {
       "vad.json",
       "--words",
       "words.json",
-      "--trigger",
-      "cut now",
       "--teaser",
       "3.8:4.4",
       "--out",
@@ -125,12 +123,16 @@ describe.skipIf(!haveFfmpeg)("saraev talking-head pipeline", () => {
     const plan = JSON.parse(fs.readFileSync(path.join(root, "edit-01", "edit.json"), "utf8"));
     expect(decisions.removedIslands).toHaveLength(1);
     expect(decisions.matches[0].action).toBe("remove_speech_island");
-    expect(edited.words.some((word: { text: string }) => /cut|now|mistake/i.test(word.text))).toBe(false);
+    expect(edited.words.some((word: { text: string }) => /cut|mistake/i.test(word.text))).toBe(false);
     expect(plan.clips[0].role).toBe("teaser");
-    expect(plan.triggers).toEqual(["cut now"]);
+    expect(plan.triggers).toEqual(["cut cut"]);
+    expect(plan.audio).toMatchObject({ loudnessLufs: -16, truePeakDb: -0.4, music: false });
+    expect(plan.grade).toMatchObject({ saturation: 0.1, contrast: 1.05 });
+    expect(plan.captions.enabled).toBe(false);
+    expect(plan.export).toMatchObject({ encoder: "auto", preferredMacEncoder: "h264_videotoolbox", softwareFallback: "libx264" });
   });
 
-  it("renders captions and graphics, then creates a short technical comparison", () => {
+  it("keeps captions optional, renders graphics, then creates a short technical comparison", () => {
     const captions = py("make_captions.py", [
       "--words",
       "edit-01/edited.words.json",
@@ -143,11 +145,10 @@ describe.skipIf(!haveFfmpeg)("saraev talking-head pipeline", () => {
     const planPath = path.join(root, "edit-01", "edit.json");
     const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
     plan.graphics = [{ start: 0.1, end: 1.5, text: "PIPELINE FIXTURE", position: "top" }];
+    plan.teaser.microClips = [{ sourceStart: 0.2, sourceEnd: 0.6, editedStart: 0.1, editedEnd: 0.5 }];
     fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));
     const render = py("render.py", [
       "edit-01/edit.json",
-      "--captions",
-      "edit-01/captions.srt",
       "--sample",
       "0:2",
       "--out",
