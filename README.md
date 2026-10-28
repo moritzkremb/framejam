@@ -287,7 +287,7 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 A style sets the look; a playbook sets how a kind of video gets made: what you bring, the steps, the tools it needs
 and the quality bar, all as defaults your request can override. Name one when you ask for a video, or type
 `/framejam:playbook` to choose on a page. Some playbooks come with styles made for them, each with its own example
-video. FrameJam ships with 16:
+video. FrameJam ships with 19:
 
 | Playbook | What goes in, what comes out |
 | --- | --- |
@@ -300,6 +300,7 @@ video. FrameJam ships with 16:
 | **Editorial Reel** | A raw talking-head recording goes in, a vertical reel with magazine-style serif titles, chat pop-ups and word-by-word captions comes out. |
 | **Whiteboard Reel** | A raw talking-head recording goes in, a vertical reel comes out where every idea you explain is drawn on a white board above you. |
 | **Clean Cut** | A raw recording goes in, the same video as a tight, fast-paced jump cut without pauses, fillers and retakes comes out. |
+| **Saraev-like Talking Head** | Raw talking-head footage goes in, a tight, enhanced, captioned cut with a configurable opening teaser comes out. The open pipeline does not assume Nick Saraev's private tools or settings. |
 | **Product Launch** | Your product goes in, a polished launch video with the real app on screen comes out. |
 | **Founder Launch** | A founder talking to camera and screen recordings go in, a tight launch video comes out. |
 | **Launch Teaser** | A name, one promise and a few real clips go in, a 15-second teaser that lands the name on the beat comes out. |

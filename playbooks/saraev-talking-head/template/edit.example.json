@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "source": "source/raw.mp4",
+  "sourceDuration": 60.0,
+  "duration": 42.0,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "styleBible": "STYLE_BIBLE.md",
+  "clips": [
+    {
+      "role": "main",
+      "sourceStart": 0.1,
+      "sourceEnd": 42.1,
+      "editedStart": 0.0,
+      "editedEnd": 42.0
+    }
+  ],
+  "triggers": [],
+  "audio": {
+    "highpassHz": 70,
+    "lowpassHz": 16000,
+    "denoiseDb": -25,
+    "compressorThresholdDb": -18,
+    "compressorRatio": 3,
+    "loudnessLufs": -14,
+    "truePeakDb": -1.5,
+    "loudnessRange": 11
+  },
+  "grade": {
+    "brightness": 0,
+    "contrast": 1,
+    "saturation": 1,
+    "gamma": 1
+  },
+  "teaser": {
+    "enabled": false,
+    "label": "COMING UP",
+    "swivel": 0.025
+  },
+  "captions": {
+    "font": "DejaVu Sans",
+    "size": 54,
+    "color": "&H00FFFFFF",
+    "outlineColor": "&H00000000",
+    "outline": 3,
+    "marginV": 64
+  },
+  "graphics": [],
+  "export": {
+    "encoder": "libx264",
+    "crf": 18
+  }
+}
