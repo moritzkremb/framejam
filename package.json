@@ -38,6 +38,7 @@
     "!playbooks/*/preview.mp4",
     "!playbooks/anchor-overlay",
     "!playbooks/editorial-reel",
+    "!playbooks/trailer-launch",
     "!playbooks/whiteboard-reel",
     "skills",
     "plugin",

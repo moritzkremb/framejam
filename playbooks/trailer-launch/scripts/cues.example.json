@@ -1,0 +1,22 @@
+{
+  "bpm": 120,
+  "duration": 52,
+  "mood": "night",
+  "sections": [
+    {"t": 0, "dur": 5, "type": "atmosphere"},
+    {"t": 5, "dur": 16.5, "type": "build"},
+    {"t": 21.5, "dur": 1.5, "type": "silence"},
+    {"t": 23, "dur": 11, "type": "climax"},
+    {"t": 34, "dur": 15, "type": "hero"},
+    {"t": 49, "dur": 3, "type": "outro"}
+  ],
+  "hits": [
+    {"t": 0.4, "sfx": "tick"},
+    {"t": 5.0, "sfx": "whoosh", "dur": 0.5},
+    {"t": 17.0, "sfx": "riser", "dur": 4.5},
+    {"t": 23.0, "sfx": "boom"},
+    {"t": 23.0, "sfx": "whoosh", "dur": 0.4},
+    {"t": 34.0, "sfx": "swoosh", "dur": 0.8},
+    {"t": 49.0, "sfx": "boom"}
+  ]
+}
