@@ -6,7 +6,7 @@ export function NotFoundPage() {
     <div className="fc-screen">
       <HomeHeader />
       <main className="fc-main">
-        <NotHere title="This page isn't here" message="The link may be old or mistyped." />
+        <NotHere title={<>This page isn't <em>here</em></>} message="The link may be old or mistyped." />
       </main>
     </div>
   );

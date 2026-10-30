@@ -1,8 +1,9 @@
 import { Search, WifiOff } from "lucide-react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { CodeBlock } from "@/components/setup-steps";
 
-export function NotHere({ title, message, back = "/", backLabel = "Back to projects" }: { title: string; message: string; back?: string; backLabel?: string }) {
+export function NotHere({ title, message, back = "/", backLabel = "Back to projects" }: { title: ReactNode; message: string; back?: string; backLabel?: string }) {
   return (
     <div className="fc-empty fc-center">
       <span className="ic">
@@ -20,10 +21,12 @@ export function NotHere({ title, message, back = "/", backLabel = "Back to proje
 export function Offline() {
   return (
     <div className="fc-empty fc-center">
-      <span className="ic" style={{ color: "var(--danger)", background: "var(--danger-soft)" }}>
+      <span className="ic danger">
         <WifiOff className="fc-i" />
       </span>
-      <div className="fc-h3">FrameJam isn't running</div>
+      <div className="fc-h3">
+        FrameJam isn't <em>running</em>
+      </div>
       <p>Start it again in your terminal, and this page reconnects by itself.</p>
       <div style={{ marginTop: 8, width: "100%", maxWidth: 320 }}>
         <CodeBlock code="npx -y framejam start" />

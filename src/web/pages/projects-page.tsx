@@ -93,7 +93,10 @@ export function ProjectsPage() {
       <HomeHeader />
       <main className="fc-main fc-narrow">
         <UpdateNotice />
-        <h1 className="fc-h1">Projects</h1>
+        <div>
+          <p className="fc-kicker">On this computer</p>
+          <h1 className="fc-h1">Projects</h1>
+        </div>
         {error && !reviews ? (
           isOffline(error) ? (
             <Offline />
@@ -111,8 +114,8 @@ export function ProjectsPage() {
             {!agent && (
               <section className="fc-card fc-col" style={{ gap: 14 }} aria-labelledby="setup-title" data-testid="setup-checklist">
                 <div>
-                  <h2 id="setup-title" className="fc-h3">
-                    Connect your agent to get started
+                  <h2 id="setup-title" className="fc-h2">
+                    Connect your agent to <em>get started</em>
                   </h2>
                   <p className="fc-caption" style={{ margin: "2px 0 0" }}>
                     Three messages to paste into your agent chat. Each step ticks itself off, and this goes away once your agent connects.
@@ -128,7 +131,9 @@ export function ProjectsPage() {
                   <div className="fc-row" style={{ gap: 12, flexWrap: "nowrap", alignItems: "flex-start" }}>
                     <Inbox className="fc-i fc-t2" />
                     <div>
-                      <div className="fc-h3">No projects yet</div>
+                      <div className="fc-h2">
+                        No projects <em>yet</em>
+                      </div>
                       <p className="fc-caption" style={{ margin: "2px 0 0", fontSize: 13, lineHeight: "19px" }}>
                         Paste this into your agent chat. Its first version shows up here.
                       </p>
@@ -139,12 +144,12 @@ export function ProjectsPage() {
               )
             ) : (
               <div className="fc-col" style={{ gap: 8 }}>
-                {needsYou.length > 0 && <div className="fc-caption">Needs you</div>}
+                {needsYou.length > 0 && <div className="fc-label">Needs you</div>}
                 {needsYou.map((r) => (
                   <ProjectCard key={r.id} review={r} />
                 ))}
                 {withAgent.length > 0 && (
-                  <div className="fc-caption" style={{ marginTop: needsYou.length ? 12 : 0 }}>
+                  <div className="fc-label" style={{ marginTop: needsYou.length ? 12 : 0 }}>
                     With your agent
                   </div>
                 )}

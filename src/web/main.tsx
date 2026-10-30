@@ -13,14 +13,6 @@ import { StyleDetailPage } from "@/pages/style-detail-page";
 import { StylesPage } from "@/pages/styles-page";
 import "./index.css";
 
-/** Dark by default; follows the harness / OS when it asks for light. */
-function applyTheme() {
-  const light = window.matchMedia("(prefers-color-scheme: light)").matches;
-  document.documentElement.dataset.theme = light ? "light" : "dark";
-}
-applyTheme();
-window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", applyTheme);
-
 /** Old /presets links (from agents and bookmarks) keep working. */
 function PresetRedirect() {
   const { id } = useParams();
