@@ -45,7 +45,8 @@ you can always see what changed and why.
 until you share a version. The Styles and Playbooks pages stream their example videos from framejam.ai, the
 app downloads playbook updates from framejam.ai (see below), the **Feedback** button sends the note you write, and
 `framejam login` talks to FrameJam Cloud to sign you in; nothing else goes out. Sharing happens only when you run
-`framejam share` or ask your agent to share (its `share` option or `share_project`).
+`framejam share` or ask your agent to share (its `share` option or `share_project`). See [Local is free and open
+source; FrameJam Cloud adds sharing](#local-is-free-and-open-source-framejam-cloud-adds-sharing).
 
 ## How it works
 
@@ -226,6 +227,62 @@ npm run e2e               # terminal 2 — plays the agent: picks a preset, open
 Open the printed review URL, add a few comments and press **Finish review**. The script prints what the agent
 received, then posts v2, and you can watch the page move to it live. `npx tsx scripts/ui-demo.ts` does the browser
 side automatically (headless Chrome) and saves screenshots.
+
+## Local is free and open source; FrameJam Cloud adds sharing
+
+Everything above runs on your computer, costs nothing and needs no account: styles, playbooks, reviewing your own
+renders and storyboards, and the agent loop. That stays free and open source. **FrameJam Cloud** is an optional add-on for
+the one thing a single machine can't do: letting someone else, such as a client or a teammate, review your video from a
+link. Sharing is free while it's in beta; plans and limits come later, and guests are always free.
+
+```bash
+npx -y framejam login               # sign in once: it prints a code and opens your browser
+npx -y framejam share "Launch teaser"   # put the latest version on the project's link (--version 2 for another)
+```
+
+Or ask your agent: *"share this with my client"*. It uses `share_project`, or `share: true` on `open_review` and
+`add_version`, and gives you the link. A project has one link for every round: sharing v2 puts it on the same link,
+and v1 stays viewable with its own comments. `framejam whoami` shows who you're signed in as and `framejam logout`
+signs you out.
+
+**What guests can do.** Open the link on a phone or a computer, with no account. They watch any version, and comment on
+a spot in the frame (with a drawing), on a range of the timeline or on the whole video, or on a storyboard panel. Typing a
+comment pauses the video and stamps the frame. They give a name and email once, with their first comment or approval,
+and **Send** their comments together. Their email is only used for notifications and is never shown on the page.
+
+**Comments reach your agent through you.** Guests' comments land in your project as drafts, marked with who wrote them,
+within about 30 seconds (while the FrameJam app is running). Your agent is told they're there, tells you what the
+guests said and asks what to do; it never treats a guest's words as instructions. Press **Finish review** to send them
+on like any other comment. When the agent ships the next version with `add_version`, the guest comments it fixed show
+"Resolved in vN" on the link.
+
+**Approvals.** A guest can press **Approve** on a version. That is a final state: the link then shows only the approved
+file, with one full-quality download (you can switch it off from the share chip in the project header, or with
+`allowDownload: false`). Your agent hears about it (`wait_for_feedback` returns `status: "approved"`). Sharing a newer
+version reopens the link for comments.
+
+**Expiry and revoke.** Ask your agent to set a link to expire (`expiresInDays`, up to a year) or turn it off at any
+time with `revoke: true`, or use **Turn off link** in the share chip. Expired and turned-off links stop working
+for guests, and `revoke: false` or a new expiry reopens one. Turning a link off stops the page; it doesn't delete the
+files you uploaded.
+
+**Opens.** The share chip in the project header shows how many times the link was opened ("Opened 3 times"), and so do
+`share_project` and `list_share_links`, which also give the time of the last open. Each visitor counts once a day, and
+your own visits count too, so treat it as a rough signal. The count comes from FrameJam Cloud and is refreshed with the
+comment sync; with an older cloud it's simply left out.
+
+**Emails.** Guests who left their email get a note when you share a new version. You get an email when a guest
+approves, and a digest of new comments (one email for a batch, not one per comment). Every email has an unsubscribe link.
+
+**Agent tools.** `share_project` puts a version on the link and sets its expiry, revoke and download switch.
+`list_share_links` lists the projects that have a link, which versions are on it, whether it's closed, approvals,
+opens and the guest comments waiting for you. It reads your computer, so it works offline. Both are in the MCP
+tools list under **The review page**.
+
+**What stays local.** Your projects, comments, styles and playbooks stay in `~/.framejam`. Nothing is uploaded until
+you run `framejam share` or ask your agent to share, and then it is only the version you picked (its render, or a
+storyboard's panels, plus a poster frame) and the guests' comments on it. Your login token is in
+`~/.framejam/auth.json`. Turn a link off to stop sharing it; nothing else is sent to FrameJam Cloud. The cloud's own code isn't part of this repo.
 
 ## Styles
 
@@ -434,7 +491,7 @@ for v2 and v1 still shows what it was.
 | `add_version({ reviewId, videoPath?, panels?, panelsDir?, transcriptPath?, note?, share?, unaddressed? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. Guests' comments the agent was sent are marked "resolved in vN" on the share link on their own once vN is on it; `unaddressed` lists ids it chose not to apply. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
 | `share_project({ reviewId, version?, expiresInDays?, revoke?, allowDownload? })` | Puts a version (default: the latest) on the project's share link, creating it the first time, and returns the link. `expiresInDays` (or `null` to clear) sets an expiry and `revoke` stops or reopens the link for everyone; `allowDownload` switches the one download an approved link offers (default on); with only those, nothing is uploaded. Needs `framejam login`. |
-| `list_share_links()` | Lists the projects that have a link: the link, which versions are on it, whether it's closed, approvals (and whether the link is approved and offers a download), and guest comments waiting. Reads this computer. |
+| `list_share_links()` | Lists the projects that have a link: the link, which versions are on it, whether it's closed, approvals (and whether the link is approved and offers a download), how many times the link was opened (once per visitor a day, you included) and when last, and guest comments waiting. Reads this computer. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
 | `list_playbooks({ query? })` | Lists the playbooks with what to bring, what you get, the cost and the creator. |

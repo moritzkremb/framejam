@@ -33,6 +33,16 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
   the link which comment it fixed and in which version, and your agent can set the link's expiry or revoke it. Guests'
   comments reach your agent only as text to relay to you first. Nothing is uploaded or checked until you run
   `framejam login` and share.
+- The same check also reads how many times the link was opened (once per visitor a day, yours included), which the app shows in the project header and
+  your agent can read with `share_project` and `list_share_links`.
+- FrameJam Cloud emails you and your guests about a shared link: a guest who left their email gets a note when you
+  share a new version, and you get an email when a guest approves and a digest of new comments. Every email has an
+  unsubscribe link.
+
+Local FrameJam is free and open source. FrameJam Cloud, with `framejam share`, adds sharing a project with a client:
+guests open the link with no account, comment on a frame or a range, and approve a version (the link then shows only
+that file, with an optional download); you can set the link to expire or turn it off. Sharing is free while it's in
+beta. Projects stay in `~/.framejam`, and turning a link off stops the page but doesn't delete the uploaded files.
 
 Nothing is sent from your agent's conversation.
 
