@@ -1,0 +1,37 @@
+{
+  "id": "trailer-launch",
+  "name": "Trailer Launch",
+  "tagline": "A product or mission goes in, a cinematic trailer with a silence-then-drop reveal comes out.",
+  "description": "A 45–60 second launch trailer, the kind that feels like a documentary or sci-fi teaser: a mythology hook, rising stakes, a mandatory silence, a beat-drop reveal, real product hero shots, and a logo CTA. Voiceover and kinetic type carry the story; act 1 can look archival (CRT, grain, boxy frames) and the picture goes clean and wide after the drop. Not a 15-second curiosity sting, and not a SaaS UI walk-through.",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
+  "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
+  "inspiredBy": [{ "name": "@_ganimate_", "url": "https://x.com/_ganimate_/status/2115810508125446482" }],
+  "license": "MIT",
+  "bring": [
+    "The product or mission name, one-line promise, and a CTA (URL, waitlist, or 'build with us')",
+    "A voiceover script or recording",
+    "Archival or epic B-roll, plus real product hero footage or renders",
+    "Your logo (alpha preferred). Optional: brand colors and font, licensed quote clips you own the rights to, a music track"
+  ],
+  "get": "A 45–60 s cinematic trailer with voiceover, kinetic type and a silence-then-drop (16:9, or 9:16 on request)",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    { "name": "Trailer music script and beat sheet", "where": "included" },
+    { "name": "Hyperframes (or your project's video tool), Python 3 and ffmpeg", "where": "computer" },
+    { "name": "A voiceover", "where": "service", "cost": "free", "optional": true, "examples": ["your own recording", "Kokoro (runs locally)", "ElevenLabs (paid)"] },
+    { "name": "Music, if you want a real track", "where": "service", "cost": "free tier", "optional": true, "examples": ["the included music script (free)", "YouTube Audio Library", "Epidemic Sound (paid)"] },
+    { "name": "Stock or archival footage, if you don't already have B-roll", "where": "service", "cost": "free tier", "optional": true, "examples": ["your own archive", "Pexels / Wikimedia (free)", "licensed stock (paid)"] }
+  ],
+  "styles": "all",
+  "steps": [
+    "Write the voiceover and lay it on the silence-then-drop arc",
+    "Collect archival, B-roll and real product hero footage",
+    "Score atmosphere, a rising build, a silence gap and the climax",
+    "Build the cut with kinetic type and act-1 degradation",
+    "Review each version in FrameJam until it's right"
+  ],
+  "tags": ["trailer", "product launch", "cinematic", "announcement", "kinetic type", "voiceover", "documentary"],
+  "skill": "SKILL.md"
+}

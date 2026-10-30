@@ -287,7 +287,7 @@ npm run render:presets            # or: npm run render:presets -- noir-quote
 A style sets the look; a playbook sets how a kind of video gets made: what you bring, the steps, the tools it needs
 and the quality bar, all as defaults your request can override. Name one when you ask for a video, or type
 `/framejam:playbook` to choose on a page. Some playbooks come with styles made for them, each with its own example
-video. FrameJam ships with 16:
+video. FrameJam ships with 19:
 
 | Playbook | What goes in, what comes out |
 | --- | --- |
@@ -303,6 +303,7 @@ video. FrameJam ships with 16:
 | **Product Launch** | Your product goes in, a polished launch video with the real app on screen comes out. |
 | **Founder Launch** | A founder talking to camera and screen recordings go in, a tight launch video comes out. |
 | **Launch Teaser** | A name, one promise and a few real clips go in, a 15-second teaser that lands the name on the beat comes out. |
+| **Trailer Launch** | A product or mission goes in, a cinematic trailer with a silence-then-drop reveal comes out. |
 | **Explainer** | A topic, article or script goes in, a narrated animated explainer comes out. |
 | **Math Animation** | A math or science idea goes in, a calm animated explainer in the style of 3Blue1Brown comes out. Comes with two styles made for it: Blueprint and Soft Outline. |
 | **How-to** | A process goes in, a short step-by-step video that's clear even with the sound off comes out. |
