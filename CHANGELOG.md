@@ -49,6 +49,9 @@ You need this npm release for any of it: the local app, the plugin and the skill
 ### Other changes
 
 - The review page keeps its sidebar tabs and buttons below the macOS menu bar in full screen.
+- `framejam whoami` shows the email for an account without a name instead of crashing.
+- `framejam login` keeps waiting through a dropped connection or a FrameJam Cloud 5xx until the code expires, and
+  cloud calls (sharing, `add_version`) retry a network error or 5xx twice with a short backoff.
 
 ### What leaves your computer
 

@@ -675,6 +675,21 @@ describe("the cloud client", () => {
     const fetchFn: FetchLike = async () => Response.json({ status: "error", errorMessage: "Invalid token" });
     await expect(createShareClient("fj_bad", CLOUD, fetchFn).pending("rev_1")).rejects.toThrow("Invalid token");
   });
+
+  it("retries a publish that fails once on the network", async () => {
+    let attempts = 0;
+    const slept: number[] = [];
+    const fetchFn: FetchLike = async () => {
+      attempts += 1;
+      if (attempts === 1) throw new TypeError("fetch failed");
+      return Response.json({ status: "success", value: { projectId: "p1", token: "tok", version: 1, created: true, expiresAt: null, revokedAt: null } });
+    };
+    const client = createShareClient(TOKEN, CLOUD, fetchFn, { sleep: async (ms) => void slept.push(ms) });
+    const published = await client.publish({ localId: "rev_1", title: "T", kind: "video", version: { number: 1, videoAssetId: "a" } });
+    expect(published.token).toBe("tok");
+    expect(attempts).toBe(2);
+    expect(slept).toEqual([500]);
+  });
 });
 
 describe("the project's share details over HTTP", () => {
