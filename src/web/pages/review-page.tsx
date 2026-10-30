@@ -166,10 +166,10 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
   const here = comments.filter((c) => isAt(c, time));
   const pins: Pin[] = here
     .filter((c) => c.x !== undefined && c.y !== undefined)
-    .map((c) => ({ id: c.id, index: indexOf.get(c.id)!, x: c.x!, y: c.y!, sent: c.status !== "draft", text: c.text }));
+    .map((c) => ({ id: c.id, index: indexOf.get(c.id)!, x: c.x!, y: c.y!, sent: c.status !== "draft", text: c.text, author: c.author }));
   const floating: FloatingNote[] = here
     .filter((c) => c.x === undefined || c.y === undefined)
-    .map((c) => ({ id: c.id, index: indexOf.get(c.id)!, sent: c.status !== "draft", text: c.text }));
+    .map((c) => ({ id: c.id, index: indexOf.get(c.id)!, sent: c.status !== "draft", text: c.text, author: c.author }));
 
   const markers: Marker[] = comments.map((c) => ({ id: c.id, index: indexOf.get(c.id)!, time: c.time, endTime: c.endTime, whole: c.wholeVideo, sent: c.status !== "draft" }));
 

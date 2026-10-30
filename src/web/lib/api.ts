@@ -1,7 +1,7 @@
 import type { Transcript, TranscriptWord } from "../../core/transcript";
-import type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, TranscriptionStatus, VideoPick } from "../../core/types";
+import type { AgentInfo, CommentKind, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, TranscriptionStatus, VideoPick } from "../../core/types";
 
-export type { AgentInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, Transcript, TranscriptionStatus, TranscriptWord, VideoPick };
+export type { AgentInfo, CommentKind, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, Transcript, TranscriptionStatus, TranscriptWord, VideoPick };
 
 /** From `/api/catalog`: whether playbooks update from framejam.ai, and how the last check went. */
 export interface CatalogStatus {

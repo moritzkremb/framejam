@@ -16,6 +16,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "tsup.config.ts", "src/server", "src/core", "tests", "scripts"],
+  "include": ["vite.config.ts", "vite.share.config.ts", "vitest.config.ts", "tsup.config.ts", "src/server", "src/core", "tests", "scripts"],
   "exclude": ["tests/web"]
 }

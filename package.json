@@ -32,6 +32,7 @@
   "files": [
     "dist",
     "!dist/**/*.map",
+    "!dist/share",
     "presets",
     "!presets/*/preview.mp4",
     "playbooks",
@@ -51,6 +52,8 @@
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,magenta \"tsx watch src/server/cli.ts\" \"vite\"",
     "build": "tsc -b && vite build && tsup",
+    "build:share": "vite build --config vite.share.config.ts",
+    "dev:share": "vite --config vite.share.config.ts",
     "start": "node dist/server/cli.js",
     "typecheck": "tsc -b",
     "lint": "oxlint src tests scripts",
@@ -80,6 +83,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "cn": "^0.4.0",
     "concurrently": "^10.0.5",
+    "convex": "^1.48.0",
     "happy-dom": "^21.0.3",
     "lucide-react": "^1.49.0",
     "oxlint": "^1.81.0",

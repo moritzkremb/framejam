@@ -379,6 +379,7 @@ a { color: inherit; }
 .fc-note.draft .n { background: var(--accent); color: var(--on-accent); }
 .fc-note.sent .n { background: rgba(255, 255, 255, .2); color: var(--on-video); }
 .fc-note.is-selected { outline: 2px solid var(--on-video); outline-offset: 1px; }
+.fc-note .who { margin-right: 6px; font-weight: 600; }
 .fc-player-veil { position: absolute; inset: 0; display: grid; place-items: center; gap: 8px; background: rgba(0, 0, 0, .4); color: var(--on-video); font: 400 13px/18px var(--font-sans); text-align: center; padding: 24px; }
 .fc-player-veil.error { background: rgba(0, 0, 0, .75); }
 .fc-play[disabled] { opacity: .4; cursor: not-allowed; }

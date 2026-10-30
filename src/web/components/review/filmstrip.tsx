@@ -2,7 +2,7 @@ import { ZoomIn, ZoomOut } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import { formatTime, type TranscriptWord } from "@/lib/api";
 import { wordIndexAt } from "./transcript";
-import { cn, MOD_KEY } from "@/lib/utils";
+import { cn, crossOriginFor, MOD_KEY } from "@/lib/utils";
 
 export interface Marker {
   id: string;
@@ -27,6 +27,8 @@ function useFrames(url: string | undefined, count: number) {
     const video = document.createElement("video");
     video.muted = true;
     video.preload = "auto";
+    const cors = crossOriginFor(url);
+    if (cors) video.crossOrigin = cors;
     video.src = url;
     const seek = (t: number) =>
       new Promise<void>((resolve) => {

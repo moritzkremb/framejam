@@ -44,7 +44,13 @@ function CommentItem({
       <span className={cn("fc-num", editable ? "draft" : "sent")}>{index}</span>
       <div style={{ minWidth: 0 }}>
         <div className="top">
+          {comment.author && (
+            <span className="who fc-truncate" title={`Written by ${comment.author} on the shared link`}>
+              {comment.author}
+            </span>
+          )}
           <span className="when">{label}</span>
+          {comment.fromVersion !== undefined && <span className="from">from v{comment.fromVersion}</span>}
         </div>
         {editing ? (
           <div className="fc-edit" onClick={(e) => e.stopPropagation()}>
@@ -119,7 +125,10 @@ function CommentItem({
   );
 }
 
-/** The comments on the version you're watching, one card under another. Editable while the version is open, greyed once finished. */
+/**
+ * The comments on the version you're watching, one card under another. Editable while the version is open, greyed
+ * once finished; `editable` can also decide per comment (on a shared link, only your own unsent ones).
+ */
 export function CommentList({
   comments,
   editable,
@@ -130,7 +139,7 @@ export function CommentList({
   onDelete,
 }: {
   comments: ReviewComment[];
-  editable: boolean;
+  editable: boolean | ((c: ReviewComment) => boolean);
   selectedId: string | null;
   /** Where the comment is, e.g. "0:04.2" or "Panel 3". */
   label?(c: ReviewComment): string;
@@ -146,7 +155,7 @@ export function CommentList({
           comment={c}
           index={i + 1}
           label={label(c)}
-          editable={editable}
+          editable={typeof editable === "function" ? editable(c) : editable}
           selected={selectedId === c.id}
           onSelect={() => onSelect(c)}
           onSave={(t) => onSave(c, t)}

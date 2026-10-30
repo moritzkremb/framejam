@@ -134,6 +134,19 @@ describe("review screens with a data source", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("show a guest's name next to the comments they wrote on a shared link", async () => {
+    const review = videoReview();
+    review.comments.push(comment({ id: "c2", kind: "general", time: 3, text: "Music is too loud", author: "Anna Lee", fromVersion: 1 }));
+    review.versions.push({ number: 2, videoPath: "/renders/teaser-2.mp4", createdAt: at });
+    review.comments[1]!.version = 2;
+    await renderReview("rev_video", fakeSource(review).source);
+
+    const card = host.querySelector('[data-testid="comment-card"]')!;
+    expect(card.querySelector(".who")?.textContent).toBe("Anna Lee");
+    expect(card.textContent).toContain("from v1");
+    expect(card.textContent).toContain("Music is too loud");
+  });
+
   it("render a storyboard's panels from the data source's URLs", async () => {
     const fake = fakeSource(storyboardReview());
     await renderReview("rev_board", fake.source);
