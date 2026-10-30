@@ -33,7 +33,7 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
   the link which comment it fixed and in which version, and your agent can set the link's expiry or revoke it. Guests'
   comments reach your agent only as text to relay to you first. Nothing is uploaded or checked until you run
   `framejam login` and share.
-- The same check also reads how many times guests have opened the link, which the app shows in the project header and
+- The same check also reads how many times the link was opened (once per visitor a day, yours included), which the app shows in the project header and
   your agent can read with `share_project` and `list_share_links`.
 - FrameJam Cloud emails you and your guests about a shared link: a guest who left their email gets a note when you
   share a new version, and you get an email when a guest approves and a digest of new comments. Every email has an

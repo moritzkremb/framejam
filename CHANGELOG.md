@@ -29,7 +29,8 @@ You need this npm release for any of it: the local app, the plugin and the skill
 - **Expiry and revoke.** `share_project` sets `expiresInDays` (or `null` to clear) and `revoke` (`false` reopens). The
   project header's share chip has **Allow download** and **Turn off link**. Expired and turned-off links stop working
   for guests, enforced on the server. Turning a link off doesn't delete the uploaded files.
-- **Guest opens.** The share chip shows how many times guests opened the link ("Opened 3 times"), and `share_project`,
+- **Opens.** The share chip shows how many times the link was opened ("Opened 3 times"; each visitor counts once a day
+  and your own visits count too), and `share_project`,
   `open_review` / `add_version` with `share: true`, `list_share_links` and `framejam share` report `opens` and
   `lastOpenedAt`. Needs the updated FrameJam Cloud; an older one just leaves them out.
 - **Emails.** From FrameJam Cloud: guests who left their email get a note when you share a new version; you get an email

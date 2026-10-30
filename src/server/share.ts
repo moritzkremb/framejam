@@ -58,7 +58,7 @@ export interface ShareState {
   approvalSeenAt?: number;
   /** The creator's download switch; unset means on. */
   allowDownload?: boolean;
-  /** Guest opens of the link, as last reported by the cloud. Unset until a cloud that counts them has answered. */
+  /** Opens of the link, as last reported by the cloud. Unset until a cloud that counts them has answered. */
   opens?: number;
   lastOpenedAt?: number;
   /** Cloud ids of the guest comments already marked "resolved in vN" on the link. */
@@ -270,7 +270,7 @@ export interface PullResult {
   resolved: number;
   /** Why marking comments resolved failed, if it did. The pull itself went through. */
   resolveError?: string;
-  /** Guest opens of the link, when the cloud reports them. */
+  /** Opens of the link, when the cloud reports them. */
   opens?: number;
 }
 
@@ -458,7 +458,7 @@ export function describeShare(result: ShareResult): string {
   if (result.pulled.waiting) lines.push(`${result.pulled.waiting} more will come in with your next version.`);
   if (result.pulled.resolved) lines.push(`${result.pulled.resolved} guest comment${result.pulled.resolved === 1 ? "" : "s"} marked resolved on the link.`);
   if (result.pulled.resolveError) lines.push(`Couldn't mark comments resolved on the link: ${result.pulled.resolveError}`);
-  if (result.pulled.opens) lines.push(`Guests have opened the link ${openedTimes(result.pulled.opens)}.`);
+  if (result.pulled.opens) lines.push(`The link has been opened ${openedTimes(result.pulled.opens)}.`);
   return lines.join("\n");
 }
 

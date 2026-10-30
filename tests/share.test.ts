@@ -1306,7 +1306,7 @@ describe("the creator's share settings over HTTP", () => {
   });
 });
 
-describe("guest opens", () => {
+describe("opens", () => {
   beforeEach(signIn);
 
   it("keeps the count the cloud reports and shows it in summaries, share_project and list_share_links", async () => {
@@ -1340,7 +1340,7 @@ describe("guest opens", () => {
     expect((await listShares(store))[0]!.lastOpenedAt).toBeUndefined();
     expect(describeShare(result)).not.toContain("opened");
     cloud.opens = 2;
-    expect(describeShare({ ...result, pulled: await pullShare(store, id, opts()) })).toContain("Guests have opened the link 2 times.");
+    expect(describeShare({ ...result, pulled: await pullShare(store, id, opts()) })).toContain("The link has been opened 2 times.");
   });
 
   it("works against an older cloud that doesn't send the fields, and keeps a known count if it stops sending them", async () => {

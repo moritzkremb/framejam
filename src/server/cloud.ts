@@ -184,7 +184,7 @@ export interface PendingShare {
   approved?: { version: number; by: string; at: number } | null;
   /** The creator's download switch for the approved link. Missing on older deployments, which means on. */
   allowDownload?: boolean;
-  /** How many times guests have opened the link. Missing on older deployments. */
+  /** Distinct visitor-days that opened the link, yours included. Missing on older deployments. */
   opens?: number;
   /** When a guest last opened it (ms), or null if none has. Missing on older deployments. */
   lastOpenedAt?: number | null;

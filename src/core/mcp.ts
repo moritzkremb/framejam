@@ -651,7 +651,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
     {
       title: "List share links",
       description:
-        "List the projects that have a share link: the link, which versions are on it, whether it's closed (revoked or expired), approvals guests gave (and whether the link is approved and offers a download), how many times guests have opened it (opens, lastOpenedAt; left out if the cloud doesn't count them), and how many guest comments are waiting for the user. Reads this computer, so it works offline.",
+        "List the projects that have a share link: the link, which versions are on it, whether it's closed (revoked or expired), approvals guests gave (and whether the link is approved and offers a download), how many times it was opened (opens: one per visitor a day, the user's own visits included; lastOpenedAt; left out if the cloud doesn't count them), and how many guest comments are waiting for the user. Reads this computer, so it works offline.",
       inputSchema: {},
     },
     async () => {

@@ -85,7 +85,7 @@ export interface ShareInfo {
   closed?: boolean;
   expiresAt?: number | null;
   revokedAt?: number | null;
-  /** Guest opens of the link; null or missing when the cloud doesn't count them. */
+  /** Opens of the link; null or missing when the cloud doesn't count them. */
   opens?: number | null;
   lastOpenedAt?: number | null;
 }

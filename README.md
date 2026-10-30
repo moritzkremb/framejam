@@ -266,16 +266,17 @@ time with `revoke: true`, or use **Turn off link** in the share chip. Expired an
 for guests, and `revoke: false` or a new expiry reopens one. Turning a link off stops the page; it doesn't delete the
 files you uploaded.
 
-**Guest opens.** The share chip in the project header shows how many times guests have opened the link ("Opened 3
-times"), and so do `share_project` and `list_share_links`, which also give the time of the last open. The count
-comes from FrameJam Cloud; with an older cloud it's simply left out.
+**Opens.** The share chip in the project header shows how many times the link was opened ("Opened 3 times"), and so do
+`share_project` and `list_share_links`, which also give the time of the last open. Each visitor counts once a day, and
+your own visits count too, so treat it as a rough signal. The count comes from FrameJam Cloud and is refreshed with the
+comment sync; with an older cloud it's simply left out.
 
 **Emails.** Guests who left their email get a note when you share a new version. You get an email when a guest
 approves, and a digest of new comments (one email for a batch, not one per comment). Every email has an unsubscribe link.
 
 **Agent tools.** `share_project` puts a version on the link and sets its expiry, revoke and download switch.
 `list_share_links` lists the projects that have a link, which versions are on it, whether it's closed, approvals,
-guest opens and the guest comments waiting for you. It reads your computer, so it works offline. Both are in the MCP
+opens and the guest comments waiting for you. It reads your computer, so it works offline. Both are in the MCP
 tools list under **The review page**.
 
 **What stays local.** Your projects, comments, styles and playbooks stay in `~/.framejam`. Nothing is uploaded until
@@ -490,7 +491,7 @@ for v2 and v1 still shows what it was.
 | `add_version({ reviewId, videoPath?, panels?, panelsDir?, transcriptPath?, note?, share?, unaddressed? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. Guests' comments the agent was sent are marked "resolved in vN" on the share link on their own once vN is on it; `unaddressed` lists ids it chose not to apply. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
 | `share_project({ reviewId, version?, expiresInDays?, revoke?, allowDownload? })` | Puts a version (default: the latest) on the project's share link, creating it the first time, and returns the link. `expiresInDays` (or `null` to clear) sets an expiry and `revoke` stops or reopens the link for everyone; `allowDownload` switches the one download an approved link offers (default on); with only those, nothing is uploaded. Needs `framejam login`. |
-| `list_share_links()` | Lists the projects that have a link: the link, which versions are on it, whether it's closed, approvals (and whether the link is approved and offers a download), how many times guests opened it and when last, and guest comments waiting. Reads this computer. |
+| `list_share_links()` | Lists the projects that have a link: the link, which versions are on it, whether it's closed, approvals (and whether the link is approved and offers a download), how many times the link was opened (once per visitor a day, you included) and when last, and guest comments waiting. Reads this computer. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
 | `list_playbooks({ query? })` | Lists the playbooks with what to bring, what you get, the cost and the creator. |

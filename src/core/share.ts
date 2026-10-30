@@ -27,7 +27,7 @@ export interface ShareLinkSummary {
   allowDownload: boolean;
   /** Guests' comments the user hasn't sent to the agent yet. */
   guestCommentsWaiting: number;
-  /** How many times guests have opened the link. Left out until the cloud has reported it (older clouds never do). */
+  /** Opens of the link: each visitor counts once a day, you included. Left out until the cloud has reported it (older clouds never do). */
   opens?: number;
   /** The last time a guest opened it; left out when none has or the cloud doesn't say. */
   lastOpenedAt?: string;
