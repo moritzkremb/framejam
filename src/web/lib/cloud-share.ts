@@ -40,6 +40,8 @@ export interface ShareView {
     at: number;
   }>;
   approvals: Array<{ version: number; guestName: string; at: number }>;
+  /** A guest approved the latest version: the link carries only that version, no comments, and maybe a download. */
+  approved?: { version: number; by: string; at: number; download: boolean };
 }
 
 export interface Guest {
@@ -69,12 +71,15 @@ export interface ShareBackend {
   frameUpload(link: string): Promise<{ uploadUrl: string; storageKey: string }>;
   send(args: { link: string; version: number; name: string; email: string; comments: SentComment[] }): Promise<{ ids: string[] }>;
   approve(args: { link: string; version: number; name: string; email: string }): Promise<{ at: number }>;
+  /** A short-lived link that saves the approved video's original file. */
+  downloadUrl(link: string): Promise<{ url: string; filename: string }>;
 }
 
 const viewRef = makeFunctionReference<"query", { link: string }, ShareView | null>("guest:view");
 const frameUploadRef = makeFunctionReference<"action", { link: string }, { uploadUrl: string; storageKey: string }>("guest:frameUpload");
 const sendRef = makeFunctionReference<"mutation", Parameters<ShareBackend["send"]>[0], { ids: string[] }>("guest:send");
 const approveRef = makeFunctionReference<"mutation", Parameters<ShareBackend["approve"]>[0], { at: number }>("guest:approve");
+const downloadRef = makeFunctionReference<"action", { link: string }, { url: string; filename: string }>("guest:downloadUrl");
 
 /** Convex's message without the request id and stack it adds in development. */
 export function cloudMessage(e: unknown): string {
@@ -93,12 +98,20 @@ export function convexShareBackend(url: string): ShareBackend {
     frameUpload: (link) => client.action(frameUploadRef, { link }),
     send: (args) => client.mutation(sendRef, args),
     approve: (args) => client.mutation(approveRef, args),
+    downloadUrl: (link) => client.action(downloadRef, { link }),
   };
 }
 
 /** A comment on the share page: what the review screens show, plus what the guest drew. */
 export type SharedComment = ReviewComment & { drawing?: number[][] };
-export type SharedReview = Review & { comments: SharedComment[]; kind: ShareView["kind"]; approvals: ShareView["approvals"] };
+export type SharedReview = Review & {
+  comments: SharedComment[];
+  kind: ShareView["kind"];
+  approvals: ShareView["approvals"];
+  approved?: ShareView["approved"];
+  /** Poster image of each video version, by version number. */
+  posters: Record<number, string>;
+};
 export type NewSharedComment = NewComment & { drawing?: number[][] };
 
 interface Draft {
@@ -132,6 +145,8 @@ export interface CloudShareSource extends ReviewDataSource {
   approve(id: string, version: number): Promise<void>;
   /** Versions this browser approved. */
   approvedHere(id: string): number[];
+  /** Starts the approved video's download: resolves with the file name once the browser has been handed the file. */
+  download(id: string): Promise<string>;
 }
 
 const GUEST_KEY = "framejam:guest";
@@ -252,6 +267,8 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       batches: [],
       kind: view.kind,
       approvals: view.approvals,
+      approved: view.approved,
+      posters: Object.fromEntries(view.versions.flatMap((v) => (v.video?.posterUrl ? [[v.number, v.video.posterUrl]] : []))),
     };
   };
 
@@ -422,6 +439,22 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
 
     approvedHere(id) {
       return readJson<number[]>(storage, approvedKey(id), []);
+    },
+
+    async download(id) {
+      try {
+        const { url, filename } = await backend.downloadUrl(id);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.rel = "noreferrer";
+        document.body.append(a);
+        a.click();
+        a.remove();
+        return filename;
+      } catch (e) {
+        throw new Error(cloudMessage(e));
+      }
     },
   };
 }

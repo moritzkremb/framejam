@@ -52,6 +52,12 @@ export interface ShareState {
   lastPulledAt?: string;
   expiresAt?: number;
   revokedAt?: number;
+  /** Set while a guest's approval has made the link final. */
+  approved?: { version: number; by: string; at: number };
+  /** The `at` of the approval an agent was last told about. */
+  approvalSeenAt?: number;
+  /** The creator's download switch; unset means on. */
+  allowDownload?: boolean;
   /** Cloud ids of the guest comments already marked "resolved in vN" on the link. */
   resolvedSynced?: string[];
 }
@@ -80,6 +86,15 @@ function writeShareState(root: string, reviewId: string, state: ShareState): voi
   const tmp = `${file}.${process.pid}.tmp`;
   fs.writeFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`);
   fs.renameSync(tmp, file);
+}
+
+/** When the project's link state last changed, so the review page can show a new approval without a reload. */
+export function shareStateMtime(root: string, reviewId: string): number {
+  try {
+    return fs.statSync(stateFile(root, reviewId)).mtimeMs;
+  } catch {
+    return 0;
+  }
 }
 
 /** The ids of every project that has a link. */
@@ -228,6 +243,8 @@ export async function shareVersion(
       lastPulledAt: state?.lastPulledAt,
       expiresAt: published.expiresAt ?? undefined,
       revokedAt: published.revokedAt ?? undefined,
+      approvalSeenAt: state?.approvalSeenAt,
+      allowDownload: state?.allowDownload,
       resolvedSynced: state?.resolvedSynced,
     };
     writeShareState(store.root, review.id, state);
@@ -335,6 +352,8 @@ export async function pullShare(store: Store, reviewId: string, opts: ShareOptio
     lastPulledAt: (opts.now?.() ?? new Date()).toISOString(),
     ...(pending.expiresAt !== undefined ? { expiresAt: pending.expiresAt ?? undefined } : {}),
     ...(pending.revokedAt !== undefined ? { revokedAt: pending.revokedAt ?? undefined } : {}),
+    ...(pending.approved !== undefined ? { approved: pending.approved ?? undefined } : {}),
+    ...(pending.allowDownload !== undefined ? { allowDownload: pending.allowDownload } : {}),
     resolvedSynced: synced.ids,
   });
   return { added, waiting, approvals: pending.approvals.length, resolved: synced.newly, resolveError: synced.error };
@@ -452,6 +471,13 @@ export function summarizeShare(review: Review, state: ShareState): ShareLinkSumm
     expiresAt: state.expiresAt ? new Date(state.expiresAt).toISOString() : undefined,
     revokedAt: state.revokedAt ? new Date(state.revokedAt).toISOString() : undefined,
     approvals: state.approvals.map((a) => ({ version: a.version, by: a.guestName, at: new Date(a.at).toISOString() })),
+    ...(state.approved
+      ? {
+          approved: { version: state.approved.version, by: state.approved.by, at: new Date(state.approved.at).toISOString() },
+          approvalNew: state.approvalSeenAt !== state.approved.at,
+        }
+      : {}),
+    allowDownload: state.allowDownload !== false,
     guestCommentsWaiting: waiting,
     lastPulledAt: state.lastPulledAt,
   };
@@ -475,13 +501,14 @@ export async function listShares(store: Store): Promise<ShareLinkSummary[]> {
 }
 
 /**
- * Sets when a project's link stops working, or revokes or reopens it. `expiresInDays: null` removes the expiry.
+ * Sets when a project's link stops working, revokes or reopens it, or switches the approved link's download.
+ * `expiresInDays: null` removes the expiry.
  * The link has to exist: share a version first.
  */
 export async function configureShare(
   store: Store,
   reviewId: string,
-  change: { expiresInDays?: number | null; revoked?: boolean },
+  change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean },
   opts: ShareOptions = {},
 ): Promise<ShareLinkSummary> {
   const { client, cloudUrl } = requireSession(store.root, opts);
@@ -492,10 +519,25 @@ export async function configureShare(
   const settings = await client.configure(reviewId, {
     ...(days === undefined ? {} : { expiresAt: days === null ? null : (opts.now?.() ?? new Date()).getTime() + days * DAY_MS }),
     ...(change.revoked === undefined ? {} : { revoked: change.revoked }),
+    ...(change.allowDownload === undefined ? {} : { allowDownload: change.allowDownload }),
   });
-  const next: ShareState = { ...state, expiresAt: settings.expiresAt ?? undefined, revokedAt: settings.revokedAt ?? undefined };
+  const next: ShareState = {
+    ...state,
+    expiresAt: settings.expiresAt ?? undefined,
+    revokedAt: settings.revokedAt ?? undefined,
+    ...(settings.allowDownload === undefined ? {} : { allowDownload: settings.allowDownload }),
+  };
   writeShareState(store.root, reviewId, next);
   return summarizeShare(await store.getReview(reviewId), next);
+}
+
+/** Remembers that an agent was told about the link's current approval. */
+export function markApprovalSeen(root: string, reviewId: string): Promise<void> {
+  const state = readShareState(root, reviewId);
+  if (state?.approved && state.approvalSeenAt !== state.approved.at) {
+    writeShareState(root, reviewId, { ...state, approvalSeenAt: state.approved.at });
+  }
+  return Promise.resolve();
 }
 
 /** The share tools an agent gets over MCP, on this computer's store and saved login. */
@@ -517,6 +559,7 @@ export function createShareHooks(store: Store, opts: ShareOptions = {}): ShareHo
       };
     },
     configure: (reviewId, change) => configureShare(store, reviewId, change, opts),
+    approvalSeen: (reviewId) => markApprovalSeen(store.root, reviewId),
     list: () => listShares(store),
     async link(reviewId) {
       const state = readShareState(store.root, reviewId);

@@ -1,4 +1,4 @@
-import { api, panelUrl, videoUrl, type Review, type ReviewComment, type Transcript, type TranscriptionStatus } from "@/lib/api";
+import { api, panelUrl, videoUrl, type Review, type ReviewComment, type ShareInfo, type Transcript, type TranscriptionStatus } from "@/lib/api";
 
 export type NewComment = Partial<ReviewComment> & { text: string; time: number; thumbnailDataUrl?: string };
 
@@ -21,6 +21,9 @@ export interface ReviewDataSource {
   prompt(id: string, version?: number): Promise<string>;
   /** Saves the video when the browser can't: `chosen` is false when it went to Downloads without asking. */
   downloadVideo(id: string, version: number): Promise<{ path: string; chosen: boolean } | { cancelled: true }>;
+  /** The project's share link and its settings. Optional: only the local server has one to show the creator. */
+  share?(id: string): Promise<ShareInfo>;
+  setShare?(id: string, change: { allowDownload?: boolean; revoked?: boolean }): Promise<ShareInfo>;
   videoUrl(id: string, version: number): string;
   panelUrl(id: string, version: number, panel: number): string;
 }
@@ -43,6 +46,8 @@ export const localDataSource: ReviewDataSource = {
   transcribe: api.transcribe,
   prompt: api.prompt,
   downloadVideo: api.downloadVideo,
+  share: api.share,
+  setShare: api.setShare,
   videoUrl,
   panelUrl,
 };

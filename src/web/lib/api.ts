@@ -73,7 +73,24 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return (type.includes("application/json") ? res.json() : res.text()) as Promise<T>;
 }
 
+/** The project's share link as the local server reports it (`GET /api/reviews/:id/share`). */
+export interface ShareInfo {
+  shared: boolean;
+  url?: string;
+  versions?: number[];
+  approvals?: { version: number; guestName: string; at: number }[];
+  /** A guest approved this version; the link shows only that file. */
+  approved?: { version: number; by: string; at: number } | null;
+  allowDownload?: boolean;
+  closed?: boolean;
+  expiresAt?: number | null;
+  revokedAt?: number | null;
+}
+
 export const api = {
+  share: (id: string) => request<ShareInfo>(`/api/reviews/${id}/share`),
+  setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean }) =>
+    request<ShareInfo>(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify(change) }),
   health: () => request<Health>("/api/health"),
   update: () => request<UpdateInfo>("/api/update"),
   skillStatus: () => request<SkillStatus>("/api/skill-status"),

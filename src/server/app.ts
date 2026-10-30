@@ -8,7 +8,7 @@ import { sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
 import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
 import { chooseSavePath } from "./save-dialog.ts";
-import { readShareState, shareUrl } from "./share.ts";
+import { configureShare, readShareState, ShareError, shareStateMtime, shareUrl } from "./share.ts";
 import { isPickListening, StoreError, type NewCommentInput } from "../core/store.ts";
 import { extractFrame } from "./thumbs.ts";
 import { skillStatus } from "./skill.ts";
@@ -117,27 +117,50 @@ export function createApp(ctx: McpContext) {
 
   app.get("/api/reviews/:id", async (c) => c.json(await reviewJson(c.req.param("id"))));
 
-  /** The project's share link, if it has one: which versions are on it, and the approvals pulled so far. */
+  const shareJson = (state: NonNullable<ReturnType<typeof readShareState>>) => ({
+    shared: true,
+    url: shareUrl(state.token),
+    versions: state.versions,
+    approvals: state.approvals,
+    approved: state.approved ?? null,
+    allowDownload: state.allowDownload !== false,
+    lastPulledAt: state.lastPulledAt ?? null,
+    expiresAt: state.expiresAt ?? null,
+    revokedAt: state.revokedAt ?? null,
+    closed: Boolean(state.revokedAt) || (state.expiresAt !== undefined && state.expiresAt <= Date.now()),
+  });
+
+  /** The project's share link, if it has one: which versions are on it, the approvals pulled so far and the link's settings. */
   app.get("/api/reviews/:id/share", async (c) => {
     const id = c.req.param("id");
     await store.getReview(id);
     const state = readShareState(store.root, id);
-    if (!state) return c.json({ shared: false });
-    return c.json({
-      shared: true,
-      url: shareUrl(state.token),
-      versions: state.versions,
-      approvals: state.approvals,
-      lastPulledAt: state.lastPulledAt ?? null,
-      closed: Boolean(state.revokedAt) || (state.expiresAt !== undefined && state.expiresAt <= Date.now()),
-    });
+    return c.json(state ? shareJson(state) : { shared: false });
+  });
+
+  /** Turns the approved link's download on or off, or revokes the link (the same settings `share_project` changes). */
+  app.post("/api/reviews/:id/share/settings", async (c) => {
+    const id = c.req.param("id");
+    await store.getReview(id);
+    const body = (await c.req.json().catch(() => ({}))) as { allowDownload?: unknown; revoked?: unknown };
+    const change: { allowDownload?: boolean; revoked?: boolean } = {};
+    if (typeof body.allowDownload === "boolean") change.allowDownload = body.allowDownload;
+    if (typeof body.revoked === "boolean") change.revoked = body.revoked;
+    if (!Object.keys(change).length) return c.json({ error: "Nothing to change" }, 400);
+    try {
+      await configureShare(store, id, change, ctx.share || {});
+    } catch (err) {
+      if (err instanceof ShareError) return c.json({ error: err.message }, 400);
+      throw err;
+    }
+    return c.json(shareJson(readShareState(store.root, id)!));
   });
 
   app.get("/api/reviews/:id/events", async (c) => {
     const id = c.req.param("id");
     await store.getReview(id);
     // The listening flag can expire without any file changing, so it's part of the fingerprint.
-    const fingerprint = async () => `${await store.reviewMtime(id)}:${await store.agentListening(id)}:${await store.agentOutdated()}`;
+    const fingerprint = async () => `${await store.reviewMtime(id)}:${shareStateMtime(store.root, id)}:${await store.agentListening(id)}:${await store.agentOutdated()}`;
     return streamSSE(c, async (stream) => {
       let last = await fingerprint();
       let alive = true;

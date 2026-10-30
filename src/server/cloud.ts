@@ -180,6 +180,10 @@ export interface PendingShare {
   /** The link's current state, when the cloud says; older deployments leave these out. */
   expiresAt?: number | null;
   revokedAt?: number | null;
+  /** Set while a guest's approval has made the link final: which version, who, when. */
+  approved?: { version: number; by: string; at: number } | null;
+  /** The creator's download switch for the approved link. Missing on older deployments, which means on. */
+  allowDownload?: boolean;
 }
 
 /** One guest comment fixed in a later version. */
@@ -192,6 +196,7 @@ export interface LinkSettings {
   token: string;
   expiresAt: number | null;
   revokedAt: number | null;
+  allowDownload?: boolean;
 }
 
 /** What sharing needs from FrameJam Cloud, for the signed-in user's API token. */
@@ -203,8 +208,8 @@ export interface ShareClient {
   markPulled(localId: string, commentIds: string[]): Promise<{ marked: number }>;
   /** Marks guest comments "resolved in vN" on the link. The version has to be on the link already. */
   resolve(localId: string, resolutions: Resolution[]): Promise<{ marked: number }>;
-  /** Sets or clears the link's expiry (`expiresAt: null` clears it) and revokes or reopens it. */
-  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean }): Promise<LinkSettings>;
+  /** Sets or clears the link's expiry (`expiresAt: null` clears it), revokes or reopens it, and switches the download. */
+  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<LinkSettings>;
 }
 
 export function createShareClient(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): ShareClient {

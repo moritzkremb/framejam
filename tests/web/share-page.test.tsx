@@ -49,6 +49,7 @@ function fakeBackend(initial: ShareView | null) {
     frameUpload: vi.fn(async () => ({ uploadUrl: "https://r2.example.com/put?sig=1", storageKey: "frames/u/f1.jpg" })),
     send: vi.fn(async (args: Parameters<ShareBackend["send"]>[0]) => ({ ids: args.comments.map((_, i) => `new${i}`) })),
     approve: vi.fn(async () => ({ at: Date.UTC(2026, 9, 3) })),
+    downloadUrl: vi.fn(async () => ({ url: "https://r2.example.com/get?sig=1", filename: "Launch teaser v2.mp4" })),
   } satisfies ShareBackend;
   return {
     backend,
@@ -253,6 +254,84 @@ describe("share page", () => {
     await render(fakeBackend(null));
     expect(host.textContent).toContain("This link isn't available");
     expect(host.textContent).toContain("doesn't work anymore");
+  });
+});
+
+function approvedView(over: Partial<NonNullable<ShareView["approved"]>> = {}): ShareView {
+  const v = videoView();
+  return {
+    ...v,
+    versions: [{ ...v.versions[1]!, video: { ...v.versions[1]!.video!, posterUrl: "https://media.example.com/posters/u/v2.jpg" } }],
+    comments: [],
+    approvals: [{ version: 2, guestName: "Anna", at: Date.UTC(2026, 9, 3) }],
+    approved: { version: 2, by: "Anna", at: Date.UTC(2026, 9, 3), download: true, ...over },
+  };
+}
+
+describe("an approved link", () => {
+  it("shows only the approved file, who approved it and when, with one download and no comment box", async () => {
+    await render(fakeBackend(approvedView()));
+    expect(q("approved-share")).not.toBeNull();
+    expect(q("approved-by")!.textContent).toMatch(/Approved by Anna on .*2026/);
+    expect(host.querySelector("video")!.getAttribute("src")).toBe("https://media.example.com/renders/u/v2.mp4");
+    expect(host.querySelector("video")!.getAttribute("poster")).toBe("https://media.example.com/posters/u/v2.jpg");
+    expect(host.querySelectorAll("video")).toHaveLength(1);
+    expect(q("download")).not.toBeNull();
+    expect(q("comment-box")).toBeNull();
+    expect(q("approve")).toBeNull();
+    expect(q("version-menu")).toBeNull();
+    expect(host.textContent).toContain("comments are closed");
+  });
+
+  it("has no download when the creator turned it off", async () => {
+    await render(fakeBackend(approvedView({ download: false })));
+    expect(q("download")).toBeNull();
+    expect(host.textContent).not.toContain("download the original");
+    expect(host.querySelector("video")).not.toBeNull();
+  });
+
+  it("starts the download through a fresh link from the cloud", async () => {
+    const fake = fakeBackend(approvedView());
+    const click = vi.fn();
+    const make = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string, o?: ElementCreationOptions) => {
+      const el = make(tag, o);
+      if (tag === "a") el.click = click;
+      return el;
+    });
+    await render(fake);
+    await act(async () => q<HTMLButtonElement>("download")!.click());
+    expect(fake.backend.downloadUrl).toHaveBeenCalledWith(LINK);
+    expect(click).toHaveBeenCalledTimes(1);
+    vi.restoreAllMocks();
+  });
+
+  it("flips to the approved state live when a guest approves", async () => {
+    const fake = fakeBackend(videoView());
+    await render(fake);
+    expect(q("approved-share")).toBeNull();
+    expect(q("comment-box")).not.toBeNull();
+    await act(async () => fake.push(approvedView()));
+    await flush();
+    expect(q("approved-share")).not.toBeNull();
+    expect(q("comment-box")).toBeNull();
+  });
+
+  it("reopens when a newer version arrives", async () => {
+    const fake = fakeBackend(approvedView());
+    await render(fake);
+    await act(async () => fake.push(videoView()));
+    await flush();
+    expect(q("approved-share")).toBeNull();
+    expect(q("comment-box")).not.toBeNull();
+  });
+
+  it("shows a storyboard's panels without a download", async () => {
+    const view: ShareView = { ...storyboardView(), approvals: [{ version: 1, guestName: "Ben", at: Date.UTC(2026, 9, 3) }], approved: { version: 1, by: "Ben", at: Date.UTC(2026, 9, 3), download: false } };
+    await render(fakeBackend(view));
+    expect(host.querySelectorAll("figure img")).toHaveLength(2);
+    expect(q("download")).toBeNull();
+    expect(host.querySelector("video")).toBeNull();
   });
 });
 
