@@ -1,0 +1,36 @@
+/* Cloud projects: the strip above the stage while a version's files upload, and the project badge. */
+.fc-upload {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 var(--gutter, 16px) 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface);
+  color: var(--text);
+}
+.fc-upload > .fc-i { flex: none; margin-top: 2px; color: var(--accent-text); }
+.fc-upload.failed > .fc-i { color: var(--danger); }
+.fc-upload .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.fc-upload .line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 18px; }
+.fc-upload .line strong { font-weight: 600; }
+.fc-upload .count { color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fc-upload .note { color: var(--text-3); font-size: 12px; line-height: 17px; }
+.fc-upload.failed { background: var(--danger-soft); border-color: transparent; }
+.fc-upload.failed .note { color: var(--text-2); }
+
+.fc-cloud-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.fc-cloud-tag .fc-i { width: 11px; height: 11px; }

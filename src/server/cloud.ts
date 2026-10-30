@@ -93,8 +93,23 @@ export async function convexCall<T>(
     throw new Error(res.ok ? "FrameJam Cloud returned a bad response." : `FrameJam Cloud returned ${res.status}.`);
   }
   if (body.status === "success") return body.value;
-  const thrown = typeof body.errorData === "string" && body.errorData.trim() ? body.errorData.trim() : undefined;
+  const data = body.errorData;
+  if (data && typeof data === "object" && typeof (data as { message?: unknown }).message === "string") {
+    const { message, status } = data as { message: string; status?: unknown };
+    throw new CloudError(message, status === 404 || status === 409 || status === 400 ? status : undefined);
+  }
+  const thrown = typeof data === "string" && data.trim() ? data.trim() : undefined;
   throw new Error(thrown ?? cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`);
+}
+
+/** A rule the cloud refused with a message and the same status a local store would give (404 not found, 409 conflict). */
+export class CloudError extends Error {
+  constructor(
+    message: string,
+    readonly status?: 400 | 404 | 409,
+  ) {
+    super(message);
+  }
 }
 
 /**

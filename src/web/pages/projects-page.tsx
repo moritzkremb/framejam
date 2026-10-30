@@ -1,4 +1,4 @@
-import { ChevronRight, Film, Inbox, LayoutGrid } from "lucide-react";
+import { ChevronRight, Cloud, Film, Inbox, LayoutGrid } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CommunityCard, MadeBy } from "@/components/community";
@@ -41,7 +41,14 @@ function ProjectCard({ review }: { review: ReviewListItem }) {
     <Link to={`/review/${review.id}`} className="fc-rcard" data-testid="project-card" data-status={status.kind}>
       <Poster review={review} />
       <div className="fc-grow">
-        <div className="name">{review.title}</div>
+        <div className="name">
+          {review.title}
+          {review.cloud && (
+            <span className="fc-cloud-tag" data-testid="cloud-tag" style={{ marginLeft: 8, verticalAlign: "middle" }}>
+              <Cloud className="fc-i" /> Cloud
+            </span>
+          )}
+        </div>
         <div className={cn("state", status.tone)}>
           {status.working ? (
             <span className="fc-agent working" style={{ gap: 0 }}>
