@@ -4,8 +4,8 @@ FrameJam helps you make videos with your coding agent. Pick a style or a playboo
 any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg or screen recordings), then review the render: click a moment
 or a spot in the frame, say what to change, press **Finish review**, and the agent makes the next version.
 
-Everything runs on your computer. There's no account, and your videos and comments are never uploaded; projects are
-saved in `~/.framejam`.
+Everything runs on your computer. There's no account unless you run `framejam login` (optional; FrameJam Cloud).
+Your videos and comments are never uploaded; projects are saved in `~/.framejam`.
 
 Install it in Claude Code:
 
@@ -13,7 +13,7 @@ Install it in Claude Code:
 /plugin install framejam --marketplace moritzkremb/framejam
 ```
 
-What leaves your computer, and only to framejam.ai, npm or Hugging Face:
+What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJam Cloud:
 
 - The Styles and Playbooks pages stream their example videos from framejam.ai.
 - The app downloads playbook and style updates, including the scripts and files they come with, from
@@ -25,6 +25,8 @@ What leaves your computer, and only to framejam.ai, npm or Hugging Face:
 - The **Get updates** form sends the email you enter to framejam.ai, to send you release news.
 - If you press **Transcribe** and have no speech model yet, the app downloads one (574 MB) from Hugging Face.
   Transcription itself runs on your computer; your videos are never uploaded.
+- `framejam login` talks to FrameJam Cloud to sign you in and stores a token in `~/.framejam/auth.json`. Your
+  videos stay on this computer.
 
 Nothing is sent from your agent's conversation.
 
