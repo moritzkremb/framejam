@@ -1,5 +1,5 @@
 import { deleteAuth, readAuth, writeAuth } from "./auth.ts";
-import { type CloudClient, type CloudWhoami, cloudUrl, createCloudClient } from "./cloud.ts";
+import { type CloudClient, type CloudWhoami, cloudUrl, createCloudClient, isTransientCloudError } from "./cloud.ts";
 import { dataDir, env } from "./paths.ts";
 
 export interface CommandResult {
@@ -30,7 +30,7 @@ export function shouldOpenBrowser(environ: NodeJS.ProcessEnv = process.env, plat
 }
 
 export function formatAccount(user: CloudWhoami): string {
-  const name = user.name.trim();
+  const name = typeof user.name === "string" ? user.name.trim() : "";
   return name ? `${name} <${user.email}>` : user.email;
 }
 
@@ -64,6 +64,7 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
 
   const intervalMs = Math.max(0, (started.interval ?? DEFAULT_INTERVAL_S) * 1000);
   const deadline = now() + (started.expiresIn ?? DEFAULT_EXPIRES_S) * 1000;
+  let unreachable = false;
   while (now() < deadline) {
     await wait(intervalMs);
     if (now() >= deadline) break;
@@ -71,8 +72,14 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
     try {
       poll = await client.poll(started.deviceCode);
     } catch (err) {
+      // A dropped connection or a 5xx mid-login shouldn't end it: keep polling until the code expires.
+      if (isTransientCloudError(err)) {
+        unreachable = true;
+        continue;
+      }
       return { ok: false, text: err instanceof Error ? err.message : "Couldn't reach FrameJam Cloud." };
     }
+    unreachable = false;
     if (poll.status === "approved") {
       const savedUrl = resolveCloudUrl();
       writeAuth({ token: poll.token, cloudUrl: savedUrl }, root);
@@ -86,6 +93,7 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
     if (poll.status === "expired") return { ok: false, text: "The code expired. Run framejam login again." };
     if (poll.status === "unknown") return { ok: false, text: "This login code isn't valid. Run framejam login again." };
   }
+  if (unreachable) return { ok: false, text: "Couldn't reach FrameJam Cloud before the code expired. Run framejam login again." };
   return { ok: false, text: "The code expired. Run framejam login again." };
 }
 
