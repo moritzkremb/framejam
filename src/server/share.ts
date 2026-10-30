@@ -12,12 +12,14 @@ import { Readable } from "node:stream";
 import { StoreError, type NewCommentInput, type Store } from "../core/store.ts";
 import type { Review, ReviewVersion } from "../core/types.ts";
 import { readAuth } from "./auth.ts";
+import type { ShareHooks, ShareLinkSummary } from "../core/share.ts";
 import {
   type AssetKind,
   type FetchLike,
   type GuestApproval,
   type GuestComment,
   type PublishInput,
+  type Resolution,
   type ShareClient,
   createShareClient,
 } from "./cloud.ts";
@@ -50,6 +52,8 @@ export interface ShareState {
   lastPulledAt?: string;
   expiresAt?: number;
   revokedAt?: number;
+  /** Cloud ids of the guest comments already marked "resolved in vN" on the link. */
+  resolvedSynced?: string[];
 }
 
 export function sharesDir(root: string): string {
@@ -224,6 +228,7 @@ export async function shareVersion(
       lastPulledAt: state?.lastPulledAt,
       expiresAt: published.expiresAt ?? undefined,
       revokedAt: published.revokedAt ?? undefined,
+      resolvedSynced: state?.resolvedSynced,
     };
     writeShareState(store.root, review.id, state);
   }
@@ -241,9 +246,13 @@ export interface PullResult {
   waiting: number;
   /** Approvals on the link. */
   approvals: number;
+  /** Guest comments newly marked "resolved in vN" on the link. */
+  resolved: number;
+  /** Why marking comments resolved failed, if it did. The pull itself went through. */
+  resolveError?: string;
 }
 
-const EMPTY_PULL: PullResult = { added: 0, waiting: 0, approvals: 0 };
+const EMPTY_PULL: PullResult = { added: 0, waiting: 0, approvals: 0, resolved: 0 };
 
 /** What the project has for a guest comment, or undefined when the comment can't be added right now. */
 function commentInput(review: Review, c: GuestComment): NewCommentInput | undefined {
@@ -319,12 +328,47 @@ export async function pullShare(store: Store, reviewId: string, opts: ShareOptio
   }
   if (acknowledge.length) await s.client.markPulled(reviewId, acknowledge);
 
+  const synced = await syncResolutions(store, reviewId, state, s.client);
   writeShareState(store.root, reviewId, {
     ...state,
     approvals: pending.approvals,
     lastPulledAt: (opts.now?.() ?? new Date()).toISOString(),
+    ...(pending.expiresAt !== undefined ? { expiresAt: pending.expiresAt ?? undefined } : {}),
+    ...(pending.revokedAt !== undefined ? { revokedAt: pending.revokedAt ?? undefined } : {}),
+    resolvedSynced: synced.ids,
   });
-  return { added, waiting, approvals: pending.approvals.length };
+  return { added, waiting, approvals: pending.approvals.length, resolved: synced.newly, resolveError: synced.error };
+}
+
+/**
+ * Tells the link which guest comments the agent has fixed. A comment qualifies once the project marks it resolved in
+ * a version that is on the link and newer than the one it was written on, so a guest never reads "resolved in v3"
+ * before v3 is there. Each id is sent once; the cloud keeps the first resolution if a call is repeated.
+ */
+async function syncResolutions(
+  store: Store,
+  reviewId: string,
+  state: ShareState,
+  client: ShareClient,
+): Promise<{ ids: string[]; newly: number; error?: string }> {
+  const done = new Set(state.resolvedSynced ?? []);
+  const review = await store.getReview(reviewId);
+  const onLink = new Set(state.versions);
+  const due: Resolution[] = [];
+  for (const c of review.comments) {
+    const version = c.resolution?.version;
+    if (!c.cloudId || c.status !== "resolved" || version === undefined || done.has(c.cloudId)) continue;
+    if (!onLink.has(version) || version <= c.version) continue;
+    due.push({ commentId: c.cloudId, version });
+  }
+  if (!due.length) return { ids: [...done], newly: 0 };
+  try {
+    await client.resolve(reviewId, due);
+  } catch (err) {
+    return { ids: [...done], newly: 0, error: err instanceof Error ? err.message : String(err) };
+  }
+  for (const r of due) done.add(r.commentId);
+  return { ids: [...done], newly: due.length };
 }
 
 /** Pulls every shared project. A project that fails doesn't stop the others. */
@@ -334,7 +378,9 @@ export async function pullAll(store: Store, opts: ShareOptions = {}): Promise<{ 
   if (!readAuth(store.root)) return { pulled, errors };
   for (const id of sharedProjectIds(store.root)) {
     try {
-      pulled += (await pullShare(store, id, opts)).added;
+      const result = await pullShare(store, id, opts);
+      pulled += result.added;
+      if (result.resolveError) errors.push(result.resolveError);
     } catch (err) {
       errors.push(err instanceof Error ? err.message : String(err));
     }
@@ -383,5 +429,99 @@ export function describeShare(result: ShareResult): string {
   if (result.closed) lines.push("This link is closed (revoked or expired), so guests can't open it.");
   if (result.pulled.added) lines.push(`${result.pulled.added} new comment${result.pulled.added === 1 ? "" : "s"} from guests, added as drafts.`);
   if (result.pulled.waiting) lines.push(`${result.pulled.waiting} more will come in with your next version.`);
+  if (result.pulled.resolved) lines.push(`${result.pulled.resolved} guest comment${result.pulled.resolved === 1 ? "" : "s"} marked resolved on the link.`);
+  if (result.pulled.resolveError) lines.push(`Couldn't mark comments resolved on the link: ${result.pulled.resolveError}`);
   return lines.join("\n");
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const isClosed = (state: Pick<ShareState, "expiresAt" | "revokedAt">) =>
+  Boolean(state.revokedAt) || (state.expiresAt !== undefined && state.expiresAt <= Date.now());
+
+/** What an agent or the CLI is told about one project's link. */
+export function summarizeShare(review: Review, state: ShareState): ShareLinkSummary {
+  const waiting = review.comments.filter((c) => c.author && c.status === "draft").length;
+  return {
+    reviewId: review.id,
+    title: review.title,
+    url: shareUrl(state.token),
+    versionsOnLink: state.versions,
+    latestVersion: review.versions.at(-1)!.number,
+    closed: isClosed(state),
+    expiresAt: state.expiresAt ? new Date(state.expiresAt).toISOString() : undefined,
+    revokedAt: state.revokedAt ? new Date(state.revokedAt).toISOString() : undefined,
+    approvals: state.approvals.map((a) => ({ version: a.version, by: a.guestName, at: new Date(a.at).toISOString() })),
+    guestCommentsWaiting: waiting,
+    lastPulledAt: state.lastPulledAt,
+  };
+}
+
+/** Every project that has a link here, newest share first. Reads this computer only, so it works offline. */
+export async function listShares(store: Store): Promise<ShareLinkSummary[]> {
+  const out: { at: string; summary: ShareLinkSummary }[] = [];
+  for (const id of sharedProjectIds(store.root)) {
+    const state = readShareState(store.root, id);
+    if (!state) continue;
+    let review: Review;
+    try {
+      review = await store.getReview(id);
+    } catch {
+      continue;
+    }
+    out.push({ at: state.sharedAt, summary: summarizeShare(review, state) });
+  }
+  return out.sort((a, b) => b.at.localeCompare(a.at)).map((x) => x.summary);
+}
+
+/**
+ * Sets when a project's link stops working, or revokes or reopens it. `expiresInDays: null` removes the expiry.
+ * The link has to exist: share a version first.
+ */
+export async function configureShare(
+  store: Store,
+  reviewId: string,
+  change: { expiresInDays?: number | null; revoked?: boolean },
+  opts: ShareOptions = {},
+): Promise<ShareLinkSummary> {
+  const { client, cloudUrl } = requireSession(store.root, opts);
+  const state = readShareState(store.root, reviewId);
+  if (!state || state.cloudUrl !== cloudUrl) throw new ShareError("This project isn't shared yet. Share a version first.");
+  const days = change.expiresInDays;
+  if (typeof days === "number" && (!Number.isFinite(days) || days <= 0)) throw new ShareError("expiresInDays has to be a number of days above 0.");
+  const settings = await client.configure(reviewId, {
+    ...(days === undefined ? {} : { expiresAt: days === null ? null : (opts.now?.() ?? new Date()).getTime() + days * DAY_MS }),
+    ...(change.revoked === undefined ? {} : { revoked: change.revoked }),
+  });
+  const next: ShareState = { ...state, expiresAt: settings.expiresAt ?? undefined, revokedAt: settings.revokedAt ?? undefined };
+  writeShareState(store.root, reviewId, next);
+  return summarizeShare(await store.getReview(reviewId), next);
+}
+
+/** The share tools an agent gets over MCP, on this computer's store and saved login. */
+export function createShareHooks(store: Store, opts: ShareOptions = {}): ShareHooks {
+  return {
+    async share(reviewId, { version } = {}) {
+      const result = await shareVersion(store, reviewId, { ...opts, version });
+      const review = await store.getReview(reviewId);
+      return {
+        url: result.url,
+        version: result.version,
+        uploaded: result.uploaded,
+        closed: result.closed,
+        newGuestComments: result.pulled.added,
+        waitingForNextVersion: result.pulled.waiting,
+        markedResolved: result.pulled.resolved,
+        resolveError: result.pulled.resolveError,
+        link: summarizeShare(review, readShareState(store.root, reviewId)!),
+      };
+    },
+    configure: (reviewId, change) => configureShare(store, reviewId, change, opts),
+    list: () => listShares(store),
+    async link(reviewId) {
+      const state = readShareState(store.root, reviewId);
+      return state ? summarizeShare(await store.getReview(reviewId), state) : undefined;
+    },
+    signedIn: () => Boolean(readAuth(store.root)),
+  };
 }

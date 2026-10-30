@@ -34,6 +34,8 @@ export interface ShareView {
     text: string;
     guestName: string;
     frameUrl?: string;
+    /** The version that fixed this comment, once the creator shipped it. */
+    resolvedIn?: number;
     drawing?: number[][];
     at: number;
   }>;
@@ -214,7 +216,8 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       wholeVideo: c.wholeVideo,
       text: c.text,
       thumbnail: c.frameUrl,
-      status: "sent",
+      status: c.resolvedIn ? "resolved" : "sent",
+      resolution: c.resolvedIn ? { version: c.resolvedIn } : undefined,
       createdAt: iso(c.at),
       author: c.guestName,
       drawing: c.drawing,

@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Check, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Menu, MenuItem } from "@/components/menu";
 import { formatTime, type ReviewComment } from "@/lib/api";
@@ -51,6 +51,11 @@ function CommentItem({
           )}
           <span className="when">{label}</span>
           {comment.fromVersion !== undefined && <span className="from">from v{comment.fromVersion}</span>}
+          {comment.status === "resolved" && comment.resolution && (
+            <span className="res" data-testid="resolved-in" title={comment.resolution.note || undefined}>
+              <Check className="fc-i xs" /> Resolved in v{comment.resolution.version}
+            </span>
+          )}
         </div>
         {editing ? (
           <div className="fc-edit" onClick={(e) => e.stopPropagation()}>

@@ -48,6 +48,8 @@ interface ConvexSuccess<T> {
 interface ConvexFailure {
   status: "error";
   errorMessage?: string;
+  /** What a function passed to `ConvexError`; production deployments hide `errorMessage` but keep this. */
+  errorData?: unknown;
 }
 
 export type FetchLike = typeof fetch;
@@ -91,7 +93,8 @@ export async function convexCall<T>(
     throw new Error(res.ok ? "FrameJam Cloud returned a bad response." : `FrameJam Cloud returned ${res.status}.`);
   }
   if (body.status === "success") return body.value;
-  throw new Error(cloudMessage(body.errorMessage) || `FrameJam Cloud returned ${res.status}.`);
+  const thrown = typeof body.errorData === "string" && body.errorData.trim() ? body.errorData.trim() : undefined;
+  throw new Error(thrown ?? cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`);
 }
 
 /**
@@ -174,6 +177,21 @@ export interface PendingShare {
   latestVersion: number;
   comments: GuestComment[];
   approvals: GuestApproval[];
+  /** The link's current state, when the cloud says; older deployments leave these out. */
+  expiresAt?: number | null;
+  revokedAt?: number | null;
+}
+
+/** One guest comment fixed in a later version. */
+export interface Resolution {
+  commentId: string;
+  version: number;
+}
+
+export interface LinkSettings {
+  token: string;
+  expiresAt: number | null;
+  revokedAt: number | null;
 }
 
 /** What sharing needs from FrameJam Cloud, for the signed-in user's API token. */
@@ -183,6 +201,10 @@ export interface ShareClient {
   publish(input: PublishInput): Promise<Published>;
   pending(localId: string): Promise<PendingShare | null>;
   markPulled(localId: string, commentIds: string[]): Promise<{ marked: number }>;
+  /** Marks guest comments "resolved in vN" on the link. The version has to be on the link already. */
+  resolve(localId: string, resolutions: Resolution[]): Promise<{ marked: number }>;
+  /** Sets or clears the link's expiry (`expiresAt: null` clears it) and revokes or reopens it. */
+  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean }): Promise<LinkSettings>;
 }
 
 export function createShareClient(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): ShareClient {
@@ -195,5 +217,7 @@ export function createShareClient(token: string, url: string = cloudUrl(), fetch
     publish: (input) => call<Published>("mutation", "shares:publish", { ...input }),
     pending: (localId) => call<PendingShare | null>("query", "shares:pending", { localId }),
     markPulled: (localId, commentIds) => call<{ marked: number }>("mutation", "shares:markPulled", { localId, commentIds }),
+    resolve: (localId, resolutions) => call<{ marked: number }>("mutation", "shares:resolve", { localId, resolutions }),
+    configure: (localId, settings) => call<LinkSettings>("mutation", "shares:configure", { localId, ...settings }),
   };
 }
