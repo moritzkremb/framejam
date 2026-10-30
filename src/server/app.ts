@@ -8,6 +8,7 @@ import { sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
 import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
 import { chooseSavePath } from "./save-dialog.ts";
+import { readShareState, shareUrl } from "./share.ts";
 import { isPickListening, StoreError, type NewCommentInput } from "../core/store.ts";
 import { extractFrame } from "./thumbs.ts";
 import { skillStatus } from "./skill.ts";
@@ -115,6 +116,22 @@ export function createApp(ctx: McpContext) {
   });
 
   app.get("/api/reviews/:id", async (c) => c.json(await reviewJson(c.req.param("id"))));
+
+  /** The project's share link, if it has one: which versions are on it, and the approvals pulled so far. */
+  app.get("/api/reviews/:id/share", async (c) => {
+    const id = c.req.param("id");
+    await store.getReview(id);
+    const state = readShareState(store.root, id);
+    if (!state) return c.json({ shared: false });
+    return c.json({
+      shared: true,
+      url: shareUrl(state.token),
+      versions: state.versions,
+      approvals: state.approvals,
+      lastPulledAt: state.lastPulledAt ?? null,
+      closed: Boolean(state.revokedAt) || (state.expiresAt !== undefined && state.expiresAt <= Date.now()),
+    });
+  });
 
   app.get("/api/reviews/:id/events", async (c) => {
     const id = c.req.param("id");

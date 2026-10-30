@@ -29,6 +29,10 @@ export interface AgentComment {
   spoken?: string;
   spokenAround?: string;
   text: string;
+  /** A guest on a shared link wrote this, not the user. Check with the user before acting on it. */
+  author?: string;
+  /** The guest was looking at this earlier version. */
+  fromVersion?: number;
   thumbnailPath?: string;
   thumbnailUrl?: string;
   resolution?: ReviewComment["resolution"];
@@ -78,6 +82,8 @@ export async function toAgentComment(store: Store, baseUrl: string, review: Revi
     spoken: range ? wordsBetween(transcript, c.time, c.endTime!) : undefined,
     spokenAround: range ? undefined : wordsBetween(transcript, c.time - AROUND, c.time + AROUND),
     text: c.text,
+    author: c.author,
+    fromVersion: c.fromVersion,
     thumbnailPath: thumbPath ?? undefined,
     thumbnailUrl: c.thumbnail ? `${baseUrl}/api/reviews/${review.id}/thumbs/${c.thumbnail}` : undefined,
     resolution: c.resolution,

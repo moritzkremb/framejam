@@ -9,6 +9,7 @@ import { createMcpServer } from "./mcp.ts";
 import { type CatalogClient, catalogConfig, catalogStatus, startCatalog } from "./catalog.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
 import { login, logout, shouldOpenBrowser, whoami } from "./login.ts";
+import { describeShare, findProject, shareVersion, startSharePuller } from "./share.ts";
 import { DEFAULT_CLOUD_URL } from "./cloud.ts";
 import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
@@ -25,6 +26,7 @@ Usage:
   framejam login            Sign in to FrameJam Cloud (prints a code and opens the browser)
   framejam logout           Sign out of FrameJam Cloud
   framejam whoami           Show the signed-in FrameJam Cloud account
+  framejam share <project>  Put a project's latest version on its share link and pull in guests' comments
 
 Options:
   --port <n>        HTTP port (default ${DEFAULT_PORT}, env FRAMEJAM_PORT)
@@ -32,6 +34,7 @@ Options:
   --data-dir <dir>  Where reviews and state are stored (default ~/.framejam, env FRAMEJAM_HOME)
   --browser         With start: also open the UI in the system browser
   --no-browser      With login: print the URL but don't open a browser
+  --version <n>     With share: share this version instead of the latest
   -h, --help
 
 FrameJam Cloud: FRAMEJAM_CLOUD_URL or FRAMEJAM_CONVEX_URL (default ${DEFAULT_CLOUD_URL})
@@ -46,6 +49,7 @@ const { values, positionals } = parseArgs({
     "data-dir": { type: "string" },
     browser: { type: "boolean", default: false },
     "no-browser": { type: "boolean", default: false },
+    version: { type: "string" },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -206,6 +210,23 @@ if (positionals[0] === "start") await start();
 if (positionals[0] === "install") await runInstall();
 
 const store: Store = new JsonStore();
+
+/** `framejam share <project>`: uploads a version to the project's link and pulls in what guests wrote. */
+async function runShare(): Promise<never> {
+  const ref = positionals.slice(1).join(" ").trim();
+  if (!ref) await finish({ ok: false, text: "Usage: framejam share <project id or title> [--version <n>]" });
+  const version = values.version === undefined ? undefined : Number(values.version);
+  if (version !== undefined && (!Number.isInteger(version) || version < 1)) {
+    await finish({ ok: false, text: "--version takes a version number, like 2." });
+  }
+  try {
+    const project = await findProject(store, ref);
+    return await finish({ ok: true, text: describeShare(await shareVersion(store, project.id, { version })) });
+  } catch (err) {
+    return await finish({ ok: false, text: err instanceof Error ? err.message : "Sharing failed." });
+  }
+}
+if (positionals[0] === "share") await runShare();
 const catalogSettings = catalogConfig();
 let catalogClient: CatalogClient | undefined;
 const ctx = { store, baseUrl, catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient) };
@@ -232,7 +253,8 @@ if (stdio) {
   const transport = new StdioServerTransport();
   await createMcpServer(ctx).connect(transport);
   catalogClient = startCatalog(catalogDir(store.root), log, catalogSettings);
-  if (!(await startHttp())) {
+  if (await startHttp()) startSharePuller(store, log);
+  else {
     const updated = await replaceOlderUI();
     if (updated) {
       const ui = await ensureRunning();
@@ -253,4 +275,5 @@ if (stdio) {
     process.exit(1);
   }
   catalogClient = startCatalog(catalogDir(store.root), log, catalogSettings);
+  startSharePuller(store, log);
 }

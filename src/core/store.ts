@@ -57,6 +57,12 @@ export interface NewCommentInput {
   panel?: number;
   wholeVideo?: boolean;
   text: string;
+  /** Set for a guest's comment pulled from a share link. */
+  author?: string;
+  /** The comment's id in the cloud. A comment with this id that is already in the project is returned as it is. */
+  cloudId?: string;
+  /** The version the guest was looking at, when the comment is added to a later one. */
+  fromVersion?: number;
 }
 
 export interface AppState {

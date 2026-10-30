@@ -23,6 +23,12 @@ export interface ReviewComment {
   batchId?: string;
   resolvedAt?: string;
   resolution?: { note?: string; version: number };
+  /** A guest who commented on a shared link (FrameJam Cloud); comments the creator wrote have none. */
+  author?: string;
+  /** The comment's id in the cloud, so pulling it twice adds it once. */
+  cloudId?: string;
+  /** A guest's comment was written on this earlier version; it sits on the latest one. */
+  fromVersion?: number;
 }
 
 /** One storyboard panel: a still image plus optional words about the shot. */

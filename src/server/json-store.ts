@@ -250,7 +250,9 @@ export class JsonStore implements Store {
       // Comments belong to the version they were written on. Unsent ones (the agent shipped a new
       // version before the user pressed Send) move forward so they aren't stranded on an old version.
       for (const c of review.comments) {
-        if (c.status === "draft" && prev && c.version === prev.number) c.version = version.number;
+        if (c.status !== "draft" || !prev || c.version !== prev.number) continue;
+        if (c.cloudId && c.fromVersion === undefined) c.fromVersion = c.version;
+        c.version = version.number;
       }
       review.versions.push(version);
     });
@@ -339,6 +341,11 @@ export class JsonStore implements Store {
     if (!text) throw new StoreError("Comment text is required");
     let comment!: ReviewComment;
     this.update(reviewId, (review) => {
+      const already = input.cloudId ? review.comments.find((c) => c.cloudId === input.cloudId) : undefined;
+      if (already) {
+        comment = already;
+        return;
+      }
       const latest = review.versions.at(-1)!;
       const version = input.version ?? latest.number;
       if (!review.versions.some((v) => v.number === version)) {
@@ -372,6 +379,9 @@ export class JsonStore implements Store {
         text,
         status: "draft",
         createdAt: now(),
+        author: input.author?.trim() || undefined,
+        cloudId: input.cloudId || undefined,
+        fromVersion: input.fromVersion !== undefined && input.fromVersion !== version ? input.fromVersion : undefined,
       };
       review.comments.push(comment);
     });

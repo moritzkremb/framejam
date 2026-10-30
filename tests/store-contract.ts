@@ -200,6 +200,24 @@ export function storeContract(name: string, create: (dataDir: string) => Store |
         expect((await store.getReview(id)).comments.find((x) => x.id === c.id)?.version).toBe(2);
       });
 
+      it("adds a guest's comment once, with who wrote it and the version they saw", async () => {
+        const id = await open();
+        const guest = { time: 2, x: 0.3, y: 0.4, text: "Logo is small", author: "  Anna ", cloudId: "cmt_1" };
+        const first = await store.addComment(id, guest);
+        expect(first).toMatchObject({ author: "Anna", cloudId: "cmt_1", status: "draft", version: 1 });
+        expect(first.fromVersion).toBeUndefined();
+        const again = await store.addComment(id, guest);
+        expect(again.id).toBe(first.id);
+        expect((await store.getReview(id)).comments).toHaveLength(1);
+
+        await store.addVersion(id, { videoPath: writeVideo("v2.mp4", "two") });
+        expect((await store.getReview(id)).comments[0]).toMatchObject({ version: 2, fromVersion: 1 });
+        const late = await store.addComment(id, { time: 1, text: "On v1", author: "Anna", cloudId: "cmt_2", fromVersion: 1 });
+        expect(late).toMatchObject({ version: 2, fromVersion: 1 });
+        const same = await store.addComment(id, { time: 1, text: "On v2", author: "Anna", cloudId: "cmt_3", fromVersion: 2 });
+        expect(same.fromVersion).toBeUndefined();
+      });
+
       it("reopens a round: withdrawn before delivery, retracted and replaced after", async () => {
         const id = await open();
         await store.addComment(id, { time: 1, text: "First" });

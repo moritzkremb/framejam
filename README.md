@@ -40,11 +40,11 @@ from the render, with your pin drawn where you clicked.
 **Go round by round.** Each new version from the agent is a fresh round. Old versions keep their comments, so
 you can always see what changed and why.
 
-**Runs on your machine.** One local Node process, no account unless you run `framejam login`, no upload. Your projects
-are plain JSON files in `~/.framejam`. Your videos and comments never leave your machine. The Styles and Playbooks
-pages stream their example videos from framejam.ai, the app downloads playbook updates from framejam.ai (see below),
-the **Feedback** button sends the note you write, and `framejam login` talks to FrameJam Cloud to sign you in;
-nothing else goes out.
+**Runs on your machine.** One local Node process, no account unless you run `framejam login`, no upload unless you run
+`framejam share`. Your projects are plain JSON files in `~/.framejam`. Your videos and comments stay on your machine
+until you share a version. The Styles and Playbooks pages stream their example videos from framejam.ai, the
+app downloads playbook updates from framejam.ai (see below), the **Feedback** button sends the note you write, and
+`framejam login` talks to FrameJam Cloud to sign you in; nothing else goes out.
 
 ## How it works
 
@@ -461,7 +461,7 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/core/` | Code that runs anywhere (no Node or filesystem): shared types, playbook display helpers, feedback formatting, the MCP tool definitions (`mcp.ts`, given a store and base URL) and the `Store` interface (`store.ts`: everything FrameJam keeps, such as projects, comments, picks, state, styles and playbooks). |
 | `src/server/mcp.ts` | The core MCP tools with this computer's skill version. |
 | `src/server/json-store.ts` | `JsonStore`, the JSON file implementation of `Store`. Every call re-reads from disk, so several processes can share `~/.framejam`. |
@@ -476,7 +476,7 @@ Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_H
 `FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), `FRAMEJAM_PLAYBOOK_PREVIEW_URL` (the
 same for the Playbooks page), `FRAMEJAM_CATALOG_URL` (where playbook and style updates come from; `off` turns them off, see
 [docs/catalog.md](docs/catalog.md)), `FRAMEJAM_CLOUD_URL` / `FRAMEJAM_CONVEX_URL` (FrameJam Cloud Convex URL, default
-`https://mellow-dalmatian-42.convex.cloud`; used by `framejam login`), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and
+`https://mellow-dalmatian-42.convex.cloud`; used by `framejam login` and `framejam share`), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and
 model for transcripts, when they aren't found on their own), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't look for a newer
 version on npm or for playbook updates).
 
