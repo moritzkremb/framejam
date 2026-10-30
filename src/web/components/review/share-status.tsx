@@ -40,7 +40,15 @@ export function ShareStatus({ data, reviewId }: { data: ReviewDataSource; review
       toast.error((e as Error).message);
     }
   };
-  const label = closed ? (info.revokedAt ? "Link turned off" : "Link expired") : approved ? `Approved by ${approved.by}` : "Shared";
+  const opens = typeof info.opens === "number" ? info.opens : undefined;
+  const opened = opens ? `Opened ${opens} time${opens === 1 ? "" : "s"}` : undefined;
+  const label = closed ? (info.revokedAt ? "Link turned off" : "Link expired") : approved ? `Approved by ${approved.by}` : (opened ?? "Shared");
+  const openedLine =
+    opens === undefined
+      ? undefined
+      : opens === 0
+        ? "Nobody has opened it yet"
+        : `${opened}${info.lastOpenedAt ? `, last ${relativeTime(new Date(info.lastOpenedAt).toISOString())}` : ""}`;
 
   return (
     <Menu
@@ -59,6 +67,7 @@ export function ShareStatus({ data, reviewId }: { data: ReviewDataSource; review
             ? `Version ${approved.version} approved ${relativeTime(new Date(approved.at).toISOString())}. The link shows only that file.`
             : "Guests can comment and approve"}
       </MenuLabel>
+      {openedLine && <MenuLabel>{openedLine}</MenuLabel>}
       <MenuItem
         icon={<Copy className="fc-i sm" />}
         onSelect={async () => {

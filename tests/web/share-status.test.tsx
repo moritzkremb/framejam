@@ -67,6 +67,27 @@ describe("the creator's share chip", () => {
     expect(text()).toBe("Link expired");
   });
 
+  it("shows how many times guests opened the link, and copes with a cloud that doesn't count", async () => {
+    await show({ shared: true, closed: false, opens: 3, lastOpenedAt: Date.now() - 3 * 3600_000 });
+    expect(text()).toBe("Opened 3 times");
+    act(() => root?.unmount());
+    host?.remove();
+    await show({ shared: true, closed: false, opens: 1 });
+    expect(text()).toBe("Opened 1 time");
+    act(() => root?.unmount());
+    host?.remove();
+    await show({ shared: true, closed: false, opens: 0 });
+    expect(text()).toBe("Shared");
+    act(() => root?.unmount());
+    host?.remove();
+    await show({ shared: true, closed: false, opens: null });
+    expect(text()).toBe("Shared");
+    act(() => root?.unmount());
+    host?.remove();
+    await show({ shared: true, closed: false, approved: { version: 2, by: "Anna", at: 1 }, opens: 5 });
+    expect(text()).toBe("Approved by Anna");
+  });
+
   it("reads the link again when the project changes", async () => {
     const s = await show({ shared: true, closed: false });
     await s.changed();

@@ -58,6 +58,9 @@ export interface ShareState {
   approvalSeenAt?: number;
   /** The creator's download switch; unset means on. */
   allowDownload?: boolean;
+  /** Guest opens of the link, as last reported by the cloud. Unset until a cloud that counts them has answered. */
+  opens?: number;
+  lastOpenedAt?: number;
   /** Cloud ids of the guest comments already marked "resolved in vN" on the link. */
   resolvedSynced?: string[];
 }
@@ -267,7 +270,11 @@ export interface PullResult {
   resolved: number;
   /** Why marking comments resolved failed, if it did. The pull itself went through. */
   resolveError?: string;
+  /** Guest opens of the link, when the cloud reports them. */
+  opens?: number;
 }
+
+const openedTimes = (n: number) => (n === 1 ? "once" : `${n} times`);
 
 const EMPTY_PULL: PullResult = { added: 0, waiting: 0, approvals: 0, resolved: 0 };
 
@@ -354,9 +361,10 @@ export async function pullShare(store: Store, reviewId: string, opts: ShareOptio
     ...(pending.revokedAt !== undefined ? { revokedAt: pending.revokedAt ?? undefined } : {}),
     ...(pending.approved !== undefined ? { approved: pending.approved ?? undefined } : {}),
     ...(pending.allowDownload !== undefined ? { allowDownload: pending.allowDownload } : {}),
+    ...(typeof pending.opens === "number" ? { opens: pending.opens, lastOpenedAt: pending.lastOpenedAt ?? undefined } : {}),
     resolvedSynced: synced.ids,
   });
-  return { added, waiting, approvals: pending.approvals.length, resolved: synced.newly, resolveError: synced.error };
+  return { added, waiting, approvals: pending.approvals.length, resolved: synced.newly, resolveError: synced.error, opens: typeof pending.opens === "number" ? pending.opens : undefined };
 }
 
 /**
@@ -450,6 +458,7 @@ export function describeShare(result: ShareResult): string {
   if (result.pulled.waiting) lines.push(`${result.pulled.waiting} more will come in with your next version.`);
   if (result.pulled.resolved) lines.push(`${result.pulled.resolved} guest comment${result.pulled.resolved === 1 ? "" : "s"} marked resolved on the link.`);
   if (result.pulled.resolveError) lines.push(`Couldn't mark comments resolved on the link: ${result.pulled.resolveError}`);
+  if (result.pulled.opens) lines.push(`Guests have opened the link ${openedTimes(result.pulled.opens)}.`);
   return lines.join("\n");
 }
 
@@ -479,6 +488,7 @@ export function summarizeShare(review: Review, state: ShareState): ShareLinkSumm
       : {}),
     allowDownload: state.allowDownload !== false,
     guestCommentsWaiting: waiting,
+    ...(state.opens === undefined ? {} : { opens: state.opens, lastOpenedAt: state.lastOpenedAt ? new Date(state.lastOpenedAt).toISOString() : undefined }),
     lastPulledAt: state.lastPulledAt,
   };
 }

@@ -58,6 +58,9 @@ class FakeCloud implements ShareClient {
   revokedAt: number | null = null;
   approved: { version: number; by: string; at: number } | null = null;
   allowDownload = true;
+  /** Left undefined, like a cloud that doesn't count opens yet. */
+  opens: number | undefined;
+  lastOpenedAt: number | null | undefined;
   pendingCalls = 0;
   failMarkPulled = false;
   failPending: Error | undefined;
@@ -99,6 +102,7 @@ class FakeCloud implements ShareClient {
       revokedAt: this.revokedAt,
       approved: this.approved,
       allowDownload: this.allowDownload,
+      ...(this.opens === undefined ? {} : { opens: this.opens, lastOpenedAt: this.lastOpenedAt }),
     };
   }
   /** A guest approves the latest version: the link is final. */
@@ -1299,5 +1303,67 @@ describe("the creator's share settings over HTTP", () => {
     const before = shareStateMtime(store.root, id);
     expect(before).toBeGreaterThan(0);
     expect(shareStateMtime(store.root, "rev_nothing")).toBe(0);
+  });
+});
+
+describe("guest opens", () => {
+  beforeEach(signIn);
+
+  it("keeps the count the cloud reports and shows it in summaries, share_project and list_share_links", async () => {
+    const id = await openLaunch();
+    cloud.opens = 3;
+    cloud.lastOpenedAt = Date.UTC(2026, 9, 30, 9);
+    await shareVersion(store, id, opts());
+    expect(readShareState(store.root, id)).toMatchObject({ opens: 3, lastOpenedAt: Date.UTC(2026, 9, 30, 9) });
+    expect((await listShares(store))[0]).toMatchObject({ opens: 3, lastOpenedAt: "2026-10-30T09:00:00.000Z" });
+
+    const mcp = await connectClient({ store, baseUrl: "http://localhost:2400", waitSeconds: 1, pollMs: 10, share: opts() });
+    try {
+      cloud.opens = 4;
+      const shared = parse(await mcp.call("share_project", { reviewId: id }));
+      expect(shared.link).toMatchObject({ opens: 4 });
+      const listed = parse(await mcp.call("list_share_links", {}));
+      expect(listed.links[0]).toMatchObject({ reviewId: id, opens: 4, lastOpenedAt: "2026-10-30T09:00:00.000Z" });
+      const opened = parse(await mcp.call("open_review", { title: "Second", videoPath: writeVideo("v2.mp4"), share: true }));
+      expect(opened.share).toMatchObject({ shared: true, opens: 4 });
+    } finally {
+      await mcp.close();
+    }
+  });
+
+  it("reports a count of zero and tells the CLI user about opens", async () => {
+    const id = await openLaunch();
+    cloud.opens = 0;
+    cloud.lastOpenedAt = null;
+    const result = await shareVersion(store, id, opts());
+    expect((await listShares(store))[0]).toMatchObject({ opens: 0 });
+    expect((await listShares(store))[0]!.lastOpenedAt).toBeUndefined();
+    expect(describeShare(result)).not.toContain("opened");
+    cloud.opens = 2;
+    expect(describeShare({ ...result, pulled: await pullShare(store, id, opts()) })).toContain("Guests have opened the link 2 times.");
+  });
+
+  it("works against an older cloud that doesn't send the fields, and keeps a known count if it stops sending them", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    const [link] = await listShares(store);
+    expect(link).not.toHaveProperty("opens");
+    expect(readShareState(store.root, id)).not.toHaveProperty("opens");
+    cloud.opens = 5;
+    await pullShare(store, id, opts());
+    cloud.opens = undefined;
+    await pullShare(store, id, opts());
+    expect((await listShares(store))[0]).toMatchObject({ opens: 5 });
+  });
+
+  it("is in the share status over HTTP", async () => {
+    const id = await openLaunch();
+    const app = createApp({ store, baseUrl: "http://localhost:2400", share: opts() });
+    await shareVersion(store, id, opts());
+    expect(await (await app.request(`/api/reviews/${id}/share`)).json()).toMatchObject({ shared: true, opens: null, lastOpenedAt: null });
+    cloud.opens = 7;
+    cloud.lastOpenedAt = 123;
+    await pullShare(store, id, opts());
+    expect(await (await app.request(`/api/reviews/${id}/share`)).json()).toMatchObject({ opens: 7, lastOpenedAt: 123 });
   });
 });

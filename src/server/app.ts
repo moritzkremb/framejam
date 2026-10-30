@@ -127,6 +127,8 @@ export function createApp(ctx: McpContext) {
     lastPulledAt: state.lastPulledAt ?? null,
     expiresAt: state.expiresAt ?? null,
     revokedAt: state.revokedAt ?? null,
+    opens: state.opens ?? null,
+    lastOpenedAt: state.lastOpenedAt ?? null,
     closed: Boolean(state.revokedAt) || (state.expiresAt !== undefined && state.expiresAt <= Date.now()),
   });
 

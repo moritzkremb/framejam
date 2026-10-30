@@ -110,6 +110,8 @@ const linkFacts = (link: ShareLinkSummary) => ({
   approved: link.approved,
   allowDownload: link.allowDownload,
   guestCommentsWaiting: link.guestCommentsWaiting,
+  opens: link.opens,
+  lastOpenedAt: link.lastOpenedAt,
 });
 
 const REVISED_NOTE =
@@ -174,6 +176,8 @@ export function createMcpServer(ctx: CoreContext): McpServer {
           newGuestComments: out.newGuestComments,
           markedResolved: out.markedResolved,
           resolveError: out.resolveError,
+          opens: out.link.opens,
+          lastOpenedAt: out.link.lastOpenedAt,
           next: out.closed
             ? "The link is closed (revoked or expired), so guests can't open it. Tell the user; share_project can reopen it."
             : `Post ${out.url} in chat as a clickable markdown link so the user can send it to their client.`,
@@ -647,7 +651,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
     {
       title: "List share links",
       description:
-        "List the projects that have a share link: the link, which versions are on it, whether it's closed (revoked or expired), approvals guests gave (and whether the link is approved and offers a download), and how many guest comments are waiting for the user. Reads this computer, so it works offline.",
+        "List the projects that have a share link: the link, which versions are on it, whether it's closed (revoked or expired), approvals guests gave (and whether the link is approved and offers a download), how many times guests have opened it (opens, lastOpenedAt; left out if the cloud doesn't count them), and how many guest comments are waiting for the user. Reads this computer, so it works offline.",
       inputSchema: {},
     },
     async () => {
