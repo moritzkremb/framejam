@@ -8,6 +8,8 @@ import { createApp } from "./app.ts";
 import { createMcpServer } from "./mcp.ts";
 import { type CatalogClient, catalogConfig, catalogStatus, startCatalog } from "./catalog.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
+import { login, logout, shouldOpenBrowser, whoami } from "./login.ts";
+import { DEFAULT_CLOUD_URL } from "./cloud.ts";
 import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
 import type { Store } from "../core/store.ts";
@@ -20,13 +22,19 @@ Usage:
   framejam start            Start the web UI in the background (if it isn't running yet) and print its URL
   framejam [serve]          Start the web UI + MCP over HTTP in this terminal (http://localhost:2400, MCP at /mcp)
   framejam --stdio          MCP over stdio for Cursor / Claude Code / Codex (also hosts the web UI if the port is free)
+  framejam login            Sign in to FrameJam Cloud (prints a code and opens the browser)
+  framejam logout           Sign out of FrameJam Cloud
+  framejam whoami           Show the signed-in FrameJam Cloud account
 
 Options:
   --port <n>        HTTP port (default ${DEFAULT_PORT}, env FRAMEJAM_PORT)
   --host <host>     Bind address (default 127.0.0.1)
   --data-dir <dir>  Where reviews and state are stored (default ~/.framejam, env FRAMEJAM_HOME)
   --browser         With start: also open the UI in the system browser
+  --no-browser      With login: print the URL but don't open a browser
   -h, --help
+
+FrameJam Cloud: FRAMEJAM_CLOUD_URL or FRAMEJAM_CONVEX_URL (default ${DEFAULT_CLOUD_URL})
 `;
 
 const { values, positionals } = parseArgs({
@@ -37,6 +45,7 @@ const { values, positionals } = parseArgs({
     host: { type: "string" },
     "data-dir": { type: "string" },
     browser: { type: "boolean", default: false },
+    "no-browser": { type: "boolean", default: false },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -178,6 +187,21 @@ async function runInstall(): Promise<never> {
   process.exit(steps.every((s) => s.ok) ? 0 : 1);
 }
 
+async function finish(result: { ok: boolean; text: string }): Promise<never> {
+  log(result.text);
+  process.exit(result.ok ? 0 : 1);
+}
+
+if (positionals[0] === "login") {
+  await finish(
+    await login({
+      write: log,
+      openUrl: values["no-browser"] || !shouldOpenBrowser() ? undefined : openBrowser,
+    }),
+  );
+}
+if (positionals[0] === "logout") await finish(await logout());
+if (positionals[0] === "whoami") await finish(await whoami());
 if (positionals[0] === "start") await start();
 if (positionals[0] === "install") await runInstall();
 
