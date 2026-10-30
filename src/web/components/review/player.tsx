@@ -1,7 +1,7 @@
 import { Loader2, MessageSquarePlus, Plus, TriangleAlert } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { drawPin } from "@/lib/pin";
-import { cn } from "@/lib/utils";
+import { cn, crossOriginFor } from "@/lib/utils";
 
 export interface MediaController {
   duration: number;
@@ -24,6 +24,8 @@ export interface Pin {
   y: number;
   sent: boolean;
   text: string;
+  /** The guest who wrote it, on a shared link. */
+  author?: string;
 }
 
 /** A comment at the current time that isn't tied to a spot (a range or a plain timestamp). */
@@ -32,6 +34,7 @@ export interface FloatingNote {
   index: number;
   sent: boolean;
   text: string;
+  author?: string;
 }
 
 interface PlayerProps {
@@ -52,6 +55,10 @@ interface PlayerProps {
   onPinClick(id: string): void;
   /** Width of the picture as laid out, so the controls under it can match. */
   onFrameWidth?(width: number): void;
+  /** Drawn over the picture, above the pins (the share page's drawing layer). */
+  children?: ReactNode;
+  /** Replaces the message shown when the video can't load. */
+  errorMessage?: string;
 }
 
 function videoController(video: HTMLVideoElement): MediaController {
@@ -106,7 +113,7 @@ function useFitBox(aspect: number) {
 }
 
 /** The video well: footage on black, comment pins on top. Clicking the picture is the main way to comment. */
-export function Player({ src, pins, floating, newPin, selectedId, showHint, interactive, className, style, onController, onFrameClick, onPinClick, onFrameWidth }: PlayerProps) {
+export function Player({ src, pins, floating, newPin, selectedId, showHint, interactive, className, style, onController, onFrameClick, onPinClick, onFrameWidth, children, errorMessage }: PlayerProps) {
   const [native, setNative] = useState({ width: 1920, height: 1080 });
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -143,13 +150,14 @@ export function Player({ src, pins, floating, newPin, selectedId, showHint, inte
             key={src}
             ref={videoRef}
             src={src}
+            crossOrigin={crossOriginFor(src)}
             className="fc-media"
             preload="auto"
             playsInline
             onLoadedMetadata={handleVideoMeta}
             onError={() => {
               setStatus("error");
-              setError("This video couldn't be loaded. If the file was moved or deleted, ask your agent to add the render again.");
+              setError(errorMessage ?? "This video couldn't be loaded. If the file was moved or deleted, ask your agent to add the render again.");
             }}
           />
 
@@ -167,8 +175,8 @@ export function Player({ src, pins, floating, newPin, selectedId, showHint, inte
               <button
                 key={p.id}
                 type="button"
-                title={p.text}
-                aria-label={`Comment ${p.index}: ${p.text}`}
+                title={p.author ? `${p.author}: ${p.text}` : p.text}
+                aria-label={`Comment ${p.index}${p.author ? ` by ${p.author}` : ""}: ${p.text}`}
                 className={cn("fc-pin", p.sent ? "sent" : "draft", selectedId === p.id && "is-selected")}
                 style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
                 onClick={(e) => {
@@ -197,12 +205,16 @@ export function Player({ src, pins, floating, newPin, selectedId, showHint, inte
                     }}
                   >
                     <span className="n">{n.index}</span>
-                    <span className="fc-truncate">{n.text}</span>
+                    <span className="fc-truncate">
+                      {n.author && <span className="who">{n.author}</span>}
+                      {n.text}
+                    </span>
                   </button>
                 ))}
               </div>
             )}
           </div>
+          {children}
 
           {status === "loading" && (
             <div className="fc-player-veil">

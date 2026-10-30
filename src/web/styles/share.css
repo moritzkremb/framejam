@@ -1,0 +1,59 @@
+/* The share page (www.framejam.ai/v/<token>): one column on phones, the comments beside the video from 900px. */
+.fc-share { min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); }
+.fc-share-h { padding-left: var(--space-4); }
+.fc-share-h .titles { margin-left: var(--space-2); }
+.fc-share-loading { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 960px; margin: 0 auto; padding: var(--space-4); }
+.fc-share-closed { flex: 1; justify-content: center; }
+
+.fc-share-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.fc-share-stage { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); }
+.fc-share-stage > * { width: 100%; }
+.fc-share-player { position: relative; width: 100%; max-height: 70dvh; min-height: 160px; }
+.fc-share-stage .fc-dock { position: static; padding: 0; background: none; }
+.fc-share-stage .fc-dock .box { box-shadow: inset 0 0 0 1px var(--border); }
+.fc-share-stage .fc-dock .box:focus-within { box-shadow: inset 0 0 0 1.5px var(--border-strong); }
+.fc-share-dock .tools { flex-wrap: wrap; row-gap: 6px; }
+.fc-share-dock .fc-chip-btn.on { background: var(--accent-soft); color: var(--accent-text); }
+.fc-share-dock .send { flex-wrap: wrap; row-gap: 8px; }
+.fc-share-as { font: 400 12px/16px var(--font-sans); color: var(--text-2); }
+.fc-share-as b { font-weight: 600; color: var(--text); }
+.fc-share-as .fc-link { border: 0; padding: 0; background: none; font: inherit; cursor: pointer; }
+
+.fc-share-side { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.fc-share-side-h { display: flex; align-items: center; height: 48px; flex: none; padding: 0 16px; border-bottom: 1px solid var(--border); }
+.fc-share-side-body { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.fc-share-approved { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--accent-text); font: 500 12px/16px var(--font-sans); }
+
+.fc-draw { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.fc-draw.active { pointer-events: auto; cursor: crosshair; touch-action: none; }
+.fc-draw path { fill: none; stroke: #d4ff3a; stroke-width: 4px; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .6)); }
+.fc-draw path.shown { stroke: #fff; opacity: .85; }
+
+.fc-share-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .55); animation: fc-fade .15s ease-out; }
+.fc-share-who { display: flex; flex-direction: column; gap: 12px; width: min(400px, 100%); padding: 20px; border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow-pop); }
+.fc-share-who p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--text-2); }
+.fc-share-who label { display: flex; flex-direction: column; gap: 6px; font: 500 12px/16px var(--font-sans); color: var(--text-2); }
+
+.fc-share-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.fc-share-panel { display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); color: inherit; text-align: left; font: inherit; cursor: pointer; scroll-margin: 12px; }
+.fc-share-panel.is-active { box-shadow: inset 0 0 0 2px var(--accent); }
+.fc-share-panel img { width: 100%; border-radius: var(--radius-md); background: var(--video); }
+.fc-share-panel .cap { display: flex; align-items: center; gap: 6px; padding: 0 4px; font: 500 13px/18px var(--font-sans); }
+.fc-share-panel .cap .n { margin-left: auto; padding: 0 6px; border-radius: var(--radius-full); background: var(--surface-2); font: 500 11px/18px var(--font-mono); color: var(--text-2); }
+.fc-share-panel .d { padding: 0 4px 4px; font: 400 12px/17px var(--font-sans); color: var(--text-2); }
+
+@media (max-width: 560px) {
+  .fc-share-h .lbl { display: none; }
+  .fc-share-h .titles .s { font-size: 11px; }
+}
+
+@media (min-width: 900px) {
+  .fc-share { height: 100dvh; }
+  .fc-share-body { flex-direction: row; overflow: hidden; }
+  .fc-share-stage { flex: 1; min-width: 0; padding: var(--space-4); overflow: auto; justify-content: safe center; }
+  .fc-share-stage > * { max-width: var(--content-w, 1100px); margin-left: auto; margin-right: auto; }
+  .fc-share-stage > .fc-share-player { max-width: none; max-height: calc(100dvh - 380px); }
+  .fc-share-side { width: clamp(300px, 28vw, 380px); flex: none; border-top: 0; border-left: 1px solid var(--border); }
+  .fc-share-side-h { height: 52px; }
+  .fc-share-side-body { flex: 1; min-height: 0; overflow: auto; }
+}
