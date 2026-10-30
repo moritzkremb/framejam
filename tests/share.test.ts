@@ -29,11 +29,13 @@ import {
   describeShare,
   findProject,
   listShares,
+  markApprovalSeen,
   pullAll,
   pullShare,
   readShareState,
   shareUrl,
   shareVersion,
+  shareStateMtime,
   sharedProjectIds,
   startSharePuller,
 } from "../src/server/share.ts";
@@ -54,6 +56,8 @@ class FakeCloud implements ShareClient {
   approvals: GuestApproval[] = [];
   expiresAt: number | null = null;
   revokedAt: number | null = null;
+  approved: { version: number; by: string; at: number } | null = null;
+  allowDownload = true;
   pendingCalls = 0;
   failMarkPulled = false;
   failPending: Error | undefined;
@@ -93,18 +97,26 @@ class FakeCloud implements ShareClient {
       approvals: this.approvals,
       expiresAt: this.expiresAt,
       revokedAt: this.revokedAt,
+      approved: this.approved,
+      allowDownload: this.allowDownload,
     };
+  }
+  /** A guest approves the latest version: the link is final. */
+  approve(version: number, by: string, at: number) {
+    this.approvals.push({ version, guestName: by, at });
+    this.approved = { version, by, at };
   }
   async resolve(_localId: string, resolutions: Resolution[]) {
     if (this.failResolve) throw this.failResolve;
     this.resolved.push(resolutions);
     return { marked: resolutions.length };
   }
-  async configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean }): Promise<LinkSettings> {
+  async configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<LinkSettings> {
     if (!this.tokens.has(localId)) throw new Error("This project isn't shared");
     if (settings.expiresAt !== undefined) this.expiresAt = settings.expiresAt;
     if (settings.revoked !== undefined) this.revokedAt = settings.revoked ? 1_700_000_000_000 : null;
-    return { token: this.tokens.get(localId)!, expiresAt: this.expiresAt, revokedAt: this.revokedAt };
+    if (settings.allowDownload !== undefined) this.allowDownload = settings.allowDownload;
+    return { token: this.tokens.get(localId)!, expiresAt: this.expiresAt, revokedAt: this.revokedAt, allowDownload: this.allowDownload };
   }
   async markPulled(_localId: string, ids: string[]) {
     if (this.failMarkPulled) throw new Error("Couldn't reach FrameJam Cloud.");
@@ -1130,5 +1142,162 @@ describe("errors from FrameJam Cloud", () => {
     ]);
     expect(calls[0]!.body.args).toEqual({ localId: "rev_1", resolutions: [{ commentId: "c1", version: 2 }], token: TOKEN });
     expect(calls[1]!.body.args).toEqual({ localId: "rev_1", expiresAt: null, revoked: false, token: TOKEN });
+  });
+});
+
+describe("an approval reaches the creator and the agent", () => {
+  beforeEach(signIn);
+
+  let mcp: Awaited<ReturnType<typeof connectClient>>;
+  afterEach(async () => {
+    await mcp?.close();
+  });
+
+  async function sharedProject() {
+    mcp = await connectClient({ store, baseUrl: "http://localhost:2400", waitSeconds: 1, pollMs: 10, progressEveryMs: 50, share: opts() });
+    return parse(await mcp.call("open_review", { title: "Launch teaser", videoPath: writeVideo("v1.mp4"), share: true })).reviewId as string;
+  }
+
+  it("keeps the approval, who and when, in the project's link details after a pull", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    expect(readShareState(store.root, id)!.approved).toBeUndefined();
+    cloud.approve(1, "Anna", Date.UTC(2026, 9, 30, 12));
+    await pullShare(store, id, opts());
+    expect(readShareState(store.root, id)).toMatchObject({ approved: { version: 1, by: "Anna", at: Date.UTC(2026, 9, 30, 12) }, allowDownload: true });
+
+    const app = createApp({ store, baseUrl: "http://localhost:2400" });
+    const body = await (await app.request(`/api/reviews/${id}/share`)).json();
+    expect(body).toMatchObject({ shared: true, approved: { version: 1, by: "Anna" }, allowDownload: true, closed: false });
+  });
+
+  it("wakes wait_for_feedback with status approved, once, and says the link is final", async () => {
+    const reviewId = await sharedProject();
+    const waiting = mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 5 });
+    await new Promise((r) => setTimeout(r, 60));
+    cloud.approve(1, "Anna Lee", Date.UTC(2026, 9, 30, 12));
+    await pullShare(store, reviewId, opts());
+
+    const body = parse(await waiting);
+    expect(body.status).toBe("approved");
+    expect(body.approved).toMatchObject({ version: 1, by: "Anna Lee" });
+    expect(body.allowDownload).toBe(true);
+    expect(body.message).toContain("Anna Lee approved version 1");
+    expect(body.message).toContain("not an instruction");
+    expect(body.next).toContain("Don't make another version");
+
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+    const link = parse(await mcp.call("list_share_links")).links[0];
+    expect(link.approved).toMatchObject({ version: 1, by: "Anna Lee" });
+    expect(link.allowDownload).toBe(true);
+  });
+
+  it("announces an approval that arrived before the agent started waiting, and again after a new approval", async () => {
+    const reviewId = await sharedProject();
+    cloud.approve(1, "Anna", 1000);
+    await pullShare(store, reviewId, opts());
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("approved");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+
+    cloud.approved = null;
+    await pullShare(store, reviewId, opts());
+    expect(readShareState(store.root, reviewId)!.approved).toBeUndefined();
+    parse(await mcp.call("add_version", { reviewId, videoPath: writeVideo("v2.mp4", "two"), share: true }));
+    cloud.approve(2, "Ben", 2000);
+    await pullShare(store, reviewId, opts());
+    const again = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
+    expect(again).toMatchObject({ status: "approved", approved: { version: 2, by: "Ben" } });
+  });
+
+  it("puts guest comments first when both are waiting", async () => {
+    const reviewId = await sharedProject();
+    cloud.guest("cmt_1", 1, "One more thing");
+    cloud.approve(1, "Anna", 1000);
+    await pullShare(store, reviewId, opts());
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("guest_comments");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("approved");
+  });
+
+  it("doesn't wake a project that isn't shared", async () => {
+    mcp = await connectClient({ store, baseUrl: "http://localhost:2400", waitSeconds: 1, pollMs: 10, progressEveryMs: 50, share: opts() });
+    const { reviewId } = parse(await mcp.call("open_review", { title: "Launch teaser", videoPath: writeVideo("v1.mp4") }));
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+  });
+
+  it("keeps the download switch and what the agent was told when another version is shared", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    await configureShare(store, id, { allowDownload: false }, opts());
+    cloud.approve(1, "Anna", 1000);
+    await pullShare(store, id, opts());
+    await markApprovalSeen(store.root, id);
+    await store.addVersion(id, { videoPath: writeVideo("v2.mp4", "two") });
+    cloud.approved = null;
+    await shareVersion(store, id, { ...opts(), version: 2 });
+    expect(readShareState(store.root, id)).toMatchObject({ allowDownload: false, approvalSeenAt: 1000 });
+    expect(readShareState(store.root, id)!.approved).toBeUndefined();
+  });
+});
+
+describe("the download switch", () => {
+  beforeEach(signIn);
+
+  it("sets it on the link, remembers it, and reports it", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    const off = await configureShare(store, id, { allowDownload: false }, opts());
+    expect(cloud.allowDownload).toBe(false);
+    expect(off.allowDownload).toBe(false);
+    expect(readShareState(store.root, id)!.allowDownload).toBe(false);
+    const on = await configureShare(store, id, { allowDownload: true }, opts());
+    expect(on.allowDownload).toBe(true);
+  });
+
+  it("share_project passes allowDownload without uploading anything", async () => {
+    const mcp = await connectClient({ store, baseUrl: "http://localhost:2400", waitSeconds: 1, pollMs: 10, share: opts() });
+    try {
+      const { reviewId } = parse(await mcp.call("open_review", { title: "Launch teaser", videoPath: writeVideo("v1.mp4"), share: true }));
+      const uploads = cloud.uploads.length;
+      const res = parse(await mcp.call("share_project", { reviewId, allowDownload: false }));
+      expect(res.link).toMatchObject({ allowDownload: false });
+      expect(res.uploaded).toBeUndefined();
+      expect(cloud.uploads).toHaveLength(uploads);
+      expect(cloud.allowDownload).toBe(false);
+    } finally {
+      await mcp.close();
+    }
+  });
+});
+
+describe("the creator's share settings over HTTP", () => {
+  beforeEach(signIn);
+
+  it("turns the download off and on, and revokes the link", async () => {
+    const id = await openLaunch();
+    const app = createApp({ store, baseUrl: "http://localhost:2400", share: opts() });
+    await shareVersion(store, id, opts());
+    const post = (body: unknown) => app.request(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json" } });
+
+    expect(await (await post({ allowDownload: false })).json()).toMatchObject({ shared: true, allowDownload: false, closed: false });
+    expect(cloud.allowDownload).toBe(false);
+    expect(await (await post({ revoked: true })).json()).toMatchObject({ closed: true });
+    expect(cloud.revokedAt).not.toBeNull();
+    expect((await post({})).status).toBe(400);
+  });
+
+  it("says so when the project isn't shared or the computer is signed out", async () => {
+    const id = await openLaunch();
+    const app = createApp({ store, baseUrl: "http://localhost:2400", share: opts() });
+    const res = await app.request(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify({ revoked: true }), headers: { "content-type": "application/json" } });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain("isn't shared");
+  });
+
+  it("changes the review's event fingerprint when the link state changes, so the page refreshes", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    const before = shareStateMtime(store.root, id);
+    expect(before).toBeGreaterThan(0);
+    expect(shareStateMtime(store.root, "rev_nothing")).toBe(0);
   });
 });

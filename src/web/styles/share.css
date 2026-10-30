@@ -57,3 +57,13 @@
   .fc-share-side-h { height: 52px; }
   .fc-share-side-body { flex: 1; min-height: 0; overflow: auto; }
 }
+
+.fc-share-final-body { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px 16px 40px; width: min(960px, 100%); margin: 0 auto; }
+.fc-share-approved.big { align-self: stretch; justify-content: center; padding: 12px 14px; font-size: 14px; line-height: 20px; }
+.fc-share-final-video { width: 100%; max-height: 70vh; border-radius: 14px; background: #000; box-shadow: var(--shadow-pop); }
+.fc-share-final-note { margin: 0; color: var(--text-2); font: 400 13px/20px var(--font-sans); text-align: center; }
+.fc-share-panels.final { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; width: 100%; }
+.fc-share-panel.final { margin: 0; border-radius: 12px; overflow: hidden; background: var(--surface); }
+.fc-share-panel.final img { display: block; width: 100%; height: auto; }
+.fc-share-panel.final figcaption { padding: 8px 10px; font: 500 12px/16px var(--font-sans); }
+@media (max-width: 720px) { .fc-share-final-body { padding: 14px 12px 32px; gap: 12px; } .fc-share-final .fc-header .lbl { display: inline; } }

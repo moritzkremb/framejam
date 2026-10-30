@@ -6,6 +6,7 @@ import { BackHeader } from "@/components/header";
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
 import { CommentList } from "@/components/review/comment-list";
 import { Handoff } from "@/components/review/dock";
+import { ShareStatus } from "@/components/review/share-status";
 import type { ReviewState } from "@/components/review/use-review";
 import { copyText, relativeTime, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
@@ -205,6 +206,7 @@ export function ReviewHeader({
   if (!review || !version || !latest) return null;
   return (
     <BackHeader to="/" title={review.title} sub={subline}>
+      <ShareStatus data={r.data} reviewId={review.id} />
       <ShortcutsButton shortcuts={shortcuts} />
       <Menu
         label="Versions and more"

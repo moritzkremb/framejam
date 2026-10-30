@@ -16,6 +16,15 @@ export interface ShareLinkSummary {
   expiresAt?: string;
   revokedAt?: string;
   approvals: { version: number; by: string; at: string }[];
+  /**
+   * A guest approved this version and the link is in its final state: guests see only that file. Sharing a newer
+   * version reopens the link.
+   */
+  approved?: { version: number; by: string; at: string };
+  /** The approval hasn't been reported to an agent yet. */
+  approvalNew?: boolean;
+  /** Whether the approved link offers a download (the creator's switch; videos only). */
+  allowDownload: boolean;
   /** Guests' comments the user hasn't sent to the agent yet. */
   guestCommentsWaiting: number;
   lastPulledAt?: string;
@@ -39,8 +48,10 @@ export interface ShareOutcome {
 export interface ShareHooks {
   /** Puts a version (default: the latest) on the project's link, creating it the first time. Throws a message fit to show the user. */
   share(reviewId: string, opts?: { version?: number }): Promise<ShareOutcome>;
-  /** Sets or clears the link's expiry and revokes or reopens it. */
-  configure(reviewId: string, change: { expiresInDays?: number | null; revoked?: boolean }): Promise<ShareLinkSummary>;
+  /** Sets or clears the link's expiry, revokes or reopens it, and switches the approved link's download. */
+  configure(reviewId: string, change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<ShareLinkSummary>;
+  /** Records that an agent has been told about the link's current approval, so it doesn't wake again. */
+  approvalSeen(reviewId: string): Promise<void>;
   /** Every project that has a link. */
   list(): Promise<ShareLinkSummary[]>;
   /** One project's link, if it has one. */

@@ -334,3 +334,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 400 14px/21px
 .fc-use:hover { background: #fff; }
 .fc-use.on { background: var(--accent); color: var(--on-accent); }
 .fc-use .fc-i { width: 14px; height: 14px; stroke-width: 2.4; }
+
+.fc-share-chip.approved { color: var(--accent-text); background: var(--accent-soft); }
+.fc-share-chip.closed { color: var(--text-3); }
+@media (max-width: 720px) { .fc-share-chip .lbl { max-width: 9ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }

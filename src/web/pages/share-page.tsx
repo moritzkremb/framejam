@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Eraser, Loader2, MapPin, MoveHorizontal, Pause, PenLine, Play, Send, ThumbsUp, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Download, Eraser, Loader2, MapPin, MoveHorizontal, Pause, PenLine, Play, Send, ThumbsUp, X } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import lockup from "../../../public/brand/lockup.svg";
@@ -133,6 +133,8 @@ export function SharePage({ link, data }: { link: string; data: CloudShareSource
   const version = s.version;
   const storyboard = Boolean(version.panels?.length);
 
+  if (review.approved) return <ApprovedShare review={review} data={data} link={link} />;
+
   return (
     <div className="fc-share">
       <ShareHeader s={s} data={data} link={link} asGuest={asGuest} />
@@ -171,6 +173,7 @@ function ShareHeader({ s, data, link, asGuest }: { s: ShareState; data: CloudSha
   const version = s.version!;
   const [approving, setApproving] = useState(false);
   const approvedHere = data.approvedHere(link).includes(version.number);
+  const isLatest = version.number === review.versions.at(-1)!.number;
   const approvers = review.approvals.filter((a) => a.version === version.number).map((a) => a.guestName);
   const count = review.versions.length;
   const sub = [
@@ -224,15 +227,90 @@ function ShareHeader({ s, data, link, asGuest }: { s: ShareState; data: CloudSha
       <button
         type="button"
         className={cn("fc-btn sm", approvedHere ? "ghost" : "outline")}
-        disabled={approving || approvedHere}
+        disabled={approving || approvedHere || !isLatest}
         onClick={approve}
-        title={approvers.length ? `Approved by ${approvers.join(", ")}` : "Tell whoever shared this that this version is good to go"}
+        title={
+          !isLatest
+            ? "Open the newest version to approve it"
+            : approvers.length
+              ? `Approved by ${approvers.join(", ")}`
+              : "Tell whoever shared this that this version is good to go. The link then shows only this file."
+        }
         data-testid="approve"
       >
         {approving ? <Loader2 className="fc-i xs fc-spin" /> : approvedHere ? <Check className="fc-i xs" /> : <ThumbsUp className="fc-i xs" />}
         <span className="lbl">{approvedHere ? "Approved" : "Approve"}</span>
       </button>
     </header>
+  );
+}
+
+const dateLabel = (ms: number) => new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+
+/**
+ * A link whose version was approved is final: just that file, who approved it and when, and the creator's download if
+ * they allow one. No comments, no versions, nothing to approve again.
+ */
+function ApprovedShare({ review, data, link }: { review: SharedReview; data: CloudShareSource; link: string }) {
+  const approved = review.approved!;
+  const version = review.versions.find((v) => v.number === approved.version) ?? review.versions.at(-1)!;
+  const [saving, setSaving] = useState(false);
+  const panels = version.panels ?? [];
+  const src = data.videoUrl(link, version.number);
+
+  const download = async () => {
+    setSaving(true);
+    try {
+      await data.download(link);
+      toast.success("Your download is starting");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fc-share fc-share-final" data-testid="approved-share">
+      <header className="fc-header fc-share-h">
+        <Logo />
+        <div className="titles">
+          <span className="t" title={review.title}>
+            {review.title}
+          </span>
+          <span className="s">Version {version.number}</span>
+        </div>
+        {approved.download && !panels.length && (
+          <button type="button" className="fc-btn primary sm" onClick={download} disabled={saving} data-testid="download">
+            {saving ? <Loader2 className="fc-i xs fc-spin" /> : <Download className="fc-i xs" />}
+            <span className="lbl">Download</span>
+          </button>
+        )}
+      </header>
+      <main className="fc-share-final-body">
+        <div className="fc-share-approved big" data-testid="approved-by">
+          <Check className="fc-i sm" />
+          <span>
+            Approved by <b>{approved.by}</b> on {dateLabel(approved.at)}
+          </span>
+        </div>
+        {panels.length ? (
+          <div className="fc-share-panels final">
+            {panels.map((p, i) => (
+              <figure key={i} className="fc-share-panel final">
+                <img src={data.panelUrl(link, version.number, i + 1)} alt={p.title ?? `Panel ${i + 1}`} />
+                <figcaption>
+                  <b>{i + 1}</b> {p.title}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        ) : (
+          <video className="fc-share-final-video" src={src} poster={review.posters[version.number]} controls playsInline preload="metadata" data-testid="approved-video" />
+        )}
+        <p className="fc-share-final-note">This version is approved, so comments are closed.{approved.download && !panels.length ? " You can download the original file." : ""}</p>
+      </main>
+    </div>
   );
 }
 
