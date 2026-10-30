@@ -180,7 +180,7 @@ export function PlaybookDetailPage() {
       <div className="fc-screen">
         <BackHeader to="/playbooks" title="Playbooks" />
         <main className="fc-main">
-          <NotHere title="This playbook isn't here" message="It may have been removed from the library." back="/playbooks" backLabel="Back to playbooks" />
+          <NotHere title={<>This playbook isn't <em>here</em></>} message="It may have been removed from the library." back="/playbooks" backLabel="Back to playbooks" />
         </main>
       </div>
     );
@@ -235,6 +235,7 @@ export function PlaybookDetailPage() {
 
         <div className="fc-style-head">
           <div className="fc-grow">
+            <p className="fc-kicker">Playbook</p>
             <h1 className="fc-h1">{p.name}</h1>
             <p className="fc-lede">{p.tagline}</p>
             <div className="fc-row" style={{ gap: 6, marginTop: 10, flexWrap: "wrap" }}>
