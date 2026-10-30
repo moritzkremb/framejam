@@ -144,6 +144,27 @@ describe("share page", () => {
     expect(q("approvals")?.textContent).toContain("Approved by Cleo");
   });
 
+  it("shows \"Resolved in vN\" on a comment once the creator's agent ships the fix, live", async () => {
+    const fake = fakeBackend(videoView());
+    await render(fake);
+    expect(host.querySelectorAll('[data-testid="resolved-in"]')).toHaveLength(0);
+
+    const fixed = videoView();
+    fixed.versions.push({ number: 3, at: Date.UTC(2026, 9, 3), note: "Bigger logo", video: { url: "https://media.example.com/renders/u/v3.mp4", duration: 8 } });
+    fixed.comments[0]!.resolvedIn = 3;
+    await act(async () => fake.push(fixed));
+    await flush();
+
+    expect(host.textContent).toContain("Version 3 of 3");
+    act(() => q<HTMLButtonElement>("version-menu")!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 })));
+    await flush();
+    const item = [...document.querySelectorAll(".fc-menu-item")].find((el) => el.textContent?.startsWith("Version 2"));
+    act(() => (item as HTMLElement).click());
+    await flush();
+    expect(q("resolved-in")?.textContent).toContain("Resolved in v3");
+    expect(cards()[0]).toMatch(/Logo is too small/);
+  });
+
   it("switches versions, each with its own comments", async () => {
     await render(fakeBackend(videoView()));
     act(() => q<HTMLButtonElement>("version-menu")!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 })));

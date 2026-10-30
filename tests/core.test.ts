@@ -20,6 +20,8 @@ const TOOLS = [
   "list_reviews",
   "resolve_comments",
   "add_version",
+  "share_project",
+  "list_share_links",
   "list_presets",
   "get_preset",
   "get_selected_preset",

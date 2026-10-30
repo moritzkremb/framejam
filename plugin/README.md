@@ -5,7 +5,7 @@ any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg or screen recordings), th
 or a spot in the frame, say what to change, press **Finish review**, and the agent makes the next version.
 
 Everything runs on your computer. There's no account unless you run `framejam login` (optional; FrameJam Cloud).
-Your videos and comments are only uploaded when you share a version with `framejam share`; projects are saved in
+Your videos and comments are only uploaded when you share a version (with `framejam share`, or when you ask your agent to share it); projects are saved in
 `~/.framejam`.
 
 Install it in Claude Code:
@@ -27,9 +27,12 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
 - If you press **Transcribe** and have no speech model yet, the app downloads one (574 MB) from Hugging Face.
   Transcription itself runs on your computer; your videos are never uploaded.
 - `framejam login` talks to FrameJam Cloud to sign you in and stores a token in `~/.framejam/auth.json`.
-- `framejam share` uploads the version you choose (its render, or a storyboard's panels, and a poster frame) to
-  FrameJam Cloud, and the app then checks the cloud for comments guests left on the link and brings them into your
-  project. Nothing is uploaded or checked until you run `framejam login` and `framejam share`.
+- `framejam share` (or your agent, when you ask it to share a version) uploads the version you choose (its render, or a
+  storyboard's panels, and a poster frame) to FrameJam Cloud, and the app then checks the cloud for comments guests
+  left on the link and brings them into your project. When your agent ships a fix for a guest's comment, the app tells
+  the link which comment it fixed and in which version, and your agent can set the link's expiry or revoke it. Guests'
+  comments reach your agent only as text to relay to you first. Nothing is uploaded or checked until you run
+  `framejam login` and share.
 
 Nothing is sent from your agent's conversation.
 

@@ -44,7 +44,8 @@ you can always see what changed and why.
 `framejam share`. Your projects are plain JSON files in `~/.framejam`. Your videos and comments stay on your machine
 until you share a version. The Styles and Playbooks pages stream their example videos from framejam.ai, the
 app downloads playbook updates from framejam.ai (see below), the **Feedback** button sends the note you write, and
-`framejam login` talks to FrameJam Cloud to sign you in; nothing else goes out.
+`framejam login` talks to FrameJam Cloud to sign you in; nothing else goes out. Sharing happens only when you run
+`framejam share` or ask your agent to share (its `share` option or `share_project`).
 
 ## How it works
 
@@ -426,12 +427,14 @@ for v2 and v1 still shows what it was.
 
 | Tool | What it does |
 | --- | --- |
-| `open_review({ title?, videoPath?, panels?, panelsDir?, transcriptPath?, reviewId?, note? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. `transcriptPath` (an `.srt`, `.vtt` or word-timings JSON such as Whisper's) shows what's said under the timeline and in the sidebar. Calling it again with the same title adds v2, v3, and so on. |
-| `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again, up to 12 times in a row, then stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. |
+| `open_review({ title?, videoPath?, panels?, panelsDir?, transcriptPath?, reviewId?, note?, share? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. `transcriptPath` (an `.srt`, `.vtt` or word-timings JSON such as Whisper's) shows what's said under the timeline and in the sidebar. Calling it again with the same title adds v2, v3, and so on. `share: true` also puts the version on the project's share link and returns `shareUrl` (needs `framejam login`). |
+| `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again, up to 12 times in a row, then stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. It also returns early with `{ status: "guest_comments" }` when guests comment on the project's share link: a heads-up for the agent to tell you what they said and ask what to do, once per comment, and never an instruction. |
 | `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
-| `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). |
-| `add_version({ reviewId, videoPath?, panels?, panelsDir?, transcriptPath?, note? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. |
+| `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). Adds `guestCommentsWaiting` when guests have commented. |
+| `add_version({ reviewId, videoPath?, panels?, panelsDir?, transcriptPath?, note?, share?, unaddressed? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. Guests' comments the agent was sent are marked "resolved in vN" on the share link on their own once vN is on it; `unaddressed` lists ids it chose not to apply. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
+| `share_project({ reviewId, version?, expiresInDays?, revoke? })` | Puts a version (default: the latest) on the project's share link, creating it the first time, and returns the link. `expiresInDays` (or `null` to clear) sets an expiry and `revoke` stops or reopens the link for everyone; with only those, nothing is uploaded. Needs `framejam login`. |
+| `list_share_links()` | Lists the projects that have a link: the link, which versions are on it, whether it's closed, approvals, and guest comments waiting. Reads this computer. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
 | `list_playbooks({ query? })` | Lists the playbooks with what to bring, what you get, the cost and the creator. |
