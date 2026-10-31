@@ -5,8 +5,8 @@ any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg or screen recordings), th
 or a spot in the frame, say what to change, press **Finish review**, and the agent makes the next version.
 
 Everything runs on your computer. There's no account unless you run `framejam login` (optional; FrameJam Cloud).
-Your videos and comments are only uploaded when you share a version (with `framejam share`, or when you ask your agent to share it); projects are saved in
-`~/.framejam`.
+Your videos and comments are only uploaded when you share a version (with `framejam share`, or when you ask your agent to share it) or turn on cloud projects (`framejam cloud on`); projects are saved in
+`~/.framejam` otherwise.
 
 Install it in Claude Code:
 
@@ -35,6 +35,11 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
   `framejam login` and share.
 - The same check also reads how many times the link was opened (once per visitor a day, yours included), which the app shows in the project header and
   your agent can read with `share_project` and `list_share_links`.
+- With `framejam cloud on` (optional, needs `framejam login`), new projects live in your FrameJam Cloud account: the
+  project's title, versions, notes, your comments and what you resolve are stored there, and each version's render (or a
+  storyboard's panels), a poster frame and the frame image of each comment are uploaded. The app asks the cloud for
+  changes while a project is open. Turn it off with `framejam cloud off`; projects you already have stay on your
+  computer, and nothing goes to the cloud for them.
 - FrameJam Cloud emails you and your guests about a shared link: a guest who left their email gets a note when you
   share a new version, and you get an email when a guest approves and a digest of new comments. Every email has an
   unsubscribe link.

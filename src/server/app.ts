@@ -8,7 +8,8 @@ import { sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
 import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
 import { chooseSavePath } from "./save-dialog.ts";
-import { configureShare, readShareState, ShareError, shareStateMtime, shareUrl } from "./share.ts";
+import { AppStore } from "./app-store.ts";
+import { configureShare, loadShareState, ShareError, type ShareState, shareStateMtime, shareUrl } from "./share.ts";
 import { isPickListening, StoreError, type NewCommentInput } from "../core/store.ts";
 import { extractFrame } from "./thumbs.ts";
 import { skillStatus } from "./skill.ts";
@@ -44,6 +45,7 @@ export function createApp(ctx: McpContext) {
       version: VERSION,
       pid: process.pid,
       dataDir: store.root,
+      cloud: store instanceof AppStore ? { on: Boolean(store.cloud()), signedOut: store.cloudSignedOut } : { on: false, signedOut: false },
       baseUrl: ctx.baseUrl,
       agent: (await store.getState()).agent ?? null,
       setup: setupInfo(),
@@ -76,6 +78,7 @@ export function createApp(ctx: McpContext) {
             agentListening: await store.agentListening(r.id),
             hasVideo: r.versions.some((v) => v.videoPath),
             panels: latest.panels?.length ?? 0,
+            ...(store instanceof AppStore && (await store.isCloud(r.id)) ? { cloud: true, upload: latest.upload ?? null } : {}),
           };
         }),
       ),
@@ -91,6 +94,8 @@ export function createApp(ctx: McpContext) {
       const file = await store.panelFileFor(id, latest, 1);
       return file ? sendFile(file, c.req.raw) : c.text("No panel", 404);
     }
+    const saved = await store.posterFile(id, latest.number);
+    if (saved) return sendFile(saved, c.req.raw);
     let render: { number: number; file: string } | undefined;
     for (const v of [...review.versions].reverse()) {
       const file = await store.videoFileFor(id, v);
@@ -113,11 +118,12 @@ export function createApp(ctx: McpContext) {
     ...(await store.getReview(id)),
     agentListening: await store.agentListening(id),
     agentOutdated: await store.agentOutdated(),
+    ...(store instanceof AppStore && (await store.isCloud(id)) ? { cloud: true } : {}),
   });
 
   app.get("/api/reviews/:id", async (c) => c.json(await reviewJson(c.req.param("id"))));
 
-  const shareJson = (state: NonNullable<ReturnType<typeof readShareState>>) => ({
+  const shareJson = (state: ShareState) => ({
     shared: true,
     url: shareUrl(state.token),
     versions: state.versions,
@@ -136,7 +142,7 @@ export function createApp(ctx: McpContext) {
   app.get("/api/reviews/:id/share", async (c) => {
     const id = c.req.param("id");
     await store.getReview(id);
-    const state = readShareState(store.root, id);
+    const state = await loadShareState(store, id);
     return c.json(state ? shareJson(state) : { shared: false });
   });
 
@@ -155,7 +161,7 @@ export function createApp(ctx: McpContext) {
       if (err instanceof ShareError) return c.json({ error: err.message }, 400);
       throw err;
     }
-    return c.json(shareJson(readShareState(store.root, id)!));
+    return c.json(shareJson((await loadShareState(store, id))!));
   });
 
   app.get("/api/reviews/:id/events", async (c) => {

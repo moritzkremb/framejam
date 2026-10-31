@@ -8,7 +8,6 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { Readable } from "node:stream";
 import { StoreError, type NewCommentInput, type Store } from "../core/store.ts";
 import type { Review, ReviewVersion } from "../core/types.ts";
 import { readAuth } from "./auth.ts";
@@ -23,19 +22,21 @@ import {
   type ShareClient,
   createShareClient,
 } from "./cloud.ts";
+import { AppStore } from "./app-store.ts";
+import type { CloudStore } from "./cloud-store.ts";
+import type { CloudLink } from "./cloud-api.ts";
 import { mimeFor } from "./files.ts";
 import { resolveCloudUrl } from "./login.ts";
 import { extractFrame } from "./thumbs.ts";
+import { MAX_UPLOAD_BYTES, putFile, ShareError } from "./upload.ts";
 
 /** Where guests open a link. The page itself arrives with the share page batch. */
 export const SHARE_BASE_URL = "https://www.framejam.ai/v";
-/** R2 takes one presigned PUT up to 5 GB; larger files need multipart, which isn't built. */
-export const MAX_UPLOAD_BYTES = 5 * 1024 ** 3;
 /** A guest's frame image is a small JPEG; refuse anything much bigger. */
 const MAX_FRAME_BYTES = 5 * 1024 * 1024;
 export const PULL_INTERVAL_MS = 30_000;
 
-export class ShareError extends Error {}
+export { ShareError, MAX_UPLOAD_BYTES };
 
 export const shareUrl = (token: string) => `${SHARE_BASE_URL}/${token}`;
 
@@ -152,25 +153,6 @@ export async function findProject(store: Store, ref: string): Promise<Review> {
   throw new ShareError(`More than one project is called "${ref}": ${matches.map((r) => r.id).join(", ")}. Use its id.`);
 }
 
-/** PUTs a file to a presigned URL as a stream, so a large render never sits in memory. */
-async function putFile(uploadUrl: string, file: string, mime: string, fetchFn: FetchLike): Promise<number> {
-  const bytes = fs.statSync(file).size;
-  if (bytes > MAX_UPLOAD_BYTES) throw new ShareError(`${path.basename(file)} is larger than 5 GB, which sharing doesn't support yet.`);
-  let res: Response;
-  try {
-    res = await fetchFn(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": mime, "Content-Length": String(bytes) },
-      body: Readable.toWeb(fs.createReadStream(file)) as unknown as BodyInit,
-      duplex: "half",
-    } as RequestInit);
-  } catch {
-    throw new ShareError("Couldn't upload the file to FrameJam Cloud.");
-  }
-  if (!res.ok) throw new ShareError(`Uploading to FrameJam Cloud failed (${res.status}).`);
-  return bytes;
-}
-
 async function uploadFile(client: ShareClient, file: string, kind: AssetKind, fetchFn: FetchLike, extra: { posterKey?: string } = {}) {
   const mime = mimeFor(file);
   const ticket = await client.requestUpload({ filename: path.basename(file), mime, kind });
@@ -205,6 +187,8 @@ export async function shareVersion(
   reviewId: string,
   opts: ShareOptions & { version?: number } = {},
 ): Promise<ShareResult> {
+  const cloud = await cloudOf(store, reviewId);
+  if (cloud) return await cloudShareVersion(cloud, store, reviewId, opts.version);
   const { client, cloudUrl } = requireSession(store.root, opts);
   const fetchFn = opts.fetch ?? fetch;
   const review = await store.getReview(reviewId);
@@ -507,6 +491,18 @@ export async function listShares(store: Store): Promise<ShareLinkSummary[]> {
     }
     out.push({ at: state.sharedAt, summary: summarizeShare(review, state) });
   }
+  const cloud = store instanceof AppStore ? store.cloud() : undefined;
+  if (cloud) {
+    try {
+      for (const item of await cloud.api.links()) {
+        if (item.link.sharedVersion === null) continue;
+        const review = await store.getReview(item.reviewId);
+        out.push({ at: new Date(item.link.createdAt).toISOString(), summary: summarizeShare(review, cloudStateOf(cloud, review, item.link)!) });
+      }
+    } catch {
+      // Offline: the links on this computer still list.
+    }
+  }
   return out.sort((a, b) => b.at.localeCompare(a.at)).map((x) => x.summary);
 }
 
@@ -521,8 +517,9 @@ export async function configureShare(
   change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean },
   opts: ShareOptions = {},
 ): Promise<ShareLinkSummary> {
-  const { client, cloudUrl } = requireSession(store.root, opts);
-  const state = readShareState(store.root, reviewId);
+  const cloud = await cloudOf(store, reviewId);
+  const { client, cloudUrl } = cloud ? { client: { configure: (id: string, settings: Parameters<ShareClient["configure"]>[1]) => cloud.api.configure(id, settings) }, cloudUrl: cloud.api.url } : requireSession(store.root, opts);
+  const state = cloud ? await cloudState(cloud, store, reviewId) : readShareState(store.root, reviewId);
   if (!state || state.cloudUrl !== cloudUrl) throw new ShareError("This project isn't shared yet. Share a version first.");
   const days = change.expiresInDays;
   if (typeof days === "number" && (!Number.isFinite(days) || days <= 0)) throw new ShareError("expiresInDays has to be a number of days above 0.");
@@ -531,6 +528,10 @@ export async function configureShare(
     ...(change.revoked === undefined ? {} : { revoked: change.revoked }),
     ...(change.allowDownload === undefined ? {} : { allowDownload: change.allowDownload }),
   });
+  if (cloud) {
+    cloud.refresh(reviewId);
+    return summarizeShare(await store.getReview(reviewId), (await cloudState(cloud, store, reviewId))!);
+  }
   const next: ShareState = {
     ...state,
     expiresAt: settings.expiresAt ?? undefined,
@@ -542,12 +543,17 @@ export async function configureShare(
 }
 
 /** Remembers that an agent was told about the link's current approval. */
-export function markApprovalSeen(root: string, reviewId: string): Promise<void> {
+export async function markApprovalSeen(target: Store | string, reviewId: string): Promise<void> {
+  const cloud = typeof target === "string" ? undefined : await cloudOf(target, reviewId);
+  if (cloud) {
+    await cloud.api.approvalSeen(reviewId);
+    return;
+  }
+  const root = typeof target === "string" ? target : target.root;
   const state = readShareState(root, reviewId);
   if (state?.approved && state.approvalSeenAt !== state.approved.at) {
     writeShareState(root, reviewId, { ...state, approvalSeenAt: state.approved.at });
   }
-  return Promise.resolve();
 }
 
 /** The share tools an agent gets over MCP, on this computer's store and saved login. */
@@ -565,16 +571,76 @@ export function createShareHooks(store: Store, opts: ShareOptions = {}): ShareHo
         waitingForNextVersion: result.pulled.waiting,
         markedResolved: result.pulled.resolved,
         resolveError: result.pulled.resolveError,
-        link: summarizeShare(review, readShareState(store.root, reviewId)!),
+        link: summarizeShare(review, (await loadShareState(store, reviewId))!),
       };
     },
     configure: (reviewId, change) => configureShare(store, reviewId, change, opts),
-    approvalSeen: (reviewId) => markApprovalSeen(store.root, reviewId),
+    approvalSeen: (reviewId) => markApprovalSeen(store, reviewId),
     list: () => listShares(store),
     async link(reviewId) {
-      const state = readShareState(store.root, reviewId);
+      const state = await loadShareState(store, reviewId);
       return state ? summarizeShare(await store.getReview(reviewId), state) : undefined;
     },
     signedIn: () => Boolean(readAuth(store.root)),
   };
+}
+
+// --- Projects that live in FrameJam Cloud: the files are already there, so sharing is only the link -------------------
+
+/** The cloud store that holds a project, or undefined when it's a local one (or cloud mode is off). */
+export async function cloudOf(store: Store, reviewId: string): Promise<CloudStore | undefined> {
+  return store instanceof AppStore ? await store.cloudFor(reviewId) : undefined;
+}
+
+/** The link as the local code reads it, built from the cloud's answer; undefined until a version is on it. */
+function cloudStateOf(cloud: CloudStore, review: Review, link: CloudLink | null): ShareState | undefined {
+  if (!link || link.sharedVersion === null) return undefined;
+  const upTo = link.sharedVersion;
+  return {
+    cloudUrl: cloud.api.url,
+    token: link.token,
+    versions: review.versions.map((v) => v.number).filter((n) => n <= upTo),
+    approvals: link.approvals,
+    sharedAt: new Date(link.createdAt).toISOString(),
+    expiresAt: link.expiresAt ?? undefined,
+    revokedAt: link.revokedAt ?? undefined,
+    approved: link.approved ?? undefined,
+    approvalSeenAt: link.approvalSeenAt ?? undefined,
+    allowDownload: link.allowDownload,
+    opens: link.opens,
+    lastOpenedAt: link.lastOpenedAt ?? undefined,
+  };
+}
+
+async function cloudState(cloud: CloudStore, store: Store, reviewId: string): Promise<ShareState | undefined> {
+  return cloudStateOf(cloud, await store.getReview(reviewId), await cloud.linkOf(reviewId));
+}
+
+/** A project's link: from the cloud for a cloud project, from this computer's share file otherwise. */
+export async function loadShareState(store: Store, reviewId: string): Promise<ShareState | undefined> {
+  const cloud = await cloudOf(store, reviewId);
+  return cloud ? await cloudState(cloud, store, reviewId) : readShareState(store.root, reviewId);
+}
+
+/** Puts a version on a cloud project's link. Nothing is uploaded here: it waits for the version's own upload to finish. */
+async function cloudShareVersion(cloud: CloudStore, store: Store, reviewId: string, requested: number | undefined): Promise<ShareResult> {
+  const review = await store.getReview(reviewId);
+  const number = requested ?? review.versions.at(-1)!.number;
+  if (!review.versions.some((v) => v.number === number)) throw new ShareError(`${review.title} has no version ${number}.`);
+  try {
+    await cloud.waitForUpload(reviewId, number);
+    const out = await cloud.api.share(reviewId, number);
+    cloud.refresh(reviewId);
+    const state = cloudStateOf(cloud, await store.getReview(reviewId), out)!;
+    return {
+      url: shareUrl(out.token),
+      version: number,
+      uploaded: out.newOnLink,
+      closed: isClosed(state),
+      pulled: { added: 0, waiting: 0, approvals: out.approvals.length, resolved: 0, opens: out.opens },
+    };
+  } catch (err) {
+    if (err instanceof ShareError) throw err;
+    throw new ShareError(err instanceof Error ? err.message : String(err));
+  }
 }

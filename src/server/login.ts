@@ -30,7 +30,7 @@ export function shouldOpenBrowser(environ: NodeJS.ProcessEnv = process.env, plat
 }
 
 export function formatAccount(user: CloudWhoami): string {
-  const name = user.name.trim();
+  const name = user.name?.trim() ?? "";
   return name ? `${name} <${user.email}>` : user.email;
 }
 
