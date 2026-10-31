@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 
 const FPS = 30;
 const POINT_VISIBLE_FOR = 1.5;
+/** How close (seconds) the video must be to a comment's frame for its pin and drawing to belong to what is on screen. */
+const ON_FRAME = 0.06;
 const SITE = "https://www.framejam.ai";
 
 /** What a new comment is attached to. Typing, clicking the frame or drawing pauses the video and stamps the frame. */
@@ -613,7 +615,7 @@ function VideoShare(props: ViewProps) {
     look: (): VoiceLook | null => {
       if (!ctrl) return null;
       const t = ctrl.getTime();
-      const here = !whole && anchor.kind === "frame" && Math.abs(anchor.time - t) < 0.06 ? anchor : undefined;
+      const here = !whole && anchor.kind === "frame" && Math.abs(anchor.time - t) < ON_FRAME ? anchor : undefined;
       return {
         time: t,
         x: here?.x,
@@ -715,9 +717,12 @@ function VideoShare(props: ViewProps) {
     if (!ctrl) return;
     ctrl.pause();
     const t = ctrl.getTime();
+    // A pin or drawing belongs to the frame it was made on: after scrubbing elsewhere, a new one starts fresh.
+    const moved = anchor.kind === "frame" && Math.abs(anchor.time - t) > ON_FRAME;
+    if (moved) setStrokes([]);
     setAnchor((a) => {
       if (spot) return { kind: "frame", time: t, ...spot, frame: ctrl.captureFrame() };
-      if (a.kind !== "none") return a;
+      if (a.kind !== "none" && !moved) return a;
       return { kind: "frame", time: t, frame: ctrl.captureFrame() };
     });
     setWhole(false);
@@ -819,7 +824,7 @@ function VideoShare(props: ViewProps) {
           src={src}
           pins={pins}
           floating={floating}
-          newPin={!whole && anchor.kind === "frame" && anchor.x !== undefined ? { x: anchor.x, y: anchor.y! } : null}
+          newPin={!whole && anchor.kind === "frame" && anchor.x !== undefined && Math.abs(anchor.time - time) <= ON_FRAME * 2 ? { x: anchor.x, y: anchor.y! } : null}
           selectedId={c.selectedId}
           showHint={comments.length === 0 && anchor.kind === "none" && !playing && !drawOn}
           interactive={!drawOn}
