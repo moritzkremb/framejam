@@ -13,6 +13,18 @@ export function reviewUrl(baseUrl: string, reviewId: string) {
   return `${baseUrl}/review/${reviewId}`;
 }
 
+/**
+ * A project id from what an agent was given: the id itself, or a project link (`/p/<id>` on the web app, `/review/<id>`
+ * on this computer), with the version in `?v=` when it names one.
+ */
+export function parseProjectRef(ref: string): { reviewId: string; version?: number } {
+  const text = ref.trim();
+  const link = /\/(?:p|review)\/([\w-]+)/.exec(text);
+  if (!link) return { reviewId: text };
+  const v = /[?&]v=(\d+)/.exec(text);
+  return { reviewId: link[1]!, ...(v ? { version: Number(v[1]) } : {}) };
+}
+
 export interface AgentComment {
   id: string;
   version: number;

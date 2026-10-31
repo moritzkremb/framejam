@@ -21,6 +21,8 @@ export interface WireVersion {
   panelsDir?: string;
   panels?: { sourcePath: string; title?: string; caption?: string; url?: string }[];
   note?: string;
+  notes?: string;
+  source?: { filename: string; bytes: number; ready: boolean };
   createdAt: string;
   sentAt?: string;
   batchId?: string;
@@ -92,6 +94,9 @@ export interface WireMeta {
 
 export interface VersionInput {
   note?: string;
+  notes?: string;
+  /** The source zip that goes up with the version: its name and size. */
+  source?: { filename: string; bytes: number };
   /** Decides whether re-opening with this brings anything new. */
   contentKey: string;
   videoPath?: string;
@@ -126,6 +131,8 @@ export interface CloudLink {
   approved: { version: number; by: string; at: number } | null;
   approvalSeenAt: number | null;
   allowDownload: boolean;
+  /** Guests see each version's handoff notes. Missing on older deployments, which means off. */
+  showNotes?: boolean;
   opens: number;
   lastOpenedAt: number | null;
   approvals: { version: number; guestName: string; at: number }[];
@@ -148,7 +155,9 @@ export interface CloudApi {
   }): Promise<{ review: WireReview; version: number; created: boolean; upload: number | null }>;
   addVersion(reviewId: string, version: VersionInput): Promise<{ review: WireReview; version: number }>;
   uploadProgress(reviewId: string, version: number, bytes: number): Promise<null>;
-  versionReady(reviewId: string, version: number, assets: { videoAssetId?: string; panelAssetIds?: string[] }): Promise<null>;
+  versionReady(reviewId: string, version: number, assets: { videoAssetId?: string; panelAssetIds?: string[]; sourceAssetId?: string }): Promise<null>;
+  /** A short-lived download of a version's source zip. */
+  sourceUrl(reviewId: string, version: number): Promise<{ url: string; filename: string; bytes: number }>;
   versionFailed(reviewId: string, version: number, error: string): Promise<null>;
   setTranscript(reviewId: string, version: number, t: { json: string; sourcePath?: string; words: number }): Promise<WireReview>;
   transcript(reviewId: string, version: number): Promise<string | null>;
@@ -170,7 +179,7 @@ export interface CloudApi {
   link(reviewId: string): Promise<CloudLink | null>;
   links(): Promise<{ reviewId: string; title: string; latestVersion: number; link: CloudLink }[]>;
   approvalSeen(reviewId: string): Promise<null>;
-  configure(reviewId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<LinkSettings>;
+  configure(reviewId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<LinkSettings>;
 }
 
 export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): CloudApi {
@@ -186,6 +195,7 @@ export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn:
     addVersion: (reviewId, version) => call("mutation", "cloud:addVersion", { reviewId, version }),
     uploadProgress: (reviewId, version, bytes) => call("mutation", "cloud:uploadProgress", { reviewId, version, bytes }),
     versionReady: (reviewId, version, assets) => call("mutation", "cloud:versionReady", { reviewId, version, ...assets }),
+    sourceUrl: (reviewId, version) => call("action", "cloud:sourceUrl", { reviewId, version }),
     versionFailed: (reviewId, version, error) => call("mutation", "cloud:versionFailed", { reviewId, version, error }),
     setTranscript: (reviewId, version, t) => call("mutation", "cloud:setTranscript", { reviewId, version, ...t }),
     transcript: (reviewId, version) => call("query", "cloud:transcript", { reviewId, version }),

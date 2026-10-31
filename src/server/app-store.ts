@@ -6,6 +6,7 @@ import {
   type NewCommentInput,
   type OpenReviewInput,
   type PicksChoice,
+  type SourceDownload,
   type Store,
 } from "../core/store.ts";
 import type { CloudStore } from "./cloud-store.ts";
@@ -95,6 +96,10 @@ export class AppStore implements Store {
 
   async addVersion(reviewId: string, input: MediaInput & { note?: string }): Promise<Review> {
     return (await this.route(reviewId)).addVersion(reviewId, input);
+  }
+
+  async sourceFor(reviewId: string, version: number): Promise<SourceDownload | undefined> {
+    return (await this.route(reviewId)).sourceFor(reviewId, version);
   }
 
   async setReviewPicks(reviewId: string, picks: PicksChoice): Promise<Review> {

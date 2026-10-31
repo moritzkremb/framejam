@@ -133,7 +133,7 @@ export function cloudMessage(raw: string | undefined): string | undefined {
   return plain;
 }
 
-export type AssetKind = "render" | "panel" | "poster" | "frame";
+export type AssetKind = "render" | "panel" | "poster" | "frame" | "source";
 
 export interface UploadTicket {
   uploadUrl: string;
@@ -224,6 +224,7 @@ export interface LinkSettings {
   expiresAt: number | null;
   revokedAt: number | null;
   allowDownload?: boolean;
+  showNotes?: boolean;
 }
 
 /** What sharing needs from FrameJam Cloud, for the signed-in user's API token. */
@@ -236,7 +237,7 @@ export interface ShareClient {
   /** Marks guest comments "resolved in vN" on the link. The version has to be on the link already. */
   resolve(localId: string, resolutions: Resolution[]): Promise<{ marked: number }>;
   /** Sets or clears the link's expiry (`expiresAt: null` clears it), revokes or reopens it, and switches the download. */
-  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<LinkSettings>;
+  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<LinkSettings>;
 }
 
 export function createShareClient(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): ShareClient {

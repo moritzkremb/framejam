@@ -1257,6 +1257,12 @@ describe("the download switch", () => {
     expect(on.allowDownload).toBe(true);
   });
 
+  it("keeps notes on the link to cloud projects, as the creator's own choice", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    await expect(configureShare(store, id, { showNotes: true }, opts())).rejects.toThrow("cloud projects");
+  });
+
   it("share_project passes allowDownload without uploading anything", async () => {
     const mcp = await connectClient({ store, baseUrl: "http://localhost:2400", waitSeconds: 1, pollMs: 10, share: opts() });
     try {

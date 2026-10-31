@@ -17,6 +17,8 @@ export interface ShareView {
   versions: Array<{
     number: number;
     note?: string;
+    /** Handoff notes, only when the creator turned them on for this link. */
+    notes?: string;
     at: number;
     video?: { url?: string; posterUrl?: string; duration?: number; width?: number; height?: number };
     panels?: Array<{ url?: string; title?: string; caption?: string }>;
@@ -214,6 +216,7 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
     const versions: ReviewVersion[] = view.versions.map((v) => ({
       number: v.number,
       note: v.note,
+      notes: v.notes,
       createdAt: iso(v.at),
       videoPath: view.kind === "video" ? v.video?.url : undefined,
       panels: v.panels?.map((p, i) => ({ image: p.url ?? "", sourcePath: `panel-${i + 1}`, title: p.title, caption: p.caption })),
