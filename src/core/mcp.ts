@@ -7,12 +7,13 @@ import { costBadge, playbookUpdateNotice, projectLabel, stylesSentence } from ".
 import type { ShareHooks, ShareLinkSummary } from "./share.ts";
 import { LISTEN_HEARTBEAT_MS, PICK_HEARTBEAT_MS, type Store } from "./store.ts";
 import { TRANSCRIPT_FORMATS } from "./transcript.ts";
+import { decodeWaitCursor, encodeWaitCursor } from "./wait-cursor.ts";
 
 /** What the MCP tools need: a store and the base URL of the FrameJam UI. */
 export interface CoreContext {
   store: Store;
   baseUrl: string;
-  /** Upper bound for one wait_for_feedback call before it returns `pending`. */
+  /** Upper bound for one wait_for_feedback call before it returns `waiting`. */
   waitSeconds?: number;
   pollMs?: number;
   progressEveryMs?: number;
@@ -64,7 +65,7 @@ const serverInstructions = (ctx: CoreContext) => `FrameJam lets the user review 
 First, open the FrameJam UI (${ctx.baseUrl}, or the review url) in the harness's built-in browser if you have a browser tool. If it doesn't load, run \`npx -y framejam start\`.
 FrameJam is a toolkit, not a process: do what the user asks with sensible defaults, and don't add steps, questions or approvals they didn't ask for. If they name a playbook or style, use get_playbook / get_preset. Open the pick page (open_picker, then wait_for_pick) only when they ask to choose ('/framejam playbook', '/framejam style') or the request is too open to start from. A playbook is a recipe with defaults their request overrides; say in chat what you're using, and pass playbookId and styleId to open_review. Some playbooks list styles made for them (featuredStyles); when the picked style is one, get_playbook returns its ready settings for that playbook.
 A style is a look, not a starting video: plan the video from the user's request, then build that subject in the style's palette, textures, type, motion and pacing, bending it where the subject or request needs. Don't copy the style's example scene (its subject, props or layout) unless the user asks for it.
-Loop: build the video with the project's own tool (or whatever fits) -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again while it returns status "pending", but stop after 12 pending results in a row, about 10 minutes, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
+Loop: build the video with the project's own tool (or whatever fits) -> render to a new file per version -> open_review -> open the URL in the built-in browser -> wait_for_feedback right away (call again with the cursor while it returns status "waiting", but stop after about 10 minutes of waiting in total, and tell the user to press Finish review and say "apply my FrameJam feedback"; the user sees "Your agent is listening" only while you are in this loop) -> edit -> re-render -> add_version with a note -> wait_for_feedback again.
 Pass videoPath (the render) for every tool; the user always reviews the rendered file. Don't convert the project to another tool.
 Each version is one round: the user comments on it and presses "Finish review", which locks it. The next version starts with no comments. The user can reopen a finished round; you then get a revised list that replaces the old one. If the comments only say the video is done or approved, don't make another version: confirm and stop waiting.
 If the video has speech and you have its timings (captions, a voiceover script with timestamps, a Whisper run), pass transcriptPath with the render; the user can then comment on what's said. Without one, FrameJam transcribes the render on this computer when whisper.cpp is installed, so don't transcribe only for this.
@@ -353,18 +354,25 @@ export function createMcpServer(ctx: CoreContext): McpServer {
       description:
         "Blocks until the user presses 'Finish review' in the review UI, then returns their comments (timestamp or range, pin position, " +
         "and a frame image with the pin drawn on it). Also returns early with { status: 'guest_comments' } when guests comment on the project's share link: that is a heads-up, not feedback to apply. Tell the user what the guests said and ask what to do, then call wait_for_feedback again. It returns { status: 'approved' } when a guest approves a version on the link: tell the user and stop waiting. " +
-        "Returns { status: 'pending' } after ~50s so clients don't time out: " +
-        "when that happens, call wait_for_feedback again with the same reviewId. After 12 pending results in a row (about 10 minutes) stop and tell the user to press Finish review and say 'apply my FrameJam feedback'; their comments are saved.",
+        "Returns { status: 'waiting', cursor } after ~50s so clients don't time out: " +
+        "when that happens, call wait_for_feedback again with the same reviewId and the cursor; nothing is lost between calls. After about 10 minutes of waiting in total (waitedSeconds) stop and tell the user to press Finish review and say 'apply my FrameJam feedback'; their comments are saved.",
       inputSchema: {
         reviewId: z.string(),
-        timeoutSeconds: z.number().min(1).max(300).optional().describe("Max seconds to block before returning pending (default 50)"),
+        cursor: z.string().optional().describe("The cursor the last 'waiting' result gave. Leave out on the first call"),
+        timeoutSeconds: z.number().min(1).max(300).optional().describe("Max seconds to block before returning waiting (default 50)"),
       },
     },
-    async ({ reviewId, timeoutSeconds }, extra) => {
+    async ({ reviewId, cursor: givenCursor, timeoutSeconds }, extra) => {
       try {
         await store.getReview(reviewId);
       } catch (err) {
         return errorResult(err);
+      }
+      const cursor = decodeWaitCursor(givenCursor, reviewId) ?? { r: reviewId, s: Date.now(), n: 0, a: [] };
+      if (cursor.a.length) {
+        const known = announced.get(reviewId) ?? new Set<string>();
+        for (const id of cursor.a) known.add(id);
+        announced.set(reviewId, known);
       }
       const timeoutMs = (timeoutSeconds ?? ctx.waitSeconds ?? 50) * 1000;
       const pollMs = ctx.pollMs ?? 400;
@@ -373,7 +381,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
       const started = Date.now();
       let lastProgress = started;
       let lastBeat = started;
-      // A `pending` result keeps the heartbeat so the UI still says "listening" until the agent calls again.
+      // A `waiting` result keeps the heartbeat so the UI still says "listening" until the agent calls again.
       let timedOut = false;
       await store.setAgentWaiting(reviewId, true);
       try {
@@ -463,13 +471,20 @@ export function createMcpServer(ctx: CoreContext): McpServer {
       } finally {
         if (!timedOut) await store.setAgentWaiting(reviewId, false);
       }
+      const waitedSeconds = Math.round((Date.now() - cursor.s) / 1000);
+      const told = [...(announced.get(reviewId) ?? [])];
       return {
         content: [
           json({
-            status: "pending",
+            status: "waiting",
             reviewId,
             url: await pageUrl(reviewId),
-            next: "No feedback yet. Call wait_for_feedback again with the same reviewId. After 12 pending results in a row (about 10 minutes), stop: tell the user to press Finish review and say \"apply my FrameJam feedback\" (their comments are saved).",
+            cursor: encodeWaitCursor({ ...cursor, n: cursor.n + 1, a: told }),
+            waitedSeconds,
+            next:
+              waitedSeconds >= 600
+                ? "You've waited about 10 minutes. Stop: tell the user to press Finish review and say \"apply my FrameJam feedback\" (their comments are saved)."
+                : "No feedback yet. Call wait_for_feedback again with the same reviewId and this cursor. After about 10 minutes of waiting in total (waitedSeconds), stop and tell the user to press Finish review and say \"apply my FrameJam feedback\".",
           }),
         ],
       };

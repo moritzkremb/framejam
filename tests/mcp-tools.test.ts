@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { decodeWaitCursor } from "../src/core/wait-cursor.ts";
 import { builtinPresetsDir } from "../src/server/paths.ts";
 import { connectClient, makeFixture, parse, samplePlaybook, writePlaybook, type ToolResult } from "./helpers.ts";
 
@@ -97,11 +98,11 @@ describe("open_review", () => {
 });
 
 describe("wait_for_feedback", () => {
-  it("returns pending when nothing is sent before the timeout", async () => {
+  it("returns waiting with a cursor when nothing is sent before the timeout", async () => {
     const { reviewId } = await open();
     const started = Date.now();
     const res = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
-    expect(res.status).toBe("pending");
+    expect(res.status).toBe("waiting");
     expect(Date.now() - started).toBeGreaterThanOrEqual(950);
     // Still "listening" through the gap until the agent's next call.
     expect(fx.store.agentListening(reviewId)).toBe(true);
@@ -143,6 +144,25 @@ describe("wait_for_feedback", () => {
     expect(prompt).toContain("“This”");
   });
 
+  it("resumes from the cursor of the last waiting result", async () => {
+    const { reviewId } = await open();
+    const first = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
+    expect(first.cursor).toMatch(/^wf1\./);
+    expect(decodeWaitCursor(first.cursor, reviewId)).toMatchObject({ r: reviewId, n: 1 });
+    const second = parse(await mcp.call("wait_for_feedback", { reviewId, cursor: first.cursor, timeoutSeconds: 1 }));
+    expect(second.status).toBe("waiting");
+    expect(decodeWaitCursor(second.cursor, reviewId)).toMatchObject({ n: 2, s: decodeWaitCursor(first.cursor, reviewId)!.s });
+    expect(second.waitedSeconds).toBeGreaterThanOrEqual(1);
+  });
+
+  it("starts over when the cursor is junk or from another project", async () => {
+    const { reviewId } = await open();
+    const res = parse(await mcp.call("wait_for_feedback", { reviewId, cursor: "nonsense", timeoutSeconds: 1 }));
+    expect(res.status).toBe("waiting");
+    expect(decodeWaitCursor(res.cursor, reviewId)).toMatchObject({ n: 1 });
+    expect(decodeWaitCursor(res.cursor, "rev_other")).toBeUndefined();
+  });
+
   it("unblocks as soon as the user presses Send, with comments, pins and frames", async () => {
     const { reviewId } = await open();
     const pin = fx.store.addComment(reviewId, { time: 2.23, x: 0.85, y: 0.42, text: "Make this block a circle" });
@@ -173,7 +193,7 @@ describe("wait_for_feedback", () => {
 
     // Delivered batches are not returned twice.
     const next = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
-    expect(next.status).toBe("pending");
+    expect(next.status).toBe("waiting");
   });
 
   it("quotes what was said when the version has a transcript", async () => {
@@ -204,7 +224,7 @@ describe("wait_for_feedback", () => {
     const { reviewId } = await open();
     const progress: number[] = [];
     const res = (await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }, { onprogress: (p) => progress.push(p.progress) })) as ToolResult;
-    expect(parse(res).status).toBe("pending");
+    expect(parse(res).status).toBe("waiting");
     expect(progress.length).toBeGreaterThan(0);
   });
 
