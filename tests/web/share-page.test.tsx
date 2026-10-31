@@ -291,7 +291,10 @@ describe("share page", () => {
     const storage = memoryStorage();
     storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
     await render(fake, storage);
+    const dismiss = vi.spyOn(toast, "dismiss");
     await act(async () => q<HTMLButtonElement>("approve")!.click());
+    expect(dismiss).toHaveBeenCalledWith();
+    dismiss.mockRestore();
     const cancel = [...q("approve-confirm")!.querySelectorAll("button")].find((b) => b.textContent === "Cancel")!;
     await act(async () => cancel.click());
     expect(q("approve-confirm")).toBeNull();

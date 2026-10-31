@@ -1,5 +1,6 @@
 import { Check, Download, Loader2, Send, ThumbsUp } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import type { DockPrimary } from "@/components/review/dock";
 import type { GuestKit, Heard, MakeComment, MakeVoiceDraft } from "@/components/review/guest";
@@ -336,7 +337,13 @@ function GuestReview({ r, data, link, guest, width, resumeTime, asGuest, onChang
           type="button"
           className={cn("fc-btn sm", approvedHere ? "ghost" : "outline")}
           disabled={approving || approvedHere || !r.isLatest}
-          onClick={() => asGuest("approve", () => setConfirming(true))}
+          onClick={() =>
+            asGuest("approve", () => {
+              // Toasts sit above the modal, so on a short window an old one could cover the dialog.
+              toast.dismiss();
+              setConfirming(true);
+            })
+          }
           title={
             !r.isLatest
               ? "Open the newest version to approve it"
@@ -368,7 +375,8 @@ function ApproveConfirm({ version, drafts, onCancel, onApprove }: { version: num
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel]);
-  return (
+  // Rendered from the header, whose backdrop-filter would make it the box a fixed overlay fills.
+  return createPortal(
     <div className="fc-share-modal" role="presentation" onClick={onCancel}>
       <div className="fc-share-who" role="dialog" aria-modal="true" aria-labelledby="approve-title" onClick={(e) => e.stopPropagation()} data-testid="approve-confirm">
         <div className="fc-h3" id="approve-title">
@@ -400,7 +408,8 @@ function ApproveConfirm({ version, drafts, onCancel, onApprove }: { version: num
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
