@@ -51,7 +51,7 @@ this npm release for all of it.
 
 ### Skill
 
-- Skill version 7: cloud mode links, spoken and Live comments, version notes and `get_version`, connecting by URL,
+- Skill version 7: cloud mode links, spoken comments, version notes and `get_version`, connecting by URL,
   rendering in the cloud and the resumable wait. Rerun `npx -y framejam@latest install` to get it; Claude Code plugin
   installs update on their own.
 
