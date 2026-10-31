@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CommunityCard, MadeBy } from "@/components/community";
 import { HomeHeader } from "@/components/header";
-import { FIRST_VIDEO_PROMPT, PromptBlock, SetupSteps } from "@/components/setup-steps";
+import { CodeBlock, FIRST_VIDEO_PROMPT, PromptBlock, SetupSteps } from "@/components/setup-steps";
 import { isOffline, Offline } from "@/components/states";
 import { UpdateNotice } from "@/components/update-notice";
 import { agentLabel, api, posterUrl, relativeTime, type Health, type ReviewListItem } from "@/lib/api";
@@ -100,6 +100,14 @@ export function ProjectsPage() {
       <HomeHeader />
       <main className="fc-main fc-narrow">
         <UpdateNotice />
+        {health?.cloud?.signedOut && (
+          <section className="fc-card fc-col" style={{ gap: 10 }} aria-label="Cloud mode" data-testid="cloud-signed-out">
+            <div>
+              <b>Cloud mode is on, but you're signed out.</b> <span className="fc-t2">New projects stay on this computer until you sign in. Paste this in a terminal:</span>
+            </div>
+            <CodeBlock code="npx -y framejam login" />
+          </section>
+        )}
         <h1 className="fc-h1">Projects</h1>
         {error && !reviews ? (
           isOffline(error) ? (
