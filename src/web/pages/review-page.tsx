@@ -500,6 +500,12 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
           tab={sideTab}
           onTab={setSideTab}
           onSelect={(c) => selectComment(c)}
+          onPoint={(c, i) => {
+            setSelectedId(c.id);
+            ctrl?.pause();
+            const t = c.voice?.points[i]?.time;
+            if (t !== undefined) seek(t);
+          }}
         />
       </div>
     </>

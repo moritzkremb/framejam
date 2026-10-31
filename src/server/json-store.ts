@@ -382,6 +382,7 @@ export class JsonStore implements Store {
         author: input.author?.trim() || undefined,
         cloudId: input.cloudId || undefined,
         fromVersion: input.fromVersion !== undefined && input.fromVersion !== version ? input.fromVersion : undefined,
+        voice: input.voice ? { ...input.voice, points: input.voice.points.map((p) => ({ ...p, frame: undefined })) } : undefined,
       };
       review.comments.push(comment);
     });
@@ -412,13 +413,26 @@ export class JsonStore implements Store {
       review.comments = review.comments.filter((x) => x.id !== commentId);
     });
     fs.rmSync(path.join(this.thumbsDir(reviewId), `${commentId}.jpg`), { force: true });
+    for (const file of fs.existsSync(this.thumbsDir(reviewId)) ? fs.readdirSync(this.thumbsDir(reviewId)) : []) {
+      if (file.startsWith(`${commentId}-p`)) fs.rmSync(path.join(this.thumbsDir(reviewId), file), { force: true });
+    }
   }
 
-  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array): string {
-    const file = `${commentId}.jpg`;
+  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array, point?: number): string {
+    const file = point === undefined ? `${commentId}.jpg` : `${commentId}-p${point}.jpg`;
+    if (point !== undefined) {
+      const c = this.getReview(reviewId).comments.find((x) => x.id === commentId);
+      if (!c) throw new StoreError(`Comment not found: ${commentId}`, 404);
+      if (!c.voice?.points[point]) throw new StoreError(`Comment ${commentId} has no pointing phrase ${point}`);
+    }
     fs.mkdirSync(this.thumbsDir(reviewId), { recursive: true });
     fs.writeFileSync(path.join(this.thumbsDir(reviewId), file), jpeg);
-    this.updateComment(reviewId, commentId, { thumbnail: file });
+    if (point === undefined) this.updateComment(reviewId, commentId, { thumbnail: file });
+    else {
+      this.update(reviewId, (review) => {
+        review.comments.find((x) => x.id === commentId)!.voice!.points[point]!.frame = file;
+      });
+    }
     return file;
   }
 

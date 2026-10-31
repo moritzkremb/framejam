@@ -297,6 +297,15 @@ function commentInput(review: Review, c: GuestComment): NewCommentInput | undefi
     author: c.guestName,
     cloudId: c.id,
     fromVersion: c.version !== latest.number ? c.version : undefined,
+    voice: c.voice
+      ? {
+          status: c.voice.status,
+          duration: c.voice.duration,
+          audioUrl: c.voice.audioUrl,
+          note: c.voice.note,
+          points: c.voice.points.map((p) => ({ phrase: p.phrase, at: p.at, time: p.time, x: p.x, y: p.y, drawn: p.drawing?.length ? true : undefined })),
+        }
+      : undefined,
   };
 }
 
@@ -348,6 +357,10 @@ export async function pullShare(store: Store, reviewId: string, opts: ShareOptio
     if (c.frameUrl) {
       const jpeg = await downloadFrame(c.frameUrl, fetchFn);
       if (jpeg) await store.saveThumbnail(reviewId, comment.id, jpeg);
+    }
+    for (const [i, p] of (c.voice?.points ?? []).entries()) {
+      const jpeg = p.frameUrl ? await downloadFrame(p.frameUrl, fetchFn) : undefined;
+      if (jpeg) await store.saveThumbnail(reviewId, comment.id, jpeg, i);
     }
   }
   if (acknowledge.length) await s.client.markPulled(reviewId, acknowledge);

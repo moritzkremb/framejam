@@ -2,12 +2,15 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cloudShareSource, type ShareBackend, type ShareView } from "@/lib/cloud-share";
+import { cloudShareSource, type ShareBackend, type ShareView, type VoiceResult } from "@/lib/cloud-share";
 import { SharePage } from "@/pages/share-page";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const LINK = "tok_abc";
+
+const VOICE_TEXT = "This logo is too small. And over here the subtitle needs contrast.";
+const VOICE_WORDS = VOICE_TEXT.split(" ").map((text, i) => ({ text, start: 0.5 + i * 0.4, end: 0.8 + i * 0.4 }));
 
 function videoView(): ShareView {
   return {
@@ -47,6 +50,8 @@ function fakeBackend(initial: ShareView | null) {
     }),
     view: vi.fn(async () => view),
     frameUpload: vi.fn(async () => ({ uploadUrl: "https://r2.example.com/put?sig=1", storageKey: "frames/u/f1.jpg" })),
+    voiceUpload: vi.fn(async () => ({ uploadUrl: "https://r2.example.com/put-voice?sig=1", storageKey: "voice/u/r1.webm", mime: "audio/webm" })),
+    voiceTranscribe: vi.fn(async (): Promise<VoiceResult> => ({ voiceId: "vr1", status: "transcribed", text: VOICE_TEXT, words: VOICE_WORDS, duration: 6 })),
     send: vi.fn(async (args: Parameters<ShareBackend["send"]>[0]) => ({ ids: args.comments.map((_, i) => `new${i}`) })),
     approve: vi.fn(async () => ({ at: Date.UTC(2026, 9, 3) })),
     downloadUrl: vi.fn(async () => ({ url: "https://r2.example.com/get?sig=1", filename: "Launch teaser v2.mp4" })),
@@ -387,5 +392,158 @@ describe("cloud share source", () => {
     await expect(data.deleteComment(LINK, "k1")).rejects.toThrow(/can't be deleted/);
     await data.deleteComment(LINK, c.id);
     expect((await data.review(LINK)).comments.map((x) => x.id)).toEqual(["k1", "k0"]);
+  });
+});
+
+describe("voice comments", () => {
+  const guestStorage = () => {
+    const storage = memoryStorage();
+    storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
+    return storage;
+  };
+
+  /** A MediaRecorder that records nothing but behaves like one: chunks arrive on stop, then `onstop`. */
+  function stubRecorder() {
+    class FakeRecorder {
+      static isTypeSupported = () => true;
+      state: "inactive" | "recording" = "inactive";
+      mimeType = "audio/webm;codecs=opus";
+      ondataavailable: ((e: { data: Blob }) => void) | null = null;
+      onstop: (() => void) | null = null;
+      start() {
+        this.state = "recording";
+      }
+      stop() {
+        this.state = "inactive";
+        this.ondataavailable?.({ data: new Blob(["voice"], { type: "audio/webm" }) });
+        this.onstop?.();
+      }
+    }
+    vi.stubGlobal("MediaRecorder", FakeRecorder);
+    const track = { stop: vi.fn() };
+    Object.defineProperty(navigator, "mediaDevices", { value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) }, configurable: true });
+    return track;
+  }
+
+  const sentVoiceView = (): ShareView => {
+    const view = videoView();
+    view.comments.push({
+      id: "k9",
+      version: 2,
+      kind: "pin",
+      time: 1,
+      x: 0.2,
+      y: 0.3,
+      text: VOICE_TEXT,
+      guestName: "Cleo",
+      at: Date.UTC(2026, 9, 2, 4),
+      voice: {
+        status: "transcribed",
+        text: VOICE_TEXT,
+        duration: 6,
+        audioUrl: "https://media.example.com/voice/r1.webm",
+        points: [
+          { phrase: "This", at: 0.5, time: 1, x: 0.2, y: 0.3, frameUrl: "https://media.example.com/frames/a.jpg" },
+          { phrase: "over here", at: 3.7, time: 3.5, frameUrl: "https://media.example.com/frames/b.jpg" },
+        ],
+      },
+    });
+    return view;
+  };
+
+  it("shows a spoken comment as a transcript whose pointing phrases open the frame that was shown", async () => {
+    await render(fakeBackend(sentVoiceView()));
+    const links = [...host.querySelectorAll<HTMLButtonElement>('[data-testid="voice-point"]')];
+    expect(links.map((l) => l.textContent)).toEqual(["This", "over here"]);
+    expect(q("voice-transcript")?.textContent).toBe(VOICE_TEXT);
+    expect(q("voice-frame")).toBeNull();
+    act(() => links[1]!.click());
+    expect(q("voice-frame")?.querySelector("img")?.getAttribute("src")).toBe("https://media.example.com/frames/b.jpg");
+    expect(q("voice-frame")?.textContent).toContain("over here");
+    expect(q("voice-audio")?.getAttribute("src")).toBe("https://media.example.com/voice/r1.webm");
+  });
+
+  it("says when a recording has no transcript instead of showing an empty comment", async () => {
+    const view = videoView();
+    view.comments.push({ id: "k8", version: 2, kind: "general", time: 0, text: "Voice comment (transcription pending)", guestName: "Cleo", at: Date.UTC(2026, 9, 2, 4), voice: { status: "pending", note: "Transcription pending", audioUrl: "https://media.example.com/voice/r2.webm", points: [] } });
+    await render(fakeBackend(view));
+    expect(q("voice-note")?.textContent).toBe("Transcription pending");
+    expect(q("voice-point")).toBeNull();
+    expect(q("voice-audio")).not.toBeNull();
+  });
+
+  it("records, uploads and transcribes a voice comment into a draft with one link per pointing phrase", async () => {
+    const track = stubRecorder();
+    const fake = fakeBackend(videoView());
+    const put = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:voice" }));
+    await render(fake, guestStorage(), put as unknown as typeof fetch);
+    loadVideo();
+
+    await act(async () => q("voice-toggle")!.click());
+    await flush();
+    expect(q("voice-toggle")?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => q("voice-toggle")!.click());
+    await flush();
+
+    expect(track.stop).toHaveBeenCalled();
+    expect(fake.backend.voiceUpload).toHaveBeenCalledWith(LINK, "audio/webm;codecs=opus");
+    expect(put).toHaveBeenCalledWith("https://r2.example.com/put-voice?sig=1", expect.objectContaining({ method: "PUT" }));
+    expect(fake.backend.voiceTranscribe).toHaveBeenCalledWith(expect.objectContaining({ link: LINK, storageKey: "voice/u/r1.webm", mime: "audio/webm" }));
+    expect([...host.querySelectorAll('[data-testid="voice-point"]')].map((l) => l.textContent)).toEqual(["This", "over here"]);
+    expect(q("send")?.textContent).toContain("Send 1 comment");
+    expect(q("voice-audio")?.getAttribute("src")).toBe("blob:voice");
+  });
+
+  it("sends a voice draft with its recording and one frame per pointing phrase", async () => {
+    const fake = fakeBackend(videoView());
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(new Blob(["jpeg"], { type: "image/jpeg" }))));
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:voice" }));
+    const put = vi.fn(async () => new Response(null, { status: 200 }));
+    const data = cloudShareSource(fake.backend, guestStorage(), put as unknown as typeof fetch);
+    const result = await data.transcribeVoice(LINK, new Blob(["a"]), "audio/webm", 6);
+    await data.addComment(LINK, {
+      version: 2,
+      time: 1,
+      x: 0.2,
+      y: 0.3,
+      text: result.text ?? "",
+      thumbnailDataUrl: "data:image/jpeg;base64,AAAA",
+      voice: {
+        id: result.voiceId,
+        status: result.status,
+        duration: 6,
+        points: [
+          { phrase: "This", at: 0.5, time: 1, x: 0.2, y: 0.3, frame: "data:image/jpeg;base64,AAAA" },
+          { phrase: "over here", at: 3.7, time: 3.5, drawing: [[0.1, 0.1, 0.2, 0.2]], frame: "data:image/jpeg;base64,BBBB" },
+        ],
+      },
+    });
+    await data.submit(LINK);
+    const [args] = fake.backend.send.mock.calls[0]!;
+    expect(args.comments).toHaveLength(1);
+    expect(args.comments[0]).toEqual(
+      expect.objectContaining({
+        text: "",
+        voice: {
+          id: "vr1",
+          points: [
+            expect.objectContaining({ phrase: "This", time: 1, x: 0.2, frame: { key: "frames/u/f1.jpg", bytes: 4 } }),
+            expect.objectContaining({ phrase: "over here", time: 3.5, drawing: [[0.1, 0.1, 0.2, 0.2]], frame: { key: "frames/u/f1.jpg", bytes: 4 } }),
+          ],
+        },
+      }),
+    );
+  });
+
+  it("keeps a recording that couldn't be transcribed and says so, and doesn't allow editing it", async () => {
+    const fake = fakeBackend(videoView());
+    fake.backend.voiceTranscribe.mockResolvedValueOnce({ voiceId: "vr2", status: "pending", words: [], duration: 3, note: "Transcription pending" });
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:voice" }));
+    const data = cloudShareSource(fake.backend, guestStorage(), vi.fn(async () => new Response(null, { status: 200 })) as unknown as typeof fetch);
+    const result = await data.transcribeVoice(LINK, new Blob(["a"]), "audio/webm", 3);
+    const c = await data.addComment(LINK, { version: 2, time: 0, text: result.note ?? "", voice: { id: result.voiceId, status: result.status, note: result.note, points: [] } });
+    expect(c.voice).toEqual(expect.objectContaining({ status: "pending", note: "Transcription pending", audioUrl: "blob:voice" }));
+    await expect(data.updateComment(LINK, c.id, { text: "x" })).rejects.toThrow(/can't be edited/);
   });
 });

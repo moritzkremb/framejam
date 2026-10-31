@@ -1,12 +1,65 @@
-import { Check, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Check, Mic, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Menu, MenuItem } from "@/components/menu";
+import { splitTranscript } from "../../../core/voice";
 import { formatTime, type ReviewComment } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export function whenLabel(c: Pick<ReviewComment, "wholeVideo" | "time" | "endTime">) {
   if (c.wholeVideo) return "Whole video";
   return c.endTime !== undefined ? `${formatTime(c.time)} – ${formatTime(c.endTime)}` : formatTime(c.time);
+}
+
+/** A spoken comment: the transcript with each pointing phrase as a link to the frame that was shown, and the recording. */
+function VoiceBody({ comment, frameUrl, onPoint }: { comment: ReviewComment; frameUrl?(file: string): string; onPoint?(point: number): void }) {
+  const voice = comment.voice!;
+  const [open, setOpen] = useState<number | null>(null);
+  const transcribed = voice.status === "transcribed" && comment.text.trim();
+  const point = open === null ? undefined : voice.points[open];
+  const image = point?.frame ? (frameUrl ? frameUrl(point.frame) : point.frame) : undefined;
+  return (
+    <div className="fc-voice">
+      {transcribed ? (
+        <p className="body" data-testid="voice-transcript">
+          {splitTranscript(comment.text, voice.points).map((piece, i) =>
+            piece.point === undefined ? (
+              <span key={i}>{piece.text}</span>
+            ) : (
+              <button
+                key={i}
+                type="button"
+                className={cn("fc-point", open === piece.point && "on")}
+                aria-pressed={open === piece.point}
+                data-testid="voice-point"
+                title={`Show the frame for “${piece.text}”`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(open === piece.point ? null : piece.point!);
+                  onPoint?.(piece.point!);
+                }}
+              >
+                {piece.text}
+              </button>
+            ),
+          )}
+        </p>
+      ) : (
+        <p className="body fc-voice-note" data-testid="voice-note">
+          {voice.note ?? "No transcript"}
+        </p>
+      )}
+      {point && (
+        <figure className="fc-point-frame" data-testid="voice-frame">
+          {image ? <img src={image} alt={`The frame when “${point.phrase}” was said`} /> : <div className="none">No frame</div>}
+          <figcaption>
+            “{point.phrase}” at {formatTime(point.time)}
+            {point.drawn ? " · drawn on" : ""}
+          </figcaption>
+        </figure>
+      )}
+      {voice.audioUrl && <audio className="fc-voice-audio" controls preload="none" src={voice.audioUrl} data-testid="voice-audio" onClick={(e) => e.stopPropagation()} />}
+    </div>
+  );
 }
 
 function CommentItem({
@@ -18,8 +71,12 @@ function CommentItem({
   onSelect,
   onSave,
   onDelete,
+  frameUrl,
+  onPoint,
 }: {
   comment: ReviewComment;
+  frameUrl?(file: string): string;
+  onPoint?(point: number): void;
   index: number;
   label: string;
   editable: boolean;
@@ -49,6 +106,7 @@ function CommentItem({
               {comment.author}
             </span>
           )}
+          {comment.voice && <Mic className="fc-i xs fc-voice-i" aria-label="Voice comment" />}
           <span className="when">{label}</span>
           {comment.fromVersion !== undefined && <span className="from">from v{comment.fromVersion}</span>}
           {comment.status === "resolved" && comment.resolution && (
@@ -57,7 +115,9 @@ function CommentItem({
             </span>
           )}
         </div>
-        {editing ? (
+        {comment.voice ? (
+          <VoiceBody comment={comment} frameUrl={frameUrl} onPoint={onPoint} />
+        ) : editing ? (
           <div className="fc-edit" onClick={(e) => e.stopPropagation()}>
             <textarea
               autoFocus
@@ -115,9 +175,11 @@ function CommentItem({
               </button>
             }
           >
-            <MenuItem icon={<Pencil className="fc-i sm" />} onSelect={() => setEditing(true)}>
-              Edit
-            </MenuItem>
+            {!comment.voice && (
+              <MenuItem icon={<Pencil className="fc-i sm" />} onSelect={() => setEditing(true)}>
+                Edit
+              </MenuItem>
+            )}
             <MenuItem danger icon={<Trash2 className="fc-i sm" />} onSelect={() => void onDelete()}>
               Delete
             </MenuItem>
@@ -142,7 +204,13 @@ export function CommentList({
   onSelect,
   onSave,
   onDelete,
+  frameUrl,
+  onPoint,
 }: {
+  /** Turns a voice point's frame into an image URL; omit when frames already are URLs. */
+  frameUrl?(file: string): string;
+  /** A pointing phrase was clicked: seek to where it was said. */
+  onPoint?(c: ReviewComment, point: number): void;
   comments: ReviewComment[];
   editable: boolean | ((c: ReviewComment) => boolean);
   selectedId: string | null;
@@ -165,6 +233,8 @@ export function CommentList({
           onSelect={() => onSelect(c)}
           onSave={(t) => onSave(c, t)}
           onDelete={() => onDelete(c)}
+          frameUrl={frameUrl}
+          onPoint={onPoint && ((i) => onPoint(c, i))}
         />
       ))}
     </ul>

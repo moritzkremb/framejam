@@ -8,12 +8,16 @@ import { CommentList, whenLabel } from "@/components/review/comment-list";
 import { burnFrame, DrawLayer, MAX_STROKES, type Stroke } from "@/components/review/drawing";
 import { Filmstrip, useTimelineZoom, type Marker } from "@/components/review/filmstrip";
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
+import { canRecordVoice, useVoiceRecorder, VoiceButton, type VoiceLook, type VoiceSample, type VoiceTake } from "@/components/review/voice";
 import { formatTime, relativeTime, type ReviewComment } from "@/lib/api";
-import { LinkClosedError, type CloudShareSource, type Guest, type SharedComment, type SharedReview } from "@/lib/cloud-share";
+import { LinkClosedError, type CloudShareSource, type DraftVoice, type Guest, type NewSharedComment, type SharedComment, type SharedReview } from "@/lib/cloud-share";
+import { findPointingPhrases, sampleAt } from "../../core/voice";
 import { cn } from "@/lib/utils";
 
 const FPS = 30;
 const POINT_VISIBLE_FOR = 1.5;
+/** How close (seconds) the video must be to a comment's frame for its pin and drawing to belong to what is on screen. */
+const ON_FRAME = 0.06;
 const SITE = "https://www.framejam.ai";
 
 /** What a new comment is attached to. Typing, clicking the frame or drawing pauses the video and stamps the frame. */
@@ -365,6 +369,8 @@ interface DockProps {
   whole: boolean;
   wholeLabel: string;
   drawing?: { on: boolean; strokes: number; toggle(): void; clear(): void };
+  /** The record button, when this browser can record. */
+  voice?: ReactNode;
   adding: boolean;
   draftCount: number;
   sending: boolean;
@@ -378,7 +384,7 @@ interface DockProps {
 
 /** The comment box: what it's attached to, drawing, the text, and Send for everything written so far. */
 const ShareDock = forwardRef<HTMLTextAreaElement, DockProps>(function ShareDock(
-  { chip, text, placeholder, whole, wholeLabel, drawing, adding, draftCount, sending, guest, onText, onWhole, onAdd, onSend, onChangeGuest },
+  { chip, text, placeholder, whole, wholeLabel, drawing, voice, adding, draftCount, sending, guest, onText, onWhole, onAdd, onSend, onChangeGuest },
   ref,
 ) {
   const typing = text.trim().length > 0;
@@ -388,6 +394,7 @@ const ShareDock = forwardRef<HTMLTextAreaElement, DockProps>(function ShareDock(
         <div className="tools">
           {chip}
           <span className="fc-grow" />
+          {voice}
           {drawing && !whole && (
             <>
               {drawing.strokes > 0 && (
@@ -519,7 +526,15 @@ function useComposer({ s, data, link, asGuest }: ViewProps) {
     });
   };
 
-  const editable = (c: ReviewComment) => c.status === "draft";
+  /** Adds a finished voice comment as a draft. Errors reach the recorder, which shows them. */
+  const addVoice = async (body: NewSharedComment, after: () => void) => {
+    const created = await data.addComment(link, body);
+    setSelectedId(created.id);
+    after();
+    await s.load();
+  };
+
+  const editable = (c: ReviewComment) => c.status === "draft" && !c.voice;
   const save = async (c: ReviewComment, t: string) => {
     await data.updateComment(link, c.id, { text: t });
     await s.load();
@@ -528,7 +543,26 @@ function useComposer({ s, data, link, asGuest }: ViewProps) {
     await data.deleteComment(link, c.id);
     await s.load();
   };
-  return { text, setText, adding, sending, send, add, selectedId, setSelectedId, drafts, editable, save, remove };
+  return { text, setText, adding, sending, send, add, addVoice, selectedId, setSelectedId, drafts, editable, save, remove };
+}
+
+/** The words of a take, and which of them point: what a draft voice comment is made of. */
+async function transcribeTake(data: CloudShareSource, link: string, take: VoiceTake) {
+  const result = await data.transcribeVoice(link, take.blob, take.mime, take.duration);
+  const phrases = result.status === "transcribed" ? findPointingPhrases(result.words) : [];
+  const text = result.status === "transcribed" && result.text?.trim() ? result.text.trim() : "";
+  return { result, phrases, text };
+}
+
+function draftVoice(result: Awaited<ReturnType<typeof transcribeTake>>["result"], points: DraftVoice["points"]): DraftVoice {
+  return { id: result.voiceId, status: result.status, note: result.note, duration: result.duration, points };
+}
+
+/** What a recording shows for one sample: the pin and drawing apply only when the sample has them. */
+async function frameOf(sample: VoiceSample | undefined) {
+  if (!sample) return undefined;
+  const pin = sample.x !== undefined && sample.y !== undefined ? { x: sample.x, y: sample.y } : undefined;
+  return await burnFrame(sample.frame, { pin, strokes: sample.strokes });
 }
 
 function Approvals({ review, version }: { review: SharedReview; version: number }) {
@@ -563,7 +597,7 @@ function Side({ title, children, empty, review, version }: { title: string; chil
 }
 
 function VideoShare(props: ViewProps) {
-  const { s, data, link, guest, onChangeGuest } = props;
+  const { s, data, link, guest, asGuest, onChangeGuest } = props;
   const review = s.review!;
   const version = s.version!;
   const c = useComposer(props);
@@ -576,6 +610,56 @@ function VideoShare(props: ViewProps) {
   const [drawOn, setDrawOn] = useState(false);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [frameWidth, setFrameWidth] = useState(0);
+
+  const recorder = useVoiceRecorder({
+    look: (): VoiceLook | null => {
+      if (!ctrl) return null;
+      const t = ctrl.getTime();
+      const here = !whole && anchor.kind === "frame" && Math.abs(anchor.time - t) < ON_FRAME ? anchor : undefined;
+      return {
+        time: t,
+        x: here?.x,
+        y: here?.y,
+        strokes: here ? strokes : [],
+        playing: ctrl.isPlaying(),
+        frame: () => here?.frame ?? ctrl.captureFrame(),
+      };
+    },
+    onTake: async (take) => {
+      const { result, phrases, text } = await transcribeTake(data, link, take);
+      const first = take.samples[0];
+      const sampled = phrases.map((p) => ({ p, sample: sampleAt(take.samples, p.at) ?? first }));
+      const points = await Promise.all(
+        sampled.map(async ({ p, sample }) => ({
+          phrase: p.phrase,
+          at: p.at,
+          time: sample?.time ?? ctrl?.getTime() ?? 0,
+          x: sample?.x,
+          y: sample?.y,
+          drawing: sample?.strokes.length ? sample.strokes : undefined,
+          frame: await frameOf(sample),
+        })),
+      );
+      const main = sampled[0]?.sample ?? first;
+      const range = !whole && anchor.kind === "range" ? anchor : undefined;
+      await c.addVoice(
+        {
+          version: version.number,
+          time: range?.time ?? main?.time ?? ctrl?.getTime() ?? 0,
+          endTime: range?.endTime,
+          x: range ? undefined : main?.x,
+          y: range ? undefined : main?.y,
+          wholeVideo: whole || undefined,
+          text: text || result.note || "",
+          drawing: !range && main?.strokes.length ? main.strokes : undefined,
+          thumbnailDataUrl: await frameOf(main),
+          voice: draftVoice(result, points),
+        },
+        reset,
+      );
+    },
+    onError: (message) => toast.error(message),
+  });
 
   useEffect(() => {
     if (!ctrl) return;
@@ -633,9 +717,12 @@ function VideoShare(props: ViewProps) {
     if (!ctrl) return;
     ctrl.pause();
     const t = ctrl.getTime();
+    // A pin or drawing belongs to the frame it was made on: after scrubbing elsewhere, a new one starts fresh.
+    const moved = anchor.kind === "frame" && Math.abs(anchor.time - t) > ON_FRAME;
+    if (moved) setStrokes([]);
     setAnchor((a) => {
       if (spot) return { kind: "frame", time: t, ...spot, frame: ctrl.captureFrame() };
-      if (a.kind !== "none") return a;
+      if (a.kind !== "none" && !moved) return a;
       return { kind: "frame", time: t, frame: ctrl.captureFrame() };
     });
     setWhole(false);
@@ -737,7 +824,7 @@ function VideoShare(props: ViewProps) {
           src={src}
           pins={pins}
           floating={floating}
-          newPin={!whole && anchor.kind === "frame" && anchor.x !== undefined ? { x: anchor.x, y: anchor.y! } : null}
+          newPin={!whole && anchor.kind === "frame" && anchor.x !== undefined && Math.abs(anchor.time - time) <= ON_FRAME * 2 ? { x: anchor.x, y: anchor.y! } : null}
           selectedId={c.selectedId}
           showHint={comments.length === 0 && anchor.kind === "none" && !playing && !drawOn}
           interactive={!drawOn}
@@ -815,6 +902,11 @@ function VideoShare(props: ViewProps) {
             },
             clear: () => setStrokes([]),
           }}
+          voice={
+            canRecordVoice() && (
+              <VoiceButton phase={recorder.phase} seconds={recorder.seconds} disabled={c.sending || c.adding} onStart={() => asGuest("add", () => void recorder.start())} onStop={recorder.stop} />
+            )
+          }
           adding={c.adding}
           draftCount={c.drafts.length}
           sending={c.sending}
@@ -834,14 +926,31 @@ function VideoShare(props: ViewProps) {
         />
       </div>
       <Side title={comments.length ? plural(comments.length, "comment") : "Comments"} empty={!comments.length} review={review} version={version.number}>
-        <CommentList comments={comments} editable={c.editable} selectedId={c.selectedId} label={whenLabel} onSelect={select} onSave={c.save} onDelete={c.remove} />
+        <CommentList
+          comments={comments}
+          editable={c.editable}
+          selectedId={c.selectedId}
+          label={whenLabel}
+          onSelect={select}
+          frameUrl={(file) => file}
+          onPoint={(x, i) => {
+            c.setSelectedId(x.id);
+            const t = x.voice?.points[i]?.time;
+            if (t !== undefined) {
+              ctrl?.pause();
+              seek(t);
+            }
+          }}
+          onSave={c.save}
+          onDelete={c.remove}
+        />
       </Side>
     </div>
   );
 }
 
 function StoryboardShare(props: ViewProps) {
-  const { s, data, link, guest, onChangeGuest } = props;
+  const { s, data, link, guest, asGuest, onChangeGuest } = props;
   const review = s.review!;
   const version = s.version!;
   const c = useComposer(props);
@@ -878,6 +987,33 @@ function StoryboardShare(props: ViewProps) {
   ) : (
     <span className="fc-anchor plain">Pick a panel</span>
   );
+
+  const recorder = useVoiceRecorder({
+    look: () => null,
+    onTake: async (take) => {
+      const { result, text } = await transcribeTake(data, link, take);
+      await c.addVoice(
+        {
+          version: version.number,
+          time: 0,
+          panel: whole ? undefined : (panel ?? undefined),
+          wholeVideo: whole || undefined,
+          kind: whole ? "general" : "panel",
+          text: text || result.note || "",
+          voice: draftVoice(result, []),
+        },
+        () => setWhole(false),
+      );
+    },
+    onError: (message) => toast.error(message),
+  });
+  const startVoice = () => {
+    if (!whole && !panel) {
+      toast.error("Pick a panel first, or comment on the whole storyboard");
+      return;
+    }
+    asGuest("add", () => void recorder.start());
+  };
 
   const addComment = () =>
     c.add(
@@ -929,6 +1065,7 @@ function StoryboardShare(props: ViewProps) {
           placeholder={whole ? "What should change in the whole storyboard?" : panel ? `What should change in panel ${panel}?` : "Pick a panel, then type…"}
           whole={whole}
           wholeLabel="Whole storyboard"
+          voice={canRecordVoice() && <VoiceButton phase={recorder.phase} seconds={recorder.seconds} disabled={c.sending || c.adding} onStart={startVoice} onStop={recorder.stop} />}
           adding={c.adding}
           draftCount={c.drafts.length}
           sending={c.sending}
@@ -946,6 +1083,7 @@ function StoryboardShare(props: ViewProps) {
           editable={c.editable}
           selectedId={c.selectedId}
           label={(x) => (x.wholeVideo ? "Whole storyboard" : `Panel ${x.panel}`)}
+          frameUrl={(file) => file}
           onSelect={(x) => {
             c.setSelectedId(x.id);
             if (x.panel) setPanel(x.panel);

@@ -25,6 +25,8 @@ export interface CoreContext {
 }
 
 const MAX_IMAGES = 6;
+/** Frame images from spoken comments, on top of MAX_IMAGES: one per pointing phrase. */
+const MAX_VOICE_IMAGES = 8;
 
 const skillLine = (ctx: CoreContext) => {
   const v = ctx.skillVersion;
@@ -240,11 +242,23 @@ export function createMcpServer(ctx: CoreContext): McpServer {
       { type: "text", text: promptText ?? (await feedbackPrompt(store, ctx.baseUrl, review, comments, { message })) },
     ];
     const thumbnails = new Map(comments.map((c) => [c.id, c.thumbnail]));
-    for (const c of agentComments.filter((c) => c.thumbnailPath).slice(0, MAX_IMAGES)) {
+    const pointed = (c: (typeof agentComments)[number]) => c.voice?.points.some((p) => p.imageFile);
+    for (const c of agentComments.filter((c) => c.thumbnailPath && !pointed(c)).slice(0, MAX_IMAGES)) {
       const jpeg = await store.readThumbnail(review.id, thumbnails.get(c.id)!);
       if (!jpeg) continue;
       content.push({ type: "text", text: `${c.panel ? "Panel" : "Frame"}${c.position ? " (pin marked)" : ""} for comment ${c.id} at ${c.at}:` });
       content.push({ type: "image", mimeType: "image/jpeg", data: toBase64(jpeg) });
+    }
+    let voiceImages = 0;
+    for (const c of agentComments) {
+      for (const p of c.voice?.points ?? []) {
+        if (!p.imageFile || voiceImages >= MAX_VOICE_IMAGES) continue;
+        const jpeg = await store.readThumbnail(review.id, p.imageFile);
+        if (!jpeg) continue;
+        voiceImages++;
+        content.push({ type: "text", text: `Frame for “${p.phrase}” in spoken comment ${c.id} (video ${p.at}${p.position ? ", pin marked" : ""}${p.drawn ? ", drawing marked" : ""}):` });
+        content.push({ type: "image", mimeType: "image/jpeg", data: toBase64(jpeg) });
+      }
     }
     return content;
   };
