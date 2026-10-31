@@ -55,11 +55,20 @@ export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDat
   if (!info?.shared || !data.setShare) return null;
   const approved = info.approved;
   const closed = Boolean(info.closed);
-  const set = async (change: { allowDownload?: boolean; revoked?: boolean; expiresAt?: number | null }, message?: string) => {
+  const set = async (change: { allowDownload?: boolean; revoked?: boolean; expiresAt?: number | null; showNotes?: boolean }, message?: string) => {
     try {
       setInfo(await data.setShare!(reviewId, change));
       toast.success(
-        message ?? (change.revoked ? "The link is turned off" : change.allowDownload ? "Guests can download the approved file" : "Guests can't download the approved file"),
+        message ??
+          (change.revoked
+            ? "The link is turned off"
+            : change.showNotes !== undefined
+              ? change.showNotes
+                ? "Guests can read the version notes"
+                : "Version notes are hidden from guests"
+              : change.allowDownload
+                ? "Guests can download the approved file"
+                : "Guests can't download the approved file"),
       );
     } catch (e) {
       toast.error((e as Error).message);
@@ -124,6 +133,11 @@ export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDat
           <MenuItem checked={info.allowDownload !== false} hint="after approval" onSelect={() => void set({ allowDownload: info.allowDownload === false })}>
             Allow download
           </MenuItem>
+          {data.shareSettings && (
+            <MenuItem checked={info.showNotes === true} hint="never the source" onSelect={() => void set({ showNotes: info.showNotes !== true })}>
+              Show version notes
+            </MenuItem>
+          )}
           {data.shareSettings && (
             <>
               <MenuLabel>{info.expiresAt ? `Expires ${new Date(info.expiresAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : "Never expires"}</MenuLabel>

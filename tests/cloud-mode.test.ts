@@ -8,7 +8,9 @@ import { AppStore } from "../src/server/app-store.ts";
 import { CloudStore } from "../src/server/cloud-store.ts";
 import { setCloudMode } from "../src/server/cloud-mode.ts";
 import { JsonStore } from "../src/server/json-store.ts";
+import { listZip, zipFolder } from "../src/server/zip.ts";
 import { createApp } from "../src/server/app.ts";
+import { configureShare, shareVersion } from "../src/server/share.ts";
 import type { McpContext } from "../src/server/mcp.ts";
 import { packageRoot } from "../src/server/paths.ts";
 import { fixturePreset, connectClient, parse } from "./helpers.ts";
@@ -190,6 +192,156 @@ describe("an agent in cloud mode", () => {
     } finally {
       await mcp.close();
     }
+  });
+});
+
+describe("notes and source files", () => {
+  beforeEach(() => setCloudMode(true, store.local.root));
+
+  let project: string;
+  beforeEach(() => {
+    project = path.join(root, "teaser");
+    fs.mkdirSync(path.join(project, "src"), { recursive: true });
+    fs.mkdirSync(path.join(project, "node_modules/dep"), { recursive: true });
+    fs.writeFileSync(path.join(project, "index.html"), "<h1>teaser</h1>");
+    fs.writeFileSync(path.join(project, "src/scene.ts"), "export {};");
+    fs.writeFileSync(path.join(project, "node_modules/dep/index.js"), "x");
+    fs.writeFileSync(path.join(project, ".env"), "SECRET=1");
+  });
+
+  const zipNames = (file: string) => listZip(file).map((e) => e.name).sort();
+
+  it("uploads the packed folder with the version and downloads it again", async () => {
+    const { review } = await store.openReview({ title: "With source", videoPath: video, notes: "## v1\nRender: `npx hyperframes render`", source: project });
+    const queued = (await store.getReview(review.id)).versions[0]!;
+    expect(queued.notes).toContain("npx hyperframes render");
+    expect(queued.source).toMatchObject({ filename: "teaser-source.zip", ready: false });
+    expect(queued.upload?.total).toBeGreaterThan(fs.statSync(video).size);
+
+    await cloudStore().waitForUpload(review.id, 1);
+    const done = (await store.getReview(review.id)).versions[0]!;
+    expect(done.upload).toBeUndefined();
+    expect(done.source).toMatchObject({ filename: "teaser-source.zip", ready: true });
+    expect(cloud.calls.filter((c) => c === "versionReady")).toHaveLength(1);
+
+    const got = await store.sourceFor(review.id, 1);
+    expect(got).toMatchObject({ filename: "teaser-source.zip" });
+    const bytes = cloud.objects.get(new URL(got!.url).pathname.slice(1))!.bytes;
+    const file = path.join(root, "downloaded.zip");
+    fs.writeFileSync(file, bytes);
+    expect(zipNames(file)).toEqual(["index.html", "src/scene.ts"]);
+  });
+
+  it("takes a zip the agent made, and refuses a source that isn't a folder or a zip", async () => {
+    const made = path.join(root, "mine.zip");
+    await zipFolder(project, made);
+    const { review } = await store.openReview({ title: "Zip given", videoPath: video, source: made });
+    await cloudStore().waitForUpload(review.id, 1);
+    expect((await store.getReview(review.id)).versions[0]!.source).toMatchObject({ filename: "mine.zip", ready: true });
+
+    fs.appendFileSync(video, "more");
+    await expect(store.addVersion(review.id, { videoPath: video, source: path.join(root, "missing.zip") })).rejects.toThrow(/does not exist/);
+    await expect(store.addVersion(review.id, { videoPath: video, source: path.join(project, "index.html") })).rejects.toThrow(/project folder or a \.zip/);
+    expect((await store.getReview(review.id)).versions).toHaveLength(1);
+  });
+
+  it("keeps versions without source as they were, and says so", async () => {
+    const { review } = await store.openReview({ title: "Plain", videoPath: video, notes: "just notes" });
+    await cloudStore().waitForUpload(review.id, 1);
+    expect(await store.sourceFor(review.id, 1)).toBeUndefined();
+    const v = (await store.getReview(review.id)).versions[0]!;
+    expect(v.source).toBeUndefined();
+    expect(v.notes).toBe("just notes");
+  });
+
+  it("lets a failed upload try again with the source still on this computer", async () => {
+    cloud.failPuts = 99;
+    const { review } = await store.openReview({ title: "Retry source", videoPath: video, source: project });
+    await expect(cloudStore().waitForUpload(review.id, 1, 5_000)).rejects.toThrow(/didn't finish uploading/);
+    cloud.failPuts = 0;
+    const again = await store.openReview({ title: "Retry source", videoPath: video, reviewId: review.id, source: project });
+    expect(again.created).toBe(false);
+    await cloudStore().waitForUpload(review.id, 1);
+    expect((await store.getReview(review.id)).versions[0]!.source?.ready).toBe(true);
+  });
+
+  it("is what an agent in another chat reads from the link alone, then continues", async () => {
+    const mcp = await connectClient(ctx);
+    try {
+      const opened = parse(await mcp.call("open_review", { title: "Handoff", videoPath: video, notes: "v1 notes", source: project }));
+      expect(opened.source).toMatchObject({ filename: "teaser-source.zip" });
+      const reviewId = opened.reviewId as string;
+      await cloudStore().waitForUpload(reviewId, 1);
+
+      fs.appendFileSync(video, "two");
+      const added = parse(
+        await mcp.call("add_version", { reviewId, videoPath: video, note: "Faster", notes: "## What changed\n- cut 2s\n\nRender: `npx hyperframes render`", source: project }),
+      );
+      expect(added).toMatchObject({ version: 2, notesSaved: true });
+      await cloudStore().waitForUpload(reviewId, 2);
+
+      const link = `https://app.framejam.ai/p/${reviewId}?v=1`;
+      const first = parse(await mcp.call("get_version", { reviewId: link }));
+      expect(first).toMatchObject({ reviewId, version: 1, latestVersion: 2, notes: "v1 notes" });
+      expect(first.source.downloadUrl).toContain("https://r2.test/");
+      expect(first.source.command).toContain("curl -L -o 'teaser-source.zip'");
+      expect(first.versions).toEqual([
+        { number: 1, hasNotes: true, hasSource: true },
+        { number: 2, note: "Faster", hasNotes: true, hasSource: true },
+      ]);
+
+      const latest = parse(await mcp.call("get_version", { reviewId }));
+      expect(latest.version).toBe(2);
+      expect(latest.notes).toContain("npx hyperframes render");
+
+      const third = parse(await mcp.call("add_version", { reviewId: `https://app.framejam.ai/p/${reviewId}`, videoPath: video, notes: "v3 from the link" }));
+      expect(third.version).toBe(3);
+      const missing = await mcp.call("get_version", { reviewId, version: 9 });
+      expect(missing.isError).toBe(true);
+    } finally {
+      await mcp.close();
+    }
+  });
+
+  it("keeps notes on a local project and says the source wasn't attached", async () => {
+    setCloudMode(false, store.local.root);
+    const mcp = await connectClient(ctx);
+    try {
+      const opened = parse(await mcp.call("open_review", { title: "Local notes", videoPath: video, notes: "kept", source: project }));
+      expect(opened).toMatchObject({ notesSaved: true });
+      expect(opened.source.attached).toBe(false);
+      const got = parse(await mcp.call("get_version", { reviewId: opened.reviewId as string }));
+      expect(got).toMatchObject({ notes: "kept", source: null });
+    } finally {
+      await mcp.close();
+    }
+  });
+
+  it("shows notes to guests only when the creator turns it on, and never the source", async () => {
+    const { review } = await store.openReview({ title: "Notes link", videoPath: video, notes: "private how-to", source: project });
+    await cloudStore().waitForUpload(review.id, 1);
+    await shareVersion(store, review.id, {});
+    expect((await cloud.link(review.id))?.showNotes).toBe(false);
+
+    const on = await configureShare(store, review.id, { showNotes: true }, {});
+    expect(on.showNotes).toBe(true);
+    expect((await cloud.link(review.id))?.showNotes).toBe(true);
+    const off = await configureShare(store, review.id, { showNotes: false }, {});
+    expect(off.showNotes).toBe(false);
+
+    const app = createApp(ctx);
+    const body = (await (await app.request(`/api/reviews/${review.id}/share/settings`, { method: "POST", body: JSON.stringify({ showNotes: true }), headers: { "content-type": "application/json" } })).json()) as { showNotes: boolean };
+    expect(body.showNotes).toBe(true);
+  });
+
+  it("serves a fresh download link to the app", async () => {
+    const app = createApp(ctx);
+    const { review } = await store.openReview({ title: "App link", videoPath: video, source: project });
+    await cloudStore().waitForUpload(review.id, 1);
+    const ok = await app.request(`/api/reviews/${review.id}/versions/1/source`);
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toMatchObject({ filename: "teaser-source.zip" });
+    expect((await app.request(`/api/reviews/${review.id}/versions/2/source`)).status).toBe(404);
   });
 });
 

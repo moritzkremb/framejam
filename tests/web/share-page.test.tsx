@@ -150,6 +150,30 @@ describe("share page", () => {
     expect(q("approvals")?.textContent).toContain("Approved by Cleo");
   });
 
+  it("has a Notes tab only when the creator's link sends notes, and never a source download", async () => {
+    const fake = fakeBackend(videoView());
+    await render(fake);
+    expect(q("notes-tab")).toBeNull();
+
+    const next = videoView();
+    next.versions[1]!.notes = "## What changed\n- cut the intro\n\nRender: `./render.sh`";
+    await act(async () => fake.push(next));
+    await flush();
+    expect(q("notes-tab")).not.toBeNull();
+    expect(q("version-notes")).toBeNull();
+    await act(async () => q<HTMLButtonElement>("notes-tab")!.click());
+    expect(q("version-notes")?.textContent).toContain("What changed");
+    expect(q("version-notes")?.textContent).toContain("Faster cuts");
+    expect(q("version-source")).toBeNull();
+    expect(q("download-source")).toBeNull();
+    expect(cards()).toEqual([]);
+
+    const tabs = [...host.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    await act(async () => tabs[0]!.click());
+    expect(q("version-notes")).toBeNull();
+    expect(cards()).toHaveLength(1);
+  });
+
   it("shows \"Resolved in vN\" on a comment once the creator's agent ships the fix, live", async () => {
     const fake = fakeBackend(videoView());
     await render(fake);

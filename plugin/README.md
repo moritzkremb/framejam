@@ -37,7 +37,8 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
   your agent can read with `share_project` and `list_share_links`.
 - With `framejam cloud on` (optional, needs `framejam login`), new projects live in your FrameJam Cloud account: the
   project's title, versions, notes, your comments and what you resolve are stored there, and each version's render (or a
-  storyboard's panels), a poster frame and the frame image of each comment are uploaded. The app asks the cloud for
+  storyboard's panels), a poster frame, the frame image of each comment and, when your agent attaches one, a zip of
+  the project's source files (without `node_modules`, `.git`, build output, renders or `.env` and key files) are uploaded. The app asks the cloud for
   changes while a project is open. Turn it off with `framejam cloud off`; projects you already have stay on your
   computer, and nothing goes to the cloud for them.
 - FrameJam Cloud emails you and your guests about a shared link: a guest who left their email gets a note when you

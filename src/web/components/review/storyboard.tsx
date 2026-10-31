@@ -2,10 +2,11 @@ import { ChevronLeft, ChevronRight, LayoutGrid, MapPin, MessageSquarePlus, Mouse
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { toast } from "sonner";
 import { FeedbackDock } from "@/components/review/dock";
-import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut } from "@/components/review/review-shell";
+import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
 import type { ReviewState } from "@/components/review/use-review";
 import type { ReviewComment, StoryboardPanel } from "@/lib/api";
 import { drawPin } from "@/lib/pin";
+import { hasHandoff, VersionNotes } from "@/components/review/version-notes";
 import { cn, FINISH_KEYS, MOD_KEY, SHIFT_KEY } from "@/lib/utils";
 
 const SHORTCUTS: Shortcut[] = [
@@ -99,6 +100,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
   const { data, isOpen, load } = r;
   const panels: StoryboardPanel[] = version.panels ?? [];
   const [view, setView] = useState<View>("board");
+  const [sideTab, setSideTab] = useState<SidebarTab>("comments");
   const [current, setCurrent] = useState(1);
   const [spot, setSpot] = useState<{ x: number; y: number } | null>(null);
   const [text, setText] = useState("");
@@ -459,6 +461,9 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
           emptyState={emptyState}
           label={label}
           onSelect={(c) => selectComment(c)}
+          tab={sideTab}
+          onTab={setSideTab}
+          notes={hasHandoff(version) ? <VersionNotes data={data} reviewId={review.id} version={version} /> : undefined}
         />
       </div>
     </>

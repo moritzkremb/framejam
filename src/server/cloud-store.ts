@@ -23,6 +23,7 @@ import {
   type NewCommentInput,
   type OpenReviewInput,
   type PicksChoice,
+  type SourceDownload,
   type Store,
   StoreError,
 } from "../core/store.ts";
@@ -42,6 +43,7 @@ import type { JsonStore } from "./json-store.ts";
 import { loadTranscript, panelsKey, resolveMedia, defaultTitle, type ResolvedMedia, type LoadedTranscript } from "./media.ts";
 import { extractFrame } from "./thumbs.ts";
 import { MAX_UPLOAD_BYTES, putFile } from "./upload.ts";
+import { checkZip, zipFolder, MAX_SOURCE_BYTES, type PackedSource } from "./zip.ts";
 import { newId } from "./json-store.ts";
 
 /** How long a read of the cloud is reused, so a page polling every second doesn't become a query every second. */
@@ -51,6 +53,15 @@ export const STALLED_UPLOAD_MS = 90_000;
 const PROGRESS_EVERY_MS = 1_000;
 
 const ID = /^[\w-]+$/;
+
+/** A source zip made for a version that the cloud hasn't numbered yet. */
+interface StagedSource {
+  file: string;
+  filename: string;
+  bytes: number;
+  files: number;
+  left: string[];
+}
 const MAX_FRAME_BYTES = 5 * 1024 * 1024;
 
 export interface CloudStoreOptions {
@@ -111,6 +122,8 @@ function mapVersion(v: WireVersion): ReviewVersion {
     })),
     transcript: v.transcript ? { file: `v${v.number}-transcript.json`, sourcePath: v.transcript.sourcePath, words: v.transcript.words } : undefined,
     note: v.note,
+    notes: v.notes,
+    source: v.source,
     createdAt: v.createdAt,
     sentAt: v.sentAt,
     batchId: v.batchId,
@@ -289,10 +302,61 @@ export class CloudStore implements Store {
     return meta ? meta.updatedAt + (meta.listeningAt ?? 0) : 0;
   }
 
+  /**
+   * Gets a version's source ready to upload (H2.6): packs a folder, or checks a zip the agent made. The file waits in a
+   * staging folder until the cloud has said which version it belongs to.
+   */
+  private async stageSource(source: string | undefined, media: ResolvedMedia): Promise<StagedSource | undefined> {
+    if (!source) return undefined;
+    const target = path.resolve(source);
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(target);
+    } catch {
+      throw new StoreError(`source does not exist: ${target}`);
+    }
+    if (stat.isFile()) {
+      if (path.extname(target).toLowerCase() !== ".zip") throw new StoreError(`source has to be the project folder or a .zip file: ${target}`);
+      const checked = checkZip(target);
+      const file = path.join(this.stagingDir(), `${newId("src")}.zip`);
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.copyFileSync(target, file, fs.constants.COPYFILE_FICLONE);
+      return { file, filename: path.basename(target), bytes: checked.bytes, files: checked.files, left: [] };
+    }
+    if (!stat.isDirectory()) throw new StoreError(`source has to be the project folder or a .zip file: ${target}`);
+    const file = path.join(this.stagingDir(), `${newId("src")}.zip`);
+    const packed: PackedSource = await zipFolder(target, file, { skip: [media.videoPath ?? ""].filter(Boolean), maxBytes: MAX_SOURCE_BYTES });
+    return { file, filename: `${path.basename(target) || "project"}-source.zip`, bytes: packed.bytes, files: packed.files, left: packed.left };
+  }
+
+  private stagingDir(): string {
+    return path.join(this.root, "cloud", "_staging");
+  }
+
+  private sourcePath(reviewId: string, number: number): string {
+    return path.join(this.versionsDir(reviewId), `v${number}-source.zip`);
+  }
+
+  private adoptSource(reviewId: string, number: number, staged: StagedSource | undefined): void {
+    if (!staged) return;
+    fs.mkdirSync(this.versionsDir(reviewId), { recursive: true });
+    fs.renameSync(staged.file, this.sourcePath(reviewId, number));
+  }
+
+  private dropSource(staged: StagedSource | undefined): void {
+    if (staged) fs.rmSync(staged.file, { force: true });
+  }
+
   /** What a version needs to upload: its size, for the progress bar, and the pieces the cloud keeps about it. */
-  private versionInput(media: ResolvedMedia, note: string | undefined, transcript: LoadedTranscript | undefined): VersionInput {
+  private versionInput(
+    media: ResolvedMedia,
+    note: string | undefined,
+    transcript: LoadedTranscript | undefined,
+    notes?: string,
+    source?: StagedSource,
+  ): VersionInput {
     const files = media.panels?.length ? media.panels.map((p) => p.sourcePath) : media.videoPath ? [media.videoPath] : [];
-    let total = 0;
+    let total = source?.bytes ?? 0;
     for (const file of files) {
       const bytes = fs.statSync(file).size;
       if (bytes > MAX_UPLOAD_BYTES) throw new StoreError(`${path.basename(file)} is larger than 5 GB, which FrameJam Cloud doesn't support yet.`);
@@ -301,6 +365,8 @@ export class CloudStore implements Store {
     const key = media.panels?.length ? `panels:${createHash("sha1").update(panelsKey(media.panels)).digest("hex")}` : `video:${media.videoPath}`;
     return {
       note,
+      notes: notes?.trim() || undefined,
+      source: source ? { filename: source.filename, bytes: source.bytes } : undefined,
       contentKey: key,
       videoPath: media.videoPath,
       panelsDir: media.panelsDir,
@@ -317,19 +383,27 @@ export class CloudStore implements Store {
     const projectKey = media.panelsDir ? `panels:${media.panelsDir}` : `title:${title}`;
     const keyed = Boolean(media.panelsDir || title);
     if (input.reviewId) this.checkId(input.reviewId);
-    const version = this.versionInput(media, input.note, transcript);
-    const out = await guard(
-      this.api.open({
-        newId: newId("rev"),
-        title: input.title?.trim() || defaultTitle(media),
-        kind: media.panels?.length ? "storyboard" : "video",
-        projectKey: keyed ? projectKey : undefined,
-        reviewId: input.reviewId,
-        version,
-      }),
-    );
+    const staged = await this.stageSource(input.source, media);
+    const version = this.versionInput(media, input.note, transcript, input.notes, staged);
+    let out: Awaited<ReturnType<CloudApi["open"]>>;
+    try {
+      out = await guard(
+        this.api.open({
+          newId: newId("rev"),
+          title: input.title?.trim() || defaultTitle(media),
+          kind: media.panels?.length ? "storyboard" : "video",
+          projectKey: keyed ? projectKey : undefined,
+          reviewId: input.reviewId,
+          version,
+        }),
+      );
+    } catch (err) {
+      this.dropSource(staged);
+      throw err;
+    }
     this.changed(out.review.id);
-    if (out.upload !== null) this.beginUpload(out.review.id, out.upload, media);
+    if (out.upload !== null) this.beginUpload(out.review.id, out.upload, media, staged);
+    else this.dropSource(staged);
     const review = (await this.entry(out.review.id)) ?? this.remember(out.review);
     return { review: review.review, version: review.review.versions.find((v) => v.number === out.version)!, created: out.created };
   }
@@ -350,10 +424,28 @@ export class CloudStore implements Store {
       media = resolveMedia(input);
     }
     const transcript = loadTranscript(input.transcriptPath, media);
-    const out = await guard(this.api.addVersion(reviewId, this.versionInput(media, input.note, transcript)));
+    const staged = await this.stageSource(input.source, media);
+    let out: Awaited<ReturnType<CloudApi["addVersion"]>>;
+    try {
+      out = await guard(this.api.addVersion(reviewId, this.versionInput(media, input.note, transcript, input.notes, staged)));
+    } catch (err) {
+      this.dropSource(staged);
+      throw err;
+    }
     this.changed(reviewId);
-    this.beginUpload(reviewId, out.version, media);
+    this.beginUpload(reviewId, out.version, media, staged);
     return (await this.getReview(reviewId)) ?? this.remember(out.review).review;
+  }
+
+  async sourceFor(reviewId: string, number: number): Promise<SourceDownload | undefined> {
+    this.checkId(reviewId);
+    const version = (await this.getReview(reviewId)).versions.find((v) => v.number === number);
+    if (!version) throw new StoreError(`${reviewId} has no version ${number}.`, 404);
+    if (!version.source) return undefined;
+    if (!version.source.ready) {
+      throw new StoreError(`The source files of version ${number} are still uploading${version.upload?.state === "failed" ? " and the upload failed" : ""}. Try again in a minute.`, 409);
+    }
+    return await guard(this.api.sourceUrl(reviewId, number));
   }
 
   async setReviewPicks(reviewId: string, picks: PicksChoice): Promise<Review> {
@@ -366,10 +458,12 @@ export class CloudStore implements Store {
   // --- Files ---------------------------------------------------------------------------------------------------
 
   /** Copies a version's files into the cache and starts uploading them. */
-  private beginUpload(reviewId: string, number: number, media: ResolvedMedia): void {
+  private beginUpload(reviewId: string, number: number, media: ResolvedMedia, staged?: StagedSource): void {
     try {
       this.snapshot(reviewId, number, media);
+      this.adoptSource(reviewId, number, staged);
     } catch (err) {
+      this.dropSource(staged);
       void this.failed(reviewId, number, err);
       return;
     }
@@ -543,7 +637,7 @@ export class CloudStore implements Store {
     this.changed(reviewId);
   }
 
-  private async putOne(file: string, kind: "render" | "panel" | "poster", onBytes?: (sent: number) => void, extra: { posterKey?: string } = {}) {
+  private async putOne(file: string, kind: "render" | "panel" | "poster" | "source", onBytes?: (sent: number) => void, extra: { posterKey?: string } = {}) {
     const mime = mimeFor(file);
     const ticket = await this.api.requestUpload({ filename: path.basename(file), mime, kind });
     const bytes = await putFile(ticket.uploadUrl, file, mime, this.fetchFn, onBytes, { attempts: 3, retryDelayMs: this.retryDelayMs });
@@ -569,6 +663,15 @@ export class CloudStore implements Store {
       this.api.uploadProgress(reviewId, number, bytes).catch(() => {});
     };
 
+    let sourceAssetId: string | undefined;
+    if (version.source) {
+      const zip = this.sourcePath(reviewId, number);
+      if (!fileExists(zip)) throw new Error(`The source files of version ${number} aren't on this computer any more.`);
+      sourceAssetId = (await this.putOne(zip, "source", (sent) => report(sent))).assetId;
+      done += fs.statSync(zip).size;
+      report(0, true);
+    }
+
     if (version.panels?.length) {
       const assetIds: string[] = [];
       for (const [i] of version.panels.entries()) {
@@ -579,7 +682,7 @@ export class CloudStore implements Store {
         report(0, true);
         assetIds.push(assetId);
       }
-      await this.api.versionReady(reviewId, number, { panelAssetIds: assetIds });
+      await this.api.versionReady(reviewId, number, { panelAssetIds: assetIds, sourceAssetId });
       return;
     }
 
@@ -595,7 +698,7 @@ export class CloudStore implements Store {
       }
     }
     const { assetId } = await this.putOne(render, "render", (sent) => report(sent), { posterKey });
-    await this.api.versionReady(reviewId, number, { videoAssetId: assetId });
+    await this.api.versionReady(reviewId, number, { videoAssetId: assetId, sourceAssetId });
   }
 
   private async makePoster(reviewId: string, number: number, render: string): Promise<string | undefined> {
@@ -620,7 +723,7 @@ export class CloudStore implements Store {
         if (!left || this.jobs.has(`${wire.id}:${v.number}`)) continue;
         const cached =
           wire.kind === "storyboard" ? fs.existsSync(path.join(this.versionsDir(wire.id), `v${v.number}-panels`)) : Boolean(this.cachedVideo(wire.id, v.number));
-        if (!cached) continue;
+        if (!cached || (v.source && !fileExists(this.sourcePath(wire.id, v.number)))) continue;
         void this.upload(wire.id, v.number);
         resumed++;
       }

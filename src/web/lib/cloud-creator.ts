@@ -24,6 +24,8 @@ export interface WireVersion {
   number: number;
   panels?: WirePanel[];
   note?: string;
+  notes?: string;
+  source?: { filename: string; bytes: number; ready: boolean };
   createdAt: string;
   sentAt?: string;
   batchId?: string;
@@ -92,6 +94,8 @@ export interface CloudLink {
   revokedAt: number | null;
   approved: { version: number; by: string; at: number } | null;
   allowDownload: boolean;
+  /** Guests read each version's handoff notes. Missing on older deployments, which means off. */
+  showNotes?: boolean;
   opens: number;
   lastOpenedAt: number | null;
   approvals: { version: number; guestName: string; at: number }[];
@@ -116,7 +120,9 @@ export interface CreatorBackend {
   /** Calls `onLink` with every new result of `cloud.link`; returns the unsubscribe. */
   watchLink(id: string, onLink: (link: CloudLink | null) => void, onError: (e: Error) => void): () => void;
   share(id: string, version?: number): Promise<CloudLink>;
-  configure(id: string, change: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<void>;
+  configure(id: string, change: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<void>;
+  /** A short-lived download of a version's source zip. */
+  sourceUrl(id: string, version: number): Promise<{ url: string; filename: string; bytes: number }>;
 }
 
 const ref = <A extends Record<string, unknown>, R>(kind: "query" | "mutation" | "action", name: string) => makeFunctionReference<typeof kind, A, R>(name);
@@ -150,6 +156,8 @@ export function convexCreatorBackend(url: string, getToken: (forceRefresh: boole
     watchLink: (id, onLink, onError) => client.onUpdate(ref<{ reviewId: string }, CloudLink | null>("query", "cloud:link") as never, { reviewId: id } as never, onLink as never, onError),
     share: (id, version) => wrap(() => m("share", { reviewId: id, ...(version ? { version } : {}) })),
     configure: (id, change) => wrap(() => m("configure", { localId: id, ...change }, "shares")),
+    sourceUrl: (id, version) =>
+      wrap(() => client.action(ref<{ reviewId: string; version: number }, { url: string; filename: string; bytes: number }>("action", "cloud:sourceUrl") as never, { reviewId: id, version } as never) as Promise<{ url: string; filename: string; bytes: number }>),
   };
 }
 
@@ -180,6 +188,7 @@ function shareInfo(link: CloudLink | null, origin: string): ShareInfo {
     approvals: link.approvals,
     approved: link.approved,
     allowDownload: link.allowDownload,
+    showNotes: link.showNotes === true,
     closed,
     expiresAt: link.expiresAt,
     revokedAt: link.revokedAt,
@@ -215,6 +224,8 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
         panels: v.panels?.map((p) => ({ image: p.url ?? "", sourcePath: p.sourcePath, title: p.title, caption: p.caption })),
         transcript: v.transcript ? { file: "", sourcePath: v.transcript.sourcePath, words: v.transcript.words } : undefined,
         note: v.note,
+        notes: v.notes,
+        source: v.source,
         createdAt: v.createdAt,
         sentAt: v.sentAt,
         batchId: v.batchId,
@@ -369,6 +380,10 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
       const review = toReview(await require(id));
       const comments = version ? versionComments(review, version) : latestComments(review);
       return await feedbackPrompt(noStore, window.location.origin, review, comments, { url: `${window.location.origin}/p/${id}` });
+    },
+
+    async sourceDownload(id, version) {
+      return await backend.sourceUrl(id, version);
     },
 
     async downloadVideo(id, version) {

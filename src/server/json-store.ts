@@ -186,14 +186,14 @@ export class JsonStore implements Store {
         const review = this.setTranscript(existing.id, latest.number, transcript.transcript, transcript.sourcePath);
         return { review, version: review.versions.at(-1)!, created: false };
       }
-      const review = this.addResolvedVersion(existing.id, media, input.note, transcript);
+      const review = this.addResolvedVersion(existing.id, media, input.note, transcript, input.notes);
       if (input.title && input.title !== review.title) {
         review.title = input.title;
         this.save(review);
       }
       return { review, version: review.versions.at(-1)!, created: false };
     }
-    const version: ReviewVersion = { number: 1, ...media, note: input.note, createdAt: now() };
+    const version: ReviewVersion = { number: 1, ...media, note: input.note, notes: input.notes?.trim() || undefined, createdAt: now() };
     const id = newId("rev");
     this.snapshotVideo(id, version);
     this.snapshotPanels(id, version);
@@ -230,16 +230,17 @@ export class JsonStore implements Store {
     } else {
       media = resolveMedia(input);
     }
-    return this.addResolvedVersion(reviewId, media, input.note, loadTranscript(input.transcriptPath, media));
+    return this.addResolvedVersion(reviewId, media, input.note, loadTranscript(input.transcriptPath, media), input.notes);
   }
 
-  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string, transcript?: LoadedTranscript): Review {
+  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string, transcript?: LoadedTranscript, notes?: string): Review {
     return this.update(reviewId, (review) => {
       const prev = review.versions.at(-1);
       const version: ReviewVersion = {
         number: (prev?.number ?? 0) + 1,
         ...media,
         note,
+        notes: notes?.trim() || undefined,
         createdAt: now(),
       };
       this.snapshotVideo(reviewId, version);
@@ -677,6 +678,11 @@ export class JsonStore implements Store {
 
   private savePick(pick: VideoPick) {
     writeJsonAtomic(this.pickFile(pick.id), pick);
+  }
+
+  /** Local projects keep no source files: that's a FrameJam Cloud feature. */
+  sourceFor(_reviewId: string, _version: number): undefined {
+    return undefined;
   }
 
   /** Remembers the playbook and style picked for a project, so later versions and new chats keep them. */

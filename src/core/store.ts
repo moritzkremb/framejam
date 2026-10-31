@@ -40,6 +40,17 @@ export interface MediaInput {
   panelsDir?: string;
   /** A transcript of the video (.srt, .vtt or word-timings JSON). Videos only. */
   transcriptPath?: string;
+  /** Handoff notes for the version: what changed, which comments it answers, how to continue (markdown). */
+  notes?: string;
+  /** The project folder (packed for you) or a zip of it, for another agent to continue from. Cloud projects only. */
+  source?: string;
+}
+
+/** What a version's source download needs: a short-lived URL, the file name and its size. */
+export interface SourceDownload {
+  url: string;
+  filename: string;
+  bytes: number;
 }
 
 export interface OpenReviewInput extends MediaInput {
@@ -147,6 +158,8 @@ export interface Store {
    * Unsent comments on the previous version move to the new one.
    */
   addVersion(reviewId: string, input: MediaInput & { note?: string }): MaybePromise<Review>;
+  /** A short-lived download of a version's source zip (H2.6), or undefined when the version has none or this store keeps none. */
+  sourceFor(reviewId: string, version: number): MaybePromise<SourceDownload | undefined>;
   /** Remembers the playbook and style picked for a project. `null` clears one, `undefined` leaves it. */
   setReviewPicks(reviewId: string, picks: PicksChoice): MaybePromise<Review>;
 

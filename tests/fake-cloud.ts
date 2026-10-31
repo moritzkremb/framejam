@@ -26,6 +26,7 @@ interface V {
   upload: { state: "uploading" | "ready" | "failed"; bytes: number; total: number; error?: string };
   videoAssetId?: string;
   panelAssetIds?: string[];
+  sourceAssetId?: string;
   sentAt?: number;
   batchId?: string;
   reopenedFrom?: string;
@@ -78,7 +79,7 @@ interface P {
   versions: V[];
   comments: C[];
   batches: B[];
-  link?: { token: string; sharedVersion: number; expiresAt?: number; revokedAt?: number; allowDownload?: boolean; createdAt: number };
+  link?: { token: string; sharedVersion: number; expiresAt?: number; revokedAt?: number; allowDownload?: boolean; showNotes?: boolean; createdAt: number };
 }
 
 export const R2 = "https://r2.test";
@@ -135,6 +136,8 @@ export class FakeCloud implements CloudApi {
         panelsDir: v.input.panelsDir,
         panels: v.input.panelMeta?.map((m, i) => ({ ...m, url: this.urlOf(this.assets.get(v.panelAssetIds?.[i] ?? "")?.storageKey) })),
         note: v.input.note,
+        notes: v.input.notes,
+        source: v.input.source ? { ...v.input.source, ready: Boolean(v.sourceAssetId) } : undefined,
         createdAt: iso(v.createdAt),
         sentAt: v.sentAt === undefined ? undefined : iso(v.sentAt),
         batchId: v.batchId,
@@ -311,17 +314,27 @@ export class FakeCloud implements CloudApi {
     return null;
   }
 
-  async versionReady(reviewId: string, version: number, assets: { videoAssetId?: string; panelAssetIds?: string[] }) {
+  async versionReady(reviewId: string, version: number, assets: { videoAssetId?: string; panelAssetIds?: string[]; sourceAssetId?: string }) {
     this.count("versionReady");
     const p = this.project(reviewId);
     const v = this.version(p, version);
     if (p.kind === "video" && (!assets.videoAssetId || assets.panelAssetIds)) throw fail("A video version needs one render");
     if (p.kind === "storyboard" && (assets.panelAssetIds?.length !== v.input.panelMeta?.length || assets.videoAssetId)) throw fail("A storyboard version needs every panel");
+    if (Boolean(v.input.source) !== Boolean(assets.sourceAssetId)) throw fail(v.input.source ? "This version needs its source files" : "This version has no source files");
+    v.sourceAssetId = assets.sourceAssetId;
     v.videoAssetId = assets.videoAssetId;
     v.panelAssetIds = assets.panelAssetIds;
     v.upload = { state: "ready", bytes: v.upload.total, total: v.upload.total };
     this.touch(p);
     return null;
+  }
+
+  async sourceUrl(reviewId: string, version: number) {
+    this.count("sourceUrl");
+    const v = this.version(this.project(reviewId), version);
+    const asset = v.sourceAssetId ? this.assets.get(v.sourceAssetId) : undefined;
+    if (!v.input.source || !asset) throw fail(`Version ${version} has no source files`, 404);
+    return { url: `${R2}/${asset.storageKey}?dl=1`, filename: v.input.source.filename, bytes: v.input.source.bytes };
   }
 
   async versionFailed(reviewId: string, version: number, error: string) {
@@ -520,7 +533,7 @@ export class FakeCloud implements CloudApi {
 
   async requestUpload(input: { filename: string; mime: string; kind: AssetKind }): Promise<UploadTicket> {
     this.count("requestUpload");
-    const prefix = { render: "renders", panel: "panels", poster: "posters", frame: "frames" }[input.kind];
+    const prefix = { render: "renders", panel: "panels", poster: "posters", frame: "frames", source: "sources" }[input.kind];
     const ext = input.filename.match(/\.\w+$/)?.[0] ?? "";
     const storageKey = `${prefix}/user_1/${randomBytes(8).toString("hex")}${ext}`;
     return { uploadUrl: `${R2}/${storageKey}?sig=1`, storageKey, publicUrl: `${R2}/${storageKey}` };
@@ -580,6 +593,7 @@ export class FakeCloud implements CloudApi {
       approved: null,
       approvalSeenAt: null,
       allowDownload: l.allowDownload !== false,
+      showNotes: l.showNotes === true,
       opens: 0,
       lastOpenedAt: null,
       approvals: [],
@@ -620,13 +634,14 @@ export class FakeCloud implements CloudApi {
     return null;
   }
 
-  async configure(reviewId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }) {
+  async configure(reviewId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }) {
     this.count("configure");
     const p = this.project(reviewId);
     if (!p.link) throw fail("This project isn't shared yet");
     if (settings.expiresAt !== undefined) p.link.expiresAt = settings.expiresAt ?? undefined;
     if (settings.revoked !== undefined) p.link.revokedAt = settings.revoked ? Date.now() : undefined;
     if (settings.allowDownload !== undefined) p.link.allowDownload = settings.allowDownload;
-    return { token: p.link.token, expiresAt: p.link.expiresAt ?? null, revokedAt: p.link.revokedAt ?? null, allowDownload: p.link.allowDownload !== false };
+    if (settings.showNotes !== undefined) p.link.showNotes = settings.showNotes;
+    return { token: p.link.token, expiresAt: p.link.expiresAt ?? null, revokedAt: p.link.revokedAt ?? null, allowDownload: p.link.allowDownload !== false, showNotes: p.link.showNotes === true };
   }
 }

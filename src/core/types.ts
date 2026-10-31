@@ -101,6 +101,10 @@ export interface ReviewVersion {
   /** Without `sourcePath`, FrameJam transcribed the render itself. */
   transcript?: { file: string; sourcePath?: string; words: number };
   note?: string;
+  /** Handoff notes (H2.6): what changed, which comments it answers, how to continue the project. */
+  notes?: string;
+  /** The project's source files for another agent to continue from. Cloud projects only. */
+  source?: VersionSource;
   createdAt: string;
   /** Set when the user pressed Send on this version. A sent version is locked: no new or edited comments. */
   sentAt?: string;
@@ -110,6 +114,13 @@ export interface ReviewVersion {
   reopenedFrom?: string;
   /** Cloud projects only: where the version's files are on their way to FrameJam Cloud. Left out once they're there. */
   upload?: VersionUpload;
+}
+
+/** A version's source zip (H2.6). `ready` once it is in FrameJam Cloud and can be downloaded. */
+export interface VersionSource {
+  filename: string;
+  bytes: number;
+  ready: boolean;
 }
 
 export interface VersionUpload {

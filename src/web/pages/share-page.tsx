@@ -5,6 +5,7 @@ import lockup from "../../../public/brand/lockup.svg";
 import lockupLight from "../../../public/brand/lockup-light.svg";
 import { Menu, MenuItem } from "@/components/menu";
 import { CommentList, whenLabel } from "@/components/review/comment-list";
+import { VersionNotes } from "@/components/review/version-notes";
 import { burnFrame, DrawLayer, MAX_STROKES, type Stroke } from "@/components/review/drawing";
 import { Filmstrip, useTimelineZoom, type Marker } from "@/components/review/filmstrip";
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
@@ -576,20 +577,41 @@ function Approvals({ review, version }: { review: SharedReview; version: number 
 }
 
 function Side({ title, children, empty, review, version }: { title: string; children: ReactNode; empty: boolean; review: SharedReview; version: number }) {
+  const [tab, setTab] = useState<"comments" | "notes">("comments");
+  const current = review.versions.find((v) => v.number === version);
+  const hasNotes = Boolean(current?.notes?.trim());
+  const showNotes = hasNotes && tab === "notes";
   return (
     <aside className="fc-share-side">
       <div className="fc-share-side-h">
-        <span className="fc-h3">{title}</span>
-      </div>
-      <div className="fc-share-side-body">
-        <Approvals review={review} version={version} />
-        {empty ? (
-          <div className="fc-side-empty">
-            <div className="fc-h3">No comments yet</div>
-            <p>Pause anywhere and type, click the video to point at something, or drag across the timeline for a range. Your comments stay here until you press Send.</p>
+        {hasNotes ? (
+          <div className="fc-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={!showNotes} onClick={() => setTab("comments")}>
+              {title}
+            </button>
+            <button type="button" role="tab" aria-selected={showNotes} onClick={() => setTab("notes")} data-testid="notes-tab">
+              Notes
+            </button>
           </div>
         ) : (
-          children
+          <span className="fc-h3">{title}</span>
+        )}
+      </div>
+      <div className="fc-share-side-body">
+        {showNotes && current ? (
+          <VersionNotes reviewId={review.id} version={current} />
+        ) : (
+          <>
+            <Approvals review={review} version={version} />
+            {empty ? (
+              <div className="fc-side-empty">
+                <div className="fc-h3">No comments yet</div>
+                <p>Pause anywhere and type, click the video to point at something, or drag across the timeline for a range. Your comments stay here until you press Send.</p>
+              </div>
+            ) : (
+              children
+            )}
+          </>
         )}
       </div>
     </aside>

@@ -79,6 +79,7 @@ function fakeBackend(initial: WireReview | null = wire(), initialLink: CloudLink
       current = link();
       return current;
     }),
+    sourceUrl: vi.fn(async (_id: string, version: number) => ({ url: `https://r2.test/sources/v${version}.zip?dl=1`, filename: "demo-source.zip", bytes: 2048 })),
     configure: vi.fn(async (_id: string, change: { revoked?: boolean }) => {
       if (current) current = { ...current, revokedAt: change.revoked ? 5 : null };
     }),
@@ -111,6 +112,29 @@ describe("the creator's data source", () => {
     expect(source.videoUrl("k1", 1)).toBe("https://media.example.com/v1.mp4");
     expect(source.poster("k1", 1)).toBe("https://media.example.com/v1.jpg");
     expect(source.compare).toBe(true);
+  });
+
+  it("carries each version's notes and source, and gets a fresh download link", async () => {
+    const withNotes = wire({
+      versions: [
+        {
+          number: 1,
+          createdAt: "2026-10-01T10:00:00.000Z",
+          upload: { state: "ready", bytes: 5, total: 5 },
+          hasVideo: true,
+          videoUrl: "https://media.example.com/v1.mp4",
+          notes: "Render: `npx hyperframes render`",
+          source: { filename: "launch-source.zip", bytes: 2048, ready: true },
+        },
+      ],
+    });
+    const { backend } = fakeBackend(withNotes);
+    const source = creatorSource(backend);
+    const review = await source.review("k1");
+    expect(review.versions[0]?.notes).toContain("hyperframes render");
+    expect(review.versions[0]?.source).toEqual({ filename: "launch-source.zip", bytes: 2048, ready: true });
+    expect(await source.sourceDownload!("k1", 1)).toEqual({ url: "https://r2.test/sources/v1.zip?dl=1", filename: "demo-source.zip", bytes: 2048 });
+    expect(backend.sourceUrl).toHaveBeenCalledWith("k1", 1);
   });
 
   it("says the agent is listening for a short while after its last heartbeat", async () => {

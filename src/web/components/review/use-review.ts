@@ -48,7 +48,8 @@ export function useReview(id: string, data: ReviewDataSource, onNewVersion?: () 
         onNewVersionRef.current?.();
       }
       knownLatest.current = latest.number;
-      setActiveVersion((v) => v ?? latest.number);
+      const linked = Number(new URLSearchParams(window.location.search).get("v"));
+      setActiveVersion((v) => v ?? (r.versions.some((x) => x.number === linked) ? linked : latest.number));
     } catch (e) {
       setLoadError(e);
     }

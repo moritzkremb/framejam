@@ -55,7 +55,7 @@ export function useSidebar(width: number, fullscreen = false) {
 }
 
 export type SidebarState = ReturnType<typeof useSidebar>;
-export type SidebarTab = "comments" | "transcript";
+export type SidebarTab = "comments" | "transcript" | "notes";
 
 /** A label and the keys that trigger it, shown one key per chip. */
 export type Shortcut = [label: string, keys: string[]];
@@ -326,6 +326,7 @@ export function ReviewSidebar({
   label,
   footer,
   transcript,
+  notes,
   tab = "comments",
   onTab,
   onSelect,
@@ -341,6 +342,8 @@ export function ReviewSidebar({
   footer?: ReactNode;
   /** With a transcript the sidebar has two tabs: comments and the transcript. */
   transcript?: ReactNode;
+  /** The Notes tab: handoff notes and source files, for a version that has them. */
+  notes?: ReactNode;
   tab?: SidebarTab;
   onTab?(tab: SidebarTab): void;
   onSelect(c: ReviewComment): void;
@@ -350,17 +353,25 @@ export function ReviewSidebar({
   if (!side.open) return null;
   const count = comments.length > 0 && <span className={cn("fc-count", r.isOpen ? "draft" : "sent")}>{comments.length}</span>;
   const showTranscript = Boolean(transcript) && tab === "transcript";
+  const showNotes = Boolean(notes) && tab === "notes";
   return (
-    <aside className={cn("fc-side", side.overlay && "overlay")} aria-label={showTranscript ? "Transcript" : "Comments"}>
+    <aside className={cn("fc-side", side.overlay && "overlay")} aria-label={showTranscript ? "Transcript" : showNotes ? "Notes" : "Comments"}>
       <div className="fc-side-h">
-        {transcript ? (
+        {transcript || notes ? (
           <div className="fc-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={!showTranscript} onClick={() => onTab?.("comments")}>
+            <button type="button" role="tab" aria-selected={!showTranscript && !showNotes} onClick={() => onTab?.("comments")}>
               Comments {count}
             </button>
-            <button type="button" role="tab" aria-selected={showTranscript} onClick={() => onTab?.("transcript")}>
-              Transcript
-            </button>
+            {transcript && (
+              <button type="button" role="tab" aria-selected={showTranscript} onClick={() => onTab?.("transcript")}>
+                Transcript
+              </button>
+            )}
+            {notes && (
+              <button type="button" role="tab" aria-selected={showNotes} onClick={() => onTab?.("notes")} data-testid="notes-tab">
+                Notes
+              </button>
+            )}
           </div>
         ) : (
           <>
@@ -376,6 +387,8 @@ export function ReviewSidebar({
       <div className="fc-side-body">
         {showTranscript ? (
           transcript
+        ) : showNotes ? (
+          notes
         ) : comments.length ? (
           <CommentList
             comments={comments}

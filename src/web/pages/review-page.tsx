@@ -9,6 +9,7 @@ import { Filmstrip, useTimelineZoom, ZoomControls, type Marker } from "@/compone
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
 import { CommentsRail, DownloadButton, UploadWait, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
 import { TranscriptionState, TranscriptPanel, useTranscript, useTranscription } from "@/components/review/transcript";
+import { hasHandoff, VersionNotes } from "@/components/review/version-notes";
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
 import { isOffline, NotHere, Offline } from "@/components/states";
@@ -522,6 +523,7 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
               transcription ? <TranscriptionState transcription={transcription} /> : version?.transcript && <div className="fc-transcript" />
             )
           }
+          notes={version && hasHandoff(version) ? <VersionNotes data={data} reviewId={review.id} version={version} /> : undefined}
           tab={sideTab}
           onTab={setSideTab}
           onSelect={(c) => selectComment(c)}
