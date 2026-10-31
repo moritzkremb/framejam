@@ -28,7 +28,10 @@ export function ReviewPage({ data = localDataSource, role = "local" }: { data?: 
           {isOffline(r.loadError) ? (
             <Offline />
           ) : (
-            <NotHere title={<>This project isn't <em>here</em></>} message="It may have been deleted, or the link is from another computer." />
+            <NotHere
+              title={<>This project isn't <em>here</em></>}
+              message={role === "owner" ? "It may have been deleted, or it's in another account." : "It may have been deleted, or the link is from another computer."}
+            />
           )}
         </main>
       </div>

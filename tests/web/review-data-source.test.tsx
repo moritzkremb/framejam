@@ -101,13 +101,13 @@ async function flush() {
   for (let i = 0; i < 5; i++) await act(async () => {});
 }
 
-async function renderReview(id: string, data: ReviewDataSource) {
+async function renderReview(id: string, data: ReviewDataSource, role?: "owner") {
   root = createRoot(host);
   act(() => {
     root!.render(
       <MemoryRouter initialEntries={[`/review/${id}`]}>
         <Routes>
-          <Route path="/review/:id" element={<ReviewPage data={data} />} />
+          <Route path="/review/:id" element={<ReviewPage data={data} role={role} />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -132,6 +132,15 @@ describe("review screens with a data source", () => {
     ]);
     expect(host.querySelector('[data-testid="send-to-agent"]')).not.toBeNull();
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("say a missing project may be in another account on FrameJam Cloud, and on another computer locally", async () => {
+    const missing = () => ({ ...fakeSource(videoReview()).source, review: async () => Promise.reject(new Error("Project not found")) });
+    await renderReview("rev_gone", missing(), "owner");
+    expect(host.textContent).toContain("It may have been deleted, or it's in another account.");
+    act(() => root?.unmount());
+    await renderReview("rev_gone", missing());
+    expect(host.textContent).toContain("It may have been deleted, or the link is from another computer.");
   });
 
   it("show a guest's name next to the comments they wrote on a shared link", async () => {
