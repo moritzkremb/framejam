@@ -2,6 +2,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { toast } from "sonner";
 import { cloudShareSource, type ShareBackend, type ShareView, type VoiceResult } from "@/lib/cloud-share";
 import { SharePage } from "@/pages/share-page";
 
@@ -569,5 +570,99 @@ describe("voice comments", () => {
     const c = await data.addComment(LINK, { version: 2, time: 0, text: result.note ?? "", voice: { id: result.voiceId, status: result.status, note: result.note, points: [] } });
     expect(c.voice).toEqual(expect.objectContaining({ status: "pending", note: "Transcription pending", audioUrl: "blob:voice" }));
     await expect(data.updateComment(LINK, c.id, { text: "x" })).rejects.toThrow(/can't be edited/);
+  });
+
+  async function recordOnce() {
+    await act(async () => q("voice-toggle")!.click());
+    await flush();
+    await act(async () => q("voice-toggle")!.click());
+    await flush();
+  }
+
+  it("keeps a voice comment whose upload is blocked (CORS) as a draft that says so, and Retry saves it", async () => {
+    stubRecorder();
+    const fake = fakeBackend(videoView());
+    const put = vi.fn(async (): Promise<Response> => {
+      throw new TypeError("Failed to fetch");
+    });
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:voice" }));
+    const { storage } = await render(fake, guestStorage(), put as unknown as typeof fetch);
+    loadVideo();
+    await recordOnce();
+
+    expect(q("voice-unsaved")?.textContent).toContain("Voice not saved.");
+    expect(q("voice-unsaved")?.textContent).toContain("CORS");
+    expect(q("voice-retry")).not.toBeNull();
+    expect(q("voice-as-text")).not.toBeNull();
+    expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([expect.objectContaining({ text: "", unsavedVoice: expect.objectContaining({ error: expect.stringContaining("CORS") }) })]);
+    expect(q<HTMLButtonElement>("send")?.disabled).toBe(true);
+    expect(fake.backend.voiceTranscribe).not.toHaveBeenCalled();
+
+    const failedId = JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)[0].id;
+    const dismiss = vi.spyOn(toast, "dismiss");
+    put.mockImplementation(async () => new Response(null, { status: 200 }));
+    await act(async () => q("voice-retry")!.click());
+    await flush();
+    expect(q("voice-unsaved")).toBeNull();
+    expect(dismiss).toHaveBeenCalledWith(`voice-${failedId}`);
+    expect([...host.querySelectorAll('[data-testid="voice-point"]')].map((l) => l.textContent)).toEqual(["This", "over here"]);
+    expect(q("send")?.textContent).toContain("Send 1 comment");
+    expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toHaveLength(1);
+  });
+
+  it("sends a voice comment whose upload link expired as text instead", async () => {
+    stubRecorder();
+    const fake = fakeBackend(videoView());
+    const put = vi.fn(async () => new Response(null, { status: 403 }));
+    await render(fake, guestStorage(), put as unknown as typeof fetch);
+    loadVideo();
+    await recordOnce();
+
+    expect(q("voice-unsaved")?.textContent).toMatch(/refused it \(403, the upload link may have expired\)/);
+    await act(async () => q("voice-as-text")!.click());
+    const box = host.querySelector<HTMLTextAreaElement>('[data-testid="comment-card"] textarea')!;
+    act(() => typeInto(box, "The logo is too small"));
+    const saveButton = [...host.querySelectorAll<HTMLButtonElement>('[data-testid="comment-card"] button')].find((b) => b.textContent === "Save")!;
+    await act(async () => saveButton.click());
+    await flush();
+
+    expect(q("voice-unsaved")).toBeNull();
+    expect(cards().some((t) => t.includes("The logo is too small"))).toBe(true);
+    await act(async () => q("send")!.click());
+    await flush();
+    const [args] = fake.backend.send.mock.calls[0]!;
+    expect(args.comments).toEqual([expect.objectContaining({ text: "The logo is too small", voice: undefined })]);
+  });
+
+  it("keeps a storyboard voice comment on its panel when the upload fails", async () => {
+    stubRecorder();
+    const fake = fakeBackend(storyboardView());
+    const put = vi.fn(async (): Promise<Response> => {
+      throw new TypeError("Failed to fetch");
+    });
+    const { storage } = await render(fake, guestStorage(), put as unknown as typeof fetch);
+    act(() => host.querySelectorAll<HTMLButtonElement>(".fc-share-panel")[1]!.click());
+    await recordOnce();
+
+    expect(q("voice-unsaved")?.textContent).toContain("Voice not saved.");
+    expect(q("voice-retry")).not.toBeNull();
+    expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([expect.objectContaining({ panel: 2, kind: "panel", unsavedVoice: expect.any(Object) })]);
+  });
+
+  it("doesn't send an unsaved voice draft, and after a reload offers only typing it", async () => {
+    const fake = fakeBackend(videoView());
+    const storage = guestStorage();
+    const data = cloudShareSource(fake.backend, storage, vi.fn() as unknown as typeof fetch);
+    await data.addComment(LINK, { version: 2, time: 1, text: "", unsavedVoice: { error: "The recording couldn't be uploaded.", duration: 4 } });
+    await expect(data.submit(LINK)).rejects.toThrow(/wasn't saved/);
+    await data.addComment(LINK, { version: 2, time: 2, text: "Typed one" });
+    await data.submit(LINK);
+    expect(fake.backend.send.mock.calls[0]![0].comments).toEqual([expect.objectContaining({ text: "Typed one" })]);
+    expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([expect.objectContaining({ unsavedVoice: expect.any(Object) })]);
+
+    await render(fake, storage);
+    expect(q("voice-unsaved")?.textContent).toContain("lost when the page reloaded");
+    expect(q("voice-retry")).toBeNull();
+    expect(q("voice-as-text")).not.toBeNull();
   });
 });

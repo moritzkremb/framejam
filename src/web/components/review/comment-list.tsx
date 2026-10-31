@@ -1,5 +1,5 @@
 import { Check, Mic, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Menu, MenuItem } from "@/components/menu";
 import { splitTranscript } from "../../../core/voice";
 import { formatTime, type ReviewComment } from "@/lib/api";
@@ -74,10 +74,12 @@ function CommentItem({
   onDelete,
   frameUrl,
   onPoint,
+  footer,
 }: {
   comment: ReviewComment;
   frameUrl?(file: string): string;
   onPoint?(point: number): void;
+  footer?: CommentFooter;
   index: number;
   label: string;
   editable: boolean;
@@ -168,8 +170,9 @@ function CommentItem({
             </div>
           </div>
         ) : (
-          <p className="body">{comment.text}</p>
+          comment.text && <p className="body">{comment.text}</p>
         )}
+        {!editing && footer?.(comment, { edit: () => setEditing(true) })}
       </div>
       {editable && !editing ? (
         <span onClick={(e) => e.stopPropagation()}>
@@ -198,6 +201,9 @@ function CommentItem({
   );
 }
 
+/** Extra content under a comment's text; `edit` opens its editor. */
+export type CommentFooter = (comment: ReviewComment, actions: { edit(): void }) => ReactNode;
+
 /**
  * The comments on the version you're watching, one card under another. Editable while the version is open, greyed
  * once finished; `editable` can also decide per comment (on a shared link, only your own unsent ones).
@@ -212,7 +218,9 @@ export function CommentList({
   onDelete,
   frameUrl,
   onPoint,
+  footer,
 }: {
+  footer?: CommentFooter;
   /** Turns a voice point's frame into an image URL; omit when frames already are URLs. */
   frameUrl?(file: string): string;
   /** A pointing phrase was clicked: seek to where it was said. */
@@ -241,6 +249,7 @@ export function CommentList({
           onDelete={() => onDelete(c)}
           frameUrl={frameUrl}
           onPoint={onPoint && ((i) => onPoint(c, i))}
+          footer={footer}
         />
       ))}
     </ul>

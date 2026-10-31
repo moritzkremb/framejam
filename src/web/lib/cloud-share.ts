@@ -131,8 +131,16 @@ export function convexShareBackend(url: string): ShareBackend {
   };
 }
 
+/**
+ * A recording whose upload or transcription failed. The draft stays, without words, until the guest retries it or types
+ * it instead; it isn't sent as it is.
+ */
+export interface UnsavedVoice {
+  error: string;
+  duration?: number;
+}
 /** A comment on the share page: what the review screens show, plus what the guest drew. */
-export type SharedComment = ReviewComment & { drawing?: number[][] };
+export type SharedComment = ReviewComment & { drawing?: number[][]; unsavedVoice?: UnsavedVoice };
 export type SharedReview = Review & {
   comments: SharedComment[];
   kind: ShareView["kind"];
@@ -149,7 +157,7 @@ export interface DraftVoice {
   duration?: number;
   points: Array<{ phrase: string; at: number; time: number; x?: number; y?: number; drawing?: number[][]; frame?: string }>;
 }
-export type NewSharedComment = NewComment & { drawing?: number[][]; voice?: DraftVoice };
+export type NewSharedComment = NewComment & { drawing?: number[][]; voice?: DraftVoice; unsavedVoice?: UnsavedVoice };
 
 interface Draft {
   id: string;
@@ -166,6 +174,7 @@ interface Draft {
   /** JPEG data URL of the frame, with the pin and drawing burned in. */
   frame?: string;
   voice?: DraftVoice;
+  unsavedVoice?: UnsavedVoice;
   createdAt: string;
 }
 
@@ -323,6 +332,7 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
         note: d.voice.note,
         points: d.voice.points.map((p) => ({ phrase: p.phrase, at: p.at, time: p.time, x: p.x, y: p.y, frame: p.frame, drawn: p.drawing?.length ? true : undefined })),
       },
+      unsavedVoice: d.unsavedVoice,
     }));
     const first = view.versions[0]?.at ?? 0;
     const last = view.versions.at(-1)?.at ?? first;
@@ -388,6 +398,7 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
         drawing: body.drawing?.length ? body.drawing : undefined,
         frame: body.thumbnailDataUrl,
         voice: body.voice,
+        unsavedVoice: body.voice ? undefined : body.unsavedVoice,
         createdAt: new Date().toISOString(),
       };
       saveDrafts(id, [...drafts(id), draft]);
@@ -398,8 +409,11 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       await requireView(id);
       try {
         const up = await backend.voiceUpload(id, mime);
-        const put = await fetchFn(up.uploadUrl, { method: "PUT", headers: { "Content-Type": up.mime }, body: blob });
-        if (!put.ok) throw new Error("The recording couldn't be uploaded. Try again.");
+        const put = await fetchFn(up.uploadUrl, { method: "PUT", headers: { "Content-Type": up.mime }, body: blob }).catch(() => {
+          // The browser hides why (offline, or the bucket's CORS rules don't list this site).
+          throw new Error("The recording couldn't be uploaded: the storage server didn't answer this site (a network or CORS problem).");
+        });
+        if (!put.ok) throw new Error(`The recording couldn't be uploaded: the storage server refused it (${put.status}${put.status === 403 ? ", the upload link may have expired" : ""}).`);
         const result = await backend.voiceTranscribe({ link: id, storageKey: up.storageKey, bytes: blob.size, mime: up.mime, duration });
         audioUrls.set(result.voiceId, URL.createObjectURL(blob));
         return result;
@@ -414,6 +428,7 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       if (!draft) throw new Error("Sent comments can't be changed");
       if (draft.voice) throw new Error("Voice comments can't be edited");
       draft.text = body.text.trim();
+      if (draft.text) draft.unsavedVoice = undefined;
       saveDrafts(id, list);
       return draft;
     },
@@ -431,8 +446,10 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
     async submit(id) {
       const who = guest();
       if (!who) throw new Error("Add your name and email first");
-      const list = drafts(id);
-      if (!list.length) throw new Error("Add a comment first");
+      const all = drafts(id);
+      if (!all.length) throw new Error("Add a comment first");
+      const list = all.filter((d) => !d.unsavedVoice);
+      if (!list.length) throw new Error("Your voice comment wasn't saved. Retry it, or send it as text instead.");
       const byVersion = new Map<number, Draft[]>();
       for (const d of list) byVersion.set(d.version, [...(byVersion.get(d.version) ?? []), d]);
 
