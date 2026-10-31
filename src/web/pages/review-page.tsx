@@ -458,7 +458,7 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
             onPinClick={selectById}
             onFrameWidth={setFrameWidth}
           />
-          <div>
+          <div className="fc-transport">
             <div className="fc-controls">
               <button type="button" className="fc-play" aria-label={playing ? "Pause" : "Play"} onClick={togglePlay} disabled={!ctrl}>
                 {playing ? <Pause className="fc-i fill" /> : <Play className="fc-i fill" />}

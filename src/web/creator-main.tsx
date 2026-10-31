@@ -16,12 +16,8 @@ function meta(name: string): string | undefined {
   return value && !value.startsWith("__") ? value : undefined;
 }
 
-function applyTheme() {
-  const light = window.matchMedia("(prefers-color-scheme: light)").matches;
-  document.documentElement.dataset.theme = light ? "light" : "dark";
-}
-applyTheme();
-window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", applyTheme);
+// framejam.ai is dark only; set here too in case the host serves its own copy of index.html.
+document.documentElement.dataset.theme = "dark";
 
 async function fetchToken(): Promise<string | null> {
   const res = await fetch("/api/convex-token", { credentials: "same-origin", cache: "no-store" });

@@ -548,22 +548,32 @@ a { color: inherit; }
 .fc-pb-label, .fc-pick-sub, .fc-pick-field .lbl { font: 500 11px/16px var(--font-mono); letter-spacing: .08em; }
 .fc-menu.fc-menu-pop { width: max-content; min-width: 248px; max-width: min(320px, calc(100vw - 24px)); }
 
-/* Phones: the transport row and the handoff card fit next to the comments rail. */
+/* Phones: the share page's transport row and the handoff card fit next to the comments rail. */
 @media (max-width: 560px) {
-  .fc-controls { gap: 4px; }
-  .fc-play { width: 36px; height: 36px; }
-  .fc-readout { font-size: 12px; }
-  .fc-controls .fc-rate { min-width: 36px; padding: 0 4px; }
-  .fc-controls .fc-btn.icon.sm { width: 28px; height: 28px; }
+  .fc-share-stage .fc-controls { gap: 4px; }
+  .fc-share-stage .fc-play { width: 36px; height: 36px; }
+  .fc-share-stage .fc-readout { font-size: 12px; }
+  .fc-share-stage .fc-controls .fc-btn.icon.sm { width: 28px; height: 28px; }
   .fc-handoff .hd { flex-wrap: wrap; }
   .fc-handoff .hd > .fc-grow { flex-basis: calc(100% - 44px); }
   .fc-handoff .hd > .fc-btn { margin-left: 44px; }
 }
 @media (max-width: 460px) {
+  .fc-stage .fc-dock .send, .fc-share-stage .fc-dock .send { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
+  .fc-stage .fc-dock .send .fc-agent, .fc-share-stage .fc-dock .send .fc-agent { flex-basis: 100%; }
+}
+/* The review page's transport row follows its own width: the comments rail, the sidebar and a tall video all narrow it. */
+.fc-transport { container-type: inline-size; }
+@container (max-width: 480px) {
+  .fc-controls { gap: 4px; }
+  .fc-play { width: 36px; height: 36px; }
+  .fc-readout { font-size: 12px; }
+  .fc-controls .fc-rate { min-width: 36px; padding: 0 4px; }
+  .fc-controls .fc-btn.icon.sm { width: 28px; height: 28px; }
+}
+@container (max-width: 400px) {
   .fc-controls:has(> .fc-zoom) { flex-wrap: wrap; height: auto; row-gap: 0; }
   .fc-controls:has(> .fc-zoom) > .fc-grow { flex-basis: 100%; }
   .fc-controls > .fc-zoom { margin-left: -4px; }
   .fc-controls > .fc-zoom + .fc-btn { margin-left: auto; }
-  .fc-stage .fc-dock .send, .fc-share-stage .fc-dock .send { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
-  .fc-stage .fc-dock .send .fc-agent, .fc-share-stage .fc-dock .send .fc-agent { flex-basis: 100%; }
 }
