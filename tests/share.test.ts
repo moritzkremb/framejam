@@ -115,8 +115,12 @@ class FakeCloud implements ShareClient {
     this.resolved.push(resolutions);
     return { marked: resolutions.length };
   }
-  async configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<LinkSettings> {
+  /** Like a cloud from before `reopen`: its validator rejects the field. */
+  rejectReopen = false;
+  async configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; reopen?: boolean }): Promise<LinkSettings> {
     if (!this.tokens.has(localId)) throw new Error("This project isn't shared");
+    if (settings.reopen && this.rejectReopen) throw new Error("ArgumentValidationError: Object contains extra field `reopen` that is not in the validator.");
+    if (settings.reopen) this.approved = null;
     if (settings.expiresAt !== undefined) this.expiresAt = settings.expiresAt;
     if (settings.revoked !== undefined) this.revokedAt = settings.revoked ? 1_700_000_000_000 : null;
     if (settings.allowDownload !== undefined) this.allowDownload = settings.allowDownload;
@@ -1366,6 +1370,31 @@ describe("the creator's share settings over HTTP", () => {
     expect(await (await post({ revoked: true })).json()).toMatchObject({ closed: true });
     expect(cloud.revokedAt).not.toBeNull();
     expect((await post({})).status).toBe(400);
+  });
+
+  it("reopens an approved link for comments", async () => {
+    const id = await openLaunch();
+    const app = createApp({ store, baseUrl: "http://localhost:2400", share: opts() });
+    await shareVersion(store, id, opts());
+    cloud.approve(1, "Anna", 1000);
+    await pullShare(store, id, opts());
+    expect(readShareState(store.root, id)!.approved).toMatchObject({ by: "Anna" });
+    const res = await app.request(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify({ reopen: true }), headers: { "content-type": "application/json" } });
+    expect(res.status).toBe(200);
+    expect((await res.json()).approved).toBeFalsy();
+    expect(cloud.approved).toBeNull();
+    expect(readShareState(store.root, id)!.approved).toBeUndefined();
+  });
+
+  it("says what to do instead when the cloud can't reopen a link yet", async () => {
+    const id = await openLaunch();
+    const app = createApp({ store, baseUrl: "http://localhost:2400", share: opts() });
+    await shareVersion(store, id, opts());
+    cloud.approve(1, "Anna", 1000);
+    cloud.rejectReopen = true;
+    const res = await app.request(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify({ reopen: true }), headers: { "content-type": "application/json" } });
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("Reopening isn't available yet. Put a new version on the link to open comments again.");
   });
 
   it("says so when the project isn't shared or the computer is signed out", async () => {

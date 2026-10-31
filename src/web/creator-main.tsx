@@ -50,7 +50,7 @@ if (!url || !id) {
       <CrashScreen>
         <MemoryRouter initialEntries={[`/review/${id}`]}>
           <Routes>
-            <Route path="/review/:id" element={<ReviewPage data={data} />} />
+            <Route path="/review/:id" element={<ReviewPage data={data} role="owner" />} />
             <Route path="*" element={<Leave />} />
           </Routes>
         </MemoryRouter>

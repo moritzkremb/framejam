@@ -315,7 +315,7 @@ export interface ShareClient {
   /** Marks guest comments "resolved in vN" on the link. The version has to be on the link already. */
   resolve(localId: string, resolutions: Resolution[]): Promise<{ marked: number }>;
   /** Sets or clears the link's expiry (`expiresAt: null` clears it), revokes or reopens it, and switches the download. */
-  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<LinkSettings>;
+  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean; reopen?: boolean }): Promise<LinkSettings>;
 }
 
 export function createShareClient(

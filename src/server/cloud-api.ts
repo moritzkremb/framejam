@@ -185,7 +185,7 @@ export interface CloudApi {
   link(reviewId: string): Promise<CloudLink | null>;
   links(): Promise<{ reviewId: string; title: string; latestVersion: number; link: CloudLink }[]>;
   approvalSeen(reviewId: string): Promise<null>;
-  configure(reviewId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<LinkSettings>;
+  configure(reviewId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean; reopen?: boolean }): Promise<LinkSettings>;
 }
 
 export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): CloudApi {

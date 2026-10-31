@@ -25,8 +25,11 @@ export interface ReviewDataSource {
   sourceDownload?(id: string, version: number): Promise<{ url: string; filename: string; bytes: number }>;
   /** The project's share link and its settings. Optional: only the local server has one to show the creator. */
   share?(id: string): Promise<ShareInfo>;
-  /** `expiresAt` (ms since the epoch, or null for no expiry) and un-revoking are only offered where the source takes them (`shareSettings`). */
-  setShare?(id: string, change: { allowDownload?: boolean; revoked?: boolean; expiresAt?: number | null; showNotes?: boolean }): Promise<ShareInfo>;
+  /**
+   * `expiresAt` (ms since the epoch, or null for no expiry) and un-revoking are only offered where the source takes them
+   * (`shareSettings`). `reopen` clears a guest's approval so the link takes comments again.
+   */
+  setShare?(id: string, change: { allowDownload?: boolean; revoked?: boolean; expiresAt?: number | null; showNotes?: boolean; reopen?: boolean }): Promise<ShareInfo>;
   /** The creator page: put a version (the latest by default) on the project's link, creating the link the first time. */
   publishShare?(id: string, version?: number): Promise<ShareInfo>;
   /** The creator page can set link expiry and turn a turned-off link back on. */

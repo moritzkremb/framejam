@@ -233,6 +233,8 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
   const notify = (link: string) => listeners.get(link)?.forEach((l) => l());
   /** Playback for recordings made in this tab; a reloaded draft keeps its transcript but not its audio. */
   const audioUrls = new Map<string, string>();
+  /** Drafts on their way to the cloud, so a second send while one runs doesn't send them again. */
+  const sending = new Set<string>();
 
   /** The frame helps whoever reads the comment, but the words matter most: a failed upload sends without it. */
   const uploadFrame = async (link: string, dataUrl: string | undefined): Promise<{ key: string; bytes: number } | undefined> => {
@@ -352,6 +354,50 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
     };
   };
 
+  const sendDrafts = async (id: string, who: Guest, list: Draft[]) => {
+    const byVersion = new Map<number, Draft[]>();
+    for (const d of list) byVersion.set(d.version, [...(byVersion.get(d.version) ?? []), d]);
+
+    const ids: string[] = [];
+    for (const [version, group] of byVersion) {
+      const comments: SentComment[] = [];
+      for (const d of group) {
+        const frame = await uploadFrame(id, d.frame);
+        const voice: SentComment["voice"] = d.voice && {
+          id: d.voice.id,
+          points: await Promise.all(
+            d.voice.points.map(async (p) => ({ phrase: p.phrase, at: p.at, time: p.time, x: p.x, y: p.y, drawing: p.drawing, frame: await uploadFrame(id, p.frame) })),
+          ),
+        };
+        comments.push({
+          kind: d.kind,
+          time: d.time,
+          endTime: d.endTime,
+          x: d.x,
+          y: d.y,
+          panel: d.panel,
+          wholeVideo: d.wholeVideo,
+          text: d.voice ? "" : d.text,
+          drawing: d.drawing,
+          frame,
+          voice,
+        });
+      }
+      try {
+        const res = await backend.send({ link: id, version, name: who.name, email: who.email, comments });
+        ids.push(...res.ids);
+      } catch (e) {
+        throw new Error(cloudMessage(e));
+      }
+      const sentIds = new Set(group.map((d) => d.id));
+      saveDrafts(
+        id,
+        drafts(id).filter((d) => !sentIds.has(d.id)),
+      );
+    }
+    return { batch: { id: "", commentIds: ids }, agentListening: false };
+  };
+
   const versionOf = (link: string, n: number) => views.get(link)?.versions.find((v) => v.number === n);
 
   return {
@@ -410,10 +456,10 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       try {
         const up = await backend.voiceUpload(id, mime);
         const put = await fetchFn(up.uploadUrl, { method: "PUT", headers: { "Content-Type": up.mime }, body: blob }).catch(() => {
-          // The browser hides why (offline, or the bucket's CORS rules don't list this site).
-          throw new Error("The recording couldn't be uploaded: the storage server didn't answer this site (a network or CORS problem).");
+          // The browser hides why: offline, or the storage doesn't accept uploads from this address.
+          throw new Error("The recording couldn't be uploaded. Check your connection and try again.");
         });
-        if (!put.ok) throw new Error(`The recording couldn't be uploaded: the storage server refused it (${put.status}${put.status === 403 ? ", the upload link may have expired" : ""}).`);
+        if (!put.ok) throw new Error(put.status === 403 ? "The recording couldn't be uploaded because the upload link expired. Try again." : "The recording couldn't be uploaded. Try again in a moment.");
         const result = await backend.voiceTranscribe({ link: id, storageKey: up.storageKey, bytes: blob.size, mime: up.mime, duration });
         audioUrls.set(result.voiceId, URL.createObjectURL(blob));
         return result;
@@ -448,49 +494,16 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       if (!who) throw new Error("Add your name and email first");
       const all = drafts(id);
       if (!all.length) throw new Error("Add a comment first");
-      const list = all.filter((d) => !d.unsavedVoice);
-      if (!list.length) throw new Error("Your voice comment wasn't saved. Retry it, or send it as text instead.");
-      const byVersion = new Map<number, Draft[]>();
-      for (const d of list) byVersion.set(d.version, [...(byVersion.get(d.version) ?? []), d]);
-
-      const ids: string[] = [];
-      for (const [version, group] of byVersion) {
-        const comments: SentComment[] = [];
-        for (const d of group) {
-          const frame = await uploadFrame(id, d.frame);
-          const voice: SentComment["voice"] = d.voice && {
-            id: d.voice.id,
-            points: await Promise.all(
-              d.voice.points.map(async (p) => ({ phrase: p.phrase, at: p.at, time: p.time, x: p.x, y: p.y, drawing: p.drawing, frame: await uploadFrame(id, p.frame) })),
-            ),
-          };
-          comments.push({
-            kind: d.kind,
-            time: d.time,
-            endTime: d.endTime,
-            x: d.x,
-            y: d.y,
-            panel: d.panel,
-            wholeVideo: d.wholeVideo,
-            text: d.voice ? "" : d.text,
-            drawing: d.drawing,
-            frame,
-            voice,
-          });
-        }
-        try {
-          const res = await backend.send({ link: id, version, name: who.name, email: who.email, comments });
-          ids.push(...res.ids);
-        } catch (e) {
-          throw new Error(cloudMessage(e));
-        }
-        const sentIds = new Set(group.map((d) => d.id));
-        saveDrafts(
-          id,
-          drafts(id).filter((d) => !sentIds.has(d.id)),
-        );
+      const ready = all.filter((d) => !d.unsavedVoice);
+      if (!ready.length) throw new Error("Your voice comment wasn't saved. Retry it, or send it as text instead.");
+      const list = ready.filter((d) => !sending.has(d.id));
+      if (!list.length) throw new Error("Your comments are already on their way.");
+      for (const d of list) sending.add(d.id);
+      try {
+        return await sendDrafts(id, who, list);
+      } finally {
+        for (const d of list) sending.delete(d.id);
       }
-      return { batch: { id: "", commentIds: ids }, agentListening: false };
     },
 
     async reopen() {

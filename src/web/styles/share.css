@@ -1,29 +1,15 @@
-/* The share page (www.framejam.ai/v/<token>): one column on phones, the comments beside the video from 900px. */
+/* The share page (www.framejam.ai/v/<token>): the review screen's layout, plus the guest's own pieces. */
 .fc-share { min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); }
+.fc-share.fc-rshell { height: 100dvh; min-height: 0; }
 .fc-share-h { padding-left: var(--space-4); }
 .fc-share-h .titles { margin-left: var(--space-2); }
 .fc-share-loading { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 960px; margin: 0 auto; padding: var(--space-4); }
 .fc-share-closed { flex: 1; justify-content: center; }
 
-.fc-share-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.fc-share-stage { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); }
-.fc-share-stage > * { width: 100%; }
-.fc-share-player { position: relative; width: 100%; max-height: 70dvh; min-height: 160px; }
-.fc-share-stage .fc-dock { position: static; padding: 0; background: none; }
-.fc-share-stage .fc-dock .box { box-shadow: inset 0 0 0 1px var(--border); }
-.fc-share-stage .fc-dock .box:focus-within { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
-.fc-share-dock .tools { flex-wrap: wrap; row-gap: 6px; }
-.fc-share-dock .fc-chip-btn.on { background: var(--accent-soft); color: var(--accent-text); }
-.fc-share-dock .send { flex-wrap: wrap; row-gap: 8px; }
 .fc-share-as { font: 400 12px/16px var(--font-sans); color: var(--text-2); }
 .fc-share-as b { font-weight: 600; color: var(--text); }
 .fc-share-as .fc-link { border: 0; padding: 0; background: none; font: inherit; cursor: pointer; }
 
-.fc-share-side { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
-.fc-share-side-h { display: flex; align-items: center; height: 48px; flex: none; padding: 0 16px; border-bottom: 1px solid var(--border); }
-.fc-share-side-h .fc-tabs { align-self: stretch; align-items: flex-end; gap: 18px; border-bottom: 0; }
-.fc-share-side-h .fc-tabs button { padding: 0 0 14px; font-size: 13px; }
-.fc-share-side-body { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
 .fc-share-approved { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--accent-text); font: 500 12px/16px var(--font-sans); }
 
 .fc-draw { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
@@ -47,17 +33,6 @@
 @media (max-width: 560px) {
   .fc-share-h .lbl { display: none; }
   .fc-share-h .titles .s { font-size: 11px; }
-}
-
-@media (min-width: 900px) {
-  .fc-share { height: 100dvh; }
-  .fc-share-body { flex-direction: row; overflow: hidden; }
-  .fc-share-stage { flex: 1; min-width: 0; padding: var(--space-4); overflow: auto; justify-content: safe center; }
-  .fc-share-stage > * { max-width: var(--content-w, 1100px); margin-left: auto; margin-right: auto; }
-  .fc-share-stage > .fc-share-player { max-width: none; max-height: calc(100dvh - 380px); }
-  .fc-share-side { width: clamp(300px, 28vw, 380px); flex: none; border-top: 0; border-left: 1px solid var(--border); }
-  .fc-share-side-h { height: 52px; }
-  .fc-share-side-body { flex: 1; min-height: 0; overflow: auto; }
 }
 
 .fc-share-final-body { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px 16px 40px; width: min(960px, 100%); margin: 0 auto; }

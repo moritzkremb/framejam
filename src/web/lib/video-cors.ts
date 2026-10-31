@@ -16,6 +16,10 @@ export async function blockedByCors(src: string, fetchFn: typeof fetch = fetch):
   }
 }
 
-export function corsMessage(host = window.location.host): string {
-  return `This video can't play on ${host}: the storage it's in doesn't allow this site yet (R2 CORS). Previews can't play videos until the bucket's CORS rules list this address.`;
+/** What a guest reads: nothing they can fix, so who to tell. */
+export const GUEST_VIDEO_ERROR = "This video can't play right now. Tell whoever sent the link.";
+
+/** What the creator reads when the storage turns this page away: their file is fine, the setup isn't. */
+export function blockedMessage(host = window.location.host): string {
+  return `This video can't play on ${host} yet. The file is fine, but FrameJam's storage doesn't allow this address. Try again later.`;
 }

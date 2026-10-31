@@ -98,7 +98,7 @@ export interface ShareInfo {
 
 export const api = {
   share: (id: string) => request<ShareInfo>(`/api/reviews/${id}/share`),
-  setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean }) =>
+  setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean; reopen?: boolean }) =>
     request<ShareInfo>(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify(change) }),
   health: () => request<Health>("/api/health"),
   update: () => request<UpdateInfo>("/api/update"),

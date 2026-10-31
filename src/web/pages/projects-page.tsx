@@ -133,7 +133,7 @@ export function ProjectsPage() {
                     Connect your agent to <em>get started</em>
                   </h2>
                   <p className="fc-caption" style={{ margin: "2px 0 0" }}>
-                    Three messages to paste into your agent chat. Each step ticks itself off, and this goes away once your agent connects.
+                    Paste these into your agent chat. Each step ticks itself off, and this goes away once your agent connects.
                   </p>
                 </div>
                 <SetupSteps health={health} agentName={agent} hasReview={reviews.length > 0} />

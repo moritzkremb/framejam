@@ -1,88 +1,23 @@
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Download, Eraser, Loader2, MapPin, MoveHorizontal, Pause, PenLine, Play, Send, ThumbsUp, X } from "lucide-react";
-import { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { Check, Download, Loader2, Send, ThumbsUp } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import lockup from "../../../public/brand/lockup.svg";
-import lockupLight from "../../../public/brand/lockup-light.svg";
-import { Menu, MenuItem } from "@/components/menu";
-import { CommentList, whenLabel } from "@/components/review/comment-list";
-import { VersionNotes } from "@/components/review/version-notes";
-import { burnFrame, DrawLayer, MAX_STROKES, type Stroke } from "@/components/review/drawing";
-import { Filmstrip, useTimelineZoom, type Marker } from "@/components/review/filmstrip";
-import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
-import { canRecordVoice, useVoiceRecorder, VoiceButton, type VoiceLook, type VoiceSample, type VoiceTake } from "@/components/review/voice";
-import { formatTime, relativeTime, type ReviewComment } from "@/lib/api";
-import { LinkClosedError, type CloudShareSource, type DraftVoice, type Guest, type NewSharedComment, type SharedComment, type SharedReview } from "@/lib/cloud-share";
-import { findPointingPhrases, sampleAt } from "../../core/voice";
+import type { DockPrimary } from "@/components/review/dock";
+import type { GuestKit, Heard, MakeComment, MakeVoiceDraft } from "@/components/review/guest";
+import { transcribeTake } from "@/components/review/guest";
+import { Logo } from "@/components/review/logo";
+import { StoryboardReview } from "@/components/review/storyboard";
+import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
+import { VideoReview } from "@/components/review/video-review";
+import type { VoiceTake } from "@/components/review/voice";
+import type { ReviewComment } from "@/lib/api";
+import { LinkClosedError, type CloudShareSource, type Guest, type SharedComment, type SharedReview } from "@/lib/cloud-share";
 import { cn } from "@/lib/utils";
 
-const FPS = 30;
-const POINT_VISIBLE_FOR = 1.5;
-/** How close (seconds) the video must be to a comment's frame for its pin and drawing to belong to what is on screen. */
-const ON_FRAME = 0.06;
-const SITE = "https://www.framejam.ai";
-
-/** What a new comment is attached to. Typing, clicking the frame or drawing pauses the video and stamps the frame. */
-type Anchor =
-  | { kind: "none" }
-  | { kind: "frame"; time: number; x?: number; y?: number; frame?: string }
-  | { kind: "range"; time: number; endTime: number }
-  | { kind: "panel"; panel: number };
-
 type Ask = null | { then: "add" | "send" | "approve" };
-
-function isAt(c: ReviewComment, t: number) {
-  if (c.wholeVideo) return false;
-  if (c.endTime !== undefined) return t >= c.time - 0.05 && t <= c.endTime + 0.05;
-  return t >= c.time - 0.15 && t <= c.time + POINT_VISIBLE_FOR;
-}
+type AsGuest = (then: NonNullable<Ask>["then"], action: () => void) => void;
 
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? "" : "s"}`;
-}
-
-/** The link's project kept live from the cloud, and the version on screen. */
-function useShare(link: string, data: CloudShareSource) {
-  const [review, setReview] = useState<SharedReview | null>(null);
-  const [error, setError] = useState<unknown>(null);
-  const [active, setActive] = useState<number | null>(null);
-  const known = useRef(0);
-
-  const load = useCallback(async () => {
-    try {
-      const r = await data.review(link);
-      setReview(r);
-      setError(null);
-      const latest = r.versions.at(-1)!;
-      const prev = known.current;
-      if (prev && latest.number > prev) {
-        toast.success(`Version ${latest.number} is here`, { description: latest.note ? `“${latest.note}”` : undefined });
-        setActive((v) => (v === null || v === prev ? latest.number : v));
-      }
-      known.current = latest.number;
-      setActive((v) => v ?? latest.number);
-    } catch (e) {
-      setError(e);
-    }
-  }, [link, data]);
-
-  useEffect(() => {
-    void load();
-    return data.subscribe(link, () => void load());
-  }, [link, data, load]);
-
-  const version = review?.versions.find((v) => v.number === active) ?? review?.versions.at(-1);
-  return { review, error, load, version, setActive };
-}
-
-type ShareState = ReturnType<typeof useShare>;
-
-function Logo() {
-  return (
-    <a href={SITE} className="fc-logo" aria-label="FrameJam" target="_blank" rel="noreferrer">
-      <img className="on-dark" src={lockup} alt="" />
-      <img className="on-light" src={lockupLight} alt="" />
-    </a>
-  );
 }
 
 function Closed({ message }: { message: string }) {
@@ -101,28 +36,36 @@ function Closed({ message }: { message: string }) {
   );
 }
 
-/** `www.framejam.ai/v/<token>`: a shared video or storyboard where guests comment, draw, approve and send. */
+/**
+ * `www.framejam.ai/v/<token>`: a shared video or storyboard where guests comment, draw, approve and send. It's the
+ * creator's review screen with the guest's controls: Send instead of Finish review, Approve, voice and drawing.
+ */
 export function SharePage({ link, data }: { link: string; data: CloudShareSource }) {
-  const s = useShare(link, data);
+  const resumeTime = useRef(0);
+  const r = useReview(link, data, () => {
+    resumeTime.current = 0;
+  }, "guest");
+  const { ref: rootRef, width } = useWidth<HTMLDivElement>();
   const [guest, setGuestState] = useState<Guest | null>(() => data.guest());
   const [ask, setAsk] = useState<Ask>(null);
   const pending = useRef<(() => void) | null>(null);
+  const review = r.review as SharedReview | null;
 
   useEffect(() => {
-    if (s.review) document.title = `${s.review.title} · FrameJam`;
-  }, [s.review]);
+    if (review) document.title = `${review.title} · FrameJam`;
+  }, [review]);
 
   /** Runs `action` once the guest has a name and email, asking for them first if needed. */
-  const asGuest = (then: NonNullable<Ask>["then"], action: () => void) => {
+  const asGuest: AsGuest = (then, action) => {
     if (data.guest()) return action();
     pending.current = action;
     setAsk({ then });
   };
 
-  if (s.error instanceof LinkClosedError || (s.error && !s.review)) {
-    return <Closed message={s.error instanceof LinkClosedError ? s.error.message : "Check your connection, then reload this page."} />;
+  if (r.loadError instanceof LinkClosedError || (r.loadError && !review)) {
+    return <Closed message={r.loadError instanceof LinkClosedError ? r.loadError.message : "Check your connection, then reload this page."} />;
   }
-  if (!s.review || !s.version) {
+  if (!review || !r.version) {
     return (
       <div className="fc-share">
         <header className="fc-header">
@@ -136,20 +79,11 @@ export function SharePage({ link, data }: { link: string; data: CloudShareSource
     );
   }
 
-  const review = s.review;
-  const version = s.version;
-  const storyboard = Boolean(version.panels?.length);
-
   if (review.approved) return <ApprovedShare review={review} data={data} link={link} />;
 
   return (
-    <div className="fc-share">
-      <ShareHeader s={s} data={data} link={link} asGuest={asGuest} />
-      {storyboard ? (
-        <StoryboardShare key={version.number} s={s} data={data} link={link} guest={guest} asGuest={asGuest} onChangeGuest={() => setAsk({ then: "add" })} />
-      ) : (
-        <VideoShare key={version.number} s={s} data={data} link={link} guest={guest} asGuest={asGuest} onChangeGuest={() => setAsk({ then: "add" })} />
-      )}
+    <div className="fc-rshell fc-share" ref={rootRef}>
+      <GuestReview r={r} data={data} link={link} guest={guest} width={width} resumeTime={resumeTime} asGuest={asGuest} onChangeGuest={() => setAsk({ then: "add" })} />
       {ask && (
         <GuestForm
           initial={guest}
@@ -175,80 +109,298 @@ export function SharePage({ link, data }: { link: string; data: CloudShareSource
   );
 }
 
-function ShareHeader({ s, data, link, asGuest }: { s: ShareState; data: CloudShareSource; link: string; asGuest(then: "approve", action: () => void): void }) {
-  const review = s.review!;
-  const version = s.version!;
-  const [approving, setApproving] = useState(false);
-  const approvedHere = data.approvedHere(link).includes(version.number);
-  const isLatest = version.number === review.versions.at(-1)!.number;
-  const approvers = review.approvals.filter((a) => a.version === version.number).map((a) => a.guestName);
-  const count = review.versions.length;
-  const sub = [
-    count > 1 ? `Version ${version.number} of ${count}` : `Version ${version.number}`,
-    version.note ? `“${version.note}”` : null,
-    relativeTime(version.createdAt),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+interface GuestProps {
+  r: ReviewState;
+  data: CloudShareSource;
+  link: string;
+  guest: Guest | null;
+  width: number;
+  resumeTime: { current: number };
+  asGuest: AsGuest;
+  onChangeGuest(): void;
+}
 
-  const approve = () =>
-    asGuest("approve", async () => {
-      setApproving(true);
+const SEND_PRIMARY: DockPrimary = {
+  label: (n) => `Send${n ? ` ${plural(n, "comment")}` : ""}`,
+  icon: <Send className="fc-i sm" />,
+  testId: "send",
+  title: (can) => (can ? "Send your comments to whoever shared this link" : "Add a comment first"),
+};
+
+function GuestReview({ r, data, link, guest, width, resumeTime, asGuest, onChangeGuest }: GuestProps) {
+  const review = r.review as SharedReview;
+  const version = r.version!;
+  const [adding, setAdding] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const busyRef = useRef(false);
+  const comments = review.comments as SharedComment[];
+  const drafts = comments.filter((c) => c.status === "draft" && !c.unsavedVoice);
+  const unsaved = comments.filter((c) => c.status === "draft" && c.unsavedVoice).length;
+
+  /** Recordings whose upload failed, by draft id, for Retry. Gone on reload: then the guest can only type it. */
+  const takes = useRef(new Map<string, { take: VoiceTake; make: MakeVoiceDraft }>());
+  const [retryable, setRetryable] = useState<ReadonlySet<string>>(new Set());
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const keepTake = (id: string, kept?: { take: VoiceTake; make: MakeVoiceDraft }) => {
+    if (kept) takes.current.set(id, kept);
+    else {
+      toast.dismiss(`voice-${id}`);
+      if (!takes.current.delete(id)) return;
+    }
+    setRetryable(new Set(takes.current.keys()));
+  };
+
+  const addNow = async (make: MakeComment, after: (c: ReviewComment) => void) => {
+    const body = await make();
+    if (!body) return;
+    const c = await data.addComment(link, body);
+    after(c);
+    (document.activeElement as HTMLElement | null)?.blur();
+  };
+
+  const add: GuestKit["add"] = (make, after) => {
+    if (adding) return;
+    asGuest("add", async () => {
+      setAdding(true);
       try {
-        await data.approve(link, version.number);
-        toast.success(`You approved version ${version.number}`, { description: "Whoever shared this link sees it in FrameJam." });
+        await addNow(make, after);
+        await r.load();
       } catch (e) {
         toast.error((e as Error).message);
       } finally {
-        setApproving(false);
+        setAdding(false);
+      }
+    });
+  };
+
+  const send: GuestKit["send"] = (pending) =>
+    asGuest("send", async () => {
+      // One send at a time, so a double click or Cmd+Enter during a send can't send the same drafts twice.
+      if (busyRef.current) return;
+      busyRef.current = true;
+      setSending(true);
+      try {
+        if (pending) await addNow(pending.make, pending.after);
+        const res = await data.submit(link);
+        const held = unsaved ? ` ${plural(unsaved, "voice comment")} that wasn't saved stayed here: retry it or send it as text.` : "";
+        toast.success(`Sent ${plural(res.batch.commentIds.length, "comment")}`, { description: `Whoever shared this link gets them in FrameJam.${held}` });
+        await r.load();
+      } catch (e) {
+        toast.error((e as Error).message);
+      } finally {
+        busyRef.current = false;
+        setSending(false);
       }
     });
 
-  return (
-    <header className="fc-header fc-share-h">
-      <Logo />
-      <div className="titles">
-        <span className="t" title={review.title}>
-          {review.title}
-        </span>
-        <span className="s">{sub}</span>
-      </div>
-      {count > 1 && (
-        <Menu
-          label="Versions"
-          trigger={
-            <button type="button" className="fc-btn ghost sm" data-testid="version-menu">
-              v{version.number}
-              <ChevronDown className="fc-i xs" />
+  /**
+   * Uploads and transcribes a take into a draft. When that fails the take still becomes a draft, marked unsaved, so
+   * nothing the guest said is dropped; `replacing` is the unsaved draft a retry stands in for.
+   */
+  const saveTake = async (take: VoiceTake, make: MakeVoiceDraft, replacing?: string) => {
+    let heard: Heard | null = null;
+    let error = "";
+    try {
+      heard = await transcribeTake(data, link, take);
+    } catch (e) {
+      error = (e as Error).message || "The recording couldn't be uploaded.";
+    }
+    if (replacing) {
+      // The guest may have sent the draft as text or deleted it while the retry ran: then there's nothing to replace.
+      const still = (await data.review(link)).comments.find((c) => c.id === replacing && c.status === "draft" && (c as SharedComment).unsavedVoice);
+      if (!still) {
+        keepTake(replacing);
+        return;
+      }
+    }
+    const body = await make(heard);
+    const created = await data.addComment(link, error ? { ...body, unsavedVoice: { error, duration: take.duration } } : body);
+    if (replacing) {
+      keepTake(replacing);
+      await data.deleteComment(link, replacing).catch(() => {});
+    }
+    if (error) {
+      keepTake(created.id, { take, make });
+      toast.error("Your voice comment wasn't saved", {
+        id: `voice-${created.id}`,
+        description: `${error} It's kept as a draft.`,
+        action: { label: "Retry", onClick: () => void retryVoice(created.id) },
+      });
+    } else if (replacing) {
+      toast.success("Voice comment saved");
+    }
+    await r.load();
+  };
+
+  const retryVoice = async (id: string) => {
+    const kept = takes.current.get(id);
+    if (!kept || busyRef.current) return;
+    busyRef.current = true;
+    setRetrying(id);
+    try {
+      await saveTake(kept.take, kept.make, id);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      busyRef.current = false;
+      setRetrying(null);
+    }
+  };
+
+  const approve = async (sendFirst: boolean) => {
+    setConfirming(false);
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setApproving(true);
+    try {
+      if (sendFirst && drafts.length) await data.submit(link);
+      await data.approve(link, version.number);
+      toast.success(`You approved version ${version.number}`, { description: "Whoever shared this link sees it in FrameJam." });
+      await r.load();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      busyRef.current = false;
+      setApproving(false);
+    }
+  };
+
+  const approvedHere = data.approvedHere(link).includes(version.number);
+  const approvers = [...new Set(review.approvals.filter((a) => a.version === version.number).map((a) => a.guestName))];
+
+  const kit: GuestKit = {
+    status: (
+      <span className="fc-share-as fc-grow fc-truncate">
+        {guest ? (
+          <>
+            Commenting as <b>{guest.name}</b>{" "}
+            <button type="button" className="fc-link" onClick={onChangeGuest}>
+              Change
             </button>
-          }
-        >
-          {[...review.versions].reverse().map((v) => (
-            <MenuItem key={v.number} checked={v.number === version.number} hint={relativeTime(v.createdAt)} onSelect={() => s.setActive(v.number)}>
-              Version {v.number}
-              {v.number === review.versions.at(-1)!.number ? " (latest)" : ""}
-            </MenuItem>
-          ))}
-        </Menu>
-      )}
-      <button
-        type="button"
-        className={cn("fc-btn sm", approvedHere ? "ghost" : "outline")}
-        disabled={approving || approvedHere || !isLatest}
-        onClick={approve}
-        title={
-          !isLatest
-            ? "Open the newest version to approve it"
-            : approvers.length
-              ? `Approved by ${approvers.join(", ")}`
-              : "Tell whoever shared this that this version is good to go. The link then shows only this file."
+          </>
+        ) : drafts.length ? (
+          "Comments stay in this browser until you send them"
+        ) : (
+          "Add your comments, then send them together"
+        )}
+      </span>
+    ),
+    primary: SEND_PRIMARY,
+    draftCount: drafts.length,
+    busy: sending || approving || retrying !== null,
+    adding,
+    add,
+    send,
+    startVoice: (start) => asGuest("add", start),
+    addTake: async (take, make, after) => {
+      await saveTake(take, make);
+      after();
+    },
+    rules: {
+      editable: (c) => c.status === "draft" && !c.voice,
+      onSave: async (c, text) => {
+        try {
+          await data.updateComment(link, c.id, { text });
+          keepTake(c.id);
+          await r.load();
+        } catch (e) {
+          toast.error((e as Error).message);
         }
-        data-testid="approve"
-      >
-        {approving ? <Loader2 className="fc-i xs fc-spin" /> : approvedHere ? <Check className="fc-i xs" /> : <ThumbsUp className="fc-i xs" />}
-        <span className="lbl">{approvedHere ? "Approved" : "Approve"}</span>
-      </button>
-    </header>
+      },
+      onDelete: async (c) => {
+        try {
+          await data.deleteComment(link, c.id);
+          keepTake(c.id);
+          await r.load();
+        } catch (e) {
+          toast.error((e as Error).message);
+        }
+      },
+      frameUrl: (file) => file,
+      footer: (comment, { edit }) => {
+        const u = (comment as SharedComment).unsavedVoice;
+        if (!u || comment.status !== "draft") return null;
+        return <UnsavedVoiceNotice unsaved={u} canRetry={retryable.has(comment.id)} retrying={retrying === comment.id} onRetry={() => void retryVoice(comment.id)} onType={edit} />;
+      },
+    },
+    before: approvers.length ? (
+      <div className="fc-share-approved" data-testid="approvals">
+        <Check className="fc-i xs" /> Approved by {approvers.join(", ")}
+      </div>
+    ) : undefined,
+    actions: (
+      <>
+        <button
+          type="button"
+          className={cn("fc-btn sm", approvedHere ? "ghost" : "outline")}
+          disabled={approving || approvedHere || !r.isLatest}
+          onClick={() => asGuest("approve", () => setConfirming(true))}
+          title={
+            !r.isLatest
+              ? "Open the newest version to approve it"
+              : approvers.length
+                ? `Approved by ${approvers.join(", ")}`
+                : "Tell whoever shared this that this version is good to go. The link then shows only this file."
+          }
+          data-testid="approve"
+        >
+          {approving ? <Loader2 className="fc-i xs fc-spin" /> : approvedHere ? <Check className="fc-i xs" /> : <ThumbsUp className="fc-i xs" />}
+          <span className="lbl">{approvedHere ? "Approved" : "Approve"}</span>
+        </button>
+        {confirming && <ApproveConfirm version={version.number} drafts={drafts.length} onCancel={() => setConfirming(false)} onApprove={(sendFirst) => void approve(sendFirst)} />}
+      </>
+    ),
+  };
+
+  return version.panels?.length ? (
+    <StoryboardReview r={r} width={width} role="guest" guest={kit} />
+  ) : (
+    <VideoReview r={r} width={width} resumeTime={resumeTime} role="guest" guest={kit} />
+  );
+}
+
+/** Approving closes the link for everyone, so it asks first, and offers to send what the guest hasn't sent yet. */
+function ApproveConfirm({ version, drafts, onCancel, onApprove }: { version: number; drafts: number; onCancel(): void; onApprove(sendFirst: boolean): void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+  return (
+    <div className="fc-share-modal" role="presentation" onClick={onCancel}>
+      <div className="fc-share-who" role="dialog" aria-modal="true" aria-labelledby="approve-title" onClick={(e) => e.stopPropagation()} data-testid="approve-confirm">
+        <div className="fc-h3" id="approve-title">
+          Approve version {version}?
+        </div>
+        <p>Comments close for everyone on this link, and it shows only this version from then on.</p>
+        {drafts > 0 && (
+          <p>
+            You have <b>{plural(drafts, "comment")}</b> you haven't sent.
+          </p>
+        )}
+        <div className="fc-row" style={{ justifyContent: "flex-end", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+          <button type="button" className="fc-btn ghost" onClick={onCancel}>
+            Cancel
+          </button>
+          {drafts > 0 ? (
+            <>
+              <button type="button" className="fc-btn outline" onClick={() => onApprove(false)} data-testid="approve-confirm-yes">
+                Approve without them
+              </button>
+              <button type="button" className="fc-btn primary" autoFocus onClick={() => onApprove(true)} data-testid="approve-send-first">
+                Send and approve
+              </button>
+            </>
+          ) : (
+            <button type="button" className="fc-btn primary" autoFocus onClick={() => onApprove(false)} data-testid="approve-confirm-yes">
+              Approve
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -363,257 +515,6 @@ function GuestForm({ initial, reason, onCancel, onSave }: { initial: Guest | nul
   );
 }
 
-interface DockProps {
-  chip: ReactNode;
-  text: string;
-  placeholder: string;
-  whole: boolean;
-  wholeLabel: string;
-  drawing?: { on: boolean; strokes: number; toggle(): void; clear(): void };
-  /** The record button, when this browser can record. */
-  voice?: ReactNode;
-  adding: boolean;
-  draftCount: number;
-  sending: boolean;
-  guest: Guest | null;
-  onText(t: string): void;
-  onWhole(on: boolean): void;
-  onAdd(): void;
-  onSend(): void;
-  onChangeGuest(): void;
-}
-
-/** The comment box: what it's attached to, drawing, the text, and Send for everything written so far. */
-const ShareDock = forwardRef<HTMLTextAreaElement, DockProps>(function ShareDock(
-  { chip, text, placeholder, whole, wholeLabel, drawing, voice, adding, draftCount, sending, guest, onText, onWhole, onAdd, onSend, onChangeGuest },
-  ref,
-) {
-  const typing = text.trim().length > 0;
-  return (
-    <div className="fc-dock fc-share-dock">
-      <div className="box">
-        <div className="tools">
-          {chip}
-          <span className="fc-grow" />
-          {voice}
-          {drawing && !whole && (
-            <>
-              {drawing.strokes > 0 && (
-                <button type="button" className="fc-btn ghost sm icon" aria-label="Clear drawing" title="Clear drawing" onClick={drawing.clear}>
-                  <Eraser className="fc-i xs" />
-                </button>
-              )}
-              <button
-                type="button"
-                className={cn("fc-btn ghost sm fc-chip-btn", drawing.on && "on")}
-                aria-pressed={drawing.on}
-                onClick={drawing.toggle}
-                title="Draw on the frame"
-                data-testid="draw-toggle"
-              >
-                <PenLine className="fc-i xs" /> Draw
-              </button>
-            </>
-          )}
-          {!whole && (
-            <button type="button" className="fc-btn ghost sm fc-chip-btn" onClick={() => onWhole(true)}>
-              {wholeLabel}
-            </button>
-          )}
-        </div>
-        <div className="entry">
-          <textarea
-            ref={ref}
-            value={text}
-            placeholder={placeholder}
-            rows={1}
-            onChange={(e) => onText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
-                e.preventDefault();
-                if (typing) onAdd();
-              }
-              if (e.key === "Escape") (e.target as HTMLTextAreaElement).blur();
-            }}
-            data-testid="comment-box"
-          />
-          <button type="button" className={cn("fc-btn sm", typing && "primary")} onClick={onAdd} disabled={adding || !typing} data-testid="add-comment">
-            {adding ? <Loader2 className="fc-i xs fc-spin" /> : null}
-            Add
-          </button>
-        </div>
-      </div>
-      <div className="send">
-        <span className="fc-share-as fc-grow fc-truncate">
-          {guest ? (
-            <>
-              Commenting as <b>{guest.name}</b>{" "}
-              <button type="button" className="fc-link" onClick={onChangeGuest}>
-                Change
-              </button>
-            </>
-          ) : draftCount ? (
-            "Comments stay in this browser until you send them"
-          ) : (
-            "Add your comments, then send them together"
-          )}
-        </span>
-        <button
-          type="button"
-          className={cn("fc-btn", draftCount > 0 && !typing ? "primary" : "outline")}
-          disabled={sending || draftCount === 0}
-          onClick={onSend}
-          title={draftCount ? "Send your comments to whoever shared this link" : "Add a comment first"}
-          data-testid="send"
-        >
-          {sending ? <Loader2 className="fc-i sm fc-spin" /> : <Send className="fc-i sm" />}
-          Send{draftCount ? ` ${plural(draftCount, "comment")}` : ""}
-        </button>
-      </div>
-    </div>
-  );
-});
-
-interface ViewProps {
-  s: ShareState;
-  data: CloudShareSource;
-  link: string;
-  guest: Guest | null;
-  asGuest(then: "add" | "send", action: () => void): void;
-  onChangeGuest(): void;
-}
-
-/** Shared by the video and storyboard views: the draft text, adding, sending. */
-function useComposer({ s, data, link, asGuest }: ViewProps) {
-  const [text, setText] = useState("");
-  const [adding, setAdding] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const review = s.review!;
-  const drafts = (review.comments as SharedComment[]).filter((c) => c.status === "draft" && !c.unsavedVoice);
-  const unsaved = (review.comments as SharedComment[]).filter((c) => c.status === "draft" && c.unsavedVoice).length;
-
-  const send = () =>
-    asGuest("send", async () => {
-      setSending(true);
-      try {
-        const res = await data.submit(link);
-        const held = unsaved ? ` ${plural(unsaved, "voice comment")} that wasn't saved stayed here: retry it or send it as text.` : "";
-        toast.success(`Sent ${plural(res.batch.commentIds.length, "comment")}`, { description: `Whoever shared this link gets them in FrameJam.${held}` });
-        await s.load();
-      } catch (e) {
-        toast.error((e as Error).message);
-      } finally {
-        setSending(false);
-      }
-    });
-
-  const add = (make: () => Promise<Parameters<CloudShareSource["addComment"]>[1] | null>, after: () => void) => {
-    if (!text.trim() || adding) return;
-    asGuest("add", async () => {
-      setAdding(true);
-      try {
-        const body = await make();
-        if (!body) return;
-        const c = await data.addComment(link, body);
-        setText("");
-        setSelectedId(c.id);
-        after();
-        (document.activeElement as HTMLElement | null)?.blur();
-        await s.load();
-      } catch (e) {
-        toast.error((e as Error).message);
-      } finally {
-        setAdding(false);
-      }
-    });
-  };
-
-  /** Recordings whose upload failed, by draft id, for Retry. Gone on reload: then the guest can only type it. */
-  const takes = useRef(new Map<string, { take: VoiceTake; make: MakeVoiceDraft }>());
-  const [retryable, setRetryable] = useState<ReadonlySet<string>>(new Set());
-  const [retrying, setRetrying] = useState<string | null>(null);
-  const inFlight = useRef(false);
-  const keepTake = (id: string, kept?: { take: VoiceTake; make: MakeVoiceDraft }) => {
-    if (kept) takes.current.set(id, kept);
-    else {
-      toast.dismiss(`voice-${id}`);
-      if (!takes.current.delete(id)) return;
-    }
-    setRetryable(new Set(takes.current.keys()));
-  };
-
-  /**
-   * Uploads and transcribes a take into a draft. When that fails the take still becomes a draft, marked unsaved, so
-   * nothing the guest said is dropped; `replacing` is the unsaved draft a retry stands in for.
-   */
-  const saveTake = async (take: VoiceTake, make: MakeVoiceDraft, replacing?: string) => {
-    let heard: Heard | null = null;
-    let error = "";
-    try {
-      heard = await transcribeTake(data, link, take);
-    } catch (e) {
-      error = (e as Error).message || "The recording couldn't be uploaded.";
-    }
-    const body = await make(heard);
-    const created = await data.addComment(link, error ? { ...body, unsavedVoice: { error, duration: take.duration } } : body);
-    if (replacing) {
-      keepTake(replacing);
-      await data.deleteComment(link, replacing).catch(() => {});
-    }
-    if (error) {
-      keepTake(created.id, { take, make });
-      toast.error("Your voice comment wasn't saved", {
-        id: `voice-${created.id}`,
-        description: `${error} It's kept as a draft.`,
-        action: { label: "Retry", onClick: () => void retryVoice(created.id) },
-      });
-    } else if (replacing) {
-      toast.success("Voice comment saved");
-    }
-    setSelectedId(created.id);
-    await s.load();
-  };
-
-  const addTake = async (take: VoiceTake, make: MakeVoiceDraft, after: () => void) => {
-    await saveTake(take, make);
-    after();
-  };
-
-  const retryVoice = async (id: string) => {
-    const kept = takes.current.get(id);
-    if (!kept || inFlight.current) return;
-    inFlight.current = true;
-    setRetrying(id);
-    try {
-      await saveTake(kept.take, kept.make, id);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      inFlight.current = false;
-      setRetrying(null);
-    }
-  };
-
-  const editable = (c: ReviewComment) => c.status === "draft" && !c.voice;
-  const save = async (c: ReviewComment, t: string) => {
-    await data.updateComment(link, c.id, { text: t });
-    keepTake(c.id);
-    await s.load();
-  };
-  const remove = async (c: ReviewComment) => {
-    await data.deleteComment(link, c.id);
-    keepTake(c.id);
-    await s.load();
-  };
-  const unsavedNotice = (comment: ReviewComment, { edit }: { edit(): void }) => {
-    const u = (comment as SharedComment).unsavedVoice;
-    if (!u || comment.status !== "draft") return null;
-    return <UnsavedVoiceNotice unsaved={u} canRetry={retryable.has(comment.id)} retrying={retrying === comment.id} onRetry={() => void retryVoice(comment.id)} onType={edit} />;
-  };
-  return { text, setText, adding, sending, send, add, addTake, selectedId, setSelectedId, drafts, editable, save, remove, unsavedNotice };
-}
-
 /** A voice draft whose recording didn't reach FrameJam: why, and the two ways on. */
 function UnsavedVoiceNotice({ unsaved, canRetry, retrying, onRetry, onType }: { unsaved: { error: string }; canRetry: boolean; retrying: boolean; onRetry(): void; onType(): void }) {
   return (
@@ -633,589 +534,6 @@ function UnsavedVoiceNotice({ unsaved, canRetry, retrying, onRetry, onType }: { 
           Send as text instead
         </button>
       </div>
-    </div>
-  );
-}
-
-/** The words of a take, and which of them point: what a draft voice comment is made of. */
-async function transcribeTake(data: CloudShareSource, link: string, take: VoiceTake) {
-  const result = await data.transcribeVoice(link, take.blob, take.mime, take.duration);
-  const phrases = result.status === "transcribed" ? findPointingPhrases(result.words) : [];
-  const text = result.status === "transcribed" && result.text?.trim() ? result.text.trim() : "";
-  return { result, phrases, text };
-}
-
-type Heard = Awaited<ReturnType<typeof transcribeTake>>;
-/** Builds a take's draft from what was heard, or from nothing when the upload failed; made when recording stops, so a retry points where the guest did. */
-type MakeVoiceDraft = (heard: Heard | null) => Promise<NewSharedComment>;
-
-function draftVoice(result: Heard["result"], points: DraftVoice["points"]): DraftVoice {
-  return { id: result.voiceId, status: result.status, note: result.note, duration: result.duration, points };
-}
-
-/** What a recording shows for one sample: the pin and drawing apply only when the sample has them. */
-async function frameOf(sample: VoiceSample | undefined) {
-  if (!sample) return undefined;
-  const pin = sample.x !== undefined && sample.y !== undefined ? { x: sample.x, y: sample.y } : undefined;
-  return await burnFrame(sample.frame, { pin, strokes: sample.strokes });
-}
-
-function Approvals({ review, version }: { review: SharedReview; version: number }) {
-  const names = review.approvals.filter((a) => a.version === version).map((a) => a.guestName);
-  if (!names.length) return null;
-  return (
-    <div className="fc-share-approved" data-testid="approvals">
-      <Check className="fc-i xs" /> Approved by {[...new Set(names)].join(", ")}
-    </div>
-  );
-}
-
-function Side({ title, children, empty, review, version }: { title: string; children: ReactNode; empty: boolean; review: SharedReview; version: number }) {
-  const [tab, setTab] = useState<"comments" | "notes">("comments");
-  const current = review.versions.find((v) => v.number === version);
-  const hasNotes = Boolean(current?.notes?.trim());
-  const showNotes = hasNotes && tab === "notes";
-  return (
-    <aside className="fc-share-side">
-      <div className="fc-share-side-h">
-        {hasNotes ? (
-          <div className="fc-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={!showNotes} onClick={() => setTab("comments")}>
-              {title}
-            </button>
-            <button type="button" role="tab" aria-selected={showNotes} onClick={() => setTab("notes")} data-testid="notes-tab">
-              Notes
-            </button>
-          </div>
-        ) : (
-          <span className="fc-h3">{title}</span>
-        )}
-      </div>
-      <div className="fc-share-side-body">
-        {showNotes && current ? (
-          <VersionNotes reviewId={review.id} version={current} />
-        ) : (
-          <>
-            <Approvals review={review} version={version} />
-            {empty ? (
-              <div className="fc-side-empty">
-                <div className="fc-h3">No comments yet</div>
-                <p>Pause anywhere and type, click the video to point at something, or drag across the timeline for a range. Your comments stay here until you press Send.</p>
-              </div>
-            ) : (
-              children
-            )}
-          </>
-        )}
-      </div>
-    </aside>
-  );
-}
-
-function VideoShare(props: ViewProps) {
-  const { s, data, link, guest, asGuest, onChangeGuest } = props;
-  const review = s.review!;
-  const version = s.version!;
-  const c = useComposer(props);
-  const boxRef = useRef<HTMLTextAreaElement>(null);
-  const [ctrl, setCtrl] = useState<MediaController | null>(null);
-  const [time, setTime] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [anchor, setAnchor] = useState<Anchor>({ kind: "none" });
-  const [whole, setWhole] = useState(false);
-  const [drawOn, setDrawOn] = useState(false);
-  const [strokes, setStrokes] = useState<Stroke[]>([]);
-  const [frameWidth, setFrameWidth] = useState(0);
-
-  const recorder = useVoiceRecorder({
-    look: (): VoiceLook | null => {
-      if (!ctrl) return null;
-      const t = ctrl.getTime();
-      const here = !whole && anchor.kind === "frame" && Math.abs(anchor.time - t) < ON_FRAME ? anchor : undefined;
-      return {
-        time: t,
-        x: here?.x,
-        y: here?.y,
-        strokes: here ? strokes : [],
-        playing: ctrl.isPlaying(),
-        frame: () => here?.frame ?? ctrl.captureFrame(),
-      };
-    },
-    onTake: async (take) => {
-      const range = !whole && anchor.kind === "range" ? anchor : undefined;
-      const wholeVideo = whole || undefined;
-      const now = ctrl?.getTime() ?? 0;
-      const first = take.samples[0];
-      await c.addTake(
-        take,
-        async (heard) => {
-          const sampled = (heard?.phrases ?? []).map((p) => ({ p, sample: sampleAt(take.samples, p.at) ?? first }));
-          const points = await Promise.all(
-            sampled.map(async ({ p, sample }) => ({
-              phrase: p.phrase,
-              at: p.at,
-              time: sample?.time ?? now,
-              x: sample?.x,
-              y: sample?.y,
-              drawing: sample?.strokes.length ? sample.strokes : undefined,
-              frame: await frameOf(sample),
-            })),
-          );
-          const main = sampled[0]?.sample ?? first;
-          return {
-            version: version.number,
-            time: range?.time ?? main?.time ?? now,
-            endTime: range?.endTime,
-            x: range ? undefined : main?.x,
-            y: range ? undefined : main?.y,
-            wholeVideo,
-            text: heard ? heard.text || heard.result.note || "" : "",
-            drawing: !range && main?.strokes.length ? main.strokes : undefined,
-            thumbnailDataUrl: await frameOf(main),
-            voice: heard ? draftVoice(heard.result, points) : undefined,
-          };
-        },
-        reset,
-      );
-    },
-    onError: (message) => toast.error(message),
-  });
-
-  useEffect(() => {
-    if (!ctrl) return;
-    let raf = 0;
-    const loop = () => {
-      setTime(ctrl.getTime());
-      setPlaying(ctrl.isPlaying());
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [ctrl]);
-
-  const comments = useMemo(
-    () => (review.comments as SharedComment[]).filter((x) => x.version === version.number).sort((a, b) => a.time - b.time || a.createdAt.localeCompare(b.createdAt)),
-    [review, version],
-  );
-  const indexOf = useMemo(() => new Map(comments.map((x, i) => [x.id, i + 1])), [comments]);
-  const duration = ctrl?.duration || 0;
-  const zoom = useTimelineZoom(duration);
-
-  const here = comments.filter((x) => isAt(x, time));
-  const pins: Pin[] = here
-    .filter((x) => x.x !== undefined && x.y !== undefined)
-    .map((x) => ({ id: x.id, index: indexOf.get(x.id)!, x: x.x!, y: x.y!, sent: x.status !== "draft", text: x.text, author: x.author }));
-  const floating: FloatingNote[] = here
-    .filter((x) => x.x === undefined || x.y === undefined)
-    .map((x) => ({ id: x.id, index: indexOf.get(x.id)!, sent: x.status !== "draft", text: x.text, author: x.author }));
-  const shownStrokes = here.flatMap((x) => x.drawing ?? []);
-  const markers: Marker[] = comments.map((x) => ({ id: x.id, index: indexOf.get(x.id)!, time: x.time, endTime: x.endTime, whole: x.wholeVideo, sent: x.status !== "draft" }));
-
-  const seek = (t: number) => {
-    ctrl?.seek(t);
-    setTime(t);
-  };
-  const step = (frames: number) => {
-    if (!ctrl) return;
-    ctrl.pause();
-    seek(Math.max(0, Math.min(duration, ctrl.getTime() + frames / FPS)));
-  };
-  const togglePlay = () => {
-    if (!ctrl) return;
-    if (ctrl.isPlaying()) ctrl.pause();
-    else ctrl.play();
-  };
-  const reset = () => {
-    setAnchor({ kind: "none" });
-    setWhole(false);
-    setDrawOn(false);
-    setStrokes([]);
-  };
-
-  /** Pauses and pins the comment to the frame on screen, unless it's already attached to something. */
-  const stamp = (spot?: { x: number; y: number }) => {
-    if (!ctrl) return;
-    ctrl.pause();
-    const t = ctrl.getTime();
-    // A pin or drawing belongs to the frame it was made on: after scrubbing elsewhere, a new one starts fresh.
-    const moved = anchor.kind === "frame" && Math.abs(anchor.time - t) > ON_FRAME;
-    if (moved) setStrokes([]);
-    setAnchor((a) => {
-      if (spot) return { kind: "frame", time: t, ...spot, frame: ctrl.captureFrame() };
-      if (a.kind !== "none" && !moved) return a;
-      return { kind: "frame", time: t, frame: ctrl.captureFrame() };
-    });
-    setWhole(false);
-    c.setSelectedId(null);
-  };
-
-  const onText = (t: string) => {
-    c.setText(t);
-    if (t.trim() && !whole && anchor.kind === "none") stamp();
-  };
-
-  const addComment = () =>
-    c.add(
-      async () => {
-        const t = anchor.kind === "frame" || anchor.kind === "range" ? anchor.time : (ctrl?.getTime() ?? time);
-        const spot = !whole && anchor.kind === "frame" && anchor.x !== undefined && anchor.y !== undefined ? { x: anchor.x, y: anchor.y } : undefined;
-        const base = !whole && anchor.kind === "frame" && anchor.frame ? anchor.frame : ctrl?.captureFrame();
-        const drawn = whole ? [] : strokes;
-        return {
-          version: version.number,
-          time: t,
-          endTime: !whole && anchor.kind === "range" ? anchor.endTime : undefined,
-          x: spot?.x,
-          y: spot?.y,
-          wholeVideo: whole || undefined,
-          text: c.text,
-          drawing: drawn.length ? drawn : undefined,
-          thumbnailDataUrl: await burnFrame(base, { pin: spot, strokes: drawn }),
-        };
-      },
-      reset,
-    );
-
-  const select = (x: ReviewComment) => {
-    c.setSelectedId(x.id);
-    if (!x.wholeVideo) {
-      ctrl?.pause();
-      seek(x.time);
-    }
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest("input, textarea, [contenteditable=true], [role=dialog]") || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === " " || e.key === "k") {
-        e.preventDefault();
-        togglePlay();
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        step(e.shiftKey ? -FPS : -1);
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        step(e.shiftKey ? FPS : 1);
-      } else if (e.key === "Escape") {
-        reset();
-        c.setSelectedId(null);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
-
-  const chip = whole ? (
-    <span className="fc-anchor plain">
-      Whole video
-      <button type="button" className="x" aria-label="Comment on one moment instead" onClick={() => setWhole(false)}>
-        <X className="fc-i xs" />
-      </button>
-    </span>
-  ) : anchor.kind === "frame" ? (
-    <span className="fc-anchor" data-testid="anchor">
-      {anchor.x !== undefined ? <MapPin className="fc-i xs" /> : <Clock className="fc-i xs" />} {formatTime(anchor.time)}
-      {anchor.x !== undefined ? " · on this spot" : " · this frame"}
-      <button type="button" className="x" aria-label="Unpin from this frame" onClick={reset}>
-        <X className="fc-i xs" />
-      </button>
-    </span>
-  ) : anchor.kind === "range" ? (
-    <span className="fc-anchor" data-testid="anchor">
-      <MoveHorizontal className="fc-i xs" /> {formatTime(anchor.time)} – {formatTime(anchor.endTime)}
-      <button type="button" className="x" aria-label="Remove range" onClick={reset}>
-        <X className="fc-i xs" />
-      </button>
-    </span>
-  ) : (
-    <span className="fc-anchor plain">
-      <Clock className="fc-i xs" /> At {formatTime(time)}
-    </span>
-  );
-
-  const src = data.videoUrl(link, version.number);
-  const aspect = ctrl ? ctrl.width / ctrl.height : 16 / 9;
-
-  return (
-    <div className="fc-share-body">
-      <div className="fc-share-stage" style={{ "--content-w": `${Math.max(frameWidth, 320)}px` } as CSSProperties}>
-        <Player
-          src={src}
-          pins={pins}
-          floating={floating}
-          newPin={!whole && anchor.kind === "frame" && anchor.x !== undefined && Math.abs(anchor.time - time) <= ON_FRAME * 2 ? { x: anchor.x, y: anchor.y! } : null}
-          selectedId={c.selectedId}
-          showHint={comments.length === 0 && anchor.kind === "none" && !playing && !drawOn}
-          interactive={!drawOn}
-          className="fc-share-player"
-          style={{ aspectRatio: `${aspect}` }}
-          onController={setCtrl}
-          onFrameClick={(x, y) => {
-            stamp({ x, y });
-            requestAnimationFrame(() => boxRef.current?.focus());
-          }}
-          onPinClick={(id) => {
-            const x = comments.find((y) => y.id === id);
-            if (x) select(x);
-          }}
-          onFrameWidth={setFrameWidth}
-          errorMessage={src ? "This video couldn't be loaded. Try reloading the page." : "This video isn't available yet."}
-        >
-          <DrawLayer strokes={drawOn || strokes.length ? strokes : []} shown={shownStrokes} active={drawOn} onStroke={(st) => setStrokes((all) => [...all, st].slice(0, MAX_STROKES))} />
-        </Player>
-        <div className="fc-controls">
-          <button type="button" className="fc-play" aria-label={playing ? "Pause" : "Play"} onClick={togglePlay} disabled={!ctrl}>
-            {playing ? <Pause className="fc-i fill" /> : <Play className="fc-i fill" />}
-          </button>
-          <span className="fc-readout">
-            {formatTime(time)} <span>/ {formatTime(duration)}</span>
-          </span>
-          <span className="fc-grow" />
-          <button type="button" className="fc-btn ghost icon sm round" aria-label="Previous frame" onClick={() => step(-1)}>
-            <ChevronLeft className="fc-i sm" />
-          </button>
-          <button type="button" className="fc-btn ghost icon sm round" aria-label="Next frame" onClick={() => step(1)}>
-            <ChevronRight className="fc-i sm" />
-          </button>
-        </div>
-        <Filmstrip
-          duration={duration}
-          time={time}
-          zoom={zoom}
-          markers={markers}
-          range={!whole && anchor.kind === "range" ? { start: anchor.time, end: anchor.endTime } : null}
-          selectedId={c.selectedId}
-          frameSource={src || undefined}
-          canSelectRange
-          wholeActive={whole}
-          onSeek={seek}
-          onScrubStart={() => ctrl?.pause()}
-          onRange={(start, end) => {
-            ctrl?.pause();
-            setAnchor({ kind: "range", time: start, endTime: end });
-            setWhole(false);
-            setDrawOn(false);
-            setStrokes([]);
-            c.setSelectedId(null);
-            requestAnimationFrame(() => boxRef.current?.focus());
-          }}
-          onClearRange={() => setAnchor((a) => (a.kind === "range" ? { kind: "none" } : a))}
-          onSelect={(id) => {
-            const x = comments.find((y) => y.id === id);
-            if (x) select(x);
-          }}
-        />
-        <ShareDock
-          ref={boxRef}
-          chip={chip}
-          text={c.text}
-          placeholder={whole ? "What should change in the whole video?" : anchor.kind === "none" ? "Type to comment on this frame…" : "What should change here?"}
-          whole={whole}
-          wholeLabel="Whole video"
-          drawing={{
-            on: drawOn,
-            strokes: strokes.length,
-            toggle: () => {
-              if (!drawOn) stamp();
-              setDrawOn(!drawOn);
-            },
-            clear: () => setStrokes([]),
-          }}
-          voice={
-            canRecordVoice() && (
-              <VoiceButton phase={recorder.phase} seconds={recorder.seconds} disabled={c.sending || c.adding} onStart={() => asGuest("add", () => void recorder.start())} onStop={recorder.stop} />
-            )
-          }
-          adding={c.adding}
-          draftCount={c.drafts.length}
-          sending={c.sending}
-          guest={guest}
-          onText={onText}
-          onWhole={(on) => {
-            setWhole(on);
-            if (on) {
-              setDrawOn(false);
-              setStrokes([]);
-            }
-            requestAnimationFrame(() => boxRef.current?.focus());
-          }}
-          onAdd={addComment}
-          onSend={c.send}
-          onChangeGuest={onChangeGuest}
-        />
-      </div>
-      <Side title={comments.length ? plural(comments.length, "comment") : "Comments"} empty={!comments.length} review={review} version={version.number}>
-        <CommentList
-          comments={comments}
-          editable={c.editable}
-          selectedId={c.selectedId}
-          label={whenLabel}
-          onSelect={select}
-          frameUrl={(file) => file}
-          onPoint={(x, i) => {
-            c.setSelectedId(x.id);
-            const t = x.voice?.points[i]?.time;
-            if (t !== undefined) {
-              ctrl?.pause();
-              seek(t);
-            }
-          }}
-          onSave={c.save}
-          onDelete={c.remove}
-          footer={c.unsavedNotice}
-        />
-      </Side>
-    </div>
-  );
-}
-
-function StoryboardShare(props: ViewProps) {
-  const { s, data, link, guest, asGuest, onChangeGuest } = props;
-  const review = s.review!;
-  const version = s.version!;
-  const c = useComposer(props);
-  const boxRef = useRef<HTMLTextAreaElement>(null);
-  const panels = version.panels ?? [];
-  const [panel, setPanel] = useState<number | null>(null);
-  const [whole, setWhole] = useState(false);
-  const panelRefs = useRef(new Map<number, HTMLElement>());
-
-  const comments = useMemo(
-    () => review.comments.filter((x) => x.version === version.number).sort((a, b) => (a.panel ?? 0) - (b.panel ?? 0) || a.createdAt.localeCompare(b.createdAt)),
-    [review, version],
-  );
-  const countOn = (n: number) => comments.filter((x) => x.panel === n && !x.wholeVideo).length;
-
-  useLayoutEffect(() => {
-    if (panel) panelRefs.current.get(panel)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [panel]);
-
-  const chip = whole ? (
-    <span className="fc-anchor plain">
-      Whole storyboard
-      <button type="button" className="x" aria-label="Comment on one panel instead" onClick={() => setWhole(false)}>
-        <X className="fc-i xs" />
-      </button>
-    </span>
-  ) : panel ? (
-    <span className="fc-anchor" data-testid="anchor">
-      Panel {panel}
-      <button type="button" className="x" aria-label="Unselect panel" onClick={() => setPanel(null)}>
-        <X className="fc-i xs" />
-      </button>
-    </span>
-  ) : (
-    <span className="fc-anchor plain">Pick a panel</span>
-  );
-
-  const recorder = useVoiceRecorder({
-    look: () => null,
-    onTake: async (take) => {
-      const on = whole ? undefined : (panel ?? undefined);
-      const wholeVideo = whole || undefined;
-      await c.addTake(
-        take,
-        async (heard) => ({
-          version: version.number,
-          time: 0,
-          panel: on,
-          wholeVideo,
-          kind: wholeVideo ? "general" : "panel",
-          text: heard ? heard.text || heard.result.note || "" : "",
-          voice: heard ? draftVoice(heard.result, []) : undefined,
-        }),
-        () => setWhole(false),
-      );
-    },
-    onError: (message) => toast.error(message),
-  });
-  const startVoice = () => {
-    if (!whole && !panel) {
-      toast.error("Pick a panel first, or comment on the whole storyboard");
-      return;
-    }
-    asGuest("add", () => void recorder.start());
-  };
-
-  const addComment = () =>
-    c.add(
-      async () => {
-        if (!whole && !panel) {
-          toast.error("Pick a panel first, or comment on the whole storyboard");
-          return null;
-        }
-        return { version: version.number, time: 0, panel: whole ? undefined : panel!, wholeVideo: whole || undefined, kind: whole ? "general" : "panel", text: c.text };
-      },
-      () => setWhole(false),
-    );
-
-  return (
-    <div className="fc-share-body">
-      <div className="fc-share-stage">
-        <div className="fc-share-panels">
-          {panels.map((p, i) => {
-            const n = i + 1;
-            const count = countOn(n);
-            return (
-              <button
-                key={n}
-                ref={(el) => {
-                  if (el) panelRefs.current.set(n, el);
-                }}
-                type="button"
-                className={cn("fc-share-panel", panel === n && !whole && "is-active")}
-                onClick={() => {
-                  setPanel(n);
-                  setWhole(false);
-                  boxRef.current?.focus();
-                }}
-              >
-                <img src={data.panelUrl(link, version.number, n)} alt={p.title ?? `Panel ${n}`} loading="lazy" />
-                <span className="cap">
-                  <b>{n}</b> {p.title}
-                  {count > 0 && <span className="n">{count}</span>}
-                </span>
-                {p.caption && <span className="d">{p.caption}</span>}
-              </button>
-            );
-          })}
-        </div>
-        <ShareDock
-          ref={boxRef}
-          chip={chip}
-          text={c.text}
-          placeholder={whole ? "What should change in the whole storyboard?" : panel ? `What should change in panel ${panel}?` : "Pick a panel, then type…"}
-          whole={whole}
-          wholeLabel="Whole storyboard"
-          voice={canRecordVoice() && <VoiceButton phase={recorder.phase} seconds={recorder.seconds} disabled={c.sending || c.adding} onStart={startVoice} onStop={recorder.stop} />}
-          adding={c.adding}
-          draftCount={c.drafts.length}
-          sending={c.sending}
-          guest={guest}
-          onText={c.setText}
-          onWhole={setWhole}
-          onAdd={addComment}
-          onSend={c.send}
-          onChangeGuest={onChangeGuest}
-        />
-      </div>
-      <Side title={comments.length ? plural(comments.length, "comment") : "Comments"} empty={!comments.length} review={review} version={version.number}>
-        <CommentList
-          comments={comments}
-          editable={c.editable}
-          selectedId={c.selectedId}
-          label={(x) => (x.wholeVideo ? "Whole storyboard" : `Panel ${x.panel}`)}
-          frameUrl={(file) => file}
-          onSelect={(x) => {
-            c.setSelectedId(x.id);
-            if (x.panel) setPanel(x.panel);
-          }}
-          onSave={c.save}
-          onDelete={c.remove}
-          footer={c.unsavedNotice}
-        />
-      </Side>
     </div>
   );
 }

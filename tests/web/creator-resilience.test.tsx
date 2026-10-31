@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CrashScreen } from "@/components/crash-screen";
-import { blockedByCors, corsMessage } from "@/lib/video-cors";
+import { blockedByCors, blockedMessage, GUEST_VIDEO_ERROR } from "@/lib/video-cors";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -67,10 +67,11 @@ describe("a video that fails to load", () => {
     expect(await blockedByCors(src, vi.fn<typeof fetch>(async () => Promise.reject(new TypeError("offline"))))).toBe(false);
   });
 
-  it("says plainly that previews can't play videos until R2 CORS allows the address", () => {
-    const message = corsMessage("framejam-cloud-git-x.vercel.app");
+  it("tells the creator plainly that the address isn't allowed yet, without storage jargon", () => {
+    const message = blockedMessage("framejam-cloud-git-x.vercel.app");
     expect(message).toContain("framejam-cloud-git-x.vercel.app");
-    expect(message).toMatch(/R2 CORS/);
-    expect(message).toMatch(/Previews can't play videos until/);
+    expect(message).toMatch(/The file is fine/);
+    expect(message).not.toMatch(/R2|CORS|bucket/);
+    expect(GUEST_VIDEO_ERROR).not.toMatch(/R2|CORS|bucket|storage/);
   });
 });

@@ -5,10 +5,30 @@ import { copyText, formatTime, handoffMessage, type ElementInfo } from "@/lib/ap
 import { elementLabel } from "@/lib/live-preview";
 import { cn, COPY_KEYS, FINISH_KEYS } from "@/lib/utils";
 
+/**
+ * What a new comment is attached to. `frame` is the moment typing (or drawing) paused on; `spot` a click on the
+ * picture. `frame` holds the picture as it was, so a pin or drawing can be burned into the image the agent gets.
+ */
 export type Anchor =
   | { kind: "time" }
-  | { kind: "spot"; time: number; x: number; y: number; thumbnailDataUrl?: string; element?: ElementInfo }
+  | { kind: "frame"; time: number; frame?: string }
+  | { kind: "spot"; time: number; x: number; y: number; frame?: string; element?: ElementInfo }
   | { kind: "range"; time: number; endTime: number };
+
+/** The button that ends a round: Finish review for the creator, Send for a guest. */
+export interface DockPrimary {
+  label(draftCount: number): string;
+  icon: ReactNode;
+  testId: string;
+  title(canFinish: boolean): string;
+}
+
+export const FINISH_PRIMARY: DockPrimary = {
+  label: (n) => `Finish review${n ? ` · ${n}` : ""}`,
+  icon: <CheckCheck className="fc-i sm" />,
+  testId: "send-to-agent",
+  title: (can) => (can ? `Lock this version's comments and hand them to your agent (${FINISH_KEYS}). You can still reopen them.` : "Add a comment first"),
+};
 
 const OUTDATED_HELP =
   "Your agent is running FrameJam from before the last update, so this page can't tell whether it's listening. Restart the framejam MCP server in your agent (Cursor: Settings → MCP) to fix it.";
@@ -61,6 +81,11 @@ interface DockProps {
   wholeKey?: string;
   /** Shown just before Finish review (the video's download button). */
   beforeFinish?: ReactNode;
+  /** Buttons beside Whole video (a guest's Voice and Draw). */
+  tools?: ReactNode;
+  /** Replaces the agent status beside the main button (who a guest is commenting as). */
+  status?: ReactNode;
+  primary?: DockPrimary;
 }
 
 /** The comment box under the timeline, with Finish review beside the agent status. */
@@ -85,6 +110,9 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     wholeLabel = "Whole video",
     wholeKey,
     beforeFinish,
+    tools,
+    status,
+    primary = FINISH_PRIMARY,
   },
   ref,
 ) {
@@ -98,14 +126,21 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
   ) : customChip ? (
     customChip
   ) : anchor.kind === "spot" ? (
-    <span className="fc-anchor">
+    <span className="fc-anchor" data-testid="anchor">
       <MapPin className="fc-i xs" /> {formatTime(anchor.time)} · on {anchor.element ? <span className="fc-truncate">{elementLabel(anchor.element)}</span> : "this spot"}
       <button type="button" className="x" aria-label="Remove spot" onClick={onClearAnchor}>
         <X className="fc-i xs" />
       </button>
     </span>
+  ) : anchor.kind === "frame" ? (
+    <span className="fc-anchor" data-testid="anchor">
+      <Clock className="fc-i xs" /> {formatTime(anchor.time)} · this frame
+      <button type="button" className="x" aria-label="Unpin from this frame" onClick={onClearAnchor}>
+        <X className="fc-i xs" />
+      </button>
+    </span>
   ) : anchor.kind === "range" ? (
-    <span className="fc-anchor">
+    <span className="fc-anchor" data-testid="anchor">
       <MoveHorizontal className="fc-i xs" /> {formatTime(anchor.time)} – {formatTime(anchor.endTime)}
       <button type="button" className="x" aria-label="Remove range" onClick={onClearAnchor}>
         <X className="fc-i xs" />
@@ -147,6 +182,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
         <div className="tools">
           {chip}
           <span className="fc-grow" />
+          {tools}
           {!whole && (
             <button
               type="button"
@@ -173,25 +209,27 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
               }
               if (e.key === "Escape") (e.target as HTMLTextAreaElement).blur();
             }}
+            data-testid="comment-box"
           />
-          <button type="button" className={`fc-btn sm${typing ? " primary" : ""}`} onClick={onAdd} disabled={adding || !typing} title="Add comment (Enter)">
+          <button type="button" className={`fc-btn sm${typing ? " primary" : ""}`} onClick={onAdd} disabled={adding || !typing} title="Add comment (Enter)" data-testid="add-comment">
+            {adding && <Loader2 className="fc-i xs fc-spin" />}
             Add comment <span className="fc-kbd">↩</span>
           </button>
         </div>
       </div>
       <div className="send">
-        <AgentLine listening={agentListening} outdated={agentOutdated} />
+        {status ?? <AgentLine listening={agentListening} outdated={agentOutdated} />}
         {beforeFinish}
         <button
           type="button"
-          data-testid="send-to-agent"
+          data-testid={primary.testId}
           className={`fc-btn ${finishing || (draftCount > 0 && !typing) ? "primary" : "outline"}`}
           onClick={onFinish}
           disabled={!canFinish}
-          title={canFinish ? `Lock this version's comments and hand them to your agent (${FINISH_KEYS}). You can still reopen them.` : "Add a comment first"}
+          title={primary.title(canFinish)}
         >
-          {finishing ? <Loader2 className="fc-i sm fc-spin" /> : <CheckCheck className="fc-i sm" />}
-          Finish review{draftCount ? ` · ${draftCount}` : ""}
+          {finishing ? <Loader2 className="fc-i sm fc-spin" /> : primary.icon}
+          {primary.label(draftCount)}
           <span className="fc-kbd">{FINISH_KEYS}</span>
         </button>
       </div>

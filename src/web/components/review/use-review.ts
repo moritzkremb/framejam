@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { toast } from "sonner";
 import { copyText, handoffMessage, type Review, type ReviewComment } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
+import type { ReviewRole } from "@/components/review/numbering";
 
 /** Width of whichever element the returned ref is attached to (the page swaps roots while loading). */
 export function useWidth<T extends HTMLElement>() {
@@ -21,7 +22,7 @@ export function useWidth<T extends HTMLElement>() {
  * A review kept live over SSE, the version on screen, and the round actions (finish, reopen, edit, delete).
  * `onNewVersion` runs when the agent ships a version while you're following the latest one.
  */
-export function useReview(id: string, data: ReviewDataSource, onNewVersion?: () => void) {
+export function useReview(id: string, data: ReviewDataSource, onNewVersion?: () => void, role: ReviewRole = "local") {
   const [review, setReview] = useState<Review | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const [activeVersion, setActiveVersion] = useState<number | null>(null);
@@ -42,7 +43,8 @@ export function useReview(id: string, data: ReviewDataSource, onNewVersion?: () 
       const latest = r.versions.at(-1)!;
       if (knownLatest.current && latest.number > knownLatest.current) {
         const prev = knownLatest.current;
-        toast.success(`Version ${latest.number} is ready`, { description: latest.note ? `“${latest.note}”` : "Your agent shipped a new version." });
+        if (role === "guest") toast.success(`Version ${latest.number} is here`, { description: latest.note ? `“${latest.note}”` : undefined });
+        else toast.success(`Version ${latest.number} is ready`, { description: latest.note ? `“${latest.note}”` : "Your agent shipped a new version." });
         // Follow the round: if you were on the latest version, move to the new one.
         setActiveVersion((v) => (v === null || v === prev ? latest.number : v));
         onNewVersionRef.current?.();
@@ -53,7 +55,7 @@ export function useReview(id: string, data: ReviewDataSource, onNewVersion?: () 
     } catch (e) {
       setLoadError(e);
     }
-  }, [id, data]);
+  }, [id, data, role]);
 
   useEffect(() => {
     knownLatest.current = 0;

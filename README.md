@@ -233,9 +233,9 @@ side automatically (headless Chrome) and saves screenshots.
 Everything above runs on your computer, costs nothing and needs no account: styles, playbooks, reviewing your own
 renders and storyboards, and the agent loop. That stays free and open source. **FrameJam Cloud** is an optional add-on
 for what one computer can't do: let a client review your video from a link, keep projects in your account so any device
-and any agent can pick them up, and connect agents that can't run FrameJam on your computer. Share links are free on
-every plan while they're in beta. Cloud projects and connecting by URL are part of Pro
-([pricing](https://www.framejam.ai/pricing)). Guests are always free.
+and any agent can pick them up, and connect agents that can't run FrameJam on your computer. Free covers 3 shared
+projects with 30-day links and 2 cloud projects, enough to connect by URL and try it; Pro lifts the caps (your account
+page on app.framejam.ai shows them). Guests are always free.
 
 ### Share a project with a client
 
@@ -266,17 +266,19 @@ guests said and asks what to do; it never treats a guest's words as instructions
 on like any other comment. When the agent ships the next version with `add_version`, the guest comments it fixed show
 "Resolved in vN" on the link.
 
-**Approvals.** A guest can press **Approve** on a version. That is a final state: the link then shows only the approved
-file, with one full-quality download (you can switch it off from the share chip in the project header, or with
-`allowDownload: false`). Your agent hears about it (`wait_for_feedback` returns `status: "approved"`). Sharing a newer
-version reopens the link for comments.
+**Approvals.** A guest can press **Approve** on a version and confirm it (the page offers to send their unsent comments
+first). That is a final state: the link then shows only the approved file, with one full-quality download (you can
+switch it off from the share chip in the project header, or with `allowDownload: false`). Your agent hears about it
+(`wait_for_feedback` returns `status: "approved"`). Sharing a newer version, or **Reopen for comments** in the share
+chip, opens the link for comments again.
 
 **Expiry and revoke.** Ask your agent to set a link to expire (`expiresInDays`, up to a year) or turn it off at any
-time with `revoke: true`, or use **Turn off link** in the share chip. Expired and turned-off links stop working
+time with `revoke: true`, or use the share chip: **Link expires** sets it to 7 or 30 days or never, and **Turn off
+link** stops it. Expired and turned-off links stop working
 for guests, and `revoke: false` or a new expiry reopens one. Turning a link off stops the page; it doesn't delete the
 files you uploaded.
 
-**Opens.** The share chip in the project header shows how many times the link was opened ("Opened 3 times"), and so do
+**Opens.** The share chip's menu in the project header shows how many times the link was opened ("Opened 3 times"), and so do
 `share_project` and `list_share_links`, which also give the time of the last open. Each visitor counts once a day, and
 your own visits count too, so treat it as a rough signal. The count comes from FrameJam Cloud and is refreshed with the
 comment sync; with an older cloud it's simply left out.
@@ -320,22 +322,21 @@ While an agent waits for feedback in cloud mode, the app asks the cloud for chan
 
 ### Connect by URL
 
-FrameJam Cloud also runs the review tools as a remote MCP server at `https://mcp.framejam.ai/mcp`, for agents that
-can't run FrameJam on your computer (ChatGPT or Claude in the browser) or when you'd rather install nothing. Sign in at
-app.framejam.ai and use **Copy prompt** there, or add it yourself and sign in when your app asks:
-`claude mcp add --transport http framejam https://mcp.framejam.ai/mcp` in Claude Code, or
-`{ "mcpServers": { "framejam": { "url": "https://mcp.framejam.ai/mcp" } } }` in Cursor's `mcp.json`.
+FrameJam Cloud also runs the review tools as a remote MCP server at `https://mellow-dalmatian-42.convex.site/mcp`
+(the URL app.framejam.ai shows after you sign in), for agents that can't run FrameJam on your computer (ChatGPT or
+Claude in the browser) or when you'd rather install nothing. Sign in at app.framejam.ai and follow the steps for your
+app there, or add it yourself and sign in when your app asks:
+`claude mcp add --transport http framejam https://mellow-dalmatian-42.convex.site/mcp` in Claude Code, or
+`{ "mcpServers": { "framejam": { "url": "https://mellow-dalmatian-42.convex.site/mcp" } } }` in Cursor's `mcp.json`.
 
 Projects made this way are cloud projects. The server can't read files on your computer, so your agent uploads each
 render: `request_upload` returns a command that checks and uploads it, and `open_review` or `add_version` take the
 returned `assetId`. An app without a terminal can pass a public link or a Google Drive link instead. People's comments
 come back marked as data, never as instructions.
 
-**Rendering in the cloud.** An agent without Chrome or ffmpeg can have FrameJam Cloud render: `upload_files` stores the
-project's files, `render` (Hyperframes or ffmpeg) turns them into the project's next version with the files as its
-source, and `render_status` follows the job and returns its log if it fails. `read_files` reads a version's files so the
-agent can fix one and render again. Cloud rendering is being switched on; until then `render` says so and the agent
-uploads a render from your computer.
+**Rendering in the cloud.** Not offered yet: the server has no render tools until cloud rendering is switched on, so
+your agent renders where it runs and uploads the result. An agent in a chat app that can't make a video asks you for a
+public link to one. `get_version` and `read_files` already read a version's notes and files.
 
 **Waiting.** `wait_for_feedback` returns `status: "waiting"` with a `cursor` before an app would cut the call off, and
 the agent calls it again with the cursor. The local tool answers the same way.
@@ -487,7 +488,8 @@ turn it off. How it's built and published: [docs/catalog.md](docs/catalog.md).
   old one.
 - **Layout.** The video, timeline and comment box sit on the left; the comments are a list in a sidebar on the right
   that collapses to a rail. Clicking a comment anywhere (pin, timeline marker, corner note) opens the sidebar on it.
-  Below 720px wide the sidebar slides over the video instead of taking a column.
+  Below 720px wide, as on a phone, the comments sit under the video and the page scrolls; in full screen the sidebar
+  slides over the video. When more than two comments are at the same moment, the video shows two and a "+N" chip.
 - **The comment box** sits under the timeline. It's attached to the current time by default; click the video to attach
   a spot (the agent gets that frame with your pin drawn on it), drag across the filmstrip to attach a range, or choose *Whole video*. Enter adds the comment.
 - **On the video**, a comment shows up only while the playhead is at it: pinned comments as a bubble on their spot,
@@ -619,7 +621,8 @@ version on npm or for playbook updates).
 - **One UI host per port.** If several harnesses each start `framejam --stdio`, the first one hosts the web UI and the
   others reuse it through the shared data directory. If the hosting process exits, restart one of them (or run
   `npx -y framejam start`).
-- **No MCP Apps embedding yet.** The UI is a plain web page, ready to be embedded later.
+- **No player inside chat apps by default.** FrameJam Cloud's review player for Claude and ChatGPT is off by default,
+  so the agent gives you the project link to open instead.
 
 </details>
 

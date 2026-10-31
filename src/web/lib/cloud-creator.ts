@@ -2,6 +2,7 @@ import { ConvexClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
 import { feedbackPrompt, latestComments, versionComments } from "../../core/feedback";
 import type { Store } from "../../core/store";
+import { REOPEN_UNAVAILABLE, reopenRejected } from "../../core/share";
 import { parseTranscript } from "../../core/transcript";
 import type { CommentKind, ElementInfo, Review, ReviewComment, ReviewVersion, ShareInfo, Transcript } from "@/lib/api";
 import { cloudMessage } from "@/lib/cloud-share";
@@ -131,7 +132,7 @@ export interface CreatorBackend {
   /** Calls `onLink` with every new result of `cloud.link`; returns the unsubscribe. */
   watchLink(id: string, onLink: (link: CloudLink | null) => void, onError: (e: Error) => void): () => void;
   share(id: string, version?: number): Promise<CloudLink>;
-  configure(id: string, change: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<void>;
+  configure(id: string, change: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean; reopen?: boolean }): Promise<void>;
   /** A short-lived download of a version's source zip. */
   sourceUrl(id: string, version: number): Promise<{ url: string; filename: string; bytes: number }>;
 }
@@ -424,7 +425,9 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
     },
 
     async setShare(id, change) {
-      await backend.configure(id, change);
+      await backend.configure(id, change).catch((e: unknown) => {
+        throw reopenRejected(e) ? new Error(REOPEN_UNAVAILABLE) : e;
+      });
       links.delete(id);
       return shareInfo(await linkOf(id), shareOrigin);
     },

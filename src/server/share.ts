@@ -11,7 +11,7 @@ import path from "node:path";
 import { StoreError, type NewCommentInput, type Store } from "../core/store.ts";
 import type { Review, ReviewVersion } from "../core/types.ts";
 import { readAuth } from "./auth.ts";
-import type { ShareHooks, ShareLinkSummary } from "../core/share.ts";
+import { REOPEN_UNAVAILABLE, reopenRejected, type ShareHooks, type ShareLinkSummary } from "../core/share.ts";
 import {
   type AssetKind,
   type FetchLike,
@@ -524,13 +524,13 @@ export async function listShares(store: Store): Promise<ShareLinkSummary[]> {
 
 /**
  * Sets when a project's link stops working, revokes or reopens it, or switches the approved link's download.
- * `expiresInDays: null` removes the expiry.
+ * `expiresInDays: null` removes the expiry; `reopen` clears a guest's approval so the link takes comments again.
  * The link has to exist: share a version first.
  */
 export async function configureShare(
   store: Store,
   reviewId: string,
-  change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean },
+  change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean; reopen?: boolean },
   opts: ShareOptions = {},
 ): Promise<ShareLinkSummary> {
   const cloud = await cloudOf(store, reviewId);
@@ -540,12 +540,17 @@ export async function configureShare(
   if (!state || state.cloudUrl !== cloudUrl) throw new ShareError("This project isn't shared yet. Share a version first.");
   const days = change.expiresInDays;
   if (typeof days === "number" && (!Number.isFinite(days) || days <= 0)) throw new ShareError("expiresInDays has to be a number of days above 0.");
-  const settings = await client.configure(reviewId, {
-    ...(days === undefined ? {} : { expiresAt: days === null ? null : (opts.now?.() ?? new Date()).getTime() + days * DAY_MS }),
-    ...(change.revoked === undefined ? {} : { revoked: change.revoked }),
-    ...(change.allowDownload === undefined ? {} : { allowDownload: change.allowDownload }),
-    ...(change.showNotes === undefined ? {} : { showNotes: change.showNotes }),
-  });
+  const settings = await client
+    .configure(reviewId, {
+      ...(days === undefined ? {} : { expiresAt: days === null ? null : (opts.now?.() ?? new Date()).getTime() + days * DAY_MS }),
+      ...(change.revoked === undefined ? {} : { revoked: change.revoked }),
+      ...(change.allowDownload === undefined ? {} : { allowDownload: change.allowDownload }),
+      ...(change.showNotes === undefined ? {} : { showNotes: change.showNotes }),
+      ...(change.reopen ? { reopen: true } : {}),
+    })
+    .catch((e: unknown) => {
+      throw reopenRejected(e) ? new ShareError(REOPEN_UNAVAILABLE) : e;
+    });
   if (cloud) {
     cloud.refresh(reviewId);
     return summarizeShare(await store.getReview(reviewId), (await cloudState(cloud, store, reviewId))!);
@@ -555,6 +560,7 @@ export async function configureShare(
     expiresAt: settings.expiresAt ?? undefined,
     revokedAt: settings.revokedAt ?? undefined,
     ...(settings.allowDownload === undefined ? {} : { allowDownload: settings.allowDownload }),
+    ...(change.reopen ? { approved: undefined } : {}),
   };
   writeShareState(store.root, reviewId, next);
   return summarizeShare(await store.getReview(reviewId), next);

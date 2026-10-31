@@ -189,7 +189,7 @@ describe("share page", () => {
     expect(host.textContent).toContain("Version 3 of 3");
     act(() => q<HTMLButtonElement>("version-menu")!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 })));
     await flush();
-    const item = [...document.querySelectorAll(".fc-menu-item")].find((el) => el.textContent?.startsWith("Version 2"));
+    const item = [...document.querySelectorAll(".fc-menu-item")].find((el) => el.textContent?.startsWith("v2"));
     act(() => (item as HTMLElement).click());
     await flush();
     expect(q("resolved-in")?.textContent).toContain("Resolved in v3");
@@ -200,7 +200,7 @@ describe("share page", () => {
     await render(fakeBackend(videoView()));
     act(() => q<HTMLButtonElement>("version-menu")!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 })));
     await flush();
-    const item = [...document.querySelectorAll(".fc-menu-item")].find((el) => el.textContent?.startsWith("Version 1"));
+    const item = [...document.querySelectorAll(".fc-menu-item")].find((el) => el.textContent?.startsWith("v1"));
     expect(item).toBeDefined();
     act(() => (item as HTMLElement).click());
     await flush();
@@ -251,17 +251,64 @@ describe("share page", () => {
     expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([]);
   });
 
-  it("records an approval for the version on screen", async () => {
+  it("asks before approving, then records the approval for the version on screen", async () => {
     const fake = fakeBackend(videoView());
     const storage = memoryStorage();
     storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
     await render(fake, storage);
 
     await act(async () => q<HTMLButtonElement>("approve")!.click());
+    expect(q("approve-confirm")?.textContent).toContain("Approve version 2?");
+    expect(q("approve-confirm")?.textContent).toContain("Comments close for everyone on this link");
+    expect(fake.backend.approve).not.toHaveBeenCalled();
+    await act(async () => q<HTMLButtonElement>("approve-confirm-yes")!.click());
     await flush();
+    expect(q("approve-confirm")).toBeNull();
     expect(fake.backend.approve).toHaveBeenCalledWith({ link: LINK, version: 2, name: "Anna", email: "anna@example.com" });
     expect(q("approve")?.textContent).toContain("Approved");
     expect(q<HTMLButtonElement>("approve")!.disabled).toBe(true);
+  });
+
+  it("warns about unsent comments before approving, and can send them first", async () => {
+    const fake = fakeBackend(videoView());
+    const storage = memoryStorage();
+    storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
+    const { data } = await render(fake, storage);
+    await act(async () => void (await data.addComment(LINK, { version: 2, time: 1, text: "Last thing" })));
+    await flush();
+
+    await act(async () => q<HTMLButtonElement>("approve")!.click());
+    expect(q("approve-confirm")?.textContent).toContain("1 comment you haven't sent");
+    await act(async () => q<HTMLButtonElement>("approve-send-first")!.click());
+    await flush();
+    expect(fake.backend.send).toHaveBeenCalledWith(expect.objectContaining({ comments: [expect.objectContaining({ text: "Last thing" })] }));
+    expect(fake.backend.approve).toHaveBeenCalled();
+    expect(fake.backend.send.mock.invocationCallOrder[0]).toBeLessThan(fake.backend.approve.mock.invocationCallOrder[0]!);
+  });
+
+  it("cancels an approval without sending anything", async () => {
+    const fake = fakeBackend(videoView());
+    const storage = memoryStorage();
+    storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
+    await render(fake, storage);
+    await act(async () => q<HTMLButtonElement>("approve")!.click());
+    const cancel = [...q("approve-confirm")!.querySelectorAll("button")].find((b) => b.textContent === "Cancel")!;
+    await act(async () => cancel.click());
+    expect(q("approve-confirm")).toBeNull();
+    expect(fake.backend.approve).not.toHaveBeenCalled();
+  });
+
+  it("numbers comments the way the creator sees them: the link's comments first, then the guest's drafts", async () => {
+    const view = videoView();
+    view.comments.push({ id: "k3", version: 2, kind: "general", time: 6, text: "Later one", guestName: "Cleo", at: Date.UTC(2026, 9, 2, 5) });
+    const storage = memoryStorage();
+    storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
+    const { data } = await render(fakeBackend(view), storage);
+    await act(async () => void (await data.addComment(LINK, { version: 2, time: 0.5, text: "My early draft" })));
+    await flush();
+    const numbers = [...host.querySelectorAll('[data-testid="comment-card"] .fc-num')].map((n) => n.textContent);
+    expect(numbers).toEqual(["1", "2", "3"]);
+    expect(cards()[2]).toContain("My early draft");
   });
 
   it("comments on a storyboard panel", async () => {
@@ -270,8 +317,8 @@ describe("share page", () => {
     storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
     await render(fake, storage);
 
-    expect([...host.querySelectorAll(".fc-share-panel img")].map((i) => i.getAttribute("src"))).toEqual(["https://media.example.com/p1.png", "https://media.example.com/p2.png"]);
-    act(() => (host.querySelectorAll(".fc-share-panel")[1] as HTMLButtonElement).click());
+    expect([...host.querySelectorAll('[data-testid="storyboard-panel"] img')].map((i) => i.getAttribute("src"))).toEqual(["https://media.example.com/p1.png", "https://media.example.com/p2.png"]);
+    act(() => (host.querySelectorAll('[data-testid="storyboard-panel"]')[1] as HTMLButtonElement).click());
     act(() => typeInto(q<HTMLTextAreaElement>("comment-box")!, "Warmer light"));
     await act(async () => q<HTMLButtonElement>("add-comment")!.click());
     await flush();
@@ -406,6 +453,26 @@ describe("cloud share source", () => {
     await data.addComment(LINK, { version: 2, time: 1, text: "Hi" });
     await expect(data.submit(LINK)).rejects.toThrow("There's no version 9 on this link");
     expect((await data.review(LINK)).comments.filter((c) => c.status === "draft")).toHaveLength(1);
+  });
+
+  it("sends each draft once when Send is pressed twice while the first send runs", async () => {
+    const fake = fakeBackend(videoView());
+    let release: () => void = () => {};
+    fake.backend.send.mockImplementationOnce(async () => {
+      await new Promise<void>((r) => (release = r));
+      return { ids: ["k_new"] };
+    });
+    const storage = memoryStorage();
+    storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
+    const data = cloudShareSource(fake.backend, storage, vi.fn() as unknown as typeof fetch);
+    await data.addComment(LINK, { version: 2, time: 1, text: "Once" });
+    const first = data.submit(LINK);
+    await expect(data.submit(LINK)).rejects.toThrow("already on their way");
+    await vi.waitFor(() => expect(fake.backend.send).toHaveBeenCalledTimes(1));
+    release();
+    await first;
+    expect(fake.backend.send).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([]);
   });
 
   it("only edits and deletes the guest's own drafts", async () => {
@@ -579,7 +646,7 @@ describe("voice comments", () => {
     await flush();
   }
 
-  it("keeps a voice comment whose upload is blocked (CORS) as a draft that says so, and Retry saves it", async () => {
+  it("keeps a voice comment whose upload is blocked as a draft that says so in plain words, and Retry saves it", async () => {
     stubRecorder();
     const fake = fakeBackend(videoView());
     const put = vi.fn(async (): Promise<Response> => {
@@ -591,10 +658,11 @@ describe("voice comments", () => {
     await recordOnce();
 
     expect(q("voice-unsaved")?.textContent).toContain("Voice not saved.");
-    expect(q("voice-unsaved")?.textContent).toContain("CORS");
+    expect(q("voice-unsaved")?.textContent).toContain("Check your connection and try again.");
+    expect(q("voice-unsaved")?.textContent).not.toMatch(/CORS|R2|storage server/);
     expect(q("voice-retry")).not.toBeNull();
     expect(q("voice-as-text")).not.toBeNull();
-    expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([expect.objectContaining({ text: "", unsavedVoice: expect.objectContaining({ error: expect.stringContaining("CORS") }) })]);
+    expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([expect.objectContaining({ text: "", unsavedVoice: expect.objectContaining({ error: expect.stringContaining("couldn't be uploaded") }) })]);
     expect(q<HTMLButtonElement>("send")?.disabled).toBe(true);
     expect(fake.backend.voiceTranscribe).not.toHaveBeenCalled();
 
@@ -618,7 +686,7 @@ describe("voice comments", () => {
     loadVideo();
     await recordOnce();
 
-    expect(q("voice-unsaved")?.textContent).toMatch(/refused it \(403, the upload link may have expired\)/);
+    expect(q("voice-unsaved")?.textContent).toContain("because the upload link expired");
     await act(async () => q("voice-as-text")!.click());
     const box = host.querySelector<HTMLTextAreaElement>('[data-testid="comment-card"] textarea')!;
     act(() => typeInto(box, "The logo is too small"));
@@ -641,7 +709,7 @@ describe("voice comments", () => {
       throw new TypeError("Failed to fetch");
     });
     const { storage } = await render(fake, guestStorage(), put as unknown as typeof fetch);
-    act(() => host.querySelectorAll<HTMLButtonElement>(".fc-share-panel")[1]!.click());
+    act(() => host.querySelectorAll<HTMLButtonElement>('[data-testid="storyboard-panel"]')[1]!.click());
     await recordOnce();
 
     expect(q("voice-unsaved")?.textContent).toContain("Voice not saved.");

@@ -2,21 +2,25 @@ import { ChevronLeft, ChevronRight, LayoutGrid, MapPin, MessageSquarePlus, Mouse
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { toast } from "sonner";
 import { FeedbackDock } from "@/components/review/dock";
-import { CommentsRail, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
+import { draftVoice, type GuestKit } from "@/components/review/guest";
+import { byPanel, numberComments, type ReviewRole } from "@/components/review/numbering";
+import { CommentsRail, railed, ReviewBottom, ReviewHeader, ReviewSidebar, showComments, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
 import type { ReviewState } from "@/components/review/use-review";
+import { canRecordVoice, useVoiceRecorder, VoiceButton } from "@/components/review/voice";
 import type { ReviewComment, StoryboardPanel } from "@/lib/api";
+import type { NewSharedComment } from "@/lib/cloud-share";
 import { drawPin } from "@/lib/pin";
 import { hasHandoff, VersionNotes } from "@/components/review/version-notes";
 import { cn, FINISH_KEYS, MOD_KEY, SHIFT_KEY } from "@/lib/utils";
 
-const SHORTCUTS: Shortcut[] = [
+const shortcuts = (guest: boolean): Shortcut[] => [
   ["Previous or next panel", ["←", "→"]],
   ["Whole board, or back to the panel", ["B"]],
   ["Show or hide comments", [MOD_KEY, "B"]],
   ["Comment", ["C"]],
   ["Add comment", ["↩"]],
   ["New line in a comment", [SHIFT_KEY, "↩"]],
-  ["Finish review", [FINISH_KEYS]],
+  [guest ? "Send your comments" : "Finish review", [FINISH_KEYS]],
   ["Clear the selection", ["Esc"]],
   ["Show shortcuts", ["?"]],
 ];
@@ -93,7 +97,8 @@ function PanelPins({
   );
 }
 
-export function StoryboardReview({ r, width }: { r: ReviewState; width: number }) {
+/** The storyboard review, the same screen for every role; see `VideoReview`. */
+export function StoryboardReview({ r, width, role = "local", guest }: { r: ReviewState; width: number; role?: ReviewRole; guest?: GuestKit }) {
   const review = r.review!;
   const version = r.version!;
   const latest = r.latest!;
@@ -104,7 +109,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
   const [current, setCurrent] = useState(1);
   const [spot, setSpot] = useState<{ x: number; y: number } | null>(null);
   const [text, setText] = useState("");
-  const [adding, setAdding] = useState(false);
+  const [ownAdding, setOwnAdding] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [native, setNative] = useState({ width: 16, height: 9 });
   const boxRef = useRef<HTMLTextAreaElement>(null);
@@ -114,25 +119,24 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
 
   const panel = Math.min(Math.max(1, current), panels.length);
   const whole = view === "board";
+  const adding = guest ? guest.adding : ownAdding;
 
   useEffect(() => {
     if (current > panels.length) setCurrent(1);
   }, [current, panels.length]);
 
-  const comments = useMemo(
+  const { ordered: comments, number: indexOf } = useMemo(
     () =>
-      review.comments
-        .filter((c) => c.version === version.number)
-        .sort(
-          (a, b) =>
-            Number(!!b.wholeVideo) - Number(!!a.wholeVideo) || (a.panel ?? 0) - (b.panel ?? 0) || a.createdAt.localeCompare(b.createdAt),
-        ),
-    [review, version],
+      numberComments(
+        review.comments.filter((c) => c.version === version.number),
+        role,
+        byPanel,
+      ),
+    [review, version, role],
   );
-  const indexOf = useMemo(() => new Map(comments.map((c, i) => [c.id, i + 1])), [comments]);
   const onPanel = (n: number) => comments.filter((c) => c.panel === n);
   const here = onPanel(panel);
-  const draftCount = comments.filter((c) => c.status === "draft").length;
+  const draftCount = guest ? guest.draftCount : comments.filter((c) => c.status === "draft").length;
 
   const panelName = (n: number) => `Panel ${n}${panels[n - 1]?.title ? ` · ${panels[n - 1].title}` : ""}`;
   const label = (c: ReviewComment) => (c.wholeVideo ? "Whole storyboard" : c.panel ? panelName(c.panel) : "");
@@ -154,7 +158,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
 
   const selectComment = (c: ReviewComment, opts: { openSidebar?: boolean } = {}) => {
     setSelectedId(c.id);
-    if (opts.openSidebar) side.setOpen(true);
+    if (opts.openSidebar) showComments(side);
     if (c.panel) {
       setCurrent(c.panel);
       setView("panel");
@@ -163,7 +167,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
   };
   const selectById = (cid: string) => {
     const c = review.comments.find((x) => x.id === cid);
-    if (c) selectComment(c, { openSidebar: true });
+    if (c) selectComment(c, { openSidebar: !side.stacked });
   };
 
   const onFrameClick = (e: MouseEvent<HTMLDivElement>) => {
@@ -175,40 +179,76 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
     focusBox();
   };
 
-  const addComment = async () => {
-    if (!text.trim() || adding) return;
-    setAdding(true);
+  const makeComment = async (): Promise<NewSharedComment> => ({
+    version: version.number,
+    time: 0,
+    panel: whole ? undefined : panel,
+    x: !whole && spot ? spot.x : undefined,
+    y: !whole && spot ? spot.y : undefined,
+    wholeVideo: whole || undefined,
+    kind: whole ? "general" : "panel",
+    text,
+    thumbnailDataUrl: whole ? undefined : panelThumbnail(imgRef.current, spot),
+  });
+
+  const afterAdd = (c: ReviewComment) => {
+    setText("");
+    setSpot(null);
+    setSelectedId(c.id);
+  };
+
+  const ownerAdd = async () => {
+    if (!text.trim() || ownAdding) return;
+    setOwnAdding(true);
     try {
-      const c = await data.addComment(review.id, {
-        version: version.number,
-        time: 0,
-        panel: whole ? undefined : panel,
-        x: !whole && spot ? spot.x : undefined,
-        y: !whole && spot ? spot.y : undefined,
-        wholeVideo: whole || undefined,
-        text,
-        thumbnailDataUrl: whole ? undefined : panelThumbnail(imgRef.current, spot),
-      });
-      setText("");
-      setSpot(null);
-      setSelectedId(c.id);
+      const c = await data.addComment(review.id, await makeComment());
+      afterAdd(c);
       await load();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
-      setAdding(false);
+      setOwnAdding(false);
     }
   };
 
+  const addComment = () => {
+    if (!text.trim() || adding) return;
+    if (guest) guest.add(makeComment, afterAdd);
+    else void ownerAdd();
+  };
+
   const finish = async () => {
-    if (text.trim()) await addComment();
+    if (guest) return guest.send(text.trim() ? { make: makeComment, after: afterAdd } : undefined);
+    if (text.trim()) await ownerAdd();
     await r.finish();
   };
+
+  const recorder = useVoiceRecorder({
+    look: () => null,
+    onTake: async (take) => {
+      if (!guest) return;
+      const on = whole ? undefined : panel;
+      await guest.addTake(
+        take,
+        async (heard) => ({
+          version: version.number,
+          time: 0,
+          panel: on,
+          wholeVideo: whole || undefined,
+          kind: whole ? "general" : "panel",
+          text: heard ? heard.text || heard.result.note || "" : "",
+          voice: heard ? draftVoice(heard.result, []) : undefined,
+        }),
+        () => setSpot(null),
+      );
+    },
+    onError: (message) => toast.error(message),
+  });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.closest("input, textarea, [contenteditable=true]") || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (target.closest("input, textarea, [contenteditable=true], [role=dialog]") || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         go(-1);
@@ -268,7 +308,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
       draftCount={draftCount}
       agentListening={Boolean(review.agentListening)}
       agentOutdated={Boolean(review.agentOutdated)}
-      finishing={r.finishing}
+      finishing={guest ? guest.busy : r.finishing}
       adding={adding}
       chip={chip}
       wholeLabel="Whole storyboard"
@@ -282,8 +322,14 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
         setSpot(null);
         focusBox();
       }}
-      onAdd={() => void addComment()}
+      onAdd={addComment}
       onFinish={() => void finish()}
+      tools={
+        guest &&
+        canRecordVoice() && <VoiceButton phase={recorder.phase} seconds={recorder.seconds} disabled={guest.busy || adding} onStart={() => guest.startVoice(() => void recorder.start())} onStop={recorder.stop} />
+      }
+      status={guest?.status}
+      primary={guest?.primary}
     />
   );
 
@@ -302,6 +348,7 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
           <MessageSquarePlus className="fc-i sm" /> Or just type, for the whole panel <span className="fc-kbd">C</span>
         </div>
       </div>
+      {guest && <p>Your comments stay in this browser until you press Send.</p>}
     </div>
   );
 
@@ -442,17 +489,17 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
 
   return (
     <>
-      <ReviewHeader r={r} subline={subline} shortcuts={SHORTCUTS} onPickVersion={pickVersion} />
-      <div className={cn("fc-review", (!side.open || side.overlay) && "railed")}>
+      <ReviewHeader r={r} role={role} subline={subline} shortcuts={shortcuts(Boolean(guest))} onPickVersion={pickVersion} actions={guest?.actions} />
+      <div className={cn("fc-review", railed(side) && "railed", side.stacked && "stacked")}>
         <div
           className={cn("fc-stage", view === "board" && "is-board")}
           style={{ "--content-w": view === "board" ? "1200px" : `${Math.max(box.width, 520)}px` } as CSSProperties}
         >
           {toolbar}
           {view === "board" ? board : panelView}
-          <ReviewBottom r={r} comments={comments} dock={dock} onLatest={() => pickVersion(latest.number)} />
+          <ReviewBottom r={r} role={role} comments={comments} dock={dock} onLatest={() => pickVersion(latest.number)} />
         </div>
-        {(!side.open || side.overlay) && <CommentsRail side={side} count={comments.length} open={isOpen} />}
+        {railed(side) && <CommentsRail side={side} count={comments.length} open={isOpen} />}
         <ReviewSidebar
           r={r}
           side={side}
@@ -460,10 +507,12 @@ export function StoryboardReview({ r, width }: { r: ReviewState; width: number }
           selectedId={selectedId}
           emptyState={emptyState}
           label={label}
+          rules={guest?.rules}
+          before={guest?.before}
           onSelect={(c) => selectComment(c)}
           tab={sideTab}
           onTab={setSideTab}
-          notes={hasHandoff(version) ? <VersionNotes data={data} reviewId={review.id} version={version} /> : undefined}
+          notes={hasHandoff(version) ? <VersionNotes data={guest ? undefined : data} reviewId={review.id} version={version} /> : undefined}
         />
       </div>
     </>

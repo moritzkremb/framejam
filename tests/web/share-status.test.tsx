@@ -42,6 +42,14 @@ const openMenu = () =>
     host!.querySelector<HTMLElement>('[data-testid="share-status"]')!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, ctrlKey: false }));
   });
 
+const pick = (label: string) =>
+  act(async () => {
+    const item = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((el) => el.textContent?.startsWith(label))!;
+    item.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }));
+    item.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, button: 0 }));
+    item.click();
+  });
+
 const text = () => host!.querySelector('[data-testid="share-status"]')?.textContent ?? null;
 
 describe("the creator's share chip", () => {
@@ -54,14 +62,16 @@ describe("the creator's share chip", () => {
     expect(text()).toBeNull();
   });
 
-  it("says Shared, then who approved it", async () => {
+  it("says Share link, then Approved, with who approved it in the menu", async () => {
     await show({ shared: true, url: "https://www.framejam.ai/v/t", closed: false, allowDownload: true });
-    expect(text()).toBe("Shared");
+    expect(text()).toBe("Share link");
     act(() => root?.unmount());
     host?.remove();
     await show({ shared: true, url: "https://www.framejam.ai/v/t", closed: false, approved: { version: 2, by: "Anna", at: Date.UTC(2026, 9, 30) } });
-    expect(text()).toBe("Approved by Anna");
+    expect(text()).toBe("Approved");
     expect(host!.querySelector(".approved")).not.toBeNull();
+    await openMenu();
+    expect(document.body.textContent).toContain("Anna approved version 2");
   });
 
   it("says when the link was turned off or expired, even after an approval", async () => {
@@ -73,25 +83,51 @@ describe("the creator's share chip", () => {
     expect(text()).toBe("Link expired");
   });
 
-  it("shows how many times guests opened the link, and copes with a cloud that doesn't count", async () => {
-    await show({ shared: true, closed: false, opens: 3, lastOpenedAt: Date.now() - 3 * 3600_000 });
-    expect(text()).toBe("Opened 3 times");
-    act(() => root?.unmount());
-    host?.remove();
-    await show({ shared: true, closed: false, opens: 1 });
-    expect(text()).toBe("Opened 1 time");
-    act(() => root?.unmount());
-    host?.remove();
-    await show({ shared: true, closed: false, opens: 0 });
-    expect(text()).toBe("Shared");
-    act(() => root?.unmount());
-    host?.remove();
-    await show({ shared: true, closed: false, opens: null });
-    expect(text()).toBe("Shared");
-    act(() => root?.unmount());
-    host?.remove();
-    await show({ shared: true, closed: false, approved: { version: 2, by: "Anna", at: 1 }, opens: 5 });
-    expect(text()).toBe("Approved by Anna");
+  it("shows how many times guests opened the link in its menu, and copes with a cloud that doesn't count", async () => {
+    const menuText = async (info: ShareInfo) => {
+      act(() => root?.unmount());
+      host?.remove();
+      await show(info);
+      await openMenu();
+      return document.body.textContent ?? "";
+    };
+    expect(await menuText({ shared: true, closed: false, opens: 3, lastOpenedAt: Date.now() - 3 * 3600_000 })).toContain("Opened 3 times, last");
+    expect(text()).toBe("Share link");
+    expect(await menuText({ shared: true, closed: false, opens: 1 })).toContain("Opened 1 time");
+    expect(await menuText({ shared: true, closed: false, opens: 0 })).toContain("Nobody has opened it yet");
+    expect(await menuText({ shared: true, closed: false, opens: null })).not.toContain("Opened");
+    await menuText({ shared: true, closed: false, approved: { version: 2, by: "Anna", at: 1 }, opens: 5 });
+    expect(text()).toBe("Approved");
+  });
+
+  it("reopens an approved link for comments after asking", async () => {
+    const confirm = vi.fn(() => true);
+    vi.stubGlobal("confirm", confirm);
+    const s = await show({ shared: true, url: "https://www.framejam.ai/v/t", closed: false, versions: [1, 2], approved: { version: 2, by: "Anna", at: 1 } });
+    await openMenu();
+    await pick("Reopen for comments");
+    expect(confirm).toHaveBeenCalled();
+    expect(s.data.setShare).toHaveBeenCalledWith("rev_1", { reopen: true });
+    vi.unstubAllGlobals();
+  });
+
+  it("has no Reopen before anyone approves", async () => {
+    await show({ shared: true, url: "https://www.framejam.ai/v/t", closed: false });
+    await openMenu();
+    expect(document.body.textContent).not.toContain("Reopen for comments");
+  });
+
+  it("lists the expiry as options with the current one checked", async () => {
+    const at = Date.UTC(2026, 10, 20);
+    const s = await show({ shared: true, url: "https://www.framejam.ai/v/t", closed: false, expiresAt: at }, true);
+    await openMenu();
+    const items = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+    const date = new Date(at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    expect(document.body.textContent).toContain("Link expires");
+    expect(items.find((el) => el.textContent?.startsWith(date))?.querySelector(".chk")).not.toBeNull();
+    expect(items.find((el) => el.textContent?.startsWith("Never"))?.querySelector(".chk")).toBeNull();
+    await pick("Never");
+    expect(s.data.setShare).toHaveBeenCalledWith("rev_1", { expiresAt: null });
   });
 
   it("offers the notes switch only where the link can take it, and flips it", async () => {

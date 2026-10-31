@@ -1,4 +1,4 @@
-import { Check, Copy, Link2, Link2Off, Loader2, Share2 } from "lucide-react";
+import { Check, Copy, Link2, Link2Off, Loader2, RotateCcw, Share2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
@@ -6,9 +6,12 @@ import { copyText, relativeTime, type ShareInfo } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
 import { cn } from "@/lib/utils";
 
+const dateLabel = (ms: number) => new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+
 /**
  * The creator's view of the project's share link, in the review header: whether a guest approved, whether the link
- * still works, and the two switches (download, stop sharing). Nothing shows for a project that isn't shared.
+ * still works, and its switches (download, notes, expiry, reopen, stop sharing). Nothing shows for a project that
+ * isn't shared.
  */
 export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDataSource; reviewId: string; latestVersion?: number }) {
   const [info, setInfo] = useState<ShareInfo | null>(null);
@@ -55,7 +58,7 @@ export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDat
   if (!info?.shared || !data.setShare) return null;
   const approved = info.approved;
   const closed = Boolean(info.closed);
-  const set = async (change: { allowDownload?: boolean; revoked?: boolean; expiresAt?: number | null; showNotes?: boolean }, message?: string) => {
+  const set = async (change: Parameters<NonNullable<ReviewDataSource["setShare"]>>[1], message?: string) => {
     try {
       setInfo(await data.setShare!(reviewId, change));
       toast.success(
@@ -78,14 +81,13 @@ export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDat
   const expireIn = (days: number | null) =>
     void set({ expiresAt: days === null ? null : Date.now() + days * 86_400_000 }, days === null ? "The link no longer expires" : `The link works for ${days} days`);
   const opens = typeof info.opens === "number" ? info.opens : undefined;
-  const opened = opens ? `Opened ${opens} time${opens === 1 ? "" : "s"}` : undefined;
-  const label = closed ? (info.revokedAt ? "Link turned off" : "Link expired") : approved ? `Approved by ${approved.by}` : (opened ?? "Shared");
+  const label = closed ? (info.revokedAt ? "Link turned off" : "Link expired") : approved ? "Approved" : "Share link";
   const openedLine =
     opens === undefined
       ? undefined
       : opens === 0
         ? "Nobody has opened it yet"
-        : `${opened}${info.lastOpenedAt ? `, last ${relativeTime(new Date(info.lastOpenedAt).toISOString())}` : ""}`;
+        : `Opened ${opens} time${opens === 1 ? "" : "s"}${info.lastOpenedAt ? `, last ${relativeTime(new Date(info.lastOpenedAt).toISOString())}` : ""}`;
 
   return (
     <Menu
@@ -101,7 +103,7 @@ export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDat
         {closed
           ? "Guests can't open this link"
           : approved
-            ? `Version ${approved.version} approved ${relativeTime(new Date(approved.at).toISOString())}. The link shows only that file.`
+            ? `${approved.by} approved version ${approved.version} ${relativeTime(new Date(approved.at).toISOString())}. The link shows only that file.`
             : "Guests can comment and approve"}
       </MenuLabel>
       {openedLine && <MenuLabel>{openedLine}</MenuLabel>}
@@ -122,6 +124,18 @@ export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDat
           Turn link back on
         </MenuItem>
       )}
+      {approved && !closed && (
+        <MenuItem
+          icon={<RotateCcw className="fc-i sm" />}
+          onSelect={() => {
+            if (window.confirm(`Reopen the link for comments? Guests see version ${newest || approved.version} again and can comment and approve.`)) {
+              void set({ reopen: true }, "The link takes comments again");
+            }
+          }}
+        >
+          Reopen for comments
+        </MenuItem>
+      )}
       {!closed && data.publishShare && latestVersion !== undefined && newest < latestVersion && (
         <MenuItem icon={<Share2 className="fc-i sm" />} onSelect={() => void publish(latestVersion)}>
           Put v{latestVersion} on the link
@@ -140,10 +154,25 @@ export function ShareStatus({ data, reviewId, latestVersion }: { data: ReviewDat
           )}
           {data.shareSettings && (
             <>
-              <MenuLabel>{info.expiresAt ? `Expires ${new Date(info.expiresAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : "Never expires"}</MenuLabel>
-              <MenuItem onSelect={() => expireIn(7)}>Expire in 7 days</MenuItem>
-              <MenuItem onSelect={() => expireIn(30)}>Expire in 30 days</MenuItem>
-              {info.expiresAt && <MenuItem onSelect={() => expireIn(null)}>Never expire</MenuItem>}
+              <MenuSeparator />
+              <MenuLabel>Link expires</MenuLabel>
+              <MenuItem checked={!info.expiresAt} onSelect={() => {
+                  if (info.expiresAt) expireIn(null);
+                }}>
+                Never
+              </MenuItem>
+              {info.expiresAt && (
+                <MenuItem checked onSelect={() => {}}>
+                  {dateLabel(info.expiresAt)}
+                </MenuItem>
+              )}
+              <MenuItem onSelect={() => expireIn(7)}>
+                In 7 days
+              </MenuItem>
+              <MenuItem onSelect={() => expireIn(30)}>
+                In 30 days
+              </MenuItem>
+              <MenuSeparator />
             </>
           )}
           <MenuItem

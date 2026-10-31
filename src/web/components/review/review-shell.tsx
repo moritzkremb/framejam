@@ -5,15 +5,17 @@ import { toast } from "sonner";
 import { BackHeader } from "@/components/header";
 import { UploadState } from "@/components/review/upload-state";
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
-import { CommentList } from "@/components/review/comment-list";
+import { CommentList, type CommentFooter } from "@/components/review/comment-list";
 import { Handoff } from "@/components/review/dock";
+import { Logo } from "@/components/review/logo";
+import type { ReviewRole } from "@/components/review/numbering";
 import { ShareStatus } from "@/components/review/share-status";
 import type { ReviewState } from "@/components/review/use-review";
 import { copyText, relativeTime, thumbUrl, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
 import { cn, MOD_KEY } from "@/lib/utils";
 
-/** Below this width the sidebar slides over the stage instead of taking a column. */
+/** Below this width the comments sit under the video and the page scrolls; in full screen the sidebar slides over it. */
 export const OVERLAY_BELOW = 720;
 
 function readCollapsed() {
@@ -24,17 +26,21 @@ function readCollapsed() {
   }
 }
 
-/** Open/closed state of the comments sidebar: remembered as a column, transient as an overlay. */
-/** In full screen the sidebar has its own open state: it starts open and isn't saved. */
+/**
+ * Open/closed state of the comments sidebar: remembered as a column, transient as an overlay. On a narrow page the
+ * comments are `stacked` under the video instead and always shown. In full screen the sidebar has its own open state:
+ * it starts open and isn't saved.
+ */
 export function useSidebar(width: number, fullscreen = false) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
-  const [overlayOpen, setOverlayOpen] = useState(false);
   const [fullscreenOpen, setFullscreenOpen] = useState(true);
-  const overlay = width > 0 && width < OVERLAY_BELOW;
-  const open = fullscreen ? fullscreenOpen : overlay ? overlayOpen : !collapsed;
+  const narrow = width > 0 && width < OVERLAY_BELOW;
+  const stacked = narrow && !fullscreen;
+  const overlay = narrow && fullscreen;
+  const open = stacked || (fullscreen ? fullscreenOpen : !collapsed);
   const setOpen = (next: boolean) => {
+    if (stacked) return;
     if (fullscreen) return setFullscreenOpen(next);
-    if (overlay) return setOverlayOpen(next);
     setCollapsed(!next);
     try {
       localStorage.setItem("framejam:sidebar", next ? "open" : "collapsed");
@@ -51,7 +57,16 @@ export function useSidebar(width: number, fullscreen = false) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
-  return { overlay, open, setOpen, openForFullscreen: () => setFullscreenOpen(true) };
+  return { overlay, stacked, open, setOpen, openForFullscreen: () => setFullscreenOpen(true) };
+}
+
+/** Whether the stage has the comments rail beside it instead of the sidebar. */
+export const railed = (side: SidebarState) => !side.stacked && (!side.open || side.overlay);
+
+/** Brings the comments into view: opens the sidebar, or scrolls down to them when they're under the video. */
+export function showComments(side: SidebarState) {
+  if (side.stacked) document.querySelector(".fc-side")?.scrollIntoView({ block: "start", behavior: "smooth" });
+  else side.setOpen(true);
 }
 
 export type SidebarState = ReturnType<typeof useSidebar>;
@@ -76,7 +91,7 @@ function ShortcutsButton({ shortcuts }: { shortcuts: Shortcut[] }) {
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button type="button" className="fc-btn ghost icon sm" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">
+        <button type="button" className="fc-btn ghost icon sm fc-shortcuts-btn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">
           <Keyboard className="fc-i sm" />
         </button>
       </Popover.Trigger>
@@ -192,46 +207,70 @@ export function DownloadButton({ data, review, version }: { data: ReviewDataSour
   );
 }
 
+/**
+ * The review header. The creator gets the back arrow, the share chip and the version menu with Compare, Copy and
+ * Download; a guest gets the logo, the same version menu (versions only) and `actions` (Approve).
+ */
 export function ReviewHeader({
   r,
+  role = "local",
   subline,
   shortcuts,
   onPickVersion,
   onCompare,
+  actions,
 }: {
   r: ReviewState;
+  role?: ReviewRole;
   subline: string;
   shortcuts: Shortcut[];
   onPickVersion(n: number): void;
   onCompare?: () => void;
+  actions?: ReactNode;
 }) {
   const { review, version, latest } = r;
   if (!review || !version || !latest) return null;
+  const guest = role === "guest";
+  const versions = review.versions.map((v) => (
+    <MenuItem key={v.number} checked={v.number === version.number} hint={v.number === latest.number ? "latest" : relativeTime(v.createdAt)} onSelect={() => onPickVersion(v.number)}>
+      v{v.number}
+      {v.note ? ` · ${v.note}` : ""}
+    </MenuItem>
+  ));
+  const trigger = (
+    <button type="button" className="fc-btn sm" aria-label={guest ? "Versions" : "Versions and more"} data-testid="version-menu">
+      v{version.number} <ChevronDown className="fc-i xs" />
+    </button>
+  );
+  if (guest) {
+    return (
+      <header className="fc-header fc-share-h">
+        <Logo />
+        <div className="titles">
+          <span className="t" title={review.title}>
+            {review.title}
+          </span>
+          <span className="s">{subline}</span>
+        </div>
+        {shortcuts.length > 0 && <ShortcutsButton shortcuts={shortcuts} />}
+        {review.versions.length > 1 && (
+          <Menu label="Versions" trigger={trigger}>
+            <MenuLabel>Version</MenuLabel>
+            {versions}
+          </Menu>
+        )}
+        {actions}
+      </header>
+    );
+  }
   return (
     <>
     <BackHeader to="/" title={review.title} sub={subline}>
       <ShareStatus data={r.data} reviewId={review.id} latestVersion={latest.number} />
-      <ShortcutsButton shortcuts={shortcuts} />
-      <Menu
-        label="Versions and more"
-        trigger={
-          <button type="button" className="fc-btn sm" aria-label="Versions and more">
-            v{version.number} <ChevronDown className="fc-i xs" />
-          </button>
-        }
-      >
+      {shortcuts.length > 0 && <ShortcutsButton shortcuts={shortcuts} />}
+      <Menu label="Versions and more" trigger={trigger}>
         <MenuLabel>Version</MenuLabel>
-        {review.versions.map((v) => (
-          <MenuItem
-            key={v.number}
-            checked={v.number === version.number}
-            hint={v.number === latest.number ? "latest" : relativeTime(v.createdAt)}
-            onSelect={() => onPickVersion(v.number)}
-          >
-            v{v.number}
-            {v.note ? ` · ${v.note}` : ""}
-          </MenuItem>
-        ))}
+        {versions}
         <MenuSeparator />
         {onCompare && (
           <MenuItem icon={<Columns2 className="fc-i sm" />} onSelect={onCompare}>
@@ -284,7 +323,7 @@ export function UploadWait({ r, poster, onCompare }: { r: ReviewState; poster?: 
 }
 
 /** Under the stage: the comment box while the round is open, the handoff once finished, or a bar on old versions. */
-export function ReviewBottom({ r, comments, dock, onLatest }: { r: ReviewState; comments: ReviewComment[]; dock: ReactNode; onLatest(): void }) {
+export function ReviewBottom({ r, role = "local", comments, dock, onLatest }: { r: ReviewState; role?: ReviewRole; comments: ReviewComment[]; dock: ReactNode; onLatest(): void }) {
   const { review, version, isLatest, isOpen } = r;
   if (!review || !version) return null;
   if (!isLatest) {
@@ -293,7 +332,11 @@ export function ReviewBottom({ r, comments, dock, onLatest }: { r: ReviewState; 
         <Clock className="fc-i sm" />
         <span className="fc-grow">
           You're looking at <b>version {version.number}</b>.{" "}
-          {version.sentAt ? `Its comments made version ${version.number + 1}.` : "Its review was never finished."}
+          {role === "guest"
+            ? "New comments go on the latest version."
+            : version.sentAt
+              ? `Its comments made version ${version.number + 1}.`
+              : "Its review was never finished."}
         </span>
         <button type="button" className="fc-btn primary sm" onClick={onLatest}>
           Go to latest
@@ -317,6 +360,15 @@ export function ReviewBottom({ r, comments, dock, onLatest }: { r: ReviewState; 
   );
 }
 
+/** How a guest's comments differ in the list: only their own drafts can change, and a failed voice upload says why. */
+export interface CommentRules {
+  editable(c: ReviewComment): boolean;
+  onSave(c: ReviewComment, text: string): Promise<void>;
+  onDelete(c: ReviewComment): Promise<void>;
+  frameUrl(file: string): string;
+  footer?: CommentFooter;
+}
+
 export function ReviewSidebar({
   r,
   side,
@@ -331,15 +383,22 @@ export function ReviewSidebar({
   onTab,
   onSelect,
   onPoint,
+  rules,
+  before,
 }: {
   r: ReviewState;
   side: SidebarState;
+  /** In the order they're numbered (`numberComments`). */
   comments: ReviewComment[];
   selectedId: string | null;
   emptyState: ReactNode;
   label?(c: ReviewComment): string;
   /** Pinned under the comment list (the comment box, in full screen). */
   footer?: ReactNode;
+  /** Replaces the creator's rules (everything editable while the round is open). */
+  rules?: CommentRules;
+  /** Above the comments (who approved, on a shared link). */
+  before?: ReactNode;
   /** With a transcript the sidebar has two tabs: comments and the transcript. */
   transcript?: ReactNode;
   /** The Notes tab: handoff notes and source files, for a version that has them. */
@@ -355,7 +414,7 @@ export function ReviewSidebar({
   const showTranscript = Boolean(transcript) && tab === "transcript";
   const showNotes = Boolean(notes) && tab === "notes";
   return (
-    <aside className={cn("fc-side", side.overlay && "overlay")} aria-label={showTranscript ? "Transcript" : showNotes ? "Notes" : "Comments"}>
+    <aside className={cn("fc-side", side.overlay && "overlay", side.stacked && "stacked")} aria-label={showTranscript ? "Transcript" : showNotes ? "Notes" : "Comments"}>
       <div className="fc-side-h">
         {transcript || notes ? (
           <div className="fc-tabs" role="tablist">
@@ -380,33 +439,41 @@ export function ReviewSidebar({
           </>
         )}
         <span className="fc-grow" />
-        <button type="button" className="fc-btn ghost icon sm round" aria-label="Hide comments" title={`Hide comments (${MOD_KEY}B)`} onClick={() => side.setOpen(false)}>
-          {side.overlay ? <X className="fc-i sm" /> : <ChevronRight className="fc-i sm" />}
-        </button>
+        {!side.stacked && (
+          <button type="button" className="fc-btn ghost icon sm round" aria-label="Hide comments" title={`Hide comments (${MOD_KEY}B)`} onClick={() => side.setOpen(false)}>
+            {side.overlay ? <X className="fc-i sm" /> : <ChevronRight className="fc-i sm" />}
+          </button>
+        )}
       </div>
       <div className="fc-side-body">
         {showTranscript ? (
           transcript
         ) : showNotes ? (
           notes
-        ) : comments.length ? (
-          <CommentList
-            comments={comments}
-            editable={r.isOpen}
-            selectedId={selectedId}
-            label={label}
-            onSelect={onSelect}
-            frameUrl={(file) => thumbUrl(r.review?.id ?? "", file)}
-            onPoint={onPoint}
-            onSave={r.saveComment}
-            onDelete={r.deleteComment}
-          />
-        ) : r.isOpen ? (
-          emptyState
         ) : (
-          <p className="fc-caption" style={{ padding: "4px 2px" }}>
-            No comments on this version.
-          </p>
+          <>
+            {before}
+            {comments.length ? (
+              <CommentList
+                comments={comments}
+                editable={rules?.editable ?? r.isOpen}
+                selectedId={selectedId}
+                label={label}
+                onSelect={onSelect}
+                frameUrl={rules?.frameUrl ?? ((file) => thumbUrl(r.review?.id ?? "", file))}
+                onPoint={onPoint}
+                onSave={rules?.onSave ?? r.saveComment}
+                onDelete={rules?.onDelete ?? r.deleteComment}
+                footer={rules?.footer}
+              />
+            ) : r.isOpen ? (
+              emptyState
+            ) : (
+              <p className="fc-caption" style={{ padding: "4px 2px" }}>
+                No comments on this version.
+              </p>
+            )}
+          </>
         )}
       </div>
       {footer && <div className="fc-side-foot">{footer}</div>}

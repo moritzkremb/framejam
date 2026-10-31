@@ -4,7 +4,7 @@ import type { ElementInfo } from "@/lib/api";
 import { connectLivePreview } from "@/lib/live-preview";
 import { drawPin } from "@/lib/pin";
 import { cn, crossOriginFor } from "@/lib/utils";
-import { blockedByCors, corsMessage } from "@/lib/video-cors";
+import { blockedByCors, blockedMessage } from "@/lib/video-cors";
 
 export interface MediaController {
   duration: number;
@@ -70,6 +70,20 @@ interface PlayerProps {
   children?: ReactNode;
   /** Replaces the message shown when the video can't load. */
   errorMessage?: string;
+  /** Replaces the message for a video the storage won't serve to this address. */
+  blockedText?: string;
+  /** More notes are at this moment than fit on the picture: show them all (in the comments list). */
+  onMoreNotes?(): void;
+}
+
+/** Corner notes shown on the picture at once; the rest are behind a "+N" chip so the frame stays visible. */
+const MAX_NOTES = 2;
+
+function visibleNotes(floating: FloatingNote[], selectedId: string | null) {
+  if (floating.length <= MAX_NOTES) return floating;
+  const first = floating.slice(0, MAX_NOTES);
+  const selected = floating.find((n) => n.id === selectedId);
+  return selected && !first.includes(selected) ? [...first.slice(0, MAX_NOTES - 1), selected] : first;
 }
 
 function videoController(video: HTMLVideoElement): MediaController {
@@ -124,7 +138,30 @@ function useFitBox(aspect: number) {
 }
 
 /** The video well: footage on black, comment pins on top. Clicking the picture is the main way to comment. */
-export function Player({ src, liveSrc, onLiveError, target, pins, floating, newPin, selectedId, showHint, interactive, className, style, onController, onFrameClick, onPinClick, onFrameWidth, children, errorMessage }: PlayerProps) {
+export function Player({
+  src,
+  liveSrc,
+  onLiveError,
+  target,
+  pins,
+  floating,
+  newPin,
+  selectedId,
+  showHint,
+  interactive,
+  className,
+  style,
+  onController,
+  onFrameClick,
+  onPinClick,
+  onFrameWidth,
+  children,
+  errorMessage,
+  blockedText,
+  onMoreNotes,
+}: PlayerProps) {
+  const notes = visibleNotes(floating, selectedId);
+  const hidden = floating.length - notes.length;
   const [native, setNative] = useState({ width: 1920, height: 1080 });
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -217,7 +254,7 @@ export function Player({ src, liveSrc, onLiveError, target, pins, floating, newP
                 const failed = src;
                 if (crossOriginFor(failed)) {
                   void blockedByCors(failed).then((blocked) => {
-                    if (blocked && videoRef.current?.getAttribute("src") === failed) setError(corsMessage());
+                    if (blocked && videoRef.current?.getAttribute("src") === failed) setError(blockedText ?? blockedMessage());
                   });
                 }
               }}
@@ -261,9 +298,9 @@ export function Player({ src, liveSrc, onLiveError, target, pins, floating, newP
                 <Plus className="fc-i" />
               </span>
             )}
-            {floating.length > 0 && (
+            {notes.length > 0 && (
               <div className="fc-floating">
-                {floating.map((n) => (
+                {notes.map((n) => (
                   <button
                     key={n.id}
                     type="button"
@@ -280,6 +317,21 @@ export function Player({ src, liveSrc, onLiveError, target, pins, floating, newP
                     </span>
                   </button>
                 ))}
+                {hidden > 0 && (
+                  <button
+                    type="button"
+                    className="fc-note more"
+                    aria-label={`${hidden} more comment${hidden === 1 ? "" : "s"} here`}
+                    title="Show all comments"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMoreNotes?.();
+                    }}
+                    data-testid="more-notes"
+                  >
+                    +{hidden}
+                  </button>
+                )}
               </div>
             )}
           </div>

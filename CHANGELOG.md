@@ -3,8 +3,8 @@
 ## 0.8.0 (unreleased): cloud projects, voice and connecting by URL
 
 FrameJam Cloud grows from share links into a place to keep projects. Local FrameJam is unchanged and still needs no
-account. Cloud projects and connecting by URL are part of Pro; share links stay free while they're in beta. You need
-this npm release for all of it.
+account. Free covers 3 shared projects with 30-day links and 2 cloud projects; Pro lifts the caps. You need this npm
+release for all of it.
 
 ### Cloud projects
 
@@ -34,14 +34,32 @@ this npm release for all of it.
 
 ### Connect by URL
 
-- FrameJam Cloud runs the review tools as a remote MCP server at `https://mcp.framejam.ai/mcp`, for ChatGPT or Claude
-  in the browser and anyone who'd rather install nothing. Renders go up with `request_upload` (or a public or Google
-  Drive link), and projects made this way are cloud projects.
-- **Rendering in the cloud.** `upload_files`, `render` (Hyperframes or ffmpeg, with `from: { reviewId, version }`),
-  `render_status` and `read_files` let an agent without Chrome or ffmpeg make the next version in FrameJam Cloud.
-  Until cloud rendering is switched on, `render` says so and the agent uploads a render instead.
+- FrameJam Cloud runs the review tools as a remote MCP server at `https://mellow-dalmatian-42.convex.site/mcp` (the
+  URL app.framejam.ai shows), for ChatGPT or Claude in the browser and anyone who'd rather install nothing. Renders go
+  up with `request_upload` (or a public or Google Drive link), and projects made this way are cloud projects. Cloud
+  rendering isn't offered yet.
 - **`wait_for_feedback` can resume.** After about 50 seconds it returns `{ status: "waiting", cursor, waitedSeconds }`
   so an app doesn't cut the call off; the agent calls it again with the `cursor`. The local tool behaves the same way.
+
+### Review pages
+
+- **One review screen everywhere.** The guest share page is now the same screen as the local app and the project page,
+  with the guest's own controls: **Send** instead of **Finish review**, **Approve**, **Voice** and **Draw**. Guests get
+  full screen, playback speed, timeline zoom and the keyboard shortcuts, and the same comment cards and comment box.
+- **The same numbers for everyone.** Comments on the link are numbered first, by time, so "comment 3" is the same
+  comment for you and every guest; your own and a guest's unsent ones come after.
+- **Approve asks first.** It says that comments close for everyone on the link and offers to send unsent comments
+  first. The share chip has **Reopen for comments** to open an approved link again.
+- **Phones.** Below 720px the comments sit under the video on every review page and the page scrolls, instead of a
+  rail that hid them. Keyboard hints are hidden on touch screens.
+- **Busy moments.** The video shows two notes at a time and a "+N" chip that opens the rest.
+- **The share chip** reads "Share link" (or "Approved", or why the link is closed). How often the link was opened is in
+  its menu, and **Link expires** lists Never, 7 days and 30 days with the current choice checked.
+- **Plain errors.** A guest whose video can't play reads "This video can't play right now. Tell whoever sent the link."
+  A voice comment whose upload fails says to check the connection, or that the upload link expired.
+- A voice draft sends once even when **Send** is pressed again while a send is running, and a **Retry** that finishes
+  after the draft was sent as text or deleted no longer adds it back.
+- The Render and Live switch is gone from the review page: it always plays the render.
 
 ### Look
 
@@ -51,8 +69,8 @@ this npm release for all of it.
 
 ### Skill
 
-- Skill version 7: cloud mode links, spoken comments, version notes and `get_version`, connecting by URL,
-  rendering in the cloud and the resumable wait. Rerun `npx -y framejam@latest install` to get it; Claude Code plugin
+- Skill version 7: cloud mode links, spoken comments, version notes and `get_version`, connecting by URL and the
+  resumable wait. Rerun `npx -y framejam@latest install` to get it; Claude Code plugin
   installs update on their own.
 
 ### Other changes
@@ -71,8 +89,9 @@ go to FrameJam Cloud and its transcription service. `README.md` and `plugin/READ
 ### Before you publish
 
 Ship the framejam-cloud side to production first: cloud projects (H2.1), the project page (H2.2), notes and source
-(H2.6), the remote MCP server and waiting cursor (H3.2), voice (H2.7) and upload sizes (H2.4).
-`mcp.framejam.ai` must answer before this README goes out. 0.7.0 was never published, so this release also carries
+(H2.6), the remote MCP server and waiting cursor (H3.2), voice (H2.7) and upload sizes (H2.4). **Reopen for comments**
+needs `shares.configure` to take `reopen`; until it does, the chip says to put a new version on the link instead. The
+production MCP URL must answer before this README goes out. 0.7.0 was never published, so this release also carries
 its sharing changes; `npm version` records skill version 7 in `skills/framejam/versions.json`.
 
 ### Release line

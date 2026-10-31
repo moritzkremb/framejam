@@ -36,7 +36,7 @@ export function SetupPage() {
           <p className="fc-kicker">Get started</p>
           <h1 className="fc-h1">Setup</h1>
           <p className="fc-lede">
-            Three messages to paste into your agent chat. Each step ticks itself off. More in the{" "}
+            Paste these into your agent chat. Each step ticks itself off. More in the{" "}
             <a href={DOCS_URL} target="_blank" rel="noreferrer" className="fc-link">
               docs
             </a>

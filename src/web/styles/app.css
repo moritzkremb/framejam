@@ -346,6 +346,20 @@ a { color: inherit; }
 .fc-side-empty { display: flex; flex-direction: column; gap: 6px; padding: 4px 2px; }
 .fc-side-empty p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--text-2); }
 .fc-side-empty .fc-ways { max-width: none; margin-top: 6px; }
+
+/* Narrow pages: the comments sit under the video and the whole page scrolls, like a phone page should. */
+.fc-review.stacked { display: flex; flex-direction: column; overflow: hidden auto; }
+.fc-review.stacked .fc-stage { flex: none; overflow: visible; justify-content: flex-start; padding: var(--space-3); }
+.fc-review.stacked .fc-stage > .fc-player { max-height: 65dvh; }
+.fc-review.stacked .fc-stage > .fc-board-wrap { flex: none; overflow: visible; }
+.fc-side.stacked { flex: none; min-height: auto; border-left: 0; border-top: 1px solid var(--border); }
+.fc-side.stacked .fc-side-body { flex: none; overflow: visible; }
+.fc-dock .tools { flex-wrap: wrap; row-gap: 6px; }
+.fc-dock .fc-chip-btn.on { background: var(--accent-soft); color: var(--accent-text); }
+/* Touch screens have no keyboard to hint at. */
+@media (hover: none) {
+  .fc-kbd, .fc-shortcuts-btn { display: none; }
+}
 .fc-rail { border-left: 1px solid var(--border); }
 
 /* Comments: one card under another */
@@ -386,6 +400,7 @@ a { color: inherit; }
 .fc-note.sent .n { background: rgba(255, 255, 255, .2); color: var(--on-video); }
 .fc-note.is-selected { outline: 2px solid var(--on-video); outline-offset: 1px; }
 .fc-note .who { margin-right: 6px; font-weight: 600; }
+.fc-note.more { padding: 0 10px; font: 600 11px/1 var(--font-mono); }
 .fc-player-veil { position: absolute; inset: 0; display: grid; place-items: center; gap: 8px; background: rgba(0, 0, 0, .4); color: var(--on-video); font: 400 13px/18px var(--font-sans); text-align: center; padding: 24px; }
 .fc-player-veil.error { background: rgba(0, 0, 0, .75); }
 .fc-play[disabled] { opacity: .4; cursor: not-allowed; }
@@ -548,19 +563,15 @@ a { color: inherit; }
 .fc-pb-label, .fc-pick-sub, .fc-pick-field .lbl { font: 500 11px/16px var(--font-mono); letter-spacing: .08em; }
 .fc-menu.fc-menu-pop { width: max-content; min-width: 248px; max-width: min(320px, calc(100vw - 24px)); }
 
-/* Phones: the share page's transport row and the handoff card fit next to the comments rail. */
+/* Phones: the handoff card wraps under its icon. */
 @media (max-width: 560px) {
-  .fc-share-stage .fc-controls { gap: 4px; }
-  .fc-share-stage .fc-play { width: 36px; height: 36px; }
-  .fc-share-stage .fc-readout { font-size: 12px; }
-  .fc-share-stage .fc-controls .fc-btn.icon.sm { width: 28px; height: 28px; }
   .fc-handoff .hd { flex-wrap: wrap; }
   .fc-handoff .hd > .fc-grow { flex-basis: calc(100% - 44px); }
   .fc-handoff .hd > .fc-btn { margin-left: 44px; }
 }
 @media (max-width: 460px) {
-  .fc-stage .fc-dock .send, .fc-share-stage .fc-dock .send { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
-  .fc-stage .fc-dock .send .fc-agent, .fc-share-stage .fc-dock .send .fc-agent { flex-basis: 100%; }
+  .fc-stage .fc-dock .send { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
+  .fc-stage .fc-dock .send :is(.fc-agent, .fc-share-as) { flex-basis: 100%; }
 }
 /* The review page's transport row follows its own width: the comments rail, the sidebar and a tall video all narrow it. */
 .fc-transport { container-type: inline-size; }

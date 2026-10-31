@@ -51,6 +51,13 @@ export interface ShareOutcome {
   link: ShareLinkSummary;
 }
 
+/** Shown while FrameJam Cloud doesn't take `reopen` yet: its validator rejects the field. */
+export const REOPEN_UNAVAILABLE = "Reopening isn't available yet. Put a new version on the link to open comments again.";
+
+export function reopenRejected(e: unknown): boolean {
+  return /extra field\W+reopen/i.test(e instanceof Error ? e.message : String(e));
+}
+
 export interface ShareHooks {
   /** Puts a version (default: the latest) on the project's link, creating it the first time. Throws a message fit to show the user. */
   share(reviewId: string, opts?: { version?: number }): Promise<ShareOutcome>;

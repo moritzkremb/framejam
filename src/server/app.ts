@@ -147,15 +147,16 @@ export function createApp(ctx: McpContext) {
     return c.json(state ? shareJson(state) : { shared: false });
   });
 
-  /** Turns the approved link's download on or off, or revokes the link (the same settings `share_project` changes). */
+  /** Turns the approved link's download on or off, revokes the link, or reopens an approved one for comments. */
   app.post("/api/reviews/:id/share/settings", async (c) => {
     const id = c.req.param("id");
     await store.getReview(id);
-    const body = (await c.req.json().catch(() => ({}))) as { allowDownload?: unknown; revoked?: unknown; showNotes?: unknown };
-    const change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean } = {};
+    const body = (await c.req.json().catch(() => ({}))) as { allowDownload?: unknown; revoked?: unknown; showNotes?: unknown; reopen?: unknown };
+    const change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean; reopen?: boolean } = {};
     if (typeof body.allowDownload === "boolean") change.allowDownload = body.allowDownload;
     if (typeof body.showNotes === "boolean") change.showNotes = body.showNotes;
     if (typeof body.revoked === "boolean") change.revoked = body.revoked;
+    if (body.reopen === true) change.reopen = true;
     if (!Object.keys(change).length) return c.json({ error: "Nothing to change" }, 400);
     try {
       await configureShare(store, id, change, ctx.share || {});
