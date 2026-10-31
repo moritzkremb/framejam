@@ -16,12 +16,8 @@ function convexUrl(): string | undefined {
   return import.meta.env.VITE_CONVEX_URL as string | undefined;
 }
 
-function applyTheme() {
-  const light = window.matchMedia("(prefers-color-scheme: light)").matches;
-  document.documentElement.dataset.theme = light ? "light" : "dark";
-}
-applyTheme();
-window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", applyTheme);
+// framejam.ai is dark only; set here too in case the host serves its own copy of index.html.
+document.documentElement.dataset.theme = "dark";
 
 const link = decodeURIComponent(window.location.pathname.match(/\/v\/([^/]+)/)?.[1] ?? "");
 const url = convexUrl();
@@ -30,7 +26,9 @@ const root = createRoot(document.getElementById("root")!);
 if (!url || !link) {
   root.render(
     <main className="fc-empty fc-center" style={{ minHeight: "100dvh", justifyContent: "center" }}>
-      <div className="fc-h3">This link isn't available</div>
+      <div className="fc-h3">
+        This link isn't <em>available</em>
+      </div>
       <p>{url ? "The link looks incomplete. Check that you copied all of it." : "Sharing isn't set up on this server."}</p>
     </main>,
   );

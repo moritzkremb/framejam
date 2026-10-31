@@ -6,7 +6,7 @@ button { cursor: pointer; }
 img, video, svg { display: block; }
 h1, h2, h3, p, ol, ul, dl, figure { margin: 0; }
 a { color: inherit; }
-::selection { background: var(--accent-soft); }
+::selection { background: var(--accent); color: var(--on-accent); }
 
 /* Chromium ignores ::-webkit-scrollbar on any element with scrollbar-width/-color set, so those stay Firefox-only. */
 ::-webkit-scrollbar { width: 12px; height: 12px; }
@@ -489,3 +489,58 @@ a { color: inherit; }
 .fc-pstrip img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .fc-pstrip .n { position: absolute; left: 4px; bottom: 4px; padding: 2px 5px; border-radius: 6px; background: var(--overlay); color: var(--on-video); font: 600 10px/1 var(--font-mono); }
 .fc-pstrip .cc { top: 3px; right: 3px; min-width: 16px; height: 16px; font-size: 9px; }
+
+/* ---------- Brand finish, kept in line with framejam.ai: type, glow, header, surfaces ---------- */
+:root { --font-serif: "Instrument Serif", Georgia, serif; --glow: radial-gradient(1100px 520px at 50% -120px, rgba(212, 255, 58, .09), transparent 70%); }
+.fc-h1 { font: 700 clamp(28px, 3.2vw, 36px)/1.1 var(--font-sans); letter-spacing: -0.035em; text-wrap: balance; }
+.fc-h2 { font-weight: 700; font-size: 18px; line-height: 24px; letter-spacing: -0.025em; }
+:is(.fc-h1, .fc-h2, .fc-h3) em { color: var(--accent-text); font: italic 400 1.14em/1 var(--font-serif); letter-spacing: -0.01em; }
+.fc-kicker { margin: 0 0 10px; color: var(--accent-text); font: 500 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.fc-label { color: var(--text-3); font: 500 11px/16px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.fc-screen, .fc-share.fc-share-final, .fc-share:has(> .fc-share-closed) { background: var(--glow), var(--bg); background-repeat: no-repeat; }
+.fc-header { background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(12px); backdrop-filter: saturate(1.4) blur(12px); }
+.fc-nav a { border-radius: var(--radius-sm); }
+
+.fc-btn:not(.primary, .ghost, .danger, .outline) { box-shadow: inset 0 0 0 1px var(--border); }
+.fc-btn:not(.primary, .ghost, .danger, .outline):hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 70%, transparent); }
+.fc-btn.primary:hover { filter: none; background: #e0ff6b; }
+.fc-btn.primary:active { background: var(--accent); }
+.fc-input { box-shadow: inset 0 0 0 1px var(--border); transition: box-shadow .15s; }
+.fc-input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+
+.fc-card { padding: 20px; border-radius: var(--radius-xl); box-shadow: inset 0 0 0 1px var(--border), 0 12px 32px rgba(0, 0, 0, .35); }
+.fc-rcard { box-shadow: inset 0 0 0 1px var(--border); transition: background-color .15s, box-shadow .15s; }
+.fc-rcard:hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 60%, transparent); }
+.fc-code, .fc-prompt { box-shadow: inset 0 0 0 1px var(--border); }
+.fc-menu, .fc-toast { box-shadow: var(--shadow-pop), inset 0 0 0 1px var(--border); }
+.fc-empty .ic { background: var(--accent-soft); color: var(--accent-text); box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .22); }
+.fc-empty .ic.danger { background: var(--danger-soft); color: var(--danger); box-shadow: inset 0 0 0 1px rgba(255, 107, 107, .25); }
+.fc-empty > .fc-h3 { font: 700 22px/28px var(--font-sans); letter-spacing: -0.03em; }
+.fc-empty > p { font-size: 14px; line-height: 21px; }
+.fc-banner { box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .18); }
+.fc-share-chip.approved { box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .3); }
+.fc-share-chip.approved:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .45); }
+.fc-dock .box:focus-within { box-shadow: var(--shadow-dock), inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+:is(.fc-stage, .fc-side-foot) .fc-dock .box:focus-within { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+.fc-pb-label, .fc-pick-sub, .fc-pick-field .lbl { font: 500 11px/16px var(--font-mono); letter-spacing: .08em; }
+.fc-menu.fc-menu-pop { width: max-content; min-width: 248px; max-width: min(320px, calc(100vw - 24px)); }
+
+/* Phones: the transport row and the handoff card fit next to the comments rail. */
+@media (max-width: 560px) {
+  .fc-controls { gap: 4px; }
+  .fc-play { width: 36px; height: 36px; }
+  .fc-readout { font-size: 12px; }
+  .fc-controls .fc-rate { min-width: 36px; padding: 0 4px; }
+  .fc-controls .fc-btn.icon.sm { width: 28px; height: 28px; }
+  .fc-handoff .hd { flex-wrap: wrap; }
+  .fc-handoff .hd > .fc-grow { flex-basis: calc(100% - 44px); }
+  .fc-handoff .hd > .fc-btn { margin-left: 44px; }
+}
+@media (max-width: 460px) {
+  .fc-controls:has(> .fc-zoom) { flex-wrap: wrap; height: auto; row-gap: 0; }
+  .fc-controls:has(> .fc-zoom) > .fc-grow { flex-basis: 100%; }
+  .fc-controls > .fc-zoom { margin-left: -4px; }
+  .fc-controls > .fc-zoom + .fc-btn { margin-left: auto; }
+  .fc-stage .fc-dock .send, .fc-share-stage .fc-dock .send { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
+  .fc-stage .fc-dock .send .fc-agent, .fc-share-stage .fc-dock .send .fc-agent { flex-basis: 100%; }
+}

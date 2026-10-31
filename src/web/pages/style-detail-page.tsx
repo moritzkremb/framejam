@@ -121,7 +121,7 @@ export function StyleDetailPage() {
       <div className="fc-screen">
         <BackHeader to="/styles" title="Styles" />
         <main className="fc-main">
-          <NotHere title="This style isn't here" message="It may have been removed from the library." back="/styles" backLabel="Back to styles" />
+          <NotHere title={<>This style isn't <em>here</em></>} message="It may have been removed from the library." back="/styles" backLabel="Back to styles" />
         </main>
       </div>
     );
@@ -189,6 +189,7 @@ export function StyleDetailPage() {
 
         <div className="fc-style-head">
           <div className="fc-grow">
+            <p className="fc-kicker">Style</p>
             <h1 className="fc-h1">{preset.name}</h1>
             <p className="fc-lede">{preset.tagline}</p>
             <div className="fc-row" style={{ gap: 6, marginTop: 10 }}>

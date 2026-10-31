@@ -69,7 +69,7 @@ export function ReviewPage({ data = localDataSource }: { data?: ReviewDataSource
           {isOffline(r.loadError) ? (
             <Offline />
           ) : (
-            <NotHere title="This project isn't here" message="It may have been deleted, or the link is from another computer." />
+            <NotHere title={<>This project isn't <em>here</em></>} message="It may have been deleted, or the link is from another computer." />
           )}
         </main>
       </div>

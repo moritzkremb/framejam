@@ -87,7 +87,9 @@ function Closed({ message }: { message: string }) {
         <Logo />
       </header>
       <main className="fc-empty fc-center fc-share-closed">
-        <div className="fc-h3">This link isn't available</div>
+        <div className="fc-h3">
+          This link isn't <em>available</em>
+        </div>
         <p>{message}</p>
       </main>
     </div>

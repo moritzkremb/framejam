@@ -105,6 +105,7 @@ export function PlaybooksPage() {
       <main className="fc-main">
         <PickBanner />
         <div>
+          <p className="fc-kicker">The method</p>
           <h1 className="fc-h1">Playbooks</h1>
           <p className="fc-lede">
             A playbook is how a kind of video gets made: what you bring, the steps and the tools. Styles set the look. Name one when you ask your agent for a video, type /framejam:playbook to pick on a page, or copy a prompt from a playbook's page.
@@ -151,7 +152,9 @@ export function PlaybooksPage() {
               </div>
             ) : visible.length === 0 ? (
               <div className="fc-empty">
-                <div className="fc-h3">No playbooks match</div>
+                <div className="fc-h3">
+                  No playbooks <em>match</em>
+                </div>
                 <button
                   type="button"
                   className="fc-btn"
