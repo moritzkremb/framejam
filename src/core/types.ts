@@ -108,6 +108,16 @@ export interface ReviewVersion {
   batchId?: string;
   /** Set when the user reopened this version after the agent already received its comments. */
   reopenedFrom?: string;
+  /** Cloud projects only: where the version's files are on their way to FrameJam Cloud. Left out once they're there. */
+  upload?: VersionUpload;
+}
+
+export interface VersionUpload {
+  state: "uploading" | "failed";
+  /** Bytes sent so far, and bytes in all. */
+  bytes: number;
+  total: number;
+  error?: string;
 }
 
 export interface FeedbackBatch {
@@ -138,6 +148,8 @@ export interface Review {
   agentListening?: boolean;
   /** The agent's FrameJam process started before the current build, so it may lack newer features (like the listening heartbeat). */
   agentOutdated?: boolean;
+  /** Computed by the API, not stored: this project lives in FrameJam Cloud. */
+  cloud?: boolean;
 }
 
 /** The agent harness that last connected over MCP (from the MCP `initialize` client info). */

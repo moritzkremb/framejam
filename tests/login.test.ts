@@ -327,6 +327,7 @@ describe("login / logout / whoami", () => {
       text: "Ada Lovelace <ada@example.com>",
     });
     expect(formatAccount({ name: "  ", email: "ada@example.com" })).toBe("ada@example.com");
+    expect(formatAccount({ name: null, email: "ada@example.com" })).toBe("ada@example.com");
   });
 
   it("whoami falls back to the email when the account has no name", async () => {

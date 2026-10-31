@@ -45,7 +45,8 @@ you can always see what changed and why.
 until you share a version. The Styles and Playbooks pages stream their example videos from framejam.ai, the
 app downloads playbook updates from framejam.ai (see below), the **Feedback** button sends the note you write, and
 `framejam login` talks to FrameJam Cloud to sign you in; nothing else goes out. Sharing happens only when you run
-`framejam share` or ask your agent to share (its `share` option or `share_project`). See [Local is free and open
+`framejam share` or ask your agent to share (its `share` option or `share_project`), and cloud projects exist only if you
+turn on `framejam cloud on`. See [Local is free and open
 source; FrameJam Cloud adds sharing](#local-is-free-and-open-source-framejam-cloud-adds-sharing).
 
 ## How it works
@@ -285,8 +286,19 @@ approves, and a digest of new comments (one email for a batch, not one per comme
 opens and the guest comments waiting for you. It reads your computer, so it works offline. Both are in the MCP
 tools list under **The review page**.
 
-**What stays local.** Your projects, comments, styles and playbooks stay in `~/.framejam`. Nothing is uploaded until
-you run `framejam share` or ask your agent to share, and then it is only the version you picked (its render, or a
+**Cloud projects.** With `framejam cloud on`, new projects are kept in your FrameJam Cloud account instead of
+`~/.framejam`: the project, its versions, comments and resolved state live in the cloud, and each version's video (or
+storyboard panels) uploads in the background. The version shows an upload bar until it plays for anyone else; you keep
+reviewing the copy on your computer meanwhile. Sharing a cloud project needs no extra upload, and guests' comments land
+in the same project, so there is nothing to pull in. Your agent works the same way (`open_review`, `wait_for_feedback`,
+`add_version`, `resolve_comments`). `framejam cloud off` puts new projects back on your computer, and running apps and
+agents follow without a restart. Projects you already have stay on your computer, and cloud projects stay in your
+account when you turn it off. `framejam cloud` shows which mode you're in. Cloud mode needs `framejam login` first;
+signed out, projects stay local. While an agent waits for feedback in cloud mode, the app asks the cloud for changes
+about once a second or two; the free tier is fine for a few projects at a time.
+
+**What stays local.** Your projects, comments, styles and playbooks stay in `~/.framejam`, unless you turned on cloud
+mode (above). Nothing is uploaded until you run `framejam share` or ask your agent to share (or you make a cloud project), and then it is only the version you picked (its render, or a
 storyboard's panels, plus a poster frame) and the guests' comments on it. Your login token is in
 `~/.framejam/auth.json`. Turn a link off to stop sharing it; nothing else is sent to FrameJam Cloud. The cloud's own code isn't part of this repo.
 
@@ -527,10 +539,11 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam cloud on|off` keeps new projects in FrameJam Cloud or on this computer (`src/server/cloud-mode.ts`, `cloud-store.ts`, `app-store.ts`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/core/` | Code that runs anywhere (no Node or filesystem): shared types, playbook display helpers, feedback formatting, the MCP tool definitions (`mcp.ts`, given a store and base URL) and the `Store` interface (`store.ts`: everything FrameJam keeps, such as projects, comments, picks, state, styles and playbooks). |
 | `src/server/mcp.ts` | The core MCP tools with this computer's skill version. |
 | `src/server/json-store.ts` | `JsonStore`, the JSON file implementation of `Store`. Every call re-reads from disk, so several processes can share `~/.framejam`. |
+| `src/server/cloud-store.ts` | `CloudStore`, the `Store` for cloud mode: projects, versions, comments and resolve state in FrameJam Cloud, files cached locally and uploaded in the background. `src/server/app-store.ts` routes each project to it or to `JsonStore`. |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). |
 | `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |

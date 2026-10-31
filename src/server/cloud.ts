@@ -27,7 +27,7 @@ export type DevicePoll =
   | { status: "approved"; token: string; tokenType: "bearer" };
 
 export interface CloudWhoami {
-  /** Null for an account without a name. */
+  /** Null for accounts that signed up with just an email address. */
   name: string | null;
   email: string;
 }
@@ -65,11 +65,15 @@ export interface RetryOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
-/** A failed cloud call. `transient` means the network or a 5xx, where trying again later can work. */
+/**
+ * A failed cloud call. `transient` means the network or a 5xx, where trying again later can work. `status` is set when
+ * the cloud refused a rule with the status a local store would give (404 not found, 409 conflict).
+ */
 export class CloudError extends Error {
   constructor(
     message: string,
     readonly transient: boolean,
+    readonly status?: 400 | 404 | 409,
   ) {
     super(message);
     this.name = "CloudError";
@@ -142,7 +146,12 @@ async function convexCallOnce<T>(
   }
   if (body?.status === "success") return body.value;
   if (body?.status !== "error") throw new CloudError(`FrameJam Cloud returned ${res.status}.`, busy);
-  const thrown = typeof body.errorData === "string" && body.errorData.trim() ? body.errorData.trim() : undefined;
+  const data = body.errorData;
+  if (data && typeof data === "object" && typeof (data as { message?: unknown }).message === "string") {
+    const { message, status } = data as { message: string; status?: unknown };
+    throw new CloudError(message, false, status === 404 || status === 409 || status === 400 ? status : undefined);
+  }
+  const thrown = typeof data === "string" && data.trim() ? data.trim() : undefined;
   throw new CloudError(thrown ?? cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`, false);
 }
 

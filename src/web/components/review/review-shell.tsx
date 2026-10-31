@@ -3,6 +3,7 @@ import { Popover } from "radix-ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { BackHeader } from "@/components/header";
+import { UploadState } from "@/components/review/upload-state";
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
 import { CommentList } from "@/components/review/comment-list";
 import { Handoff } from "@/components/review/dock";
@@ -205,6 +206,7 @@ export function ReviewHeader({
   const { review, version, latest } = r;
   if (!review || !version || !latest) return null;
   return (
+    <>
     <BackHeader to="/" title={review.title} sub={subline}>
       <ShareStatus data={r.data} reviewId={review.id} />
       <ShortcutsButton shortcuts={shortcuts} />
@@ -249,6 +251,8 @@ export function ReviewHeader({
         )}
       </Menu>
     </BackHeader>
+    <UploadState version={version} />
+    </>
   );
 }
 

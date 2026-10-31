@@ -28,6 +28,9 @@ export interface ReviewListItem {
   hasVideo: boolean;
   /** Panels in the latest version; 0 for videos. */
   panels: number;
+  /** Set on cloud projects; `upload` is the latest version's upload while its files are still on their way. */
+  cloud?: boolean;
+  upload?: ReviewVersion["upload"] | null;
 }
 
 export interface UpdateInfo {
@@ -49,6 +52,7 @@ export interface Health {
   app: string;
   version?: string;
   dataDir: string;
+  cloud?: { on: boolean; signedOut: boolean };
   baseUrl: string;
   agent: AgentInfo | null;
   setup?: { mcpCommand: string[]; installCommand?: string[]; skillPath: string };
