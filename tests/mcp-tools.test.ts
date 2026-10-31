@@ -31,6 +31,7 @@ describe("tool registry", () => {
         "get_preset",
         "get_selected_playbook",
         "get_selected_preset",
+        "get_version",
         "list_playbooks",
         "list_presets",
         "list_reviews",

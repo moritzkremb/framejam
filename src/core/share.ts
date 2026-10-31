@@ -25,6 +25,8 @@ export interface ShareLinkSummary {
   approvalNew?: boolean;
   /** Whether the approved link offers a download (the creator's switch; videos only). */
   allowDownload: boolean;
+  /** Whether guests can read each version's handoff notes (cloud projects; off unless the creator turns it on). */
+  showNotes: boolean;
   /** Guests' comments the user hasn't sent to the agent yet. */
   guestCommentsWaiting: number;
   /** Opens of the link: each visitor counts once a day, you included. Left out until the cloud has reported it (older clouds never do). */
@@ -53,7 +55,7 @@ export interface ShareHooks {
   /** Puts a version (default: the latest) on the project's link, creating it the first time. Throws a message fit to show the user. */
   share(reviewId: string, opts?: { version?: number }): Promise<ShareOutcome>;
   /** Sets or clears the link's expiry, revokes or reopens it, and switches the approved link's download. */
-  configure(reviewId: string, change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<ShareLinkSummary>;
+  configure(reviewId: string, change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<ShareLinkSummary>;
   /** Records that an agent has been told about the link's current approval, so it doesn't wake again. */
   approvalSeen(reviewId: string): Promise<void>;
   /** Every project that has a link. */

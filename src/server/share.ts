@@ -59,6 +59,8 @@ export interface ShareState {
   approvalSeenAt?: number;
   /** The creator's download switch; unset means on. */
   allowDownload?: boolean;
+  /** Whether guests read each version's handoff notes (cloud projects); unset means off. */
+  showNotes?: boolean;
   /** Opens of the link, as last reported by the cloud. Unset until a cloud that counts them has answered. */
   opens?: number;
   lastOpenedAt?: number;
@@ -471,6 +473,7 @@ export function summarizeShare(review: Review, state: ShareState): ShareLinkSumm
         }
       : {}),
     allowDownload: state.allowDownload !== false,
+    showNotes: state.showNotes === true,
     guestCommentsWaiting: waiting,
     ...(state.opens === undefined ? {} : { opens: state.opens, lastOpenedAt: state.lastOpenedAt ? new Date(state.lastOpenedAt).toISOString() : undefined }),
     lastPulledAt: state.lastPulledAt,
@@ -514,10 +517,11 @@ export async function listShares(store: Store): Promise<ShareLinkSummary[]> {
 export async function configureShare(
   store: Store,
   reviewId: string,
-  change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean },
+  change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean },
   opts: ShareOptions = {},
 ): Promise<ShareLinkSummary> {
   const cloud = await cloudOf(store, reviewId);
+  if (change.showNotes !== undefined && !cloud) throw new ShareError("Version notes on the link are for cloud projects. Turn on cloud mode first.");
   const { client, cloudUrl } = cloud ? { client: { configure: (id: string, settings: Parameters<ShareClient["configure"]>[1]) => cloud.api.configure(id, settings) }, cloudUrl: cloud.api.url } : requireSession(store.root, opts);
   const state = cloud ? await cloudState(cloud, store, reviewId) : readShareState(store.root, reviewId);
   if (!state || state.cloudUrl !== cloudUrl) throw new ShareError("This project isn't shared yet. Share a version first.");
@@ -527,6 +531,7 @@ export async function configureShare(
     ...(days === undefined ? {} : { expiresAt: days === null ? null : (opts.now?.() ?? new Date()).getTime() + days * DAY_MS }),
     ...(change.revoked === undefined ? {} : { revoked: change.revoked }),
     ...(change.allowDownload === undefined ? {} : { allowDownload: change.allowDownload }),
+    ...(change.showNotes === undefined ? {} : { showNotes: change.showNotes }),
   });
   if (cloud) {
     cloud.refresh(reviewId);
@@ -607,6 +612,7 @@ function cloudStateOf(cloud: CloudStore, review: Review, link: CloudLink | null)
     approved: link.approved ?? undefined,
     approvalSeenAt: link.approvalSeenAt ?? undefined,
     allowDownload: link.allowDownload,
+    showNotes: link.showNotes,
     opens: link.opens,
     lastOpenedAt: link.lastOpenedAt ?? undefined,
   };

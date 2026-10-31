@@ -130,6 +130,7 @@ export function createApp(ctx: McpContext) {
     approvals: state.approvals,
     approved: state.approved ?? null,
     allowDownload: state.allowDownload !== false,
+    showNotes: state.showNotes === true,
     lastPulledAt: state.lastPulledAt ?? null,
     expiresAt: state.expiresAt ?? null,
     revokedAt: state.revokedAt ?? null,
@@ -150,9 +151,10 @@ export function createApp(ctx: McpContext) {
   app.post("/api/reviews/:id/share/settings", async (c) => {
     const id = c.req.param("id");
     await store.getReview(id);
-    const body = (await c.req.json().catch(() => ({}))) as { allowDownload?: unknown; revoked?: unknown };
-    const change: { allowDownload?: boolean; revoked?: boolean } = {};
+    const body = (await c.req.json().catch(() => ({}))) as { allowDownload?: unknown; revoked?: unknown; showNotes?: unknown };
+    const change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean } = {};
     if (typeof body.allowDownload === "boolean") change.allowDownload = body.allowDownload;
+    if (typeof body.showNotes === "boolean") change.showNotes = body.showNotes;
     if (typeof body.revoked === "boolean") change.revoked = body.revoked;
     if (!Object.keys(change).length) return c.json({ error: "Nothing to change" }, 400);
     try {
@@ -254,6 +256,14 @@ export function createApp(ctx: McpContext) {
     const file = version && (await store.videoFileFor(id, version));
     if (!file) return c.text("This version has no rendered video", 404);
     return sendFile(file, c.req.raw);
+  });
+
+  /** A fresh download link for the version's source zip (cloud projects only). */
+  app.get("/api/reviews/:id/versions/:n/source", async (c) => {
+    const id = c.req.param("id");
+    await store.getReview(id);
+    const got = await store.sourceFor(id, Number(c.req.param("n")));
+    return got ? c.json(got) : c.json({ error: "This version has no source files" }, 404);
   });
 
   app.get("/api/reviews/:id/versions/:n/transcript", async (c) => {

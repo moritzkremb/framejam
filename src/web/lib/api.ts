@@ -86,6 +86,8 @@ export interface ShareInfo {
   /** A guest approved this version; the link shows only that file. */
   approved?: { version: number; by: string; at: number } | null;
   allowDownload?: boolean;
+  /** Guests can read each version's handoff notes (cloud projects). */
+  showNotes?: boolean;
   closed?: boolean;
   expiresAt?: number | null;
   revokedAt?: number | null;
@@ -96,7 +98,7 @@ export interface ShareInfo {
 
 export const api = {
   share: (id: string) => request<ShareInfo>(`/api/reviews/${id}/share`),
-  setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean }) =>
+  setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean }) =>
     request<ShareInfo>(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify(change) }),
   health: () => request<Health>("/api/health"),
   update: () => request<UpdateInfo>("/api/update"),
@@ -116,6 +118,8 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
   reopen: (id: string) => request<{ wasDelivered: boolean; review: Review }>(`/api/reviews/${id}/reopen`, { method: "POST" }),
+  sourceDownload: (id: string, version: number) =>
+    request<{ url: string; filename: string; bytes: number }>(`/api/reviews/${id}/versions/${version}/source`),
   downloadVideo: (id: string, version: number) =>
     request<{ path: string; chosen: boolean } | { cancelled: true }>(`/api/reviews/${id}/versions/${version}/download`, { method: "POST" }),
   transcript: (id: string, version: number) => request<Transcript>(`/api/reviews/${id}/versions/${version}/transcript`),
