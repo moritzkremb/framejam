@@ -105,11 +105,11 @@ export function hasHandoff(version: ReviewVersion | undefined): boolean {
   return Boolean(version?.notes?.trim() || version?.source);
 }
 
-function SourceCard({ data, reviewId, version }: { data: ReviewDataSource; reviewId: string; version: ReviewVersion }) {
+function SourceCard({ data, reviewId, version }: { data?: Pick<ReviewDataSource, "sourceDownload">; reviewId: string; version: ReviewVersion }) {
   const [busy, setBusy] = useState(false);
   const source = version.source;
   if (!source) return null;
-  const download = data.sourceDownload;
+  const download = data?.sourceDownload;
   const get = async () => {
     if (!download || busy) return;
     setBusy(true);
@@ -148,7 +148,7 @@ function SourceCard({ data, reviewId, version }: { data: ReviewDataSource; revie
 }
 
 /** The Notes tab: what the agent left with this version (what changed, how to continue) and its source files. */
-export function VersionNotes({ data, reviewId, version }: { data: ReviewDataSource; reviewId: string; version: ReviewVersion }) {
+export function VersionNotes({ data, reviewId, version }: { data?: Pick<ReviewDataSource, "sourceDownload">; reviewId: string; version: ReviewVersion }) {
   return (
     <div className="fc-notes" data-testid="version-notes">
       <div className="fc-notes-h">Version {version.number}</div>
