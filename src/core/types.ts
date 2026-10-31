@@ -2,6 +2,36 @@ export type CommentStatus = "draft" | "sent" | "resolved";
 /** `panel`: about one storyboard panel as a whole, without a pinned spot. */
 export type CommentKind = "pin" | "range" | "panel" | "general";
 
+/** A pointing phrase in a spoken comment ("this", "over here") and the frame the reviewer was showing when they said it. */
+export interface VoicePoint {
+  phrase: string;
+  /** Seconds into the recording when it was said. */
+  at: number;
+  /** Seconds into the video. */
+  time: number;
+  /** Normalized (0-1) pin position on the frame, when the reviewer had pinned one. */
+  x?: number;
+  y?: number;
+  /** The frame image, with any pin and drawing on it: a file name in the review's thumbs folder, or a URL on a shared link. */
+  frame?: string;
+  /** The reviewer drew on the frame. */
+  drawn?: boolean;
+}
+
+/** What a spoken comment adds to its `text` (the verbatim transcript, or a note that there isn't one). */
+export interface VoiceComment {
+  /** `pending`: no transcription service was set up when it was sent. `failed`: the service couldn't read it. */
+  status: "transcribed" | "pending" | "failed";
+  /** Seconds. */
+  duration?: number;
+  /** The recording, on the share link. */
+  audioUrl?: string;
+  /** Why there's no transcript, in words fit to show. */
+  note?: string;
+  /** Pointing phrases in the order they were said. */
+  points: VoicePoint[];
+}
+
 export interface ReviewComment {
   id: string;
   version: number;
@@ -29,6 +59,8 @@ export interface ReviewComment {
   cloudId?: string;
   /** A guest's comment was written on this earlier version; it sits on the latest one. */
   fromVersion?: number;
+  /** Spoken, not typed: `text` is the transcript. */
+  voice?: VoiceComment;
 }
 
 /** One storyboard panel: a still image plus optional words about the shot. */

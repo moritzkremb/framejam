@@ -106,6 +106,42 @@ describe("wait_for_feedback", () => {
     expect(fx.store.agentListening(reviewId)).toBe(true);
   });
 
+  it("gives the agent a spoken comment's transcript and one frame per pointing phrase", async () => {
+    const { reviewId } = await open();
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+    const c = fx.store.addComment(reviewId, {
+      time: 1.3,
+      x: 0.2,
+      y: 0.3,
+      text: "This logo is too small. And over here the subtitle needs contrast.",
+      voice: {
+        status: "transcribed",
+        duration: 6,
+        points: [
+          { phrase: "This", at: 0.5, time: 1.3, x: 0.2, y: 0.3 },
+          { phrase: "over here", at: 3.7, time: 4.2, drawn: true },
+        ],
+      },
+    });
+    fx.store.saveThumbnail(reviewId, c.id, jpeg);
+    fx.store.saveThumbnail(reviewId, c.id, jpeg, 0);
+    fx.store.saveThumbnail(reviewId, c.id, jpeg, 1);
+    fx.store.submit(reviewId, "");
+
+    const result = await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 5 });
+    const payload = parse(result);
+    expect(payload.comments).toHaveLength(1);
+    expect(payload.comments[0].voice.points).toHaveLength(2);
+    expect(payload.comments[0].voice.points[1]).toMatchObject({ phrase: "over here", at: "0:04.20", drawn: true });
+    const images = result.content.filter((x) => x.type === "image");
+    expect(images).toHaveLength(2);
+    const labels = result.content.filter((x) => x.type === "text" && x.text?.startsWith("Frame for “"));
+    expect(labels.map((x) => x.text)).toEqual([expect.stringContaining("“This”"), expect.stringContaining("“over here”")]);
+    const prompt = result.content[1].text!;
+    expect(prompt).toContain("Spoken comment (6s)");
+    expect(prompt).toContain("“This”");
+  });
+
   it("unblocks as soon as the user presses Send, with comments, pins and frames", async () => {
     const { reviewId } = await open();
     const pin = fx.store.addComment(reviewId, { time: 2.23, x: 0.85, y: 0.42, text: "Make this block a circle" });

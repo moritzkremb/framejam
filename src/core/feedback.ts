@@ -36,6 +36,29 @@ export interface AgentComment {
   thumbnailPath?: string;
   thumbnailUrl?: string;
   resolution?: ReviewComment["resolution"];
+  /** Spoken, not typed: `text` is the verbatim transcript. */
+  voice?: AgentVoice;
+}
+
+export interface AgentVoice {
+  status: "transcribed" | "pending" | "failed";
+  note?: string;
+  durationSeconds?: number;
+  audioUrl?: string;
+  /** One per pointing phrase ("this", "over here"), with the frame that was on screen when it was said. */
+  points: Array<{
+    phrase: string;
+    /** Seconds into the recording. */
+    saidAt: number;
+    /** Time in the video. */
+    at: string;
+    position?: { x: number; y: number; description: string };
+    drawn?: boolean;
+    imagePath?: string;
+    imageUrl?: string;
+    /** The file name inside the review's thumbs folder, for reading the image back. */
+    imageFile?: string;
+  }>;
 }
 
 /** How far either side of a point comment its "spoken around" words reach, in seconds. */
@@ -87,7 +110,43 @@ export async function toAgentComment(store: Store, baseUrl: string, review: Revi
     thumbnailPath: thumbPath ?? undefined,
     thumbnailUrl: c.thumbnail ? `${baseUrl}/api/reviews/${review.id}/thumbs/${c.thumbnail}` : undefined,
     resolution: c.resolution,
+    voice: c.voice ? await toAgentVoice(store, baseUrl, review, c.voice) : undefined,
   };
+}
+
+async function toAgentVoice(store: Store, baseUrl: string, review: Review, voice: NonNullable<ReviewComment["voice"]>): Promise<AgentVoice> {
+  const points: AgentVoice["points"] = [];
+  for (const p of voice.points) {
+    const imagePath = p.frame ? await store.thumbnailFile(review.id, p.frame) : undefined;
+    points.push({
+      phrase: p.phrase,
+      saidAt: p.at,
+      at: formatTime(p.time),
+      position: p.x !== undefined && p.y !== undefined ? { x: p.x, y: p.y, description: describePosition(p.x, p.y) } : undefined,
+      drawn: p.drawn || undefined,
+      imagePath: imagePath ?? undefined,
+      imageUrl: p.frame && imagePath ? `${baseUrl}/api/reviews/${review.id}/thumbs/${p.frame}` : undefined,
+      imageFile: p.frame && imagePath ? p.frame : undefined,
+    });
+  }
+  return { status: voice.status, note: voice.note, durationSeconds: voice.duration, audioUrl: voice.audioUrl, points };
+}
+
+/** Lines under a spoken comment: that it is spoken, and the frame for each pointing phrase. */
+export function voiceLines(a: AgentComment): string[] {
+  const v = a.voice;
+  if (!v) return [];
+  const lines: string[] = [];
+  if (v.status === "transcribed") {
+    lines.push(`  - Spoken comment${v.durationSeconds ? ` (${Math.round(v.durationSeconds)}s)` : ""}: the text above is the verbatim transcript.${v.points.length ? " Each pointing phrase has the frame that was on screen when it was said:" : ""}`);
+  } else {
+    lines.push(`  - Spoken comment with no transcript (${(v.note ?? "none").toLowerCase()}).${v.audioUrl ? ` The recording is kept: ${v.audioUrl}` : ""} Use the frame and ask the user what they said if it isn't clear.`);
+  }
+  for (const p of v.points) {
+    const where = `video ${p.at}${p.position ? `, pinned at ${p.position.description}` : ""}${p.drawn ? ", with a drawing" : ""}`;
+    lines.push(`    - “${p.phrase}” (said ${p.saidAt.toFixed(1)}s in): ${where}${p.imagePath ? `; frame: ${p.imageUrl} (file: \`${p.imagePath}\`)` : ""}`);
+  }
+  return lines;
 }
 
 export function describePosition(x: number, y: number, of = "frame"): string {
@@ -126,6 +185,7 @@ export async function guestCommentsPrompt(store: Store, baseUrl: string, review:
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
     if (a.panel?.caption) lines.push(`  - Panel caption: ${a.panel.caption}`);
     if (a.thumbnailPath) lines.push(`  - ${a.panel ? "Panel" : "Frame"}${a.position ? " with pin" : ""}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
+    lines.push(...voiceLines(a));
     lines.push(`  - Comment id: \`${c.id}\``);
   }
   lines.push("");
@@ -176,6 +236,7 @@ export async function feedbackPrompt(
     if (a.spoken) lines.push(`  - Spoken in this range: “${a.spoken}”`);
     if (a.spokenAround) lines.push(`  - Spoken around then: “${a.spokenAround}”`);
     if (a.thumbnailPath) lines.push(`  - ${a.panel ? "Panel" : "Frame"}${a.position ? " with pin" : ""}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
+    lines.push(...voiceLines(a));
     lines.push(`  - Comment id: \`${c.id}\``);
   }
   lines.push("");
