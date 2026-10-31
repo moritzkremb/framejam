@@ -1,5 +1,88 @@
 # Changelog
 
+## 0.8.0 (unreleased): cloud projects, voice and connecting by URL
+
+FrameJam Cloud grows from share links into a place to keep projects. Local FrameJam is unchanged and still needs no
+account. Cloud projects and connecting by URL are part of Pro; share links stay free while they're in beta. You need
+this npm release for all of it.
+
+### Cloud projects
+
+- **`framejam cloud on|off`.** With cloud mode on and `framejam login` done, new projects live in your FrameJam Cloud
+  account: versions, comments and resolved state. The agent's tools don't change. `framejam cloud` shows the mode, and
+  running apps and agents follow a switch without a restart. Signed out, projects stay local and the Projects page
+  says why. Existing projects stay where they are.
+- **The project page on app.framejam.ai.** `open_review` and `add_version` give a link to the project page in your
+  account, which works on a computer or a phone. It has everything the local review page has, plus a side-by-side compare
+  of two versions, your project list and the link settings. Each version uploads in the background with an upload bar
+  until it plays. Sharing a cloud project needs no second upload.
+- **Version notes and source files.** `open_review` and `add_version` take `notes` (a markdown handoff) and `source`
+  (the project folder or a `.zip`). FrameJam packs a folder itself, leaving out `node_modules`, `.git`, build output,
+  renders and `.env` or key files, up to 500 MB. The project page has a Notes tab with a source download, and the new
+  `get_version` tool hands both to another agent so it can continue in a different app. Guests see notes only when
+  you turn on **Show version notes** (`share_project` with `showNotes`); they never get the source.
+- **Live view.** For a Hyperframes version with its source attached, **Live** next to **Render** plays the composition
+  in a sandboxed frame. A comment there also carries the element under the pin (`source: "live"` and `element`), and
+  `upload_files` refreshes the view without a new render.
+- Uploads retry a dropped connection, resume after a failure and send the file size first, so FrameJam Cloud can
+  refuse a file over your plan's limit before it's uploaded. An older cloud that doesn't know the size gets the
+  request without it.
+
+### Voice comments
+
+- Guests on a share link can press **Voice** and talk while they scrub, point or draw. The recording is transcribed,
+  and words like "this" and "over here" are tied to the frame on screen when they were said, with the pin or drawing
+  made on that frame. `wait_for_feedback` gives the agent the transcript and one frame image per pointing phrase.
+  Typing stays the default.
+
+### Connect by URL
+
+- FrameJam Cloud runs the review tools as a remote MCP server at `https://mcp.framejam.ai/mcp`, for ChatGPT or Claude
+  in the browser and anyone who'd rather install nothing. Renders go up with `request_upload` (or a public or Google
+  Drive link), and projects made this way are cloud projects.
+- **Rendering in the cloud.** `upload_files`, `render` (Hyperframes or ffmpeg, with `from: { reviewId, version }`),
+  `render_status` and `read_files` let an agent without Chrome or ffmpeg make the next version in FrameJam Cloud.
+  Until cloud rendering is switched on, `render` says so and the agent uploads a render instead.
+- **`wait_for_feedback` can resume.** After about 50 seconds it returns `{ status: "waiting", cursor, waitedSeconds }`
+  so an app doesn't cut the call off; the agent calls it again with the `cursor`. The local tool behaves the same way.
+
+### Look
+
+- The local app matches framejam.ai: dark pages, the same type, buttons and cards. The cloud project page is dark too.
+- On a phone, the button row under the player stays inside the frame and wraps onto two lines when it's narrow,
+  instead of cutting off the last buttons.
+
+### Skill
+
+- Skill version 7: cloud mode links, spoken and Live comments, version notes and `get_version`, connecting by URL,
+  rendering in the cloud and the resumable wait. Rerun `npx -y framejam@latest install` to get it; Claude Code plugin
+  installs update on their own.
+
+### Other changes
+
+- `framejam whoami` shows the email for an account without a name instead of crashing.
+- `framejam login` keeps waiting through a dropped connection or a FrameJam Cloud 5xx until the code expires, and
+  cloud calls (sharing, `add_version`, cloud projects) retry a network error or 5xx twice with a short backoff.
+- Cloud projects keep voice comments and their frames on this computer until FrameJam Cloud stores them.
+
+### What leaves your computer
+
+Still nothing unless you sign in. Turning on cloud mode stores new projects in your account: renders or panels, poster
+frames, comments with their frame images, and any notes and source files the agent attaches. Guests' voice recordings
+go to FrameJam Cloud and its transcription service. `README.md` and `plugin/README.md` list this.
+
+### Before you publish
+
+Ship the framejam-cloud side to production first: cloud projects (H2.1), the project page (H2.2), notes and source
+(H2.6), the remote MCP server and waiting cursor (H3.2), voice (H2.7), upload sizes (H2.4) and the Live view (H4.3).
+`mcp.framejam.ai` must answer before this README goes out. 0.7.0 was never published, so this release also carries
+its sharing changes; `npm version` records skill version 7 in `skills/framejam/versions.json`.
+
+### Release line
+
+> FrameJam 0.8.0 keeps projects in FrameJam Cloud if you want: open them from any device, hand them to another agent
+> with notes and source, let clients leave voice comments, and connect agents by URL.
+
 ## 0.7.0 (unreleased): FrameJam Cloud sharing
 
 Local FrameJam stays free and open source and works with no account. This release adds **FrameJam Cloud**, an optional
@@ -49,9 +132,6 @@ You need this npm release for any of it: the local app, the plugin and the skill
 ### Other changes
 
 - The review page keeps its sidebar tabs and buttons below the macOS menu bar in full screen.
-- `framejam whoami` shows the email for an account without a name instead of crashing.
-- `framejam login` keeps waiting through a dropped connection or a FrameJam Cloud 5xx until the code expires, and
-  cloud calls (sharing, `add_version`) retry a network error or 5xx twice with a short backoff.
 
 ### What leaves your computer
 
