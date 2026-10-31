@@ -54,6 +54,7 @@
     "build": "tsc -b && vite build && tsup",
     "build:share": "vite build --config vite.share.config.ts",
     "dev:share": "vite --config vite.share.config.ts",
+    "build:creator": "vite build --config vite.creator.config.ts",
     "start": "node dist/server/cli.js",
     "typecheck": "tsc -b",
     "lint": "oxlint src tests scripts",

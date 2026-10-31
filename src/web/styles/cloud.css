@@ -34,3 +34,49 @@
   letter-spacing: 0.01em;
 }
 .fc-cloud-tag .fc-i { width: 11px; height: 11px; }
+
+/* The creator page: compare two versions, and the wait while a version's video uploads. */
+.fc-upload-wait {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 960px);
+  margin: 8px auto;
+  padding: 0 var(--gutter, 16px);
+  color: var(--text-3);
+  font-size: 13px;
+}
+.fc-upload-wait img { width: 100%; border-radius: 14px; background: var(--surface); }
+.fc-upload-wait p { margin: 0; }
+
+.fc-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 12px var(--gutter, 16px) 24px;
+  min-height: 0;
+}
+.fc-compare-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fc-compare-bar .fc-btn.on { background: var(--accent-soft); color: var(--accent-text); border-color: transparent; }
+.fc-compare-stage { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.fc-compare-cell { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.fc-compare-cell video { width: 100%; max-height: 62dvh; border-radius: 12px; background: #000; object-fit: contain; aspect-ratio: 16 / 9; }
+.fc-compare-cell figcaption { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--text-2); min-width: 0; }
+.fc-compare-cell figcaption b { color: var(--text); font-weight: 600; }
+.fc-compare-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface);
+}
+.fc-compare-scrub { flex: 1; min-width: 0; accent-color: var(--accent, #ff6a3d); }
+@media (max-width: 720px) {
+  .fc-compare-stage { grid-template-columns: 1fr; }
+  .fc-compare-cell video { max-height: 34dvh; }
+}

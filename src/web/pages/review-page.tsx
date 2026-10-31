@@ -3,10 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { BackHeader } from "@/components/header";
+import { ComparePage, comparableVersions } from "@/components/review/compare";
 import { FeedbackDock, type Anchor } from "@/components/review/dock";
 import { Filmstrip, useTimelineZoom, ZoomControls, type Marker } from "@/components/review/filmstrip";
 import { Player, type FloatingNote, type MediaController, type Pin } from "@/components/review/player";
-import { CommentsRail, DownloadButton, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
+import { CommentsRail, DownloadButton, UploadWait, ReviewBottom, ReviewHeader, ReviewSidebar, useSidebar, type Shortcut, type SidebarTab } from "@/components/review/review-shell";
 import { TranscriptionState, TranscriptPanel, useTranscript, useTranscription } from "@/components/review/transcript";
 import { StoryboardReview } from "@/components/review/storyboard";
 import { useReview, useWidth, type ReviewState } from "@/components/review/use-review";
@@ -60,6 +61,7 @@ export function ReviewPage({ data = localDataSource }: { data?: ReviewDataSource
     resumeTime.current = 0;
   });
   const { ref: rootRef, width } = useWidth<HTMLDivElement>();
+  const [compare, setCompare] = useState<[number, number] | null>(null);
 
   if (r.loadError && !r.review) {
     return (
@@ -88,14 +90,37 @@ export function ReviewPage({ data = localDataSource }: { data?: ReviewDataSource
     );
   }
 
+  if (compare) {
+    return <ComparePage review={r.review} data={data} initial={compare} onClose={() => setCompare(null)} />;
+  }
+
+  const playable = comparableVersions(r.review, data);
+  const onCompare =
+    data.compare && playable.length >= 2
+      ? () => {
+          const newest = playable.at(-1)!.number;
+          const before = playable.at(-2)!.number;
+          setCompare(r.version!.number === newest ? [before, newest] : [r.version!.number, newest]);
+        }
+      : undefined;
+
+  // The version is in the project before its video is: show how far the upload is, and the poster once it exists.
+  if (!r.version.panels?.length && r.version.upload && !data.videoUrl(r.review.id, r.version.number)) {
+    return (
+      <div className="fc-rshell" ref={rootRef}>
+        <UploadWait r={r} poster={data.poster?.(r.review.id, r.version.number)} onCompare={onCompare} />
+      </div>
+    );
+  }
+
   return (
     <div className="fc-rshell" ref={rootRef}>
-      {r.version.panels?.length ? <StoryboardReview r={r} width={width} /> : <VideoReview r={r} width={width} resumeTime={resumeTime} />}
+      {r.version.panels?.length ? <StoryboardReview r={r} width={width} /> : <VideoReview r={r} width={width} resumeTime={resumeTime} onCompare={onCompare} />}
     </div>
   );
 }
 
-function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; resumeTime: MutableRefObject<number> }) {
+function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; width: number; resumeTime: MutableRefObject<number>; onCompare?: () => void }) {
   const review = r.review!;
   const version = r.version!;
   const latest = r.latest!;
@@ -391,7 +416,7 @@ function VideoReview({ r, width, resumeTime }: { r: ReviewState; width: number; 
 
   return (
     <>
-      <ReviewHeader r={r} subline={subline} shortcuts={SHORTCUTS} onPickVersion={pickVersion} />
+      <ReviewHeader r={r} subline={subline} shortcuts={SHORTCUTS} onPickVersion={pickVersion} onCompare={onCompare} />
       <div ref={watchRef} className={cn("fc-review", (!side.open || side.overlay) && "railed")}>
         <div className="fc-stage" style={{ "--content-w": `${Math.max(frameWidth, 520)}px` } as CSSProperties}>
           <Player
