@@ -27,7 +27,8 @@ export type DevicePoll =
   | { status: "approved"; token: string; tokenType: "bearer" };
 
 export interface CloudWhoami {
-  name: string;
+  /** Null for an account without a name. */
+  name: string | null;
   email: string;
 }
 
@@ -56,10 +57,35 @@ export type FetchLike = typeof fetch;
 
 const CALL_TIMEOUT_MS = 15_000;
 
-export function createCloudClient(url: string = cloudUrl(), fetchFn: FetchLike = fetch): CloudClient {
+/** Waits between attempts when a call fails on the network or a 5xx. Its length is the number of retries. */
+export const RETRY_DELAYS_MS = [500, 1500];
+
+export interface RetryOptions {
+  retryDelaysMs?: number[];
+  sleep?: (ms: number) => Promise<void>;
+}
+
+/** A failed cloud call. `transient` means the network or a 5xx, where trying again later can work. */
+export class CloudError extends Error {
+  constructor(
+    message: string,
+    readonly transient: boolean,
+  ) {
+    super(message);
+    this.name = "CloudError";
+  }
+}
+
+export function isTransientCloudError(err: unknown): boolean {
+  return err instanceof CloudError && err.transient;
+}
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+export function createCloudClient(url: string = cloudUrl(), fetchFn: FetchLike = fetch, retry: RetryOptions = {}): CloudClient {
   const base = url.replace(/\/$/, "");
   const call = <T>(kind: ConvexKind, path: string, args: Record<string, unknown>) =>
-    convexCall<T>(base, kind, path, args, fetchFn);
+    convexCall<T>(base, kind, path, args, fetchFn, retry);
   return {
     start: () => call<DeviceStart>("mutation", "deviceAuth:start", {}),
     poll: (deviceCode) => call<DevicePoll>("mutation", "deviceAuth:poll", { deviceCode }),
@@ -69,6 +95,26 @@ export function createCloudClient(url: string = cloudUrl(), fetchFn: FetchLike =
 }
 
 export async function convexCall<T>(
+  url: string,
+  kind: ConvexKind,
+  path: string,
+  args: Record<string, unknown>,
+  fetchFn: FetchLike,
+  retry: RetryOptions = {},
+): Promise<T> {
+  const delays = retry.retryDelaysMs ?? RETRY_DELAYS_MS;
+  const wait = retry.sleep ?? delay;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await convexCallOnce<T>(url, kind, path, args, fetchFn);
+    } catch (err) {
+      if (!isTransientCloudError(err) || attempt >= delays.length) throw err;
+      await wait(delays[attempt]!);
+    }
+  }
+}
+
+async function convexCallOnce<T>(
   url: string,
   kind: ConvexKind,
   path: string,
@@ -84,17 +130,20 @@ export async function convexCall<T>(
       signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
     });
   } catch {
-    throw new Error("Couldn't reach FrameJam Cloud.");
+    throw new CloudError("Couldn't reach FrameJam Cloud.", true);
   }
+  // Function errors come back as JSON and won't change on a retry; a gateway 5xx or 429 has no Convex body.
+  const busy = res.status >= 500 || res.status === 429;
   let body: ConvexSuccess<T> | ConvexFailure | undefined;
   try {
     body = (await res.json()) as ConvexSuccess<T> | ConvexFailure;
   } catch {
-    throw new Error(res.ok ? "FrameJam Cloud returned a bad response." : `FrameJam Cloud returned ${res.status}.`);
+    throw new CloudError(res.ok ? "FrameJam Cloud returned a bad response." : `FrameJam Cloud returned ${res.status}.`, busy);
   }
-  if (body.status === "success") return body.value;
+  if (body?.status === "success") return body.value;
+  if (body?.status !== "error") throw new CloudError(`FrameJam Cloud returned ${res.status}.`, busy);
   const thrown = typeof body.errorData === "string" && body.errorData.trim() ? body.errorData.trim() : undefined;
-  throw new Error(thrown ?? cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`);
+  throw new CloudError(thrown ?? cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`, false);
 }
 
 /**
@@ -216,10 +265,15 @@ export interface ShareClient {
   configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<LinkSettings>;
 }
 
-export function createShareClient(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): ShareClient {
+export function createShareClient(
+  token: string,
+  url: string = cloudUrl(),
+  fetchFn: FetchLike = fetch,
+  retry: RetryOptions = {},
+): ShareClient {
   const base = url.replace(/\/$/, "");
   const call = <T>(kind: ConvexKind, path: string, args: Record<string, unknown>) =>
-    convexCall<T>(base, kind, path, { ...args, token }, fetchFn);
+    convexCall<T>(base, kind, path, { ...args, token }, fetchFn, retry);
   return {
     requestUpload: (input) => call<UploadTicket>("action", "uploads:request", input),
     registerUpload: (input) => call<{ assetId: string }>("mutation", "uploads:register", { ...input }),
