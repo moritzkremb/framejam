@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
+import { CrashScreen } from "@/components/crash-screen";
 import { convexCreatorBackend, creatorSource } from "@/lib/cloud-creator";
 import { ReviewPage } from "@/pages/review-page";
 import "./index.css";
@@ -46,12 +47,14 @@ if (!url || !id) {
   const data = creatorSource(convexCreatorBackend(url, () => fetchToken()), { shareOrigin: meta("framejam-share-origin") });
   root.render(
     <StrictMode>
-      <MemoryRouter initialEntries={[`/review/${id}`]}>
-        <Routes>
-          <Route path="/review/:id" element={<ReviewPage data={data} />} />
-          <Route path="*" element={<Leave />} />
-        </Routes>
-      </MemoryRouter>
+      <CrashScreen>
+        <MemoryRouter initialEntries={[`/review/${id}`]}>
+          <Routes>
+            <Route path="/review/:id" element={<ReviewPage data={data} />} />
+            <Route path="*" element={<Leave />} />
+          </Routes>
+        </MemoryRouter>
+      </CrashScreen>
       <Toaster
         position="top-center"
         offset={64}

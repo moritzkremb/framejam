@@ -4,6 +4,7 @@ import type { ElementInfo } from "@/lib/api";
 import { connectLivePreview } from "@/lib/live-preview";
 import { drawPin } from "@/lib/pin";
 import { cn, crossOriginFor } from "@/lib/utils";
+import { blockedByCors, corsMessage } from "@/lib/video-cors";
 
 export interface MediaController {
   duration: number;
@@ -213,6 +214,12 @@ export function Player({ src, liveSrc, onLiveError, target, pins, floating, newP
               onError={() => {
                 setStatus("error");
                 setError(errorMessage ?? "This video couldn't be loaded. If the file was moved or deleted, ask your agent to add the render again.");
+                const failed = src;
+                if (crossOriginFor(failed)) {
+                  void blockedByCors(failed).then((blocked) => {
+                    if (blocked && videoRef.current?.getAttribute("src") === failed) setError(corsMessage());
+                  });
+                }
               }}
             />
           )}
