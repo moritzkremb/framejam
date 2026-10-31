@@ -1,9 +1,9 @@
-import { ChevronRight, Film, Inbox, LayoutGrid } from "lucide-react";
+import { ChevronRight, Cloud, Film, Inbox, LayoutGrid } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CommunityCard, MadeBy } from "@/components/community";
 import { HomeHeader } from "@/components/header";
-import { FIRST_VIDEO_PROMPT, PromptBlock, SetupSteps } from "@/components/setup-steps";
+import { CodeBlock, FIRST_VIDEO_PROMPT, PromptBlock, SetupSteps } from "@/components/setup-steps";
 import { isOffline, Offline } from "@/components/states";
 import { UpdateNotice } from "@/components/update-notice";
 import { agentLabel, api, posterUrl, relativeTime, type Health, type ReviewListItem } from "@/lib/api";
@@ -41,7 +41,14 @@ function ProjectCard({ review }: { review: ReviewListItem }) {
     <Link to={`/review/${review.id}`} className="fc-rcard" data-testid="project-card" data-status={status.kind}>
       <Poster review={review} />
       <div className="fc-grow">
-        <div className="name">{review.title}</div>
+        <div className="name">
+          {review.title}
+          {review.cloud && (
+            <span className="fc-cloud-tag" data-testid="cloud-tag" style={{ marginLeft: 8, verticalAlign: "middle" }}>
+              <Cloud className="fc-i" /> Cloud
+            </span>
+          )}
+        </div>
         <div className={cn("state", status.tone)}>
           {status.working ? (
             <span className="fc-agent working" style={{ gap: 0 }}>
@@ -93,7 +100,18 @@ export function ProjectsPage() {
       <HomeHeader />
       <main className="fc-main fc-narrow">
         <UpdateNotice />
-        <h1 className="fc-h1">Projects</h1>
+        {health?.cloud?.signedOut && (
+          <section className="fc-card fc-col" style={{ gap: 10 }} aria-label="Cloud mode" data-testid="cloud-signed-out">
+            <div>
+              <b>Cloud mode is on, but you're signed out.</b> <span className="fc-t2">New projects stay on this computer until you sign in. Paste this in a terminal:</span>
+            </div>
+            <CodeBlock code="npx -y framejam login" />
+          </section>
+        )}
+        <div>
+          <p className="fc-kicker">{health?.cloud?.on && !health.cloud.signedOut ? "Cloud mode" : "On this computer"}</p>
+          <h1 className="fc-h1">Projects</h1>
+        </div>
         {error && !reviews ? (
           isOffline(error) ? (
             <Offline />
@@ -111,8 +129,8 @@ export function ProjectsPage() {
             {!agent && (
               <section className="fc-card fc-col" style={{ gap: 14 }} aria-labelledby="setup-title" data-testid="setup-checklist">
                 <div>
-                  <h2 id="setup-title" className="fc-h3">
-                    Connect your agent to get started
+                  <h2 id="setup-title" className="fc-h2">
+                    Connect your agent to <em>get started</em>
                   </h2>
                   <p className="fc-caption" style={{ margin: "2px 0 0" }}>
                     Three messages to paste into your agent chat. Each step ticks itself off, and this goes away once your agent connects.
@@ -128,7 +146,9 @@ export function ProjectsPage() {
                   <div className="fc-row" style={{ gap: 12, flexWrap: "nowrap", alignItems: "flex-start" }}>
                     <Inbox className="fc-i fc-t2" />
                     <div>
-                      <div className="fc-h3">No projects yet</div>
+                      <div className="fc-h2">
+                        No projects <em>yet</em>
+                      </div>
                       <p className="fc-caption" style={{ margin: "2px 0 0", fontSize: 13, lineHeight: "19px" }}>
                         Paste this into your agent chat. Its first version shows up here.
                       </p>
@@ -139,12 +159,12 @@ export function ProjectsPage() {
               )
             ) : (
               <div className="fc-col" style={{ gap: 8 }}>
-                {needsYou.length > 0 && <div className="fc-caption">Needs you</div>}
+                {needsYou.length > 0 && <div className="fc-label">Needs you</div>}
                 {needsYou.map((r) => (
                   <ProjectCard key={r.id} review={r} />
                 ))}
                 {withAgent.length > 0 && (
-                  <div className="fc-caption" style={{ marginTop: needsYou.length ? 12 : 0 }}>
+                  <div className="fc-label" style={{ marginTop: needsYou.length ? 12 : 0 }}>
                     With your agent
                   </div>
                 )}

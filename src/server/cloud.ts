@@ -9,6 +9,13 @@ import { env } from "./paths.ts";
 /** Production Convex deployment. Override with FRAMEJAM_CLOUD_URL or FRAMEJAM_CONVEX_URL. */
 export const DEFAULT_CLOUD_URL = "https://mellow-dalmatian-42.convex.cloud";
 
+/** The web app where a cloud project's review page lives. Override with FRAMEJAM_APP_URL. */
+export const DEFAULT_APP_URL = "https://app.framejam.ai";
+
+export function cloudReviewUrl(id: string): string {
+  return `${(env("APP_URL") ?? DEFAULT_APP_URL).replace(/\/$/, "")}/p/${id}`;
+}
+
 export function cloudUrl(): string {
   return (env("CLOUD_URL") ?? env("CONVEX_URL") ?? DEFAULT_CLOUD_URL).replace(/\/$/, "");
 }
@@ -27,7 +34,8 @@ export type DevicePoll =
   | { status: "approved"; token: string; tokenType: "bearer" };
 
 export interface CloudWhoami {
-  name: string;
+  /** Null for accounts that signed up with just an email address. */
+  name: string | null;
   email: string;
 }
 
@@ -56,10 +64,41 @@ export type FetchLike = typeof fetch;
 
 const CALL_TIMEOUT_MS = 15_000;
 
-export function createCloudClient(url: string = cloudUrl(), fetchFn: FetchLike = fetch): CloudClient {
+/** Waits between attempts when a call fails on the network or a 5xx. Its length is the number of retries. */
+export const RETRY_DELAYS_MS = [500, 1500];
+
+export interface RetryOptions {
+  retryDelaysMs?: number[];
+  sleep?: (ms: number) => Promise<void>;
+}
+
+/**
+ * A failed cloud call. `transient` means the network or a 5xx, where trying again later can work. `status` is set when
+ * the cloud refused a rule with the status a local store would give (404 not found, 409 conflict). `refused` means a
+ * function turned the call down with its own message, not a bare server error.
+ */
+export class CloudError extends Error {
+  constructor(
+    message: string,
+    readonly transient: boolean,
+    readonly status?: 400 | 404 | 409,
+    readonly refused = false,
+  ) {
+    super(message);
+    this.name = "CloudError";
+  }
+}
+
+export function isTransientCloudError(err: unknown): boolean {
+  return err instanceof CloudError && err.transient;
+}
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+export function createCloudClient(url: string = cloudUrl(), fetchFn: FetchLike = fetch, retry: RetryOptions = {}): CloudClient {
   const base = url.replace(/\/$/, "");
   const call = <T>(kind: ConvexKind, path: string, args: Record<string, unknown>) =>
-    convexCall<T>(base, kind, path, args, fetchFn);
+    convexCall<T>(base, kind, path, args, fetchFn, retry);
   return {
     start: () => call<DeviceStart>("mutation", "deviceAuth:start", {}),
     poll: (deviceCode) => call<DevicePoll>("mutation", "deviceAuth:poll", { deviceCode }),
@@ -69,6 +108,26 @@ export function createCloudClient(url: string = cloudUrl(), fetchFn: FetchLike =
 }
 
 export async function convexCall<T>(
+  url: string,
+  kind: ConvexKind,
+  path: string,
+  args: Record<string, unknown>,
+  fetchFn: FetchLike,
+  retry: RetryOptions = {},
+): Promise<T> {
+  const delays = retry.retryDelaysMs ?? RETRY_DELAYS_MS;
+  const wait = retry.sleep ?? delay;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await convexCallOnce<T>(url, kind, path, args, fetchFn);
+    } catch (err) {
+      if (!isTransientCloudError(err) || attempt >= delays.length) throw err;
+      await wait(delays[attempt]!);
+    }
+  }
+}
+
+async function convexCallOnce<T>(
   url: string,
   kind: ConvexKind,
   path: string,
@@ -84,17 +143,26 @@ export async function convexCall<T>(
       signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
     });
   } catch {
-    throw new Error("Couldn't reach FrameJam Cloud.");
+    throw new CloudError("Couldn't reach FrameJam Cloud.", true);
   }
+  // Function errors come back as JSON and won't change on a retry; a gateway 5xx or 429 has no Convex body.
+  const busy = res.status >= 500 || res.status === 429;
   let body: ConvexSuccess<T> | ConvexFailure | undefined;
   try {
     body = (await res.json()) as ConvexSuccess<T> | ConvexFailure;
   } catch {
-    throw new Error(res.ok ? "FrameJam Cloud returned a bad response." : `FrameJam Cloud returned ${res.status}.`);
+    throw new CloudError(res.ok ? "FrameJam Cloud returned a bad response." : `FrameJam Cloud returned ${res.status}.`, busy);
   }
-  if (body.status === "success") return body.value;
-  const thrown = typeof body.errorData === "string" && body.errorData.trim() ? body.errorData.trim() : undefined;
-  throw new Error(thrown ?? cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`);
+  if (body?.status === "success") return body.value;
+  if (body?.status !== "error") throw new CloudError(`FrameJam Cloud returned ${res.status}.`, busy);
+  const data = body.errorData;
+  if (data && typeof data === "object" && typeof (data as { message?: unknown }).message === "string") {
+    const { message, status } = data as { message: string; status?: unknown };
+    throw new CloudError(message, false, status === 404 || status === 409 || status === 400 ? status : undefined, true);
+  }
+  const thrown = typeof data === "string" && data.trim() ? data.trim() : undefined;
+  if (thrown) throw new CloudError(thrown, false, undefined, true);
+  throw new CloudError(cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`, false);
 }
 
 /**
@@ -110,7 +178,7 @@ export function cloudMessage(raw: string | undefined): string | undefined {
   return plain;
 }
 
-export type AssetKind = "render" | "panel" | "poster" | "frame";
+export type AssetKind = "render" | "panel" | "poster" | "frame" | "source";
 
 export interface UploadTicket {
   uploadUrl: string;
@@ -163,6 +231,16 @@ export interface GuestComment {
   text: string;
   guestName: string;
   frameUrl?: string;
+  /** A spoken comment: `text` is the transcript, and each pointing phrase has the frame it showed. */
+  voice?: GuestVoice;
+}
+
+export interface GuestVoice {
+  status: "transcribed" | "pending" | "failed";
+  duration?: number;
+  audioUrl?: string;
+  note?: string;
+  points: Array<{ phrase: string; at: number; time: number; x?: number; y?: number; frameUrl?: string; drawing?: number[][] }>;
 }
 
 export interface GuestApproval {
@@ -201,11 +279,35 @@ export interface LinkSettings {
   expiresAt: number | null;
   revokedAt: number | null;
   allowDownload?: boolean;
+  showNotes?: boolean;
+}
+
+export interface UploadRequest {
+  filename: string;
+  mime: string;
+  kind: AssetKind;
+  /** The file's size, so FrameJam Cloud can refuse a file the account has no room for before it goes up. */
+  bytes?: number;
+}
+
+/**
+ * Calls `uploads.request` with the file's size. A deployment from before limits rejects the extra argument with a bare
+ * server error, so that case is tried once more without it.
+ */
+export async function requestUpload(call: (args: Record<string, unknown>) => Promise<UploadTicket>, input: UploadRequest): Promise<UploadTicket> {
+  const { bytes, ...rest } = input;
+  if (bytes === undefined) return call(rest);
+  try {
+    return await call({ ...rest, bytes });
+  } catch (err) {
+    if (!(err instanceof CloudError) || err.transient || err.refused) throw err;
+    return call(rest);
+  }
 }
 
 /** What sharing needs from FrameJam Cloud, for the signed-in user's API token. */
 export interface ShareClient {
-  requestUpload(input: { filename: string; mime: string; kind: AssetKind }): Promise<UploadTicket>;
+  requestUpload(input: UploadRequest): Promise<UploadTicket>;
   registerUpload(input: RegisterInput): Promise<{ assetId: string }>;
   publish(input: PublishInput): Promise<Published>;
   pending(localId: string): Promise<PendingShare | null>;
@@ -213,15 +315,20 @@ export interface ShareClient {
   /** Marks guest comments "resolved in vN" on the link. The version has to be on the link already. */
   resolve(localId: string, resolutions: Resolution[]): Promise<{ marked: number }>;
   /** Sets or clears the link's expiry (`expiresAt: null` clears it), revokes or reopens it, and switches the download. */
-  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean }): Promise<LinkSettings>;
+  configure(localId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean }): Promise<LinkSettings>;
 }
 
-export function createShareClient(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): ShareClient {
+export function createShareClient(
+  token: string,
+  url: string = cloudUrl(),
+  fetchFn: FetchLike = fetch,
+  retry: RetryOptions = {},
+): ShareClient {
   const base = url.replace(/\/$/, "");
   const call = <T>(kind: ConvexKind, path: string, args: Record<string, unknown>) =>
-    convexCall<T>(base, kind, path, { ...args, token }, fetchFn);
+    convexCall<T>(base, kind, path, { ...args, token }, fetchFn, retry);
   return {
-    requestUpload: (input) => call<UploadTicket>("action", "uploads:request", input),
+    requestUpload: (input) => requestUpload((args) => call<UploadTicket>("action", "uploads:request", args), input),
     registerUpload: (input) => call<{ assetId: string }>("mutation", "uploads:register", { ...input }),
     publish: (input) => call<Published>("mutation", "shares:publish", { ...input }),
     pending: (localId) => call<PendingShare | null>("query", "shares:pending", { localId }),

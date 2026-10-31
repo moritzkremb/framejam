@@ -204,7 +204,7 @@ export function PickPage() {
       <div className="fc-screen">
         <BackHeader to="/" title="Pick for your video" />
         <main className="fc-main">
-          <NotHere title="This pick isn't here" message="Ask your agent to start a new one." back="/" backLabel="Back to projects" />
+          <NotHere title={<>This pick isn't <em>here</em></>} message="Ask your agent to start a new one." back="/" backLabel="Back to projects" />
         </main>
       </div>
     );
@@ -338,7 +338,9 @@ export function PickPage() {
         {open === "playbook" && (
           <section className="fc-pick-panel" aria-label="Choose a playbook">
             <header>
-              <h2 className="fc-h2">Choose a playbook</h2>
+              <h2 className="fc-h2">
+                Choose a <em>playbook</em>
+              </h2>
               <span className="fc-grow" />
               <button type="button" className="fc-btn ghost icon sm round" aria-label="Close" onClick={() => setOpen(null)}>
                 <X className="fc-i sm" />
@@ -374,7 +376,9 @@ export function PickPage() {
         {open === "style" && (
           <section className="fc-pick-panel" aria-label="Choose a style">
             <header>
-              <h2 className="fc-h2">Choose a style</h2>
+              <h2 className="fc-h2">
+                Choose a <em>style</em>
+              </h2>
               <span className="fc-grow" />
               <button type="button" className="fc-btn ghost icon sm round" aria-label="Close" onClick={() => setOpen(null)}>
                 <X className="fc-i sm" />

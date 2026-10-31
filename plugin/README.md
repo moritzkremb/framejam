@@ -5,8 +5,8 @@ any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg or screen recordings), th
 or a spot in the frame, say what to change, press **Finish review**, and the agent makes the next version.
 
 Everything runs on your computer. There's no account unless you run `framejam login` (optional; FrameJam Cloud).
-Your videos and comments are only uploaded when you share a version (with `framejam share`, or when you ask your agent to share it); projects are saved in
-`~/.framejam`.
+Your videos and comments are only uploaded when you share a version (with `framejam share`, or when you ask your agent to share it) or turn on cloud projects (`framejam cloud on`); projects are saved in
+`~/.framejam` otherwise.
 
 Install it in Claude Code:
 
@@ -35,6 +35,15 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
   `framejam login` and share.
 - The same check also reads how many times the link was opened (once per visitor a day, yours included), which the app shows in the project header and
   your agent can read with `share_project` and `list_share_links`.
+- With `framejam cloud on` (optional, needs `framejam login`), new projects live in your FrameJam Cloud account: the
+  project's title, versions, notes, your comments and what you resolve are stored there, and each version's render (or a
+  storyboard's panels), a poster frame, the frame image of each comment and, when your agent attaches one, a zip of
+  the project's source files (without `node_modules`, `.git`, build output, renders or `.env` and key files) are uploaded. The app asks the cloud for
+  changes while a project is open. Turn it off with `framejam cloud off`; projects you already have stay on your
+  computer, and nothing goes to the cloud for them.
+- A guest who presses **Voice** on a share link is recorded in their browser; the audio goes to FrameJam Cloud and its
+  transcription service, and the app brings the transcript and its frame images into your project. Nothing is
+  recorded on your computer.
 - FrameJam Cloud emails you and your guests about a shared link: a guest who left their email gets a note when you
   share a new version, and you get an email when a guest approves and a digest of new comments. Every email has an
   unsubscribe link.
@@ -42,7 +51,8 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
 Local FrameJam is free and open source. FrameJam Cloud, with `framejam share`, adds sharing a project with a client:
 guests open the link with no account, comment on a frame or a range, and approve a version (the link then shows only
 that file, with an optional download); you can set the link to expire or turn it off. Sharing is free while it's in
-beta. Projects stay in `~/.framejam`, and turning a link off stops the page but doesn't delete the uploaded files.
+beta. Shared projects stay in `~/.framejam`, and turning a link off stops the page but doesn't delete the uploaded
+files. Cloud projects, version notes and source files, and connecting agents by URL are part of Pro.
 
 Nothing is sent from your agent's conversation.
 

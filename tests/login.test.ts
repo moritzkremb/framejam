@@ -5,7 +5,17 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { authPath, deleteAuth, readAuth, writeAuth } from "../src/server/auth.ts";
-import { type CloudClient, type DevicePoll, type DeviceStart, DEFAULT_CLOUD_URL, cloudUrl, createCloudClient } from "../src/server/cloud.ts";
+import {
+  type CloudClient,
+  type CloudWhoami,
+  type DevicePoll,
+  type DeviceStart,
+  CloudError,
+  DEFAULT_CLOUD_URL,
+  RETRY_DELAYS_MS,
+  cloudUrl,
+  createCloudClient,
+} from "../src/server/cloud.ts";
 import { formatAccount, login, logout, shouldOpenBrowser, whoami } from "../src/server/login.ts";
 import { packageRoot } from "../src/server/paths.ts";
 
@@ -25,9 +35,9 @@ const startPayload: DeviceStart = {
 };
 
 function fakeClient(opts: {
-  polls?: DevicePoll[];
+  polls?: (DevicePoll | Error)[];
   start?: DeviceStart | Error;
-  whoami?: { name: string; email: string } | Error;
+  whoami?: CloudWhoami | Error;
   revoke?: Error | { ok: true };
 }): CloudClient & { calls: string[] } {
   const calls: string[] = [];
@@ -41,7 +51,9 @@ function fakeClient(opts: {
     },
     async poll(deviceCode) {
       calls.push(`poll:${deviceCode}`);
-      return polls.shift() ?? { status: "pending" };
+      const next = polls.shift() ?? { status: "pending" };
+      if (next instanceof Error) throw next;
+      return next;
     },
     async whoami(token) {
       calls.push(`whoami:${token}`);
@@ -131,6 +143,52 @@ describe("createCloudClient", () => {
       ["https://cloud.test/api/mutation", "deviceAuth:revoke", { token: "tok_1" }],
     ]);
   });
+
+  const whoamiOk = () => Response.json({ status: "success", value: { name: "Ada", email: "ada@example.com" } });
+
+  it("retries network errors and 5xx gateway responses with backoff", async () => {
+    const responses: (() => Response)[] = [
+      () => {
+        throw new TypeError("fetch failed");
+      },
+      () => new Response("<html>Bad Gateway</html>", { status: 502 }),
+      whoamiOk,
+    ];
+    let attempts = 0;
+    const slept: number[] = [];
+    const fetchFn: typeof fetch = async () => responses[attempts++]!();
+    const client = createCloudClient("https://cloud.test", fetchFn, { sleep: async (ms) => void slept.push(ms) });
+    expect(await client.whoami("tok_1")).toEqual({ name: "Ada", email: "ada@example.com" });
+    expect(attempts).toBe(3);
+    expect(slept).toEqual(RETRY_DELAYS_MS);
+  });
+
+  it("gives up after the retries with a transient error", async () => {
+    let attempts = 0;
+    const fetchFn: typeof fetch = async () => {
+      attempts += 1;
+      throw new TypeError("fetch failed");
+    };
+    const client = createCloudClient("https://cloud.test", fetchFn, { sleep: async () => {} });
+    const err = await client.poll("dev_1").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(CloudError);
+    expect((err as CloudError).message).toBe("Couldn't reach FrameJam Cloud.");
+    expect((err as CloudError).transient).toBe(true);
+    expect(attempts).toBe(RETRY_DELAYS_MS.length + 1);
+  });
+
+  it("doesn't retry a function error", async () => {
+    let attempts = 0;
+    const fetchFn: typeof fetch = async () => {
+      attempts += 1;
+      return Response.json({ status: "error", errorMessage: "Invalid token" }, { status: 400 });
+    };
+    const client = createCloudClient("https://cloud.test", fetchFn, { sleep: async () => {} });
+    const err = await client.whoami("tok_bad").catch((e: unknown) => e);
+    expect((err as CloudError).message).toBe("Invalid token");
+    expect((err as CloudError).transient).toBe(false);
+    expect(attempts).toBe(1);
+  });
 });
 
 describe("login / logout / whoami", () => {
@@ -188,6 +246,49 @@ describe("login / logout / whoami", () => {
     expect(client.calls.filter((c) => c.startsWith("poll:"))).toEqual(["poll:dev_1", "poll:dev_1"]);
   });
 
+  it("keeps polling through network errors and 5xx until approved", async () => {
+    root = tmpRoot();
+    const client = fakeClient({
+      polls: [
+        new CloudError("Couldn't reach FrameJam Cloud.", true),
+        { status: "pending" },
+        new CloudError("FrameJam Cloud returned 503.", true),
+        { status: "approved", token: "tok_1", tokenType: "bearer" },
+      ],
+    });
+    const result = await login({ client, root, sleep: async () => {} });
+    expect(result).toEqual({ ok: true, text: "Logged in as Ada Lovelace <ada@example.com>" });
+    expect(client.calls.filter((c) => c.startsWith("poll:"))).toHaveLength(4);
+    expect(readAuth(root)?.token).toBe("tok_1");
+  });
+
+  it("stops polling when the cloud stays unreachable until the code expires", async () => {
+    root = tmpRoot();
+    let clock = 0;
+    const client = fakeClient({
+      start: { ...startPayload, expiresIn: 30, interval: 5 },
+      polls: Array.from({ length: 20 }, () => new CloudError("Couldn't reach FrameJam Cloud.", true)),
+    });
+    const result = await login({
+      client,
+      root,
+      now: () => clock,
+      sleep: async (ms) => {
+        clock += ms;
+      },
+    });
+    expect(result).toEqual({ ok: false, text: "Couldn't reach FrameJam Cloud before the code expired. Run framejam login again." });
+    expect(client.calls.filter((c) => c.startsWith("poll:"))).toHaveLength(5);
+    expect(readAuth(root)).toBeUndefined();
+  });
+
+  it("ends login on an error that isn't transient", async () => {
+    root = tmpRoot();
+    const client = fakeClient({ polls: [new CloudError("Invalid device code", false)] });
+    expect(await login({ client, root, sleep: async () => {} })).toEqual({ ok: false, text: "Invalid device code" });
+    expect(client.calls.filter((c) => c.startsWith("poll:"))).toHaveLength(1);
+  });
+
   it("fails when the code expires", async () => {
     root = tmpRoot();
     const result = await login({
@@ -226,6 +327,15 @@ describe("login / logout / whoami", () => {
       text: "Ada Lovelace <ada@example.com>",
     });
     expect(formatAccount({ name: "  ", email: "ada@example.com" })).toBe("ada@example.com");
+    expect(formatAccount({ name: null, email: "ada@example.com" })).toBe("ada@example.com");
+  });
+
+  it("whoami falls back to the email when the account has no name", async () => {
+    root = tmpRoot();
+    writeAuth({ token: "tok_1" }, root);
+    const client = fakeClient({ whoami: { name: null, email: "ada@example.com" } });
+    expect(await whoami({ client, root })).toEqual({ ok: true, text: "ada@example.com" });
+    expect(formatAccount({ name: null, email: "ada@example.com" })).toBe("ada@example.com");
   });
 });
 

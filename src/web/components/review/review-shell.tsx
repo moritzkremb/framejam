@@ -1,14 +1,15 @@
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, Copy, Download, Keyboard, Loader2, MessageSquare, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Columns2, Copy, Download, Keyboard, Loader2, MessageSquare, X } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { BackHeader } from "@/components/header";
+import { UploadState } from "@/components/review/upload-state";
 import { Menu, MenuItem, MenuLabel, MenuSeparator } from "@/components/menu";
 import { CommentList } from "@/components/review/comment-list";
 import { Handoff } from "@/components/review/dock";
 import { ShareStatus } from "@/components/review/share-status";
 import type { ReviewState } from "@/components/review/use-review";
-import { copyText, relativeTime, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
+import { copyText, relativeTime, thumbUrl, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
 import { cn, MOD_KEY } from "@/lib/utils";
 
@@ -54,7 +55,7 @@ export function useSidebar(width: number, fullscreen = false) {
 }
 
 export type SidebarState = ReturnType<typeof useSidebar>;
-export type SidebarTab = "comments" | "transcript";
+export type SidebarTab = "comments" | "transcript" | "notes";
 
 /** A label and the keys that trigger it, shown one key per chip. */
 export type Shortcut = [label: string, keys: string[]];
@@ -196,17 +197,20 @@ export function ReviewHeader({
   subline,
   shortcuts,
   onPickVersion,
+  onCompare,
 }: {
   r: ReviewState;
   subline: string;
   shortcuts: Shortcut[];
   onPickVersion(n: number): void;
+  onCompare?: () => void;
 }) {
   const { review, version, latest } = r;
   if (!review || !version || !latest) return null;
   return (
+    <>
     <BackHeader to="/" title={review.title} sub={subline}>
-      <ShareStatus data={r.data} reviewId={review.id} />
+      <ShareStatus data={r.data} reviewId={review.id} latestVersion={latest.number} />
       <ShortcutsButton shortcuts={shortcuts} />
       <Menu
         label="Versions and more"
@@ -229,6 +233,11 @@ export function ReviewHeader({
           </MenuItem>
         ))}
         <MenuSeparator />
+        {onCompare && (
+          <MenuItem icon={<Columns2 className="fc-i sm" />} onSelect={onCompare}>
+            Compare versions
+          </MenuItem>
+        )}
         <MenuItem
           icon={<Copy className="fc-i sm" />}
           onSelect={async () => {
@@ -249,6 +258,28 @@ export function ReviewHeader({
         )}
       </Menu>
     </BackHeader>
+    <UploadState version={version} />
+    </>
+  );
+}
+
+/** A cloud project's newest version while its video is still on the way up: header, upload progress and the poster. */
+export function UploadWait({ r, poster, onCompare }: { r: ReviewState; poster?: string; onCompare?: () => void }) {
+  const version = r.version!;
+  return (
+    <>
+      <ReviewHeader
+        r={r}
+        subline={`Version ${version.number} · uploading`}
+        shortcuts={[]}
+        onPickVersion={(n) => r.setActiveVersion(n)}
+        onCompare={onCompare}
+      />
+      <div className="fc-upload-wait" data-testid="upload-wait">
+        {poster ? <img src={poster} alt="" /> : <div className="fc-skel" style={{ aspectRatio: "16 / 9", borderRadius: 14 }} />}
+        <p>The video plays here as soon as it's uploaded. Comments open then.</p>
+      </div>
+    </>
   );
 }
 
@@ -295,9 +326,11 @@ export function ReviewSidebar({
   label,
   footer,
   transcript,
+  notes,
   tab = "comments",
   onTab,
   onSelect,
+  onPoint,
 }: {
   r: ReviewState;
   side: SidebarState;
@@ -309,24 +342,36 @@ export function ReviewSidebar({
   footer?: ReactNode;
   /** With a transcript the sidebar has two tabs: comments and the transcript. */
   transcript?: ReactNode;
+  /** The Notes tab: handoff notes and source files, for a version that has them. */
+  notes?: ReactNode;
   tab?: SidebarTab;
   onTab?(tab: SidebarTab): void;
   onSelect(c: ReviewComment): void;
+  /** A pointing phrase in a spoken comment was clicked. */
+  onPoint?(c: ReviewComment, point: number): void;
 }) {
   if (!side.open) return null;
   const count = comments.length > 0 && <span className={cn("fc-count", r.isOpen ? "draft" : "sent")}>{comments.length}</span>;
   const showTranscript = Boolean(transcript) && tab === "transcript";
+  const showNotes = Boolean(notes) && tab === "notes";
   return (
-    <aside className={cn("fc-side", side.overlay && "overlay")} aria-label={showTranscript ? "Transcript" : "Comments"}>
+    <aside className={cn("fc-side", side.overlay && "overlay")} aria-label={showTranscript ? "Transcript" : showNotes ? "Notes" : "Comments"}>
       <div className="fc-side-h">
-        {transcript ? (
+        {transcript || notes ? (
           <div className="fc-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={!showTranscript} onClick={() => onTab?.("comments")}>
+            <button type="button" role="tab" aria-selected={!showTranscript && !showNotes} onClick={() => onTab?.("comments")}>
               Comments {count}
             </button>
-            <button type="button" role="tab" aria-selected={showTranscript} onClick={() => onTab?.("transcript")}>
-              Transcript
-            </button>
+            {transcript && (
+              <button type="button" role="tab" aria-selected={showTranscript} onClick={() => onTab?.("transcript")}>
+                Transcript
+              </button>
+            )}
+            {notes && (
+              <button type="button" role="tab" aria-selected={showNotes} onClick={() => onTab?.("notes")} data-testid="notes-tab">
+                Notes
+              </button>
+            )}
           </div>
         ) : (
           <>
@@ -342,6 +387,8 @@ export function ReviewSidebar({
       <div className="fc-side-body">
         {showTranscript ? (
           transcript
+        ) : showNotes ? (
+          notes
         ) : comments.length ? (
           <CommentList
             comments={comments}
@@ -349,6 +396,8 @@ export function ReviewSidebar({
             selectedId={selectedId}
             label={label}
             onSelect={onSelect}
+            frameUrl={(file) => thumbUrl(r.review?.id ?? "", file)}
+            onPoint={onPoint}
             onSave={r.saveComment}
             onDelete={r.deleteComment}
           />

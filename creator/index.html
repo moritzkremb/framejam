@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="framejam-convex-url" content="__FRAMEJAM_CONVEX_URL__" />
+    <meta name="framejam-share-origin" content="__FRAMEJAM_SHARE_ORIGIN__" />
+    <link rel="icon" href="https://www.framejam.ai/favicon.ico" sizes="32x32" />
+    <meta name="theme-color" content="#0c0c0d" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>FrameJam</title>
+    <style>
+      html { background: #0c0c0d; color-scheme: dark; }
+      .fj-boot { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; color: #ededef; font: 14px/1.5 system-ui, sans-serif; opacity: 0; animation: fj-boot-show 0s 10s forwards; }
+      .fj-boot strong { font-size: 18px; }
+      .fj-boot a { color: #0c0c0d; background: #d4ff3a; border-radius: 8px; padding: 9px 16px; font-weight: 600; text-decoration: none; }
+      @keyframes fj-boot-show { to { opacity: 1; } }
+    </style>
+  </head>
+  <body>
+    <!-- Replaced by the app once it renders; shows only if the page's script never runs. -->
+    <div id="root"><div class="fj-boot" role="alert"><strong>The review page didn't load</strong><span>Reload to try again. If it keeps happening, open it in another browser.</span><a href="">Reload</a></div></div>
+    <script type="module" src="../src/web/creator-main.tsx"></script>
+  </body>
+</html>

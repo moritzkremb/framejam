@@ -1,7 +1,7 @@
 import type { Transcript, TranscriptWord } from "../../core/transcript";
-import type { AgentInfo, CommentKind, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, TranscriptionStatus, VideoPick } from "../../core/types";
+import type { AgentInfo, CommentKind, ElementInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, TranscriptionStatus, VideoPick } from "../../core/types";
 
-export type { AgentInfo, CommentKind, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, Transcript, TranscriptionStatus, TranscriptWord, VideoPick };
+export type { AgentInfo, CommentKind, ElementInfo, PlaybookSummary, PresetSummary, Review, ReviewComment, ReviewVersion, StoryboardPanel, Transcript, TranscriptionStatus, TranscriptWord, VideoPick };
 
 /** From `/api/catalog`: whether playbooks update from framejam.ai, and how the last check went. */
 export interface CatalogStatus {
@@ -28,6 +28,9 @@ export interface ReviewListItem {
   hasVideo: boolean;
   /** Panels in the latest version; 0 for videos. */
   panels: number;
+  /** Set on cloud projects; `upload` is the latest version's upload while its files are still on their way. */
+  cloud?: boolean;
+  upload?: ReviewVersion["upload"] | null;
 }
 
 export interface UpdateInfo {
@@ -49,6 +52,7 @@ export interface Health {
   app: string;
   version?: string;
   dataDir: string;
+  cloud?: { on: boolean; signedOut: boolean };
   baseUrl: string;
   agent: AgentInfo | null;
   setup?: { mcpCommand: string[]; installCommand?: string[]; skillPath: string };
@@ -82,6 +86,8 @@ export interface ShareInfo {
   /** A guest approved this version; the link shows only that file. */
   approved?: { version: number; by: string; at: number } | null;
   allowDownload?: boolean;
+  /** Guests can read each version's handoff notes (cloud projects). */
+  showNotes?: boolean;
   closed?: boolean;
   expiresAt?: number | null;
   revokedAt?: number | null;
@@ -92,7 +98,7 @@ export interface ShareInfo {
 
 export const api = {
   share: (id: string) => request<ShareInfo>(`/api/reviews/${id}/share`),
-  setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean }) =>
+  setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean }) =>
     request<ShareInfo>(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify(change) }),
   health: () => request<Health>("/api/health"),
   update: () => request<UpdateInfo>("/api/update"),
@@ -112,6 +118,8 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
   reopen: (id: string) => request<{ wasDelivered: boolean; review: Review }>(`/api/reviews/${id}/reopen`, { method: "POST" }),
+  sourceDownload: (id: string, version: number) =>
+    request<{ url: string; filename: string; bytes: number }>(`/api/reviews/${id}/versions/${version}/source`),
   downloadVideo: (id: string, version: number) =>
     request<{ path: string; chosen: boolean } | { cancelled: true }>(`/api/reviews/${id}/versions/${version}/download`, { method: "POST" }),
   transcript: (id: string, version: number) => request<Transcript>(`/api/reviews/${id}/versions/${version}/transcript`),

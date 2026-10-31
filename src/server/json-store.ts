@@ -1,12 +1,13 @@
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, StoryboardPanel, VideoPick } from "../core/types.ts";
-import { isTranscriptError, parseTranscript, type Transcript } from "../core/transcript.ts";
+import type { FeedbackBatch, PickKind, Review, ReviewComment, ReviewVersion, VideoPick } from "../core/types.ts";
+import type { Transcript } from "../core/transcript.ts";
 import { safeJoin } from "./files.ts";
 import { type CatalogConfig, type CatalogSnapshot, catalogConfig, readSnapshot } from "./catalog.ts";
 import { catalogDir, dataDir, setupInfo } from "./paths.ts";
 import { PlaybookLibrary } from "./playbooks.ts";
+import { type LoadedTranscript, loadTranscript, panelsKey, defaultTitle, resolveMedia, type ResolvedMedia } from "./media.ts";
 import { PresetLibrary } from "./presets.ts";
 import { VERSION } from "./version.ts";
 import {
@@ -16,7 +17,6 @@ import {
   type MediaInput,
   type NewCommentInput,
   type OpenReviewInput,
-  type PanelInput,
   PICK_IDLE_MS,
   type PicksChoice,
   type Store,
@@ -67,8 +67,6 @@ function readJson<T>(file: string): T | undefined {
     throw err;
   }
 }
-
-const PANEL_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]);
 
 /**
  * JSON-file store. Every call re-reads from disk so several FrameJam processes
@@ -188,14 +186,14 @@ export class JsonStore implements Store {
         const review = this.setTranscript(existing.id, latest.number, transcript.transcript, transcript.sourcePath);
         return { review, version: review.versions.at(-1)!, created: false };
       }
-      const review = this.addResolvedVersion(existing.id, media, input.note, transcript);
+      const review = this.addResolvedVersion(existing.id, media, input.note, transcript, input.notes);
       if (input.title && input.title !== review.title) {
         review.title = input.title;
         this.save(review);
       }
       return { review, version: review.versions.at(-1)!, created: false };
     }
-    const version: ReviewVersion = { number: 1, ...media, note: input.note, createdAt: now() };
+    const version: ReviewVersion = { number: 1, ...media, note: input.note, notes: input.notes?.trim() || undefined, createdAt: now() };
     const id = newId("rev");
     this.snapshotVideo(id, version);
     this.snapshotPanels(id, version);
@@ -232,16 +230,17 @@ export class JsonStore implements Store {
     } else {
       media = resolveMedia(input);
     }
-    return this.addResolvedVersion(reviewId, media, input.note, loadTranscript(input.transcriptPath, media));
+    return this.addResolvedVersion(reviewId, media, input.note, loadTranscript(input.transcriptPath, media), input.notes);
   }
 
-  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string, transcript?: LoadedTranscript): Review {
+  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string, transcript?: LoadedTranscript, notes?: string): Review {
     return this.update(reviewId, (review) => {
       const prev = review.versions.at(-1);
       const version: ReviewVersion = {
         number: (prev?.number ?? 0) + 1,
         ...media,
         note,
+        notes: notes?.trim() || undefined,
         createdAt: now(),
       };
       this.snapshotVideo(reviewId, version);
@@ -382,6 +381,7 @@ export class JsonStore implements Store {
         author: input.author?.trim() || undefined,
         cloudId: input.cloudId || undefined,
         fromVersion: input.fromVersion !== undefined && input.fromVersion !== version ? input.fromVersion : undefined,
+        voice: input.voice ? { ...input.voice, points: input.voice.points.map((p) => ({ ...p, frame: undefined })) } : undefined,
       };
       review.comments.push(comment);
     });
@@ -412,13 +412,26 @@ export class JsonStore implements Store {
       review.comments = review.comments.filter((x) => x.id !== commentId);
     });
     fs.rmSync(path.join(this.thumbsDir(reviewId), `${commentId}.jpg`), { force: true });
+    for (const file of fs.existsSync(this.thumbsDir(reviewId)) ? fs.readdirSync(this.thumbsDir(reviewId)) : []) {
+      if (file.startsWith(`${commentId}-p`)) fs.rmSync(path.join(this.thumbsDir(reviewId), file), { force: true });
+    }
   }
 
-  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array): string {
-    const file = `${commentId}.jpg`;
+  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array, point?: number): string {
+    const file = point === undefined ? `${commentId}.jpg` : `${commentId}-p${point}.jpg`;
+    if (point !== undefined) {
+      const c = this.getReview(reviewId).comments.find((x) => x.id === commentId);
+      if (!c) throw new StoreError(`Comment not found: ${commentId}`, 404);
+      if (!c.voice?.points[point]) throw new StoreError(`Comment ${commentId} has no pointing phrase ${point}`);
+    }
     fs.mkdirSync(this.thumbsDir(reviewId), { recursive: true });
     fs.writeFileSync(path.join(this.thumbsDir(reviewId), file), jpeg);
-    this.updateComment(reviewId, commentId, { thumbnail: file });
+    if (point === undefined) this.updateComment(reviewId, commentId, { thumbnail: file });
+    else {
+      this.update(reviewId, (review) => {
+        review.comments.find((x) => x.id === commentId)!.voice!.points[point]!.frame = file;
+      });
+    }
     return file;
   }
 
@@ -667,6 +680,11 @@ export class JsonStore implements Store {
     writeJsonAtomic(this.pickFile(pick.id), pick);
   }
 
+  /** Local projects keep no source files: that's a FrameJam Cloud feature. */
+  sourceFor(_reviewId: string, _version: number): undefined {
+    return undefined;
+  }
+
   /** Remembers the playbook and style picked for a project, so later versions and new chats keep them. */
   setReviewPicks(reviewId: string, picks: PicksChoice): Review {
     const review = this.getReview(reviewId);
@@ -675,70 +693,6 @@ export class JsonStore implements Store {
     this.save(review);
     return review;
   }
-}
-
-type ResolvedMedia = Pick<ReviewVersion, "videoPath" | "panels" | "panelsDir">;
-type LoadedTranscript = { transcript: Transcript; sourcePath: string };
-
-function loadTranscript(transcriptPath: string | undefined, media: ResolvedMedia): LoadedTranscript | undefined {
-  if (!transcriptPath) return undefined;
-  if (media.panels?.length) throw new StoreError("Transcripts are for videos, not storyboards");
-  const file = path.resolve(transcriptPath);
-  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new StoreError(`transcriptPath does not exist: ${file}`);
-  try {
-    return { transcript: parseTranscript(fs.readFileSync(file, "utf8"), file), sourcePath: file };
-  } catch (err) {
-    if (isTranscriptError(err)) throw new StoreError(`${err.message}: ${file}`);
-    throw err;
-  }
-}
-
-function resolveMedia(input: MediaInput): ResolvedMedia {
-  if (input.panels?.length || input.panelsDir) {
-    if (input.videoPath) throw new StoreError("A storyboard version takes panels (or panelsDir), not a video");
-    return resolvePanels(input.panels, input.panelsDir);
-  }
-  if (!input.videoPath) {
-    throw new StoreError("Provide videoPath (the rendered video, from any tool) or panels/panelsDir (a storyboard)");
-  }
-  const p = path.resolve(input.videoPath);
-  if (!fs.existsSync(p) || !fs.statSync(p).isFile()) throw new StoreError(`videoPath does not exist: ${p}`);
-  return { videoPath: p };
-}
-
-/** Panels in the given order, or every image in panelsDir sorted by file name (01.png, 02.png, … 10.png). */
-function resolvePanels(panels: PanelInput[] | undefined, panelsDir: string | undefined): ResolvedMedia {
-  const dir = panelsDir ? path.resolve(panelsDir) : undefined;
-  if (dir && (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory())) throw new StoreError(`panelsDir is not a folder: ${dir}`);
-  const entries: { path: string; title?: string; caption?: string }[] = panels?.length
-    ? panels.map((p) => (typeof p === "string" ? { path: p } : p))
-    : fs
-        .readdirSync(dir!)
-        .filter((f) => PANEL_EXTENSIONS.has(path.extname(f).toLowerCase()) && !f.startsWith("."))
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-        .map((f) => ({ path: f }));
-  if (!entries.length) throw new StoreError(`No panel images (png, jpg, webp, gif, svg) in ${dir}`);
-  const resolved: StoryboardPanel[] = entries.map((e) => {
-    const file = path.isAbsolute(e.path) ? e.path : path.resolve(dir ?? process.cwd(), e.path);
-    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new StoreError(`Panel image does not exist: ${file}`);
-    if (!PANEL_EXTENSIONS.has(path.extname(file).toLowerCase())) throw new StoreError(`Panel isn't an image (png, jpg, webp, gif, svg): ${file}`);
-    return {
-      image: "",
-      sourcePath: file,
-      sourceMtime: Math.round(fs.statSync(file).mtimeMs),
-      title: e.title?.trim() || undefined,
-      caption: e.caption?.trim() || undefined,
-    };
-  });
-  return { panels: resolved, panelsDir: dir };
-}
-
-function panelsKey(panels: StoryboardPanel[] | undefined) {
-  return JSON.stringify((panels ?? []).map((p) => [p.sourcePath, p.sourceMtime, p.title, p.caption]));
-}
-
-function defaultTitle(media: ResolvedMedia) {
-  return path.basename(media.panelsDir ?? media.videoPath ?? (media.panels ? "Untitled storyboard" : "Untitled video"));
 }
 
 function round(n: number) {

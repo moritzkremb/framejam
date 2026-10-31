@@ -49,7 +49,7 @@ const sampleVideo = path.join(fixturePreset, "preview.mp4");
 /** The cloud as `convex/shares.ts` behaves, in memory. Guests write into `comments` and `approvals`. */
 class FakeCloud implements ShareClient {
   published: PublishInput[] = [];
-  uploads: { filename: string; mime: string; kind: string }[] = [];
+  uploads: { filename: string; mime: string; kind: string; bytes?: number }[] = [];
   registered: { storageKey: string; bytes: number; mime: string; posterKey?: string }[] = [];
   tokens = new Map<string, string>();
   comments: (GuestComment & { pulled: boolean })[] = [];
@@ -68,7 +68,7 @@ class FakeCloud implements ShareClient {
   /** What `shares.resolve` was called with, in order. */
   resolved: Resolution[][] = [];
 
-  async requestUpload(input: { filename: string; mime: string; kind: string }) {
+  async requestUpload(input: { filename: string; mime: string; kind: string; bytes?: number }) {
     this.uploads.push(input);
     const n = this.uploads.length;
     return { uploadUrl: `https://r2.test/put/${n}`, storageKey: `${input.kind}s/user/${n}-${input.filename}`, publicUrl: `https://media.test/${n}` };
@@ -236,7 +236,7 @@ describe("sharing a version", () => {
     const render = net.puts.find((p) => p.headers["Content-Type"] === "video/mp4")!;
     expect(render.bytes).toBe(fs.statSync(sampleVideo).size);
     expect(render.headers["Content-Length"]).toBe(String(render.bytes));
-    expect(cloud.uploads.find((u) => u.kind === "render")).toMatchObject({ filename: "v1.mp4", mime: "video/mp4" });
+    expect(cloud.uploads.find((u) => u.kind === "render")).toMatchObject({ filename: "v1.mp4", mime: "video/mp4", bytes: fs.statSync(sampleVideo).size });
 
     expect(cloud.published).toHaveLength(1);
     expect(cloud.published[0]).toMatchObject({ localId: id, title: "Launch teaser", kind: "video" });
@@ -499,6 +499,42 @@ describe("pulling guests' comments", () => {
     expect(comments[1]!.thumbnail).toBeUndefined();
   });
 
+  it("adds a spoken comment with its transcript, and downloads one frame per pointing phrase", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    cloud.guest("cmt_v", 1, "This logo is too small. And over here the subtitle needs contrast.", {
+      frameUrl: "https://media.test/frames/main.jpg",
+      voice: {
+        status: "transcribed",
+        duration: 6,
+        audioUrl: "https://media.test/voice/r1.webm",
+        points: [
+          { phrase: "This", at: 0.5, time: 1.5, x: 0.4, y: 0.6, frameUrl: "https://media.test/frames/p0.jpg" },
+          { phrase: "over here", at: 3.7, time: 3, frameUrl: "https://media.test/frames/p1.jpg", drawing: [[0.1, 0.1, 0.2, 0.2]] },
+        ],
+      },
+    });
+    expect(await pullShare(store, id, opts())).toMatchObject({ added: 1 });
+    const [c] = (await store.getReview(id)).comments;
+    expect(c!.text).toContain("This logo is too small");
+    expect(c!.voice).toMatchObject({ status: "transcribed", duration: 6, audioUrl: "https://media.test/voice/r1.webm" });
+    expect(c!.voice!.points.map((p) => [p.phrase, p.drawn])).toEqual([["This", undefined], ["over here", true]]);
+    expect(net.gets).toEqual(["https://media.test/frames/main.jpg", "https://media.test/frames/p0.jpg", "https://media.test/frames/p1.jpg"]);
+    for (const p of c!.voice!.points) expect((await store.readThumbnail(id, p.frame!))!.byteLength).toBe(4);
+    expect(c!.thumbnail).toBeTruthy();
+    await store.deleteComment(id, c!.id);
+    expect(await store.thumbnailFile(id, c!.voice!.points[0]!.frame!)).toBeUndefined();
+  });
+
+  it("keeps a recording that has no transcript, with the reason", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    cloud.guest("cmt_p", 1, "Voice comment (transcription pending)", { voice: { status: "pending", note: "Transcription pending", audioUrl: "https://media.test/voice/r2.webm", points: [] } });
+    await pullShare(store, id, opts());
+    const [c] = (await store.getReview(id)).comments;
+    expect(c!.voice).toMatchObject({ status: "pending", note: "Transcription pending", points: [] });
+  });
+
   it("ignores a frame that isn't an image or isn't http", async () => {
     const id = await openLaunch();
     await shareVersion(store, id, opts());
@@ -662,6 +698,28 @@ describe("the cloud client", () => {
     expect(calls[4]!.body.args).toEqual({ localId: "rev_1", commentIds: ["c1"], token: TOKEN });
   });
 
+  it("sends the file size with an upload request, and drops it for a cloud from before limits", async () => {
+    const sent: Record<string, unknown>[] = [];
+    const ticket = { uploadUrl: "u", storageKey: "k", publicUrl: "p" };
+    const old: FetchLike = async (_input, init) => {
+      const { args } = JSON.parse(String(init!.body));
+      sent.push(args);
+      return Response.json("bytes" in args ? { status: "error", errorMessage: "[Request ID: ab12] Server Error" } : { status: "success", value: ticket });
+    };
+    expect(await createShareClient(TOKEN, CLOUD, old).requestUpload({ filename: "a.mp4", mime: "video/mp4", kind: "render", bytes: 42 })).toEqual(ticket);
+    expect(sent.map((a) => a.bytes)).toEqual([42, undefined]);
+
+    sent.length = 0;
+    const full: FetchLike = async (_input, init) => {
+      sent.push(JSON.parse(String(init!.body)).args);
+      return Response.json({ status: "error", errorMessage: "Server Error", errorData: "This needs more storage. Manage your account at app.framejam.ai/account." });
+    };
+    await expect(createShareClient(TOKEN, CLOUD, full).requestUpload({ filename: "a.mp4", mime: "video/mp4", kind: "render", bytes: 42 })).rejects.toThrow(
+      "This needs more storage.",
+    );
+    expect(sent).toHaveLength(1);
+  });
+
   it("keeps only the useful part of a Convex error", () => {
     expect(cloudMessage("[Request ID: ab12] Server Error\nUncaught Error: R2 not configured. Set it.\n    at handler (x.ts:1:1)")).toBe(
       "R2 not configured. Set it.",
@@ -674,6 +732,21 @@ describe("the cloud client", () => {
   it("turns a cloud error into its message", async () => {
     const fetchFn: FetchLike = async () => Response.json({ status: "error", errorMessage: "Invalid token" });
     await expect(createShareClient("fj_bad", CLOUD, fetchFn).pending("rev_1")).rejects.toThrow("Invalid token");
+  });
+
+  it("retries a publish that fails once on the network", async () => {
+    let attempts = 0;
+    const slept: number[] = [];
+    const fetchFn: FetchLike = async () => {
+      attempts += 1;
+      if (attempts === 1) throw new TypeError("fetch failed");
+      return Response.json({ status: "success", value: { projectId: "p1", token: "tok", version: 1, created: true, expiresAt: null, revokedAt: null } });
+    };
+    const client = createShareClient(TOKEN, CLOUD, fetchFn, { sleep: async (ms) => void slept.push(ms) });
+    const published = await client.publish({ localId: "rev_1", title: "T", kind: "video", version: { number: 1, videoAssetId: "a" } });
+    expect(published.token).toBe("tok");
+    expect(attempts).toBe(2);
+    expect(slept).toEqual([500]);
   });
 });
 
@@ -1016,7 +1089,7 @@ describe("a guest comment reaches the agent", () => {
     expect(summary).not.toContain("Please make these");
 
     const again = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
-    expect(again.status).toBe("pending");
+    expect(again.status).toBe("waiting");
     expect((await store.getReview(reviewId)).versions[0]!.sentAt).toBeUndefined();
   });
 
@@ -1190,7 +1263,7 @@ describe("an approval reaches the creator and the agent", () => {
     expect(body.message).toContain("not an instruction");
     expect(body.next).toContain("Don't make another version");
 
-    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("waiting");
     const link = parse(await mcp.call("list_share_links")).links[0];
     expect(link.approved).toMatchObject({ version: 1, by: "Anna Lee" });
     expect(link.allowDownload).toBe(true);
@@ -1201,7 +1274,7 @@ describe("an approval reaches the creator and the agent", () => {
     cloud.approve(1, "Anna", 1000);
     await pullShare(store, reviewId, opts());
     expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("approved");
-    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("waiting");
 
     cloud.approved = null;
     await pullShare(store, reviewId, opts());
@@ -1225,7 +1298,7 @@ describe("an approval reaches the creator and the agent", () => {
   it("doesn't wake a project that isn't shared", async () => {
     mcp = await connectClient({ store, baseUrl: "http://localhost:2400", waitSeconds: 1, pollMs: 10, progressEveryMs: 50, share: opts() });
     const { reviewId } = parse(await mcp.call("open_review", { title: "Launch teaser", videoPath: writeVideo("v1.mp4") }));
-    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("waiting");
   });
 
   it("keeps the download switch and what the agent was told when another version is shared", async () => {
@@ -1255,6 +1328,12 @@ describe("the download switch", () => {
     expect(readShareState(store.root, id)!.allowDownload).toBe(false);
     const on = await configureShare(store, id, { allowDownload: true }, opts());
     expect(on.allowDownload).toBe(true);
+  });
+
+  it("keeps notes on the link to cloud projects, as the creator's own choice", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    await expect(configureShare(store, id, { showNotes: true }, opts())).rejects.toThrow("cloud projects");
   });
 
   it("share_project passes allowDownload without uploading anything", async () => {

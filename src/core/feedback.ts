@@ -1,4 +1,4 @@
-import type { Review, ReviewComment } from "./types.ts";
+import type { ElementInfo, Review, ReviewComment } from "./types.ts";
 import type { Store } from "./store.ts";
 import { wordsBetween } from "./transcript.ts";
 
@@ -11,6 +11,18 @@ export function formatTime(seconds: number): string {
 
 export function reviewUrl(baseUrl: string, reviewId: string) {
   return `${baseUrl}/review/${reviewId}`;
+}
+
+/**
+ * A project id from what an agent was given: the id itself, or a project link (`/p/<id>` on the web app, `/review/<id>`
+ * on this computer), with the version in `?v=` when it names one.
+ */
+export function parseProjectRef(ref: string): { reviewId: string; version?: number } {
+  const text = ref.trim();
+  const link = /\/(?:p|review)\/([\w-]+)/.exec(text);
+  if (!link) return { reviewId: text };
+  const v = /[?&]v=(\d+)/.exec(text);
+  return { reviewId: link[1]!, ...(v ? { version: Number(v[1]) } : {}) };
 }
 
 export interface AgentComment {
@@ -36,6 +48,29 @@ export interface AgentComment {
   thumbnailPath?: string;
   thumbnailUrl?: string;
   resolution?: ReviewComment["resolution"];
+  /** Spoken, not typed: `text` is the verbatim transcript. */
+  voice?: AgentVoice;
+}
+
+export interface AgentVoice {
+  status: "transcribed" | "pending" | "failed";
+  note?: string;
+  durationSeconds?: number;
+  audioUrl?: string;
+  /** One per pointing phrase ("this", "over here"), with the frame that was on screen when it was said. */
+  points: Array<{
+    phrase: string;
+    /** Seconds into the recording. */
+    saidAt: number;
+    /** Time in the video. */
+    at: string;
+    position?: { x: number; y: number; description: string };
+    drawn?: boolean;
+    imagePath?: string;
+    imageUrl?: string;
+    /** The file name inside the review's thumbs folder, for reading the image back. */
+    imageFile?: string;
+  }>;
 }
 
 /** How far either side of a point comment its "spoken around" words reach, in seconds. */
@@ -87,7 +122,43 @@ export async function toAgentComment(store: Store, baseUrl: string, review: Revi
     thumbnailPath: thumbPath ?? undefined,
     thumbnailUrl: c.thumbnail ? `${baseUrl}/api/reviews/${review.id}/thumbs/${c.thumbnail}` : undefined,
     resolution: c.resolution,
+    voice: c.voice ? await toAgentVoice(store, baseUrl, review, c.voice) : undefined,
   };
+}
+
+async function toAgentVoice(store: Store, baseUrl: string, review: Review, voice: NonNullable<ReviewComment["voice"]>): Promise<AgentVoice> {
+  const points: AgentVoice["points"] = [];
+  for (const p of voice.points) {
+    const imagePath = p.frame ? await store.thumbnailFile(review.id, p.frame) : undefined;
+    points.push({
+      phrase: p.phrase,
+      saidAt: p.at,
+      at: formatTime(p.time),
+      position: p.x !== undefined && p.y !== undefined ? { x: p.x, y: p.y, description: describePosition(p.x, p.y) } : undefined,
+      drawn: p.drawn || undefined,
+      imagePath: imagePath ?? undefined,
+      imageUrl: p.frame && imagePath ? `${baseUrl}/api/reviews/${review.id}/thumbs/${p.frame}` : undefined,
+      imageFile: p.frame && imagePath ? p.frame : undefined,
+    });
+  }
+  return { status: voice.status, note: voice.note, durationSeconds: voice.duration, audioUrl: voice.audioUrl, points };
+}
+
+/** Lines under a spoken comment: that it is spoken, and the frame for each pointing phrase. */
+export function voiceLines(a: AgentComment): string[] {
+  const v = a.voice;
+  if (!v) return [];
+  const lines: string[] = [];
+  if (v.status === "transcribed") {
+    lines.push(`  - Spoken comment${v.durationSeconds ? ` (${Math.round(v.durationSeconds)}s)` : ""}: the text above is the verbatim transcript.${v.points.length ? " Each pointing phrase has the frame that was on screen when it was said:" : ""}`);
+  } else {
+    lines.push(`  - Spoken comment with no transcript (${(v.note ?? "none").toLowerCase()}).${v.audioUrl ? ` The recording is kept: ${v.audioUrl}` : ""} Use the frame and ask the user what they said if it isn't clear.`);
+  }
+  for (const p of v.points) {
+    const where = `video ${p.at}${p.position ? `, pinned at ${p.position.description}` : ""}${p.drawn ? ", with a drawing" : ""}`;
+    lines.push(`    - “${p.phrase}” (said ${p.saidAt.toFixed(1)}s in): ${where}${p.imagePath ? `; frame: ${p.imageUrl} (file: \`${p.imagePath}\`)` : ""}`);
+  }
+  return lines;
 }
 
 export function describePosition(x: number, y: number, of = "frame"): string {
@@ -109,13 +180,13 @@ export const GUEST_WAKE_NOTE =
  * The summary an agent gets when guests have commented on a shared project: who, what and where, worded so the agent
  * asks the user first. (The user can also just press Finish review, which sends them the usual way.)
  */
-export async function guestCommentsPrompt(store: Store, baseUrl: string, review: Review, comments: ReviewComment[]): Promise<string> {
+export async function guestCommentsPrompt(store: Store, baseUrl: string, review: Review, comments: ReviewComment[], url?: string): Promise<string> {
   const latest = review.versions.at(-1)!;
   const names = [...new Set(comments.map((c) => c.author).filter(Boolean))] as string[];
   const lines: string[] = [];
   lines.push(`# ${names.join(", ")} commented on ${review.title} (v${latest.number})`, "");
   lines.push(GUEST_WAKE_NOTE, "");
-  lines.push(`Review: ${reviewUrl(baseUrl, review.id)}`, "");
+  lines.push(`Review: ${url ?? reviewUrl(baseUrl, review.id)}`, "");
   const sorted = [...comments].sort(
     (a, b) => Number(!!b.wholeVideo) - Number(!!a.wholeVideo) || (a.panel ?? 0) - (b.panel ?? 0) || a.time - b.time,
   );
@@ -126,6 +197,7 @@ export async function guestCommentsPrompt(store: Store, baseUrl: string, review:
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
     if (a.panel?.caption) lines.push(`  - Panel caption: ${a.panel.caption}`);
     if (a.thumbnailPath) lines.push(`  - ${a.panel ? "Panel" : "Frame"}${a.position ? " with pin" : ""}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
+    lines.push(...voiceLines(a));
     lines.push(`  - Comment id: \`${c.id}\``);
   }
   lines.push("");
@@ -141,7 +213,7 @@ export async function feedbackPrompt(
   baseUrl: string,
   review: Review,
   comments: ReviewComment[],
-  opts: { message?: string } = {},
+  opts: { message?: string; url?: string } = {},
 ): Promise<string> {
   const latest = review.versions.at(-1)!;
   const storyboard = Boolean(latest.panels?.length);
@@ -153,7 +225,7 @@ export async function feedbackPrompt(
     latest.panels!.forEach((p, i) => lines.push(`  ${i + 1}. \`${p.sourcePath}\`${p.title ? ` — ${p.title}` : ""}`));
   }
   if (latest.videoPath) lines.push(`Render: \`${latest.videoPath}\``);
-  lines.push(`Review: ${reviewUrl(baseUrl, review.id)}`);
+  lines.push(`Review: ${opts.url ?? reviewUrl(baseUrl, review.id)}`);
   lines.push("");
   if (opts.message) {
     lines.push(`> ${opts.message.replace(/\n/g, "\n> ")}`, "");
@@ -170,12 +242,14 @@ export async function feedbackPrompt(
   for (const [i, c] of sorted.entries()) {
     const a = await toAgentComment(store, baseUrl, review, c);
     const ver = c.version !== latest.number ? ` (on v${c.version})` : "";
-    lines.push(`${i + 1}. **[${a.at}]**${ver}${c.author ? ` (guest ${c.author})` : ""} ${c.text}`);
+    lines.push(`${i + 1}. **[${a.at}]**${ver}${c.author ? ` (guest ${c.author})` : ""}${c.source === "live" ? " (on the live preview)" : ""} ${c.text}`);
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
+    if (c.element) lines.push(...describeElement(c.element));
     if (a.panel?.caption) lines.push(`  - Panel caption: ${a.panel.caption}`);
     if (a.spoken) lines.push(`  - Spoken in this range: “${a.spoken}”`);
     if (a.spokenAround) lines.push(`  - Spoken around then: “${a.spokenAround}”`);
     if (a.thumbnailPath) lines.push(`  - ${a.panel ? "Panel" : "Frame"}${a.position ? " with pin" : ""}: ${a.thumbnailUrl} (file: \`${a.thumbnailPath}\`)`);
+    lines.push(...voiceLines(a));
     lines.push(`  - Comment id: \`${c.id}\``);
   }
   lines.push("");
@@ -185,6 +259,23 @@ export async function feedbackPrompt(
       : "When done, re-render and call `add_version` (or `open_review` again) with the new render and a one-line `note` of what you changed. The new version starts with an empty comment list. Then call `wait_for_feedback` again.",
   );
   return lines.join("\n");
+}
+
+/** Lines for a comment made on the live preview: the element under the pin, its clip and the tweens on it. */
+export function describeElement(el: ElementInfo): string[] {
+  const lines = [`  - Element: \`${el.selector}\`${el.text ? ` with text ${JSON.stringify(el.text)}` : ""}`];
+  if (el.clip) {
+    const timing = el.clip.start !== undefined ? ` (data-start ${el.clip.start}${el.clip.duration ? `, duration ${el.clip.duration}` : ""})` : "";
+    lines.push(`  - Clip: \`${el.clip.selector}\`${timing}`);
+  }
+  for (const t of el.tweens.slice(0, 3)) {
+    const props = Object.entries(t.props)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(", ");
+    const which = t.relation === "active" ? "Active" : t.relation === "previous" ? "Previous" : "Next";
+    lines.push(`  - ${which} tween: ${t.targets.join(", ")} { ${props} } ${t.start.toFixed(2)}s to ${t.end.toFixed(2)}s${t.ease ? `, ease ${t.ease}` : ""}`);
+  }
+  return lines;
 }
 
 export function versionComments(review: Review, version: number): ReviewComment[] {

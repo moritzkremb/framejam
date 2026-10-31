@@ -18,11 +18,12 @@ afterEach(() => {
   host = null;
 });
 
-async function show(info: ShareInfo | undefined) {
+async function show(info: ShareInfo | undefined, shareSettings = false) {
   let changed: () => void = () => {};
   const data = {
     share: info ? vi.fn(async () => info) : undefined,
     setShare: vi.fn(async () => info!),
+    shareSettings,
     subscribe: vi.fn((_id: string, cb: () => void) => {
       changed = cb;
       return () => {};
@@ -35,6 +36,11 @@ async function show(info: ShareInfo | undefined) {
   await act(async () => {});
   return { data, changed: async () => act(async () => changed()) };
 }
+
+const openMenu = () =>
+  act(async () => {
+    host!.querySelector<HTMLElement>('[data-testid="share-status"]')!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, ctrlKey: false }));
+  });
 
 const text = () => host!.querySelector('[data-testid="share-status"]')?.textContent ?? null;
 
@@ -86,6 +92,27 @@ describe("the creator's share chip", () => {
     host?.remove();
     await show({ shared: true, closed: false, approved: { version: 2, by: "Anna", at: 1 }, opens: 5 });
     expect(text()).toBe("Approved by Anna");
+  });
+
+  it("offers the notes switch only where the link can take it, and flips it", async () => {
+    const info = { shared: true, url: "https://www.framejam.ai/v/t", closed: false, allowDownload: true, showNotes: false } as ShareInfo;
+    const s = await show(info, true);
+    await openMenu();
+    const item = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((el) => el.textContent?.includes("Show version notes"));
+    expect(item).toBeDefined();
+    await act(async () => {
+      item!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0 }));
+      item!.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, button: 0 }));
+      item!.click();
+    });
+    expect(s.data.setShare).toHaveBeenCalledWith("rev_1", { showNotes: true });
+  });
+
+  it("has no notes switch for a project that isn't in the cloud", async () => {
+    await show({ shared: true, url: "https://www.framejam.ai/v/t", closed: false, allowDownload: true } as ShareInfo);
+    await openMenu();
+    expect(document.body.textContent).toContain("Allow download");
+    expect(document.body.textContent).not.toContain("Show version notes");
   });
 
   it("reads the link again when the project changes", async () => {

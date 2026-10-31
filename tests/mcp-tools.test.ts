@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { decodeWaitCursor } from "../src/core/wait-cursor.ts";
 import { builtinPresetsDir } from "../src/server/paths.ts";
 import { connectClient, makeFixture, parse, samplePlaybook, writePlaybook, type ToolResult } from "./helpers.ts";
 
@@ -31,6 +32,7 @@ describe("tool registry", () => {
         "get_preset",
         "get_selected_playbook",
         "get_selected_preset",
+        "get_version",
         "list_playbooks",
         "list_presets",
         "list_reviews",
@@ -96,14 +98,69 @@ describe("open_review", () => {
 });
 
 describe("wait_for_feedback", () => {
-  it("returns pending when nothing is sent before the timeout", async () => {
+  it("returns waiting with a cursor when nothing is sent before the timeout", async () => {
     const { reviewId } = await open();
     const started = Date.now();
     const res = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
-    expect(res.status).toBe("pending");
+    expect(res.status).toBe("waiting");
     expect(Date.now() - started).toBeGreaterThanOrEqual(950);
     // Still "listening" through the gap until the agent's next call.
     expect(fx.store.agentListening(reviewId)).toBe(true);
+  });
+
+  it("gives the agent a spoken comment's transcript and one frame per pointing phrase", async () => {
+    const { reviewId } = await open();
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+    const c = fx.store.addComment(reviewId, {
+      time: 1.3,
+      x: 0.2,
+      y: 0.3,
+      text: "This logo is too small. And over here the subtitle needs contrast.",
+      voice: {
+        status: "transcribed",
+        duration: 6,
+        points: [
+          { phrase: "This", at: 0.5, time: 1.3, x: 0.2, y: 0.3 },
+          { phrase: "over here", at: 3.7, time: 4.2, drawn: true },
+        ],
+      },
+    });
+    fx.store.saveThumbnail(reviewId, c.id, jpeg);
+    fx.store.saveThumbnail(reviewId, c.id, jpeg, 0);
+    fx.store.saveThumbnail(reviewId, c.id, jpeg, 1);
+    fx.store.submit(reviewId, "");
+
+    const result = await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 5 });
+    const payload = parse(result);
+    expect(payload.comments).toHaveLength(1);
+    expect(payload.comments[0].voice.points).toHaveLength(2);
+    expect(payload.comments[0].voice.points[1]).toMatchObject({ phrase: "over here", at: "0:04.20", drawn: true });
+    const images = result.content.filter((x) => x.type === "image");
+    expect(images).toHaveLength(2);
+    const labels = result.content.filter((x) => x.type === "text" && x.text?.startsWith("Frame for “"));
+    expect(labels.map((x) => x.text)).toEqual([expect.stringContaining("“This”"), expect.stringContaining("“over here”")]);
+    const prompt = result.content[1].text!;
+    expect(prompt).toContain("Spoken comment (6s)");
+    expect(prompt).toContain("“This”");
+  });
+
+  it("resumes from the cursor of the last waiting result", async () => {
+    const { reviewId } = await open();
+    const first = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
+    expect(first.cursor).toMatch(/^wf1\./);
+    expect(decodeWaitCursor(first.cursor, reviewId)).toMatchObject({ r: reviewId, n: 1 });
+    const second = parse(await mcp.call("wait_for_feedback", { reviewId, cursor: first.cursor, timeoutSeconds: 1 }));
+    expect(second.status).toBe("waiting");
+    expect(decodeWaitCursor(second.cursor, reviewId)).toMatchObject({ n: 2, s: decodeWaitCursor(first.cursor, reviewId)!.s });
+    expect(second.waitedSeconds).toBeGreaterThanOrEqual(1);
+  });
+
+  it("starts over when the cursor is junk or from another project", async () => {
+    const { reviewId } = await open();
+    const res = parse(await mcp.call("wait_for_feedback", { reviewId, cursor: "nonsense", timeoutSeconds: 1 }));
+    expect(res.status).toBe("waiting");
+    expect(decodeWaitCursor(res.cursor, reviewId)).toMatchObject({ n: 1 });
+    expect(decodeWaitCursor(res.cursor, "rev_other")).toBeUndefined();
   });
 
   it("unblocks as soon as the user presses Send, with comments, pins and frames", async () => {
@@ -136,7 +193,7 @@ describe("wait_for_feedback", () => {
 
     // Delivered batches are not returned twice.
     const next = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
-    expect(next.status).toBe("pending");
+    expect(next.status).toBe("waiting");
   });
 
   it("quotes what was said when the version has a transcript", async () => {
@@ -167,7 +224,7 @@ describe("wait_for_feedback", () => {
     const { reviewId } = await open();
     const progress: number[] = [];
     const res = (await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }, { onprogress: (p) => progress.push(p.progress) })) as ToolResult;
-    expect(parse(res).status).toBe("pending");
+    expect(parse(res).status).toBe("waiting");
     expect(progress.length).toBeGreaterThan(0);
   });
 
@@ -527,5 +584,21 @@ describe("playbooks", () => {
   it("remembers the picks on the project", async () => {
     const opened = parse(await mcp.call("open_review", { title: "Rocket", videoPath: fx.video, playbookId: "test-cut", styleId: "bauhaus-grid" }));
     expect(fx.store.getReview(opened.reviewId)).toMatchObject({ playbookId: "test-cut", styleId: "bauhaus-grid" });
+  });
+});
+
+describe("cloud projects", () => {
+  it("returns the web app's address for a project that lives in the cloud", async () => {
+    const cloudMcp = await connectClient({ ...fx.ctx, reviewUrl: (id: string) => (id.startsWith("rev_") ? `https://app.example.com/p/${id}` : undefined) });
+    try {
+      const res = parse(await cloudMcp.call("open_review", { title: "Cloud cut", videoPath: fx.video }));
+      expect(res.url).toBe(`https://app.example.com/p/${res.reviewId}`);
+      const added = parse(await cloudMcp.call("add_version", { reviewId: res.reviewId, videoPath: fx.video }));
+      expect(added.url).toBe(`https://app.example.com/p/${res.reviewId}`);
+      const listed = parse(await cloudMcp.call("list_reviews", {}));
+      expect(listed.reviews[0].url).toBe(`https://app.example.com/p/${res.reviewId}`);
+    } finally {
+      await cloudMcp.close();
+    }
   });
 });

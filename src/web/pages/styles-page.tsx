@@ -123,6 +123,7 @@ export function StylesPage() {
         )}
         <PickBanner />
         <div>
+          <p className="fc-kicker">The look</p>
           <h1 className="fc-h1">Styles</h1>
           <p className="fc-lede">Looks for whatever your video is about. Name one when you ask your agent for a video, type /framejam:style to pick on a page, or copy a prompt from a style's page.</p>
         </div>
@@ -160,7 +161,9 @@ export function StylesPage() {
               </div>
             ) : visible.length === 0 ? (
               <div className="fc-empty">
-                <div className="fc-h3">No styles match</div>
+                <div className="fc-h3">
+                  No styles <em>match</em>
+                </div>
                 <button
                   type="button"
                   className="fc-btn"

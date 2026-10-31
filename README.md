@@ -45,8 +45,8 @@ you can always see what changed and why.
 until you share a version. The Styles and Playbooks pages stream their example videos from framejam.ai, the
 app downloads playbook updates from framejam.ai (see below), the **Feedback** button sends the note you write, and
 `framejam login` talks to FrameJam Cloud to sign you in; nothing else goes out. Sharing happens only when you run
-`framejam share` or ask your agent to share (its `share` option or `share_project`). See [Local is free and open
-source; FrameJam Cloud adds sharing](#local-is-free-and-open-source-framejam-cloud-adds-sharing).
+`framejam share` or ask your agent to share (its `share` option or `share_project`), and cloud projects exist only if you
+turn on `framejam cloud on`. See [FrameJam Cloud](#framejam-cloud).
 
 ## How it works
 
@@ -211,8 +211,8 @@ it hands out are reachable.
 [`skills/framejam/SKILL.md`](skills/framejam/SKILL.md) is the skill. The plugin ships it as `start` (so the command
 reads `/framejam:start`), next to `playbook` and `style`. Without the plugin, `npx skills add moritzkremb/framejam`
 installs it for most agents (there it's `/framejam`); you can also drop it into `AGENTS.md`. It walks the agent through: ask what to make → pick a preset →
-build with the project's tool → render → `open_review` → `wait_for_feedback` (and call it again while the result is
-`pending`, up to 12 times in a row, about 10 minutes) → edit → `add_version` with a note, until you say it's done. `.cursor/rules/framejam.mdc` is the same text
+build with the project's tool → render → `open_review` → `wait_for_feedback` (and call it again with its `cursor`
+while the result is `waiting`, for about 10 minutes in total) → edit → `add_version` with a note, until you say it's done. `.cursor/rules/framejam.mdc` is the same text
 as a Cursor rule; regenerate it with `npm run sync:rule` after editing the skill.
 
 </details>
@@ -221,19 +221,23 @@ as a Cursor rule; regenerate it with `npm run sync:rule` after editing the skill
 
 ```bash
 npm start                 # terminal 1
-npm run e2e               # terminal 2 — plays the agent: picks a preset, opens a review, blocks on wait_for_feedback
+npm run e2e               # terminal 2: plays the agent, picks a preset, opens a review, blocks on wait_for_feedback
 ```
 
 Open the printed review URL, add a few comments and press **Finish review**. The script prints what the agent
 received, then posts v2, and you can watch the page move to it live. `npx tsx scripts/ui-demo.ts` does the browser
 side automatically (headless Chrome) and saves screenshots.
 
-## Local is free and open source; FrameJam Cloud adds sharing
+## FrameJam Cloud
 
 Everything above runs on your computer, costs nothing and needs no account: styles, playbooks, reviewing your own
-renders and storyboards, and the agent loop. That stays free and open source. **FrameJam Cloud** is an optional add-on for
-the one thing a single machine can't do: letting someone else, such as a client or a teammate, review your video from a
-link. Sharing is free while it's in beta; plans and limits come later, and guests are always free.
+renders and storyboards, and the agent loop. That stays free and open source. **FrameJam Cloud** is an optional add-on
+for what one computer can't do: let a client review your video from a link, keep projects in your account so any device
+and any agent can pick them up, and connect agents that can't run FrameJam on your computer. Share links are free on
+every plan while they're in beta. Cloud projects and connecting by URL are part of Pro
+([pricing](https://www.framejam.ai/pricing)). Guests are always free.
+
+### Share a project with a client
 
 ```bash
 npx -y framejam login               # sign in once: it prints a code and opens your browser
@@ -249,6 +253,12 @@ signs you out.
 a spot in the frame (with a drawing), on a range of the timeline or on the whole video, or on a storyboard panel. Typing a
 comment pauses the video and stamps the frame. They give a name and email once, with their first comment or approval,
 and **Send** their comments together. Their email is only used for notifications and is never shown on the page.
+
+**Voice comments.** Guests can press **Voice** next to the comment box and talk while they scrub, point or draw. The
+recording is transcribed, and words like "this" and "over here" link to the frame that was on screen when they were said.
+Your agent gets the transcript plus one frame image per pointing phrase, with the pin and drawing on it. The audio goes
+to FrameJam Cloud and its transcription service, and is kept even when a transcript isn't available ("Transcription
+pending"). Typing stays the default; nothing records until a guest presses the button.
 
 **Comments reach your agent through you.** Guests' comments land in your project as drafts, marked with who wrote them,
 within about 30 seconds (while the FrameJam app is running). Your agent is told they're there, tells you what the
@@ -274,15 +284,76 @@ comment sync; with an older cloud it's simply left out.
 **Emails.** Guests who left their email get a note when you share a new version. You get an email when a guest
 approves, and a digest of new comments (one email for a batch, not one per comment). Every email has an unsubscribe link.
 
-**Agent tools.** `share_project` puts a version on the link and sets its expiry, revoke and download switch.
+**Agent tools.** `share_project` puts a version on the link and sets its expiry, revoke, download and notes switches.
 `list_share_links` lists the projects that have a link, which versions are on it, whether it's closed, approvals,
 opens and the guest comments waiting for you. It reads your computer, so it works offline. Both are in the MCP
 tools list under **The review page**.
 
-**What stays local.** Your projects, comments, styles and playbooks stay in `~/.framejam`. Nothing is uploaded until
-you run `framejam share` or ask your agent to share, and then it is only the version you picked (its render, or a
-storyboard's panels, plus a poster frame) and the guests' comments on it. Your login token is in
-`~/.framejam/auth.json`. Turn a link off to stop sharing it; nothing else is sent to FrameJam Cloud. The cloud's own code isn't part of this repo.
+### Cloud projects
+
+```bash
+npx -y framejam cloud on    # new projects go to your FrameJam Cloud account
+npx -y framejam cloud off   # new projects stay on this computer again
+```
+
+With cloud mode on, new projects live in your account instead of `~/.framejam`: the project, its versions, comments and
+resolved state. Your agent works the same way (`open_review`, `wait_for_feedback`, `add_version`, `resolve_comments`),
+and the link it gives you opens your project page on app.framejam.ai, signed in, on a computer or a phone. Each
+version uploads in the background; the page shows an upload bar until it plays. Running apps and agents follow
+`cloud on` and `cloud off` without a restart, and `framejam cloud` shows which mode you're in. Projects you already have
+stay on your computer, and cloud projects stay in your account when you turn it off. Cloud mode needs
+`framejam login`; signed out, projects stay local.
+
+**The project page.** Everything the local review page has, plus a side-by-side compare of two versions (in sync or one
+at a time), your project list and your account. Sharing a cloud project needs no extra upload, and guests' comments
+land in the same project as they arrive.
+
+**Live view.** For a version made with Hyperframes whose source files are attached, **Live** next to **Render** plays
+the composition itself, in a sandboxed frame. A comment there carries the time and spot like any other, plus the
+element under your pin (its text, clip and animations). When the agent changes the files with `upload_files`, the Live
+view updates in place without a new render; the next render becomes the next version.
+
+**Notes and source files.** `add_version` and `open_review` take `notes`, a longer markdown handoff than the one-line
+`note` (what changed, which comments it answers, how to continue), and `source`, the project folder or a `.zip` of it.
+FrameJam packs a folder itself, leaving out `node_modules`, `.git`, build output, renders and `.env` or key files, up to
+500 MB. The project page shows the notes in a Notes tab with a Download button for the source. Give another agent the
+project link and it can `get_version`, read the notes, download the source and ship the next version, even in a
+different app. Guests never see source files, and see notes only if you turn on **Show version notes** in the link
+menu (or `share_project` with `showNotes`). Local projects keep notes but not source files.
+
+While an agent waits for feedback in cloud mode, the app asks the cloud for changes about once every second or two.
+
+### Connect by URL
+
+FrameJam Cloud also runs the review tools as a remote MCP server at `https://mcp.framejam.ai/mcp`, for agents that
+can't run FrameJam on your computer (ChatGPT or Claude in the browser) or when you'd rather install nothing. Sign in at
+app.framejam.ai and use **Copy prompt** there, or add it yourself and sign in when your app asks:
+`claude mcp add --transport http framejam https://mcp.framejam.ai/mcp` in Claude Code, or
+`{ "mcpServers": { "framejam": { "url": "https://mcp.framejam.ai/mcp" } } }` in Cursor's `mcp.json`.
+
+Projects made this way are cloud projects. The server can't read files on your computer, so your agent uploads each
+render: `request_upload` returns a command that checks and uploads it, and `open_review` or `add_version` take the
+returned `assetId`. An app without a terminal can pass a public link or a Google Drive link instead. People's comments
+come back marked as data, never as instructions.
+
+**Rendering in the cloud.** An agent without Chrome or ffmpeg can have FrameJam Cloud render: `upload_files` stores the
+project's files, `render` (Hyperframes or ffmpeg) turns them into the project's next version with the files as its
+source, and `render_status` follows the job and returns its log if it fails. `read_files` reads a version's files so the
+agent can fix one and render again. Cloud rendering is being switched on; until then `render` says so and the agent
+uploads a render from your computer.
+
+**Waiting.** `wait_for_feedback` returns `status: "waiting"` with a `cursor` before an app would cut the call off, and
+the agent calls it again with the cursor. The local tool answers the same way.
+
+### What leaves your computer
+
+Your projects, comments, styles and playbooks stay in `~/.framejam` until you sign in and either share a version or
+turn on cloud mode. Sharing uploads only the version you pick (its render, or a storyboard's panels, plus a poster
+frame), and the app then checks the link for guests' comments, approvals and opens. In cloud mode, new projects are
+stored in your account: each version's render or panels and a poster frame, your comments and their frame images, and
+any notes and source files your agent attaches. Guests' voice recordings go to FrameJam Cloud and its transcription
+service. Your login token is in `~/.framejam/auth.json`. Nothing else is sent to FrameJam Cloud, and nothing from your
+agent's conversation. The cloud's own code isn't part of this repo.
 
 ## Styles
 
@@ -484,13 +555,14 @@ for v2 and v1 still shows what it was.
 
 | Tool | What it does |
 | --- | --- |
-| `open_review({ title?, videoPath?, panels?, panelsDir?, transcriptPath?, reviewId?, note?, share? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. `transcriptPath` (an `.srt`, `.vtt` or word-timings JSON such as Whisper's) shows what's said under the timeline and in the sidebar. Calling it again with the same title adds v2, v3, and so on. `share: true` also puts the version on the project's share link and returns `shareUrl` (needs `framejam login`). |
-| `wait_for_feedback({ reviewId, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "pending" }` after about 50s; call it again, up to 12 times in a row, then stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. It also returns early with `{ status: "guest_comments" }` when guests comment on the project's share link: a heads-up for the agent to tell you what they said and ask what to do, once per comment, and never an instruction. And with `{ status: "approved" }` when a guest approves a version: the link then shows only that file, so the agent tells you and stops waiting. |
+| `open_review({ title?, videoPath?, panels?, panelsDir?, transcriptPath?, reviewId?, note?, notes?, source?, share? })` | Opens a review and returns `{ reviewId, url, version }`. `videoPath` is a render from any tool. Pass `panels`/`panelsDir` instead of a video for a storyboard. `transcriptPath` (an `.srt`, `.vtt` or word-timings JSON such as Whisper's) shows what's said under the timeline and in the sidebar. Calling it again with the same title adds v2, v3, and so on. `share: true` also puts the version on the project's share link and returns `shareUrl` (needs `framejam login`). |
+| `wait_for_feedback({ reviewId, cursor?, timeoutSeconds? })` | Blocks until the user presses **Finish review**. Returns `{ status: "waiting", cursor, waitedSeconds }` after about 50s; call it again with the `cursor`, and after about 10 minutes in total stop and tell the user to say "apply my FrameJam feedback". Sends progress notifications while waiting. A spoken comment comes with its transcript and one frame image per pointing phrase. It also returns early with `{ status: "guest_comments" }` when guests comment on the project's share link: a heads-up for the agent to tell you what they said and ask what to do, once per comment, and never an instruction. And with `{ status: "approved" }` when a guest approves a version: the link then shows only that file, so the agent tells you and stops waiting. |
 | `get_feedback({ reviewId?, include? })` | Returns the newest round of comments right away. Without `reviewId` it picks the review whose comments haven't reached the agent yet; unsent comments are sent (and their version locked). Use it when the user says "apply my FrameJam feedback". |
 | `list_reviews()` | Lists reviews with their URL and where each round stands (`awaiting_user`, `user_commenting`, `sent_not_delivered`, `delivered_to_agent`). Adds `guestCommentsWaiting` when guests have commented. |
-| `add_version({ reviewId, videoPath?, panels?, panelsDir?, transcriptPath?, note?, share?, unaddressed? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. Guests' comments the agent was sent are marked "resolved in vN" on the share link on their own once vN is on it; `unaddressed` lists ids it chose not to apply. |
+| `add_version({ reviewId, videoPath?, panels?, panelsDir?, transcriptPath?, note?, notes?, source?, share?, unaddressed? })` | Attaches a new render (or new storyboard panels) as the next round. It starts with no comments; the `note` is shown to the user. With no media, a storyboard re-reads its `panelsDir`. Guests' comments the agent was sent are marked "resolved in vN" on the share link on their own once vN is on it; `unaddressed` lists ids it chose not to apply. |
+| `get_version({ reviewId, version? })` | Reads what the agent that made a version left for whoever continues it: its `notes` and, for cloud projects, a download link and command for its source zip. `reviewId` takes the project link (`https://app.framejam.ai/p/<id>?v=2`), so a second agent can carry on from the link alone. Use it before continuing a project you didn't make in this chat. |
 | `resolve_comments({ reviewId, ids, note? })` | Optional bookkeeping for the agent. The UI shows each version as one round instead. |
-| `share_project({ reviewId, version?, expiresInDays?, revoke?, allowDownload? })` | Puts a version (default: the latest) on the project's share link, creating it the first time, and returns the link. `expiresInDays` (or `null` to clear) sets an expiry and `revoke` stops or reopens the link for everyone; `allowDownload` switches the one download an approved link offers (default on); with only those, nothing is uploaded. Needs `framejam login`. |
+| `share_project({ reviewId, version?, expiresInDays?, revoke?, allowDownload?, showNotes? })` | Puts a version (default: the latest) on the project's share link, creating it the first time, and returns the link. `expiresInDays` (or `null` to clear) sets an expiry and `revoke` stops or reopens the link for everyone; `allowDownload` switches the one download an approved link offers (default on); `showNotes` lets guests read each version's notes (cloud projects, default off); with only those, nothing is uploaded. Needs `framejam login`. |
 | `list_share_links()` | Lists the projects that have a link: the link, which versions are on it, whether it's closed, approvals (and whether the link is approved and offers a download), how many times the link was opened (once per visitor a day, you included) and when last, and guest comments waiting. Reads this computer. |
 | `list_presets({ mood?, pacing?, format?, query? })` | Lists the style presets. |
 | `get_preset({ id, includeTemplate? })` | Returns the look (`style.json` and its guide of look rules), what the example video shows, and the example's file list. `includeTemplate: true` adds the example's source. |
@@ -521,10 +593,11 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam cloud on|off` keeps new projects in FrameJam Cloud or on this computer (`src/server/cloud-mode.ts`, `cloud-store.ts`, `app-store.ts`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/core/` | Code that runs anywhere (no Node or filesystem): shared types, playbook display helpers, feedback formatting, the MCP tool definitions (`mcp.ts`, given a store and base URL) and the `Store` interface (`store.ts`: everything FrameJam keeps, such as projects, comments, picks, state, styles and playbooks). |
 | `src/server/mcp.ts` | The core MCP tools with this computer's skill version. |
 | `src/server/json-store.ts` | `JsonStore`, the JSON file implementation of `Store`. Every call re-reads from disk, so several processes can share `~/.framejam`. |
+| `src/server/cloud-store.ts` | `CloudStore`, the `Store` for cloud mode: projects, versions, comments and resolve state in FrameJam Cloud, files cached locally and uploaded in the background. `src/server/app-store.ts` routes each project to it or to `JsonStore`. |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). |
 | `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
@@ -536,7 +609,8 @@ Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_H
 `FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), `FRAMEJAM_PLAYBOOK_PREVIEW_URL` (the
 same for the Playbooks page), `FRAMEJAM_CATALOG_URL` (where playbook and style updates come from; `off` turns them off, see
 [docs/catalog.md](docs/catalog.md)), `FRAMEJAM_CLOUD_URL` / `FRAMEJAM_CONVEX_URL` (FrameJam Cloud Convex URL, default
-`https://mellow-dalmatian-42.convex.cloud`; used by `framejam login` and `framejam share`), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and
+`https://mellow-dalmatian-42.convex.cloud`; used by `framejam login`, `framejam share` and cloud mode), `FRAMEJAM_APP_URL`
+(where cloud project pages live, default `https://app.framejam.ai`), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and
 model for transcripts, when they aren't found on their own), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't look for a newer
 version on npm or for playbook updates).
 

@@ -1,7 +1,10 @@
 import { Loader2, MessageSquarePlus, Plus, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import type { ElementInfo } from "@/lib/api";
+import { connectLivePreview } from "@/lib/live-preview";
 import { drawPin } from "@/lib/pin";
 import { cn, crossOriginFor } from "@/lib/utils";
+import { blockedByCors, corsMessage } from "@/lib/video-cors";
 
 export interface MediaController {
   duration: number;
@@ -15,6 +18,8 @@ export interface MediaController {
   setRate(rate: number): void;
   /** The current frame as a JPEG data URL, with a pin drawn at `pin` (normalized) when given. */
   captureFrame(pin?: { x: number; y: number }): string | undefined;
+  /** Live preview only: the element under a normalized point at `time`. */
+  resolveAt?(x: number, y: number, time: number): Promise<ElementInfo | undefined>;
 }
 
 export interface Pin {
@@ -39,6 +44,12 @@ export interface FloatingNote {
 
 interface PlayerProps {
   src: string;
+  /** Plays this live composition preview in a sandboxed iframe instead of the video at `src`. */
+  liveSrc?: string;
+  /** The live preview couldn't play; the page goes back to the render. */
+  onLiveError?(message: string): void;
+  /** Outline of the element the new comment is about, on the live preview. */
+  target?: ElementInfo["rect"] | null;
   /** Pins for the comments at the current time; the page decides which ones are in view. */
   pins: Pin[];
   floating: FloatingNote[];
@@ -113,22 +124,52 @@ function useFitBox(aspect: number) {
 }
 
 /** The video well: footage on black, comment pins on top. Clicking the picture is the main way to comment. */
-export function Player({ src, pins, floating, newPin, selectedId, showHint, interactive, className, style, onController, onFrameClick, onPinClick, onFrameWidth, children, errorMessage }: PlayerProps) {
+export function Player({ src, liveSrc, onLiveError, target, pins, floating, newPin, selectedId, showHint, interactive, className, style, onController, onFrameClick, onPinClick, onFrameWidth, children, errorMessage }: PlayerProps) {
   const [native, setNative] = useState({ width: 1920, height: 1080 });
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
   const { ref, box } = useFitBox(native.width / native.height);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const onControllerRef = useRef(onController);
+  const onLiveErrorRef = useRef(onLiveError);
   useLayoutEffect(() => {
     onControllerRef.current = onController;
+    onLiveErrorRef.current = onLiveError;
   });
 
   useEffect(() => {
     setStatus("loading");
     setError(null);
     return () => onControllerRef.current(null);
-  }, [src]);
+  }, [src, liveSrc]);
+
+  // The frame says when the composition is ready, so listen before it loads rather than on its load event.
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!liveSrc || !iframe) return;
+    let live: Awaited<ReturnType<typeof connectLivePreview>> | null = null;
+    let gone = false;
+    connectLivePreview(iframe).then(
+      (p) => {
+        if (gone) return p.dispose();
+        live = p;
+        setNative({ width: p.width, height: p.height });
+        setStatus("ready");
+        onControllerRef.current({ ...p, captureFrame: () => undefined });
+      },
+      (e: Error) => {
+        if (gone) return;
+        setStatus("error");
+        setError(e.message);
+        onLiveErrorRef.current?.(e.message);
+      },
+    );
+    return () => {
+      gone = true;
+      live?.dispose();
+    };
+  }, [liveSrc]);
 
   const handleVideoMeta = useCallback(() => {
     const v = videoRef.current;
@@ -146,20 +187,42 @@ export function Player({ src, pins, floating, newPin, selectedId, showHint, inte
     <div className={cn("fc-player", className)} style={style}>
       <div ref={ref} className="fc-player-fit">
         <div className="frame" style={{ width: box.width || "100%", height: box.height || "100%" }}>
-          <video
-            key={src}
-            ref={videoRef}
-            src={src}
-            crossOrigin={crossOriginFor(src)}
-            className="fc-media"
-            preload="auto"
-            playsInline
-            onLoadedMetadata={handleVideoMeta}
-            onError={() => {
-              setStatus("error");
-              setError(errorMessage ?? "This video couldn't be loaded. If the file was moved or deleted, ask your agent to add the render again.");
-            }}
-          />
+          {liveSrc ? (
+            <div className="fc-live">
+              <iframe
+                key={liveSrc}
+                ref={iframeRef}
+                src={liveSrc}
+                title="Live preview"
+                sandbox="allow-scripts"
+                allow="autoplay"
+                referrerPolicy="no-referrer"
+                tabIndex={-1}
+                style={{ width: native.width, height: native.height, transform: `scale(${box.width ? box.width / native.width : 0})` }}
+              />
+            </div>
+          ) : (
+            <video
+              key={src}
+              ref={videoRef}
+              src={src}
+              crossOrigin={crossOriginFor(src)}
+              className="fc-media"
+              preload="auto"
+              playsInline
+              onLoadedMetadata={handleVideoMeta}
+              onError={() => {
+                setStatus("error");
+                setError(errorMessage ?? "This video couldn't be loaded. If the file was moved or deleted, ask your agent to add the render again.");
+                const failed = src;
+                if (crossOriginFor(failed)) {
+                  void blockedByCors(failed).then((blocked) => {
+                    if (blocked && videoRef.current?.getAttribute("src") === failed) setError(corsMessage());
+                  });
+                }
+              }}
+            />
+          )}
 
           <div
             data-testid="frame-overlay"
@@ -187,6 +250,12 @@ export function Player({ src, pins, floating, newPin, selectedId, showHint, inte
                 {p.index}
               </button>
             ))}
+            {target && (
+              <span
+                className="fc-target"
+                style={{ left: `${target.x * 100}%`, top: `${target.y * 100}%`, width: `${target.width * 100}%`, height: `${target.height * 100}%` }}
+              />
+            )}
             {newPin && (
               <span className="fc-pin new" style={{ left: `${newPin.x * 100}%`, top: `${newPin.y * 100}%` }}>
                 <Plus className="fc-i" />

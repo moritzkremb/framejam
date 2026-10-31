@@ -12,6 +12,7 @@ import type {
   ReviewComment,
   ReviewVersion,
   VideoPick,
+  VoiceComment,
 } from "./types.ts";
 import type { Transcript } from "./transcript.ts";
 
@@ -39,6 +40,17 @@ export interface MediaInput {
   panelsDir?: string;
   /** A transcript of the video (.srt, .vtt or word-timings JSON). Videos only. */
   transcriptPath?: string;
+  /** Handoff notes for the version: what changed, which comments it answers, how to continue (markdown). */
+  notes?: string;
+  /** The project folder (packed for you) or a zip of it, for another agent to continue from. Cloud projects only. */
+  source?: string;
+}
+
+/** What a version's source download needs: a short-lived URL, the file name and its size. */
+export interface SourceDownload {
+  url: string;
+  filename: string;
+  bytes: number;
 }
 
 export interface OpenReviewInput extends MediaInput {
@@ -63,6 +75,8 @@ export interface NewCommentInput {
   cloudId?: string;
   /** The version the guest was looking at, when the comment is added to a later one. */
   fromVersion?: number;
+  /** A spoken comment from a share link: `text` is its transcript. Point frames are saved with `saveThumbnail(…, point)`. */
+  voice?: VoiceComment;
 }
 
 export interface AppState {
@@ -144,6 +158,8 @@ export interface Store {
    * Unsent comments on the previous version move to the new one.
    */
   addVersion(reviewId: string, input: MediaInput & { note?: string }): MaybePromise<Review>;
+  /** A short-lived download of a version's source zip (H2.6), or undefined when the version has none or this store keeps none. */
+  sourceFor(reviewId: string, version: number): MaybePromise<SourceDownload | undefined>;
   /** Remembers the playbook and style picked for a project. `null` clears one, `undefined` leaves it. */
   setReviewPicks(reviewId: string, picks: PicksChoice): MaybePromise<Review>;
 
@@ -163,8 +179,11 @@ export interface Store {
   updateComment(reviewId: string, commentId: string, patch: { text?: string; thumbnail?: string }): MaybePromise<ReviewComment>;
   /** Deletes a draft comment and its frame image. */
   deleteComment(reviewId: string, commentId: string): MaybePromise<void>;
-  /** Saves a comment's frame image and links it to the comment. Returns the image's file name. */
-  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array): MaybePromise<string>;
+  /**
+   * Saves a comment's frame image and links it to the comment. Returns the image's file name. With `point`, it is the
+   * frame of that pointing phrase in a spoken comment (an index into `voice.points`) instead of the comment's own.
+   */
+  saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array, point?: number): MaybePromise<string>;
   /** A frame image by file name: its path, undefined when it doesn't exist, null when the name points outside the review. */
   thumbnailFile(reviewId: string, file: string): MaybePromise<string | null | undefined>;
   readThumbnail(reviewId: string, file: string): MaybePromise<Uint8Array | undefined>;

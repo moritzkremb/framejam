@@ -54,6 +54,7 @@
     "build": "tsc -b && vite build && tsup",
     "build:share": "vite build --config vite.share.config.ts",
     "dev:share": "vite --config vite.share.config.ts",
+    "build:creator": "vite build --config vite.creator.config.ts",
     "start": "node dist/server/cli.js",
     "typecheck": "tsc -b",
     "lint": "oxlint src tests scripts",
@@ -77,6 +78,7 @@
   "devDependencies": {
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",

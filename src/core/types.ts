@@ -2,6 +2,57 @@ export type CommentStatus = "draft" | "sent" | "resolved";
 /** `panel`: about one storyboard panel as a whole, without a pinned spot. */
 export type CommentKind = "pin" | "range" | "panel" | "general";
 
+/** A pointing phrase in a spoken comment ("this", "over here") and the frame the reviewer was showing when they said it. */
+export interface VoicePoint {
+  phrase: string;
+  /** Seconds into the recording when it was said. */
+  at: number;
+  /** Seconds into the video. */
+  time: number;
+  /** Normalized (0-1) pin position on the frame, when the reviewer had pinned one. */
+  x?: number;
+  y?: number;
+  /** The frame image, with any pin and drawing on it: a file name in the review's thumbs folder, or a URL on a shared link. */
+  frame?: string;
+  /** The reviewer drew on the frame. */
+  drawn?: boolean;
+}
+
+/** What a spoken comment adds to its `text` (the verbatim transcript, or a note that there isn't one). */
+export interface VoiceComment {
+  /** `pending`: no transcription service was set up when it was sent. `failed`: the service couldn't read it. */
+  status: "transcribed" | "pending" | "failed";
+  /** Seconds. */
+  duration?: number;
+  /** The recording, on the share link. */
+  audioUrl?: string;
+  /** Why there's no transcript, in words fit to show. */
+  note?: string;
+  /** Pointing phrases in the order they were said. */
+  points: VoicePoint[];
+}
+
+export interface TweenInfo {
+  targets: string[];
+  start: number;
+  end: number;
+  ease?: string;
+  props: Record<string, string | number | boolean>;
+  relation: "active" | "previous" | "next";
+}
+
+/** What was under a pin on the live composition preview: the element, its Hyperframes clip and its GSAP tweens. */
+export interface ElementInfo {
+  selector: string;
+  tagName: string;
+  text?: string;
+  /** Normalized (0-1) bounding box of the element inside the frame. */
+  rect?: { x: number; y: number; width: number; height: number };
+  /** Nearest Hyperframes clip (`[data-start]`) containing the element. */
+  clip?: { selector: string; start?: string; duration?: string; trackIndex?: string };
+  tweens: TweenInfo[];
+}
+
 export interface ReviewComment {
   id: string;
   version: number;
@@ -29,6 +80,11 @@ export interface ReviewComment {
   cloudId?: string;
   /** A guest's comment was written on this earlier version; it sits on the latest one. */
   fromVersion?: number;
+  /** Spoken, not typed: `text` is the transcript. */
+  voice?: VoiceComment;
+  /** Written on the live composition preview (FrameJam Cloud) instead of the render. */
+  source?: "live";
+  element?: ElementInfo;
 }
 
 /** One storyboard panel: a still image plus optional words about the shot. */
@@ -69,6 +125,10 @@ export interface ReviewVersion {
   /** Without `sourcePath`, FrameJam transcribed the render itself. */
   transcript?: { file: string; sourcePath?: string; words: number };
   note?: string;
+  /** Handoff notes (H2.6): what changed, which comments it answers, how to continue the project. */
+  notes?: string;
+  /** The project's source files for another agent to continue from. Cloud projects only. */
+  source?: VersionSource;
   createdAt: string;
   /** Set when the user pressed Send on this version. A sent version is locked: no new or edited comments. */
   sentAt?: string;
@@ -76,6 +136,28 @@ export interface ReviewVersion {
   batchId?: string;
   /** Set when the user reopened this version after the agent already received its comments. */
   reopenedFrom?: string;
+  /** Cloud projects only: where the version's files are on their way to FrameJam Cloud. Left out once they're there. */
+  upload?: VersionUpload;
+  /**
+   * Cloud projects only: the composition in `source`, playable in a sandboxed iframe on another origin. `edits` counts
+   * the files the agent sent since the render, which the preview already shows.
+   */
+  preview?: { url: string; edits: number };
+}
+
+/** A version's source zip (H2.6). `ready` once it is in FrameJam Cloud and can be downloaded. */
+export interface VersionSource {
+  filename: string;
+  bytes: number;
+  ready: boolean;
+}
+
+export interface VersionUpload {
+  state: "uploading" | "failed";
+  /** Bytes sent so far, and bytes in all. */
+  bytes: number;
+  total: number;
+  error?: string;
 }
 
 export interface FeedbackBatch {
@@ -106,6 +188,8 @@ export interface Review {
   agentListening?: boolean;
   /** The agent's FrameJam process started before the current build, so it may lack newer features (like the listening heartbeat). */
   agentOutdated?: boolean;
+  /** Computed by the API, not stored: this project lives in FrameJam Cloud. */
+  cloud?: boolean;
 }
 
 /** The agent harness that last connected over MCP (from the MCP `initialize` client info). */

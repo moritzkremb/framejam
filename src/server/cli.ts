@@ -9,11 +9,13 @@ import { createMcpServer } from "./mcp.ts";
 import { type CatalogClient, catalogConfig, catalogStatus, startCatalog } from "./catalog.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
 import { login, logout, shouldOpenBrowser, whoami } from "./login.ts";
+import { AppStore } from "./app-store.ts";
+import { readAuth } from "./auth.ts";
+import { cloudModeOn, setCloudMode } from "./cloud-mode.ts";
 import { describeShare, findProject, shareVersion, startSharePuller } from "./share.ts";
-import { DEFAULT_CLOUD_URL } from "./cloud.ts";
+import { DEFAULT_CLOUD_URL, cloudReviewUrl } from "./cloud.ts";
 import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
-import type { Store } from "../core/store.ts";
 import { VERSION, compareVersions } from "./version.ts";
 
 const HELP = `framejam — review videos and storyboards from your coding agent, and pick style presets, over MCP
@@ -27,6 +29,7 @@ Usage:
   framejam logout           Sign out of FrameJam Cloud
   framejam whoami           Show the signed-in FrameJam Cloud account
   framejam share <project>  Put a project's latest version on its share link and pull in guests' comments
+  framejam cloud on|off     Keep new projects in FrameJam Cloud (on) or on this computer (off); "cloud" alone shows which
 
 Options:
   --port <n>        HTTP port (default ${DEFAULT_PORT}, env FRAMEJAM_PORT)
@@ -209,7 +212,36 @@ if (positionals[0] === "whoami") await finish(await whoami());
 if (positionals[0] === "start") await start();
 if (positionals[0] === "install") await runInstall();
 
-const store: Store = new JsonStore();
+/** `framejam cloud [on|off|status]`: whether new projects live in FrameJam Cloud. Running apps notice on their own. */
+async function runCloud(): Promise<never> {
+  const action = positionals[1] ?? "status";
+  const root = dataDir();
+  if (action === "on") {
+    if (!readAuth(root)) return await finish({ ok: false, text: "Sign in first: framejam login" });
+    const who = await whoami();
+    if (!who.ok) return await finish({ ok: false, text: `Couldn't confirm your FrameJam Cloud account (${who.text}). Run framejam login.` });
+    setCloudMode(true, root);
+    const local = fs.existsSync(path.join(root, "reviews")) ? fs.readdirSync(path.join(root, "reviews")).filter((f) => f.endsWith(".json")).length : 0;
+    return await finish({
+      ok: true,
+      text: `Cloud mode is on for ${who.text}.\nNew projects are made in FrameJam Cloud, and their videos upload in the background.\n${local ? `Your ${local} existing project${local === 1 ? "" : "s"} stay on this computer.\n` : ""}Open FrameJam apps pick this up by themselves.`,
+    });
+  }
+  if (action === "off") {
+    const wasOn = cloudModeOn(root);
+    setCloudMode(false, root);
+    return await finish({ ok: true, text: wasOn ? "Cloud mode is off. New projects stay on this computer. What you made in cloud mode is still in your account: turn it on again to open it." : "Cloud mode is off." });
+  }
+  if (action === "status") {
+    if (!cloudModeOn(root)) return await finish({ ok: true, text: "Cloud mode is off. New projects stay on this computer. Turn it on with: framejam cloud on" });
+    const who = readAuth(root) ? await whoami() : undefined;
+    return await finish({ ok: true, text: who?.ok ? `Cloud mode is on for ${who.text}.` : "Cloud mode is on, but you're signed out, so projects stay on this computer for now. Run: framejam login" });
+  }
+  return await finish({ ok: false, text: "Usage: framejam cloud on | off | status" });
+}
+if (positionals[0] === "cloud") await runCloud();
+
+const store = new AppStore(new JsonStore());
 
 /** `framejam share <project>`: uploads a version to the project's link and pulls in what guests wrote. */
 async function runShare(): Promise<never> {
@@ -229,7 +261,17 @@ async function runShare(): Promise<never> {
 if (positionals[0] === "share") await runShare();
 const catalogSettings = catalogConfig();
 let catalogClient: CatalogClient | undefined;
-const ctx = { store, baseUrl, catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient) };
+const ctx = { store, baseUrl, reviewUrl: async (id: string) => ((await store.isCloud(id)) ? cloudReviewUrl(id) : undefined), catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient) };
+
+/** Cloud mode at startup: says if it's on but signed out, and finishes uploads a stopped app left half-done. */
+function startCloud() {
+  if (store.cloudSignedOut) log("framejam: cloud mode is on but you're signed out, so projects stay on this computer. Run: framejam login");
+  store
+    .cloud()
+    ?.resumeUploads()
+    .then((n) => n && log(`framejam: finishing ${n} upload${n === 1 ? "" : "s"} to FrameJam Cloud`))
+    .catch(() => {});
+}
 
 function startHttp(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -253,7 +295,10 @@ if (stdio) {
   const transport = new StdioServerTransport();
   await createMcpServer(ctx).connect(transport);
   catalogClient = startCatalog(catalogDir(store.root), log, catalogSettings);
-  if (await startHttp()) startSharePuller(store, log);
+  if (await startHttp()) {
+    startSharePuller(store, log);
+    startCloud();
+  }
   else {
     const updated = await replaceOlderUI();
     if (updated) {
@@ -276,4 +321,5 @@ if (stdio) {
   }
   catalogClient = startCatalog(catalogDir(store.root), log, catalogSettings);
   startSharePuller(store, log);
+  startCloud();
 }

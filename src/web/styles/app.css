@@ -6,7 +6,7 @@ button { cursor: pointer; }
 img, video, svg { display: block; }
 h1, h2, h3, p, ol, ul, dl, figure { margin: 0; }
 a { color: inherit; }
-::selection { background: var(--accent-soft); }
+::selection { background: var(--accent); color: var(--on-accent); }
 
 /* Chromium ignores ::-webkit-scrollbar on any element with scrollbar-width/-color set, so those stay Firefox-only. */
 ::-webkit-scrollbar { width: 12px; height: 12px; }
@@ -364,6 +364,12 @@ a { color: inherit; }
 .fc-player .frame { position: relative; aspect-ratio: auto; height: auto; overflow: hidden; cursor: default; border-radius: var(--radius-lg); background: var(--video); box-shadow: 0 0 0 1px var(--border); }
 .fc-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--video); }
 .fc-overlay { position: absolute; inset: 0; }
+/* The live preview: the composition at its own size, scaled into the frame. Clicks go to the overlay above it. */
+.fc-live { position: absolute; inset: 0; overflow: hidden; background: var(--video); }
+.fc-live iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; background: transparent; }
+.fc-target { position: absolute; border: 1.5px solid var(--accent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); pointer-events: none; animation: fc-fade .15s ease-out; }
+.fc-source { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-height: 32px; }
+.fc-source .note { color: var(--text-3); font: 400 12px/16px var(--font-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 /* A comment bubble with a plus; the hotspot is the tail at the bottom left. */
 .fc-overlay.interactive {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 25V8a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v9a5 5 0 0 1-5 5H8z' fill='%23d4ff3a' stroke='%23121400' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M15 8.5v8M11 12.5h8' stroke='%23121400' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 3 25, pointer;
@@ -422,6 +428,23 @@ a { color: inherit; }
 .fc-transcript .on { background: var(--surface-3); box-shadow: 0 0 0 1px var(--surface-3); }
 .fc-transcript [data-i].sel { background: rgba(212, 255, 58, .18); box-shadow: none; }
 .fc-transcript [data-i].sel.on { background: rgba(212, 255, 58, .32); box-shadow: 0 0 0 1px rgba(212, 255, 58, .32); }
+.fc-notes { display: flex; flex-direction: column; gap: 12px; padding: 2px 4px; min-width: 0; }
+.fc-notes-h { font: 500 12px/16px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }
+.fc-notes-line { margin: 0; font: 500 14px/20px var(--font-sans); color: var(--text); }
+.fc-notes-body { display: flex; flex-direction: column; gap: 10px; font: 400 14px/22px var(--font-sans); color: var(--text-2); overflow-wrap: anywhere; }
+.fc-notes-body p, .fc-notes-body ul, .fc-notes-body ol { margin: 0; }
+.fc-notes-body ul, .fc-notes-body ol { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.fc-notes-body h4 { margin: 6px 0 0; font: 600 14px/20px var(--font-sans); color: var(--text); }
+.fc-notes-body strong { color: var(--text); font-weight: 600; }
+.fc-notes-body a { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
+.fc-notes-body code { padding: 1px 5px; border-radius: 5px; background: var(--surface-2); font: 500 12.5px/1.4 var(--font-mono); color: var(--text); }
+.fc-notes-body pre { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface-2); overflow-x: auto; }
+.fc-notes-body pre code { padding: 0; background: none; white-space: pre; user-select: all; }
+.fc-source { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); }
+.fc-source > .fc-i { flex: none; color: var(--text-2); }
+.fc-source .body { flex: 1; min-width: 0; }
+.fc-source .name { font: 500 13px/18px var(--font-mono); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fc-source .meta { font: 400 12px/16px var(--font-sans); color: var(--text-3); }
 .fc-side-h .fc-tabs { align-self: stretch; align-items: flex-end; gap: 18px; border-bottom: 0; }
 .fc-side-h .fc-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 0 0 14px; font-size: 13px; }
 .fc-zoom-bar { position: relative; height: 6px; margin-top: 6px; border-radius: var(--radius-full); background: var(--surface-2); cursor: pointer; touch-action: none; }
@@ -489,3 +512,68 @@ a { color: inherit; }
 .fc-pstrip img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .fc-pstrip .n { position: absolute; left: 4px; bottom: 4px; padding: 2px 5px; border-radius: 6px; background: var(--overlay); color: var(--on-video); font: 600 10px/1 var(--font-mono); }
 .fc-pstrip .cc { top: 3px; right: 3px; min-width: 16px; height: 16px; font-size: 9px; }
+
+/* ---------- Brand finish, kept in line with framejam.ai: type, glow, header, surfaces ---------- */
+:root { --font-serif: "Instrument Serif", Georgia, serif; --glow: radial-gradient(1100px 520px at 50% -120px, rgba(212, 255, 58, .09), transparent 70%); }
+.fc-h1 { font: 700 clamp(28px, 3.2vw, 36px)/1.1 var(--font-sans); letter-spacing: -0.035em; text-wrap: balance; }
+.fc-h2 { font-weight: 700; font-size: 18px; line-height: 24px; letter-spacing: -0.025em; }
+:is(.fc-h1, .fc-h2, .fc-h3) em { color: var(--accent-text); font: italic 400 1.14em/1 var(--font-serif); letter-spacing: -0.01em; }
+.fc-kicker { margin: 0 0 10px; color: var(--accent-text); font: 500 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.fc-label { color: var(--text-3); font: 500 11px/16px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.fc-screen, .fc-share.fc-share-final, .fc-share:has(> .fc-share-closed) { background: var(--glow), var(--bg); background-repeat: no-repeat; }
+.fc-header { background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(12px); backdrop-filter: saturate(1.4) blur(12px); }
+.fc-nav a { border-radius: var(--radius-sm); }
+
+.fc-btn:not(.primary, .ghost, .danger, .outline) { box-shadow: inset 0 0 0 1px var(--border); }
+.fc-btn:not(.primary, .ghost, .danger, .outline):hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 70%, transparent); }
+.fc-btn.primary:hover { filter: none; background: #e0ff6b; }
+.fc-btn.primary:active { background: var(--accent); }
+.fc-input { box-shadow: inset 0 0 0 1px var(--border); transition: box-shadow .15s; }
+.fc-input:focus { outline: none; box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+
+.fc-card { padding: 20px; border-radius: var(--radius-xl); box-shadow: inset 0 0 0 1px var(--border), 0 12px 32px rgba(0, 0, 0, .35); }
+.fc-rcard { box-shadow: inset 0 0 0 1px var(--border); transition: background-color .15s, box-shadow .15s; }
+.fc-rcard:hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-strong) 60%, transparent); }
+.fc-code, .fc-prompt { box-shadow: inset 0 0 0 1px var(--border); }
+.fc-menu, .fc-toast { box-shadow: var(--shadow-pop), inset 0 0 0 1px var(--border); }
+.fc-empty .ic { background: var(--accent-soft); color: var(--accent-text); box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .22); }
+.fc-empty .ic.danger { background: var(--danger-soft); color: var(--danger); box-shadow: inset 0 0 0 1px rgba(255, 107, 107, .25); }
+.fc-empty > .fc-h3 { font: 700 22px/28px var(--font-sans); letter-spacing: -0.03em; }
+.fc-empty > p { font-size: 14px; line-height: 21px; }
+.fc-banner { box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .18); }
+.fc-share-chip.approved { box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .3); }
+.fc-share-chip.approved:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); box-shadow: inset 0 0 0 1px rgba(212, 255, 58, .45); }
+.fc-dock .box:focus-within { box-shadow: var(--shadow-dock), inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+:is(.fc-stage, .fc-side-foot) .fc-dock .box:focus-within { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+.fc-pb-label, .fc-pick-sub, .fc-pick-field .lbl { font: 500 11px/16px var(--font-mono); letter-spacing: .08em; }
+.fc-menu.fc-menu-pop { width: max-content; min-width: 248px; max-width: min(320px, calc(100vw - 24px)); }
+
+/* Phones: the share page's transport row and the handoff card fit next to the comments rail. */
+@media (max-width: 560px) {
+  .fc-share-stage .fc-controls { gap: 4px; }
+  .fc-share-stage .fc-play { width: 36px; height: 36px; }
+  .fc-share-stage .fc-readout { font-size: 12px; }
+  .fc-share-stage .fc-controls .fc-btn.icon.sm { width: 28px; height: 28px; }
+  .fc-handoff .hd { flex-wrap: wrap; }
+  .fc-handoff .hd > .fc-grow { flex-basis: calc(100% - 44px); }
+  .fc-handoff .hd > .fc-btn { margin-left: 44px; }
+}
+@media (max-width: 460px) {
+  .fc-stage .fc-dock .send, .fc-share-stage .fc-dock .send { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
+  .fc-stage .fc-dock .send .fc-agent, .fc-share-stage .fc-dock .send .fc-agent { flex-basis: 100%; }
+}
+/* The review page's transport row follows its own width: the comments rail, the sidebar and a tall video all narrow it. */
+.fc-transport { container-type: inline-size; }
+@container (max-width: 480px) {
+  .fc-controls { gap: 4px; }
+  .fc-play { width: 36px; height: 36px; }
+  .fc-readout { font-size: 12px; }
+  .fc-controls .fc-rate { min-width: 36px; padding: 0 4px; }
+  .fc-controls .fc-btn.icon.sm { width: 28px; height: 28px; }
+}
+@container (max-width: 400px) {
+  .fc-controls:has(> .fc-zoom) { flex-wrap: wrap; height: auto; row-gap: 0; }
+  .fc-controls:has(> .fc-zoom) > .fc-grow { flex-basis: 100%; }
+  .fc-controls > .fc-zoom { margin-left: -4px; }
+  .fc-controls > .fc-zoom + .fc-btn { margin-left: auto; }
+}
