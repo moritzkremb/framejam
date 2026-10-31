@@ -1,12 +1,13 @@
 import { Check, CheckCheck, Clock, Copy, Loader2, MapPin, MoveHorizontal, Pencil, X } from "lucide-react";
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { copyText, formatTime, handoffMessage } from "@/lib/api";
+import { copyText, formatTime, handoffMessage, type ElementInfo } from "@/lib/api";
+import { elementLabel } from "@/lib/live-preview";
 import { cn, COPY_KEYS, FINISH_KEYS } from "@/lib/utils";
 
 export type Anchor =
   | { kind: "time" }
-  | { kind: "spot"; time: number; x: number; y: number; thumbnailDataUrl?: string }
+  | { kind: "spot"; time: number; x: number; y: number; thumbnailDataUrl?: string; element?: ElementInfo }
   | { kind: "range"; time: number; endTime: number };
 
 const OUTDATED_HELP =
@@ -98,7 +99,7 @@ export const FeedbackDock = forwardRef<HTMLTextAreaElement, DockProps>(function 
     customChip
   ) : anchor.kind === "spot" ? (
     <span className="fc-anchor">
-      <MapPin className="fc-i xs" /> {formatTime(anchor.time)} · on this spot
+      <MapPin className="fc-i xs" /> {formatTime(anchor.time)} · on {anchor.element ? <span className="fc-truncate">{elementLabel(anchor.element)}</span> : "this spot"}
       <button type="button" className="x" aria-label="Remove spot" onClick={onClearAnchor}>
         <X className="fc-i xs" />
       </button>

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Maximize, MessageSquarePlus, Minimize, MousePointerClick, MoveHorizontal, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clapperboard, Maximize, MessageSquarePlus, Minimize, MousePointerClick, MoveHorizontal, Pause, Play, Radio } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MutableRefObject } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -144,6 +144,7 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
   const [sideTab, setSideTab] = useState<SidebarTab>("comments");
   const transcript = useTranscript(data, review.id, version);
   const transcription = useTranscription(data, review.id, version);
+  const live = useLiveView(version);
 
   useEffect(() => {
     const onChange = () => setFullscreen(Boolean(document.fullscreenElement) && document.fullscreenElement === watchRef.current);
@@ -274,6 +275,10 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
     setSelectedId(null);
     if (side.overlay) side.setOpen(false);
     focusBox();
+    // On the live preview the comment also says which element was clicked, for the agent.
+    void ctrl.resolveAt?.(x, y, t).then((element) => {
+      if (element) setAnchor((a) => (a.kind === "spot" && a.x === x && a.y === y ? { ...a, element } : a));
+    });
   };
 
   const addComment = async () => {
@@ -290,6 +295,7 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
         wholeVideo: whole || undefined,
         text,
         thumbnailDataUrl: !whole && anchor.kind === "spot" ? anchor.thumbnailDataUrl : ctrl?.captureFrame(),
+        ...(live.src ? { source: "live" as const, element: !whole && anchor.kind === "spot" ? anchor.element : undefined } : {}),
       });
       setText("");
       setAnchor({ kind: "time" });
@@ -349,11 +355,13 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
   });
 
   const src = data.videoUrl(review.id, version.number);
+  const liveView = live.src ? "live" : "render";
   const draftCount = comments.filter((c) => c.status === "draft").length;
   const subline = [
     review.versions.length > 1 ? `Version ${version.number} of ${review.versions.length}` : `Version ${version.number}`,
     duration ? formatTime(duration, false) : null,
     ctrl ? aspectLabel(ctrl.width, ctrl.height) : null,
+    live.src && version.preview?.edits ? `${version.preview.edits} ${version.preview.edits === 1 ? "edit" : "edits"} since the render` : null,
     version.sentAt ? "review finished" : null,
   ]
     .filter(Boolean)
@@ -420,8 +428,24 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
       <ReviewHeader r={r} subline={subline} shortcuts={SHORTCUTS} onPickVersion={pickVersion} onCompare={onCompare} />
       <div ref={watchRef} className={cn("fc-review", (!side.open || side.overlay) && "railed")}>
         <div className="fc-stage" style={{ "--content-w": `${Math.max(frameWidth, 520)}px` } as CSSProperties}>
+          {live.available && (
+            <div className="fc-source">
+              <div className="fc-seg sm" role="group" aria-label="Play">
+                <button type="button" aria-pressed={liveView === "render"} disabled={!live.hasRender} onClick={() => live.show("render")} title={live.hasRender ? "The last render" : "No render yet"}>
+                  <Clapperboard className="fc-i xs" /> Render
+                </button>
+                <button type="button" aria-pressed={liveView === "live"} onClick={() => live.show("live")} title="The composition from its source files, with the agent's latest edits">
+                  <Radio className="fc-i xs" /> Live
+                </button>
+              </div>
+              <span className="note">{liveView === "live" ? (version.preview!.edits ? "Agent edits, not rendered yet" : "From the source files") : "The last render"}</span>
+            </div>
+          )}
           <Player
             src={src}
+            liveSrc={live.src}
+            onLiveError={live.fail}
+            target={isOpen && !whole && anchor.kind === "spot" ? anchor.element?.rect : null}
             pins={pins}
             floating={floating}
             newPin={isOpen && !whole && anchor.kind === "spot" ? anchor : null}
@@ -537,4 +561,43 @@ function VideoReview({ r, width, resumeTime, onCompare }: { r: ReviewState; widt
       </div>
     </>
   );
+}
+
+/**
+ * Render or Live, for a version with a live preview. Live first when the agent has edited files since the render or
+ * there is no render, and again whenever a new edit lands. A preview that can't play goes back to the render.
+ */
+function useLiveView(version: ReviewState["version"] & {}) {
+  const preview = version.preview;
+  const hasRender = Boolean(version.videoPath);
+  const [choice, setChoice] = useState<{ version: number; view: "render" | "live" } | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const seen = useRef<{ version: number; edits: number } | null>(null);
+
+  useEffect(() => {
+    if (!preview) return;
+    const before = seen.current;
+    seen.current = { version: version.number, edits: preview.edits };
+    if (before?.version === version.number && preview.edits > before.edits) {
+      setChoice({ version: version.number, view: "live" });
+      toast("Your agent changed the composition. The live preview shows it.");
+    }
+  }, [preview, version.number]);
+
+  const fallback = preview && (preview.edits > 0 || !hasRender) ? "live" : "render";
+  const view = !preview || (hasRender && failed === preview.url) ? "render" : choice?.version === version.number ? choice.view : fallback;
+  return {
+    available: Boolean(preview),
+    hasRender,
+    src: view === "live" ? preview?.url : undefined,
+    show: (next: "render" | "live") => {
+      if (next === "live") setFailed(null);
+      setChoice({ version: version.number, view: next });
+    },
+    fail: (message: string) => {
+      if (!preview) return;
+      setFailed(preview.url);
+      if (hasRender) toast.error(`The live preview couldn't play, so this is the render. ${message}`);
+    },
+  };
 }

@@ -364,6 +364,12 @@ a { color: inherit; }
 .fc-player .frame { position: relative; aspect-ratio: auto; height: auto; overflow: hidden; cursor: default; border-radius: var(--radius-lg); background: var(--video); box-shadow: 0 0 0 1px var(--border); }
 .fc-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--video); }
 .fc-overlay { position: absolute; inset: 0; }
+/* The live preview: the composition at its own size, scaled into the frame. Clicks go to the overlay above it. */
+.fc-live { position: absolute; inset: 0; overflow: hidden; background: var(--video); }
+.fc-live iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; background: transparent; }
+.fc-target { position: absolute; border: 1.5px solid var(--accent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); pointer-events: none; animation: fc-fade .15s ease-out; }
+.fc-source { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-height: 32px; }
+.fc-source .note { color: var(--text-3); font: 400 12px/16px var(--font-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 /* A comment bubble with a plus; the hotspot is the tail at the bottom left. */
 .fc-overlay.interactive {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 25V8a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v9a5 5 0 0 1-5 5H8z' fill='%23d4ff3a' stroke='%23121400' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M15 8.5v8M11 12.5h8' stroke='%23121400' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") 3 25, pointer;

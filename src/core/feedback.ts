@@ -1,4 +1,4 @@
-import type { Review, ReviewComment } from "./types.ts";
+import type { ElementInfo, Review, ReviewComment } from "./types.ts";
 import type { Store } from "./store.ts";
 import { wordsBetween } from "./transcript.ts";
 
@@ -242,8 +242,9 @@ export async function feedbackPrompt(
   for (const [i, c] of sorted.entries()) {
     const a = await toAgentComment(store, baseUrl, review, c);
     const ver = c.version !== latest.number ? ` (on v${c.version})` : "";
-    lines.push(`${i + 1}. **[${a.at}]**${ver}${c.author ? ` (guest ${c.author})` : ""} ${c.text}`);
+    lines.push(`${i + 1}. **[${a.at}]**${ver}${c.author ? ` (guest ${c.author})` : ""}${c.source === "live" ? " (on the live preview)" : ""} ${c.text}`);
     if (a.position) lines.push(`  - Pinned at ${a.position.description}`);
+    if (c.element) lines.push(...describeElement(c.element));
     if (a.panel?.caption) lines.push(`  - Panel caption: ${a.panel.caption}`);
     if (a.spoken) lines.push(`  - Spoken in this range: “${a.spoken}”`);
     if (a.spokenAround) lines.push(`  - Spoken around then: “${a.spokenAround}”`);
@@ -258,6 +259,23 @@ export async function feedbackPrompt(
       : "When done, re-render and call `add_version` (or `open_review` again) with the new render and a one-line `note` of what you changed. The new version starts with an empty comment list. Then call `wait_for_feedback` again.",
   );
   return lines.join("\n");
+}
+
+/** Lines for a comment made on the live preview: the element under the pin, its clip and the tweens on it. */
+export function describeElement(el: ElementInfo): string[] {
+  const lines = [`  - Element: \`${el.selector}\`${el.text ? ` with text ${JSON.stringify(el.text)}` : ""}`];
+  if (el.clip) {
+    const timing = el.clip.start !== undefined ? ` (data-start ${el.clip.start}${el.clip.duration ? `, duration ${el.clip.duration}` : ""})` : "";
+    lines.push(`  - Clip: \`${el.clip.selector}\`${timing}`);
+  }
+  for (const t of el.tweens.slice(0, 3)) {
+    const props = Object.entries(t.props)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(", ");
+    const which = t.relation === "active" ? "Active" : t.relation === "previous" ? "Previous" : "Next";
+    lines.push(`  - ${which} tween: ${t.targets.join(", ")} { ${props} } ${t.start.toFixed(2)}s to ${t.end.toFixed(2)}s${t.ease ? `, ease ${t.ease}` : ""}`);
+  }
+  return lines;
 }
 
 export function versionComments(review: Review, version: number): ReviewComment[] {

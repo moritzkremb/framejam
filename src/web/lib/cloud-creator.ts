@@ -3,7 +3,7 @@ import { makeFunctionReference } from "convex/server";
 import { feedbackPrompt, latestComments, versionComments } from "../../core/feedback";
 import type { Store } from "../../core/store";
 import { parseTranscript } from "../../core/transcript";
-import type { CommentKind, Review, ReviewComment, ReviewVersion, ShareInfo, Transcript } from "@/lib/api";
+import type { CommentKind, ElementInfo, Review, ReviewComment, ReviewVersion, ShareInfo, Transcript } from "@/lib/api";
 import { cloudMessage } from "@/lib/cloud-share";
 import type { NewComment, ReviewDataSource } from "@/lib/data-source";
 
@@ -35,6 +35,8 @@ export interface WireVersion {
   videoUrl?: string;
   posterUrl?: string;
   transcript?: { sourcePath?: string; words: number };
+  /** The live composition preview (H4.3), and how many of the agent's uploads since the render it shows. */
+  preview?: { url: string; edits: number };
 }
 
 export interface WireComment {
@@ -59,6 +61,8 @@ export interface WireComment {
   author?: string;
   cloudId?: string;
   fromVersion?: number;
+  source?: "live";
+  element?: ElementInfo;
 }
 
 export interface WireBatch {
@@ -84,6 +88,8 @@ export interface WireReview {
   versions: WireVersion[];
   comments: WireComment[];
   batches: WireBatch[];
+  /** Missing on deployments without the live preview. False until the page turns it on with `previews.enable`. */
+  previewEnabled?: boolean;
 }
 
 export interface CloudLink {
@@ -106,7 +112,12 @@ export interface CreatorBackend {
   /** Calls `onReview` with every new result of `cloud.get`; returns the unsubscribe. */
   watch(id: string, onReview: (review: WireReview | null) => void, onError: (e: Error) => void): () => void;
   get(id: string): Promise<WireReview | null>;
-  addComment(id: string, comment: { version?: number; time: number; endTime?: number; x?: number; y?: number; panel?: number; wholeVideo?: boolean; kind?: CommentKind; text: string }): Promise<WireComment>;
+  addComment(
+    id: string,
+    comment: { version?: number; time: number; endTime?: number; x?: number; y?: number; panel?: number; wholeVideo?: boolean; kind?: CommentKind; text: string; source?: "live"; element?: ElementInfo },
+  ): Promise<WireComment>;
+  /** Gives the project its live preview address. Safe to repeat. */
+  enablePreview(id: string): Promise<void>;
   updateComment(id: string, commentId: string, text: string): Promise<void>;
   deleteComment(id: string, commentId: string): Promise<void>;
   submit(id: string): Promise<{ batch: WireBatch }>;
@@ -144,6 +155,7 @@ export function convexCreatorBackend(url: string, getToken: (forceRefresh: boole
     watch: (id, onReview, onError) => client.onUpdate(ref<{ reviewId: string }, WireReview | null>("query", "cloud:get") as never, { reviewId: id } as never, onReview as never, onError),
     get: (id) => q<{ reviewId: string }, WireReview | null>("get", { reviewId: id }),
     addComment: (id, comment) => wrap(() => m("addComment", { reviewId: id, comment })),
+    enablePreview: (id) => wrap(() => m("enable", { reviewId: id }, "previews")),
     updateComment: (id, commentId, text) => wrap(() => m("updateComment", { reviewId: id, commentId, text })),
     deleteComment: (id, commentId) => wrap(() => m("deleteComment", { reviewId: id, commentId })),
     submit: (id) => wrap(() => m("submit", { reviewId: id })),
@@ -231,6 +243,7 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
         batchId: v.batchId,
         reopenedFrom: v.reopenedFrom,
         upload: v.upload.state === "ready" ? undefined : { state: v.upload.state, bytes: v.upload.bytes, total: v.upload.total, error: v.upload.error },
+        preview: v.preview,
       }),
     ),
     comments: wire.comments.map(
@@ -255,6 +268,8 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
         author: c.author,
         cloudId: c.cloudId,
         fromVersion: c.fromVersion,
+        source: c.source,
+        element: c.element,
       }),
     ),
     batches: wire.batches,
@@ -288,6 +303,15 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
     }
   };
 
+  // Projects from before the live preview get their address the first time the page sees files to preview.
+  const enabling = new Set<string>();
+  const enablePreview = (id: string, wire: WireReview | null) => {
+    if (!wire || wire.previewEnabled !== false || wire.kind !== "video" || enabling.has(id)) return;
+    if (!wire.versions.some((v) => v.source?.ready)) return;
+    enabling.add(id);
+    backend.enablePreview(id).catch(() => enabling.delete(id));
+  };
+
   const linkOf = async (id: string) => {
     if (!links.has(id)) links.set(id, await backend.link(id));
     return links.get(id) ?? null;
@@ -308,6 +332,7 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
         id,
         (wire) => {
           views.set(id, wire);
+          enablePreview(id, wire);
           onChange();
         },
         () => onChange(),
@@ -340,6 +365,7 @@ export function creatorSource(backend: CreatorBackend, opts: { shareOrigin?: str
         panel: body.panel,
         wholeVideo: body.wholeVideo,
         text: body.text,
+        ...(body.source === "live" ? { source: "live" as const, element: body.element } : {}),
       });
       if (body.thumbnailDataUrl) await uploadFrame(id, comment.id, body.thumbnailDataUrl);
       return { ...comment } as ReviewComment;

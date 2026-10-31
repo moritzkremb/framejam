@@ -32,6 +32,27 @@ export interface VoiceComment {
   points: VoicePoint[];
 }
 
+export interface TweenInfo {
+  targets: string[];
+  start: number;
+  end: number;
+  ease?: string;
+  props: Record<string, string | number | boolean>;
+  relation: "active" | "previous" | "next";
+}
+
+/** What was under a pin on the live composition preview: the element, its Hyperframes clip and its GSAP tweens. */
+export interface ElementInfo {
+  selector: string;
+  tagName: string;
+  text?: string;
+  /** Normalized (0-1) bounding box of the element inside the frame. */
+  rect?: { x: number; y: number; width: number; height: number };
+  /** Nearest Hyperframes clip (`[data-start]`) containing the element. */
+  clip?: { selector: string; start?: string; duration?: string; trackIndex?: string };
+  tweens: TweenInfo[];
+}
+
 export interface ReviewComment {
   id: string;
   version: number;
@@ -61,6 +82,9 @@ export interface ReviewComment {
   fromVersion?: number;
   /** Spoken, not typed: `text` is the transcript. */
   voice?: VoiceComment;
+  /** Written on the live composition preview (FrameJam Cloud) instead of the render. */
+  source?: "live";
+  element?: ElementInfo;
 }
 
 /** One storyboard panel: a still image plus optional words about the shot. */
@@ -114,6 +138,11 @@ export interface ReviewVersion {
   reopenedFrom?: string;
   /** Cloud projects only: where the version's files are on their way to FrameJam Cloud. Left out once they're there. */
   upload?: VersionUpload;
+  /**
+   * Cloud projects only: the composition in `source`, playable in a sandboxed iframe on another origin. `edits` counts
+   * the files the agent sent since the render, which the preview already shows.
+   */
+  preview?: { url: string; edits: number };
 }
 
 /** A version's source zip (H2.6). `ready` once it is in FrameJam Cloud and can be downloaded. */

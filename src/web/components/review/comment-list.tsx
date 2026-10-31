@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, MenuItem } from "@/components/menu";
 import { splitTranscript } from "../../../core/voice";
 import { formatTime, type ReviewComment } from "@/lib/api";
+import { elementLabel } from "@/lib/live-preview";
 import { cn } from "@/lib/utils";
 
 export function whenLabel(c: Pick<ReviewComment, "wholeVideo" | "time" | "endTime">) {
@@ -109,6 +110,11 @@ function CommentItem({
           {comment.voice && <Mic className="fc-i xs fc-voice-i" aria-label="Voice comment" />}
           <span className="when">{label}</span>
           {comment.fromVersion !== undefined && <span className="from">from v{comment.fromVersion}</span>}
+          {comment.source === "live" && (
+            <span className="from fc-truncate" title={comment.element ? `On the live preview, on ${comment.element.selector}` : "On the live preview"}>
+              live{comment.element ? ` · ${elementLabel(comment.element)}` : ""}
+            </span>
+          )}
           {comment.status === "resolved" && comment.resolution && (
             <span className="res" data-testid="resolved-in" title={comment.resolution.note || undefined}>
               <Check className="fc-i xs" /> Resolved in v{comment.resolution.version}

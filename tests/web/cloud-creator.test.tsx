@@ -79,6 +79,7 @@ function fakeBackend(initial: WireReview | null = wire(), initialLink: CloudLink
       current = link();
       return current;
     }),
+    enablePreview: vi.fn(async () => {}),
     sourceUrl: vi.fn(async (_id: string, version: number) => ({ url: `https://r2.test/sources/v${version}.zip?dl=1`, filename: "demo-source.zip", bytes: 2048 })),
     configure: vi.fn(async (_id: string, change: { revoked?: boolean }) => {
       if (current) current = { ...current, revokedAt: change.revoked ? 5 : null };
@@ -135,6 +136,41 @@ describe("the creator's data source", () => {
     expect(review.versions[0]?.source).toEqual({ filename: "launch-source.zip", bytes: 2048, ready: true });
     expect(await source.sourceDownload!("k1", 1)).toEqual({ url: "https://r2.test/sources/v1.zip?dl=1", filename: "demo-source.zip", bytes: 2048 });
     expect(backend.sourceUrl).toHaveBeenCalledWith("k1", 1);
+  });
+
+  it("carries the live preview and live comments, and turns the preview on once for an older project", async () => {
+    const live = wire({
+      previewEnabled: false,
+      versions: [
+        {
+          number: 1,
+          createdAt: "2026-10-01T10:00:00.000Z",
+          upload: { state: "ready", bytes: 5, total: 5 },
+          hasVideo: true,
+          videoUrl: "https://media.example.com/v1.mp4",
+          source: { filename: "launch-source.zip", bytes: 2048, ready: true },
+          preview: { url: "https://x.convex.site/preview/k/1/2/index.html?framejam=1", edits: 2 },
+        },
+      ],
+      comments: [
+        { id: "c3", version: 1, kind: "pin", time: 1, x: 0.5, y: 0.5, text: "Bigger", status: "draft", createdAt: "2026-10-01T11:00:00.000Z", source: "live", element: { selector: "#title", tagName: "h1", text: "Hello", tweens: [] } },
+      ],
+    });
+    const fake = fakeBackend(live);
+    const source = creatorSource(fake.backend);
+    const stop = source.subscribe("k1", () => {});
+    fake.pushReview(live);
+    fake.pushReview(live);
+    expect(fake.backend.enablePreview).toHaveBeenCalledTimes(1);
+    const review = await source.review("k1");
+    expect(review.versions[0]?.preview).toEqual({ url: "https://x.convex.site/preview/k/1/2/index.html?framejam=1", edits: 2 });
+    expect(review.comments[0]).toMatchObject({ source: "live", element: { selector: "#title" } });
+    const prompt = await source.prompt("k1");
+    expect(prompt).toContain("(on the live preview) Bigger");
+    expect(prompt).toContain('Element: `#title` with text "Hello"');
+    await source.addComment("k1", { time: 1, kind: "pin", text: "Move it", x: 0.1, y: 0.2, source: "live", element: { selector: "#title", tagName: "h1", tweens: [] } });
+    expect(fake.backend.addComment).toHaveBeenLastCalledWith("k1", expect.objectContaining({ source: "live", element: expect.objectContaining({ selector: "#title" }) }));
+    stop();
   });
 
   it("says the agent is listening for a short while after its last heartbeat", async () => {
