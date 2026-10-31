@@ -72,6 +72,8 @@ export interface SentComment {
   wholeVideo?: boolean;
   text: string;
   drawing?: number[][];
+  /** The draft's id: FrameJam Cloud keeps one comment per id, so a send retried after a lost response isn't doubled. */
+  clientId?: string;
   frame?: { key: string; bytes: number };
   voice?: { id: string; points: Array<{ phrase: string; at: number; time: number; x?: number; y?: number; drawing?: number[][]; frame?: { key: string; bytes: number } }> };
 }
@@ -266,10 +268,22 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
     return g?.name && g.email ? g : null;
   };
 
+  // When the creator reopens the link its approvals leave the view, so this browser may approve again. An approval
+  // stored before this view loaded is already on the server; one made since may still be on its way into the view.
+  const forgetReopened = (link: string, before: ShareView | null | undefined, after: ShareView | null) => {
+    if (!after) return;
+    const has = (v: ShareView, n: number) => v.approvals.some((a) => a.version === n);
+    const gone = (n: number) => (before ? has(before, n) : true) && !has(after, n);
+    const approved = readJson<number[]>(storage, approvedKey(link), []);
+    const kept = approved.filter((n) => !gone(n));
+    if (kept.length !== approved.length) storage.setItem(approvedKey(link), JSON.stringify(kept));
+  };
+
   const requireView = async (link: string) => {
     let view = views.get(link);
     if (view === undefined) {
       view = await backend.view(link);
+      forgetReopened(link, views.get(link), view);
       views.set(link, view);
     }
     if (!view) throw new LinkClosedError();
@@ -379,6 +393,7 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
           wholeVideo: d.wholeVideo,
           text: d.voice ? "" : d.text,
           drawing: d.drawing,
+          clientId: d.id,
           frame,
           voice,
         });
@@ -412,6 +427,7 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       const unwatch = backend.watch(
         id,
         (view) => {
+          forgetReopened(id, views.get(id), view);
           views.set(id, view);
           onChange();
         },

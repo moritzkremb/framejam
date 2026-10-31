@@ -475,6 +475,43 @@ describe("cloud share source", () => {
     expect(JSON.parse(storage.getItem(`framejam:drafts:${LINK}`)!)).toEqual([]);
   });
 
+  it("sends each draft's id, so FrameJam Cloud keeps one comment when a send is retried after a lost response", async () => {
+    const fake = fakeBackend(videoView());
+    fake.backend.send.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    const storage = memoryStorage();
+    storage.setItem("framejam:guest", JSON.stringify({ name: "Anna", email: "anna@example.com" }));
+    const data = cloudShareSource(fake.backend, storage, vi.fn() as unknown as typeof fetch);
+    await data.addComment(LINK, { version: 2, time: 1, text: "Once" });
+    await expect(data.submit(LINK)).rejects.toThrow();
+    await data.submit(LINK);
+    const [first, again] = fake.backend.send.mock.calls.map(([args]) => args.comments[0]!.clientId);
+    expect(first).toMatch(/^draft_/);
+    expect(again).toBe(first);
+  });
+
+  it("lets this browser approve again after the creator reopens the link", async () => {
+    const at = Date.UTC(2026, 9, 3);
+    const fake = fakeBackend({ ...videoView(), approvals: [{ version: 2, guestName: "Anna", at }], approved: { version: 2, by: "Anna", at, download: true } });
+    const storage = memoryStorage();
+    storage.setItem(`framejam:approved:${LINK}`, JSON.stringify([2]));
+    const data = cloudShareSource(fake.backend, storage, vi.fn() as unknown as typeof fetch);
+    const onChange = vi.fn();
+    const stop = data.subscribe(LINK, onChange);
+    await vi.waitFor(() => expect(onChange).toHaveBeenCalled());
+    expect(data.approvedHere(LINK)).toEqual([2]);
+    fake.push(videoView());
+    expect(data.approvedHere(LINK)).toEqual([]);
+    stop();
+  });
+
+  it("lets this browser approve again when it opens a link the creator reopened meanwhile", async () => {
+    const storage = memoryStorage();
+    storage.setItem(`framejam:approved:${LINK}`, JSON.stringify([2]));
+    const data = cloudShareSource(fakeBackend(videoView()).backend, storage, vi.fn() as unknown as typeof fetch);
+    await data.review(LINK);
+    expect(data.approvedHere(LINK)).toEqual([]);
+  });
+
   it("only edits and deletes the guest's own drafts", async () => {
     const data = cloudShareSource(fakeBackend(videoView()).backend, memoryStorage(), vi.fn());
     const c = await data.addComment(LINK, { version: 2, time: 1, text: "Hi" });
