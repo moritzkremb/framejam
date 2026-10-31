@@ -238,7 +238,7 @@ export function createApp(ctx: McpContext) {
     const review = await store.getReview(c.req.param("id"));
     const version = Number(c.req.query("version"));
     const comments = version ? versionComments(review, version) : latestComments(review);
-    return c.text(await feedbackPrompt(store, ctx.baseUrl, review, comments));
+    return c.text(await feedbackPrompt(store, ctx.baseUrl, review, comments, { url: await ctx.reviewUrl?.(review.id) }));
   });
 
   app.get("/api/reviews/:id/thumbs/:file", async (c) => {

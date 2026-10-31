@@ -22,6 +22,8 @@ export interface CoreContext {
   updateCommand?: string;
   /** Sharing on this computer: absent where nothing can reach FrameJam Cloud, which leaves the share tools off. */
   share?: ShareHooks;
+  /** The page for a project when it isn't this app's own: a cloud project opens at its address on the web app. */
+  reviewUrl?: (reviewId: string) => Promise<string | undefined> | string | undefined;
 }
 
 const MAX_IMAGES = 6;
@@ -220,6 +222,8 @@ export function createMcpServer(ctx: CoreContext): McpServer {
     Promise.resolve(store.recordAgent(client?.name, client?.version)).catch((err) => console.error("[framejam]", err));
   };
 
+  const pageUrl = async (id: string) => (await ctx.reviewUrl?.(id)) ?? reviewUrl(ctx.baseUrl, id);
+
   const feedbackContent = async (review: Review, comments: ReviewComment[], extra: Record<string, unknown>, message?: string, promptText?: string) => {
     const agentComments = await Promise.all(comments.map((c) => toAgentComment(store, ctx.baseUrl, review, c)));
     const latest = review.versions.at(-1)!;
@@ -228,7 +232,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
         ...extra,
         reviewId: review.id,
         title: review.title,
-        url: reviewUrl(ctx.baseUrl, review.id),
+        url: await pageUrl(review.id),
         currentVersion: latest.number,
         videoPath: latest.videoPath,
         panelsDir: latest.panelsDir,
@@ -239,7 +243,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
         ...(!promptText && agentComments.some((c) => c.author) ? { guestComments: { count: agentComments.filter((c) => c.author).length, note: GUEST_SENT_NOTE } } : {}),
         comments: agentComments,
       }),
-      { type: "text", text: promptText ?? (await feedbackPrompt(store, ctx.baseUrl, review, comments, { message })) },
+      { type: "text", text: promptText ?? (await feedbackPrompt(store, ctx.baseUrl, review, comments, { message, url: await pageUrl(review.id) })) },
     ];
     const thumbnails = new Map(comments.map((c) => [c.id, c.thumbnail]));
     const pointed = (c: (typeof agentComments)[number]) => c.voice?.points.some((p) => p.imageFile);
@@ -294,7 +298,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
           content: [
             json({
               reviewId: review.id,
-              url: reviewUrl(ctx.baseUrl, review.id),
+              url: await pageUrl(review.id),
               version: version.number,
               created,
               ...(fixed.length ? { resolvedGuestComments: fixed.length } : {}),
@@ -380,7 +384,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
                   "If they'd rather add notes of their own, they press Finish review and wait_for_feedback returns everything together; call it again now.",
               },
               GUEST_WAKE_NOTE,
-              await guestCommentsPrompt(store, ctx.baseUrl, review, fresh),
+              await guestCommentsPrompt(store, ctx.baseUrl, review, fresh, await pageUrl(review.id)),
             );
             return { content };
           }
@@ -393,7 +397,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
                   status: "approved",
                   reviewId,
                   title: review.title,
-                  url: reviewUrl(ctx.baseUrl, reviewId),
+                  url: await pageUrl(reviewId),
                   approved: link.approved,
                   allowDownload: link.allowDownload,
                   shareUrl: link.url,
@@ -431,7 +435,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
           json({
             status: "pending",
             reviewId,
-            url: reviewUrl(ctx.baseUrl, reviewId),
+            url: await pageUrl(reviewId),
             next: "No feedback yet. Call wait_for_feedback again with the same reviewId. After 12 pending results in a row (about 10 minutes), stop: tell the user to press Finish review and say \"apply my FrameJam feedback\" (their comments are saved).",
           }),
         ],
@@ -524,7 +528,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
       inputSchema: {},
     },
     async () => {
-      const list = (await store.listReviews()).map((r) => {
+      const list = await Promise.all((await store.listReviews()).map(async (r) => {
         const latest = r.versions.at(-1)!;
         const batch = latest.batchId ? r.batches.find((b) => b.id === latest.batchId) : undefined;
         const draftList = r.comments.filter((c) => c.version === latest.number && c.status === "draft");
@@ -532,7 +536,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
         return {
           reviewId: r.id,
           title: r.title,
-          url: reviewUrl(ctx.baseUrl, r.id),
+          url: await pageUrl(r.id),
           updatedAt: r.updatedAt,
           latestVersion: latest.number,
           ...(drafts.guests ? { guestCommentsWaiting: drafts.guests } : {}),
@@ -547,7 +551,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
               ? "delivered_to_agent"
               : "sent_not_delivered",
         };
-      });
+      }));
       return { content: [json({ count: list.length, reviews: list })] };
     },
   );
@@ -603,7 +607,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
         const fixed = await resolveGuestFixes(reviewId, unaddressed, note);
         const shared = await shareFields(reviewId, v.number, share);
         return {
-          content: [json({ reviewId, version: v.number, url: reviewUrl(ctx.baseUrl, reviewId), ...(fixed.length ? { resolvedGuestComments: fixed.length } : {}), ...shared, next: `Tell the user version ${v.number} is ready, with the url as a clickable markdown link (e.g. [Open v${v.number} in FrameJam](url)) and a one-line summary of what changed, then call wait_for_feedback.` })],
+          content: [json({ reviewId, version: v.number, url: await pageUrl(reviewId), ...(fixed.length ? { resolvedGuestComments: fixed.length } : {}), ...shared, next: `Tell the user version ${v.number} is ready, with the url as a clickable markdown link (e.g. [Open v${v.number} in FrameJam](url)) and a one-line summary of what changed, then call wait_for_feedback.` })],
         };
       } catch (err) {
         return errorResult(err);

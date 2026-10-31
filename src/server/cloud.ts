@@ -9,6 +9,13 @@ import { env } from "./paths.ts";
 /** Production Convex deployment. Override with FRAMEJAM_CLOUD_URL or FRAMEJAM_CONVEX_URL. */
 export const DEFAULT_CLOUD_URL = "https://mellow-dalmatian-42.convex.cloud";
 
+/** The web app where a cloud project's review page lives. Override with FRAMEJAM_APP_URL. */
+export const DEFAULT_APP_URL = "https://app.framejam.ai";
+
+export function cloudReviewUrl(id: string): string {
+  return `${(env("APP_URL") ?? DEFAULT_APP_URL).replace(/\/$/, "")}/p/${id}`;
+}
+
 export function cloudUrl(): string {
   return (env("CLOUD_URL") ?? env("CONVEX_URL") ?? DEFAULT_CLOUD_URL).replace(/\/$/, "");
 }

@@ -168,13 +168,13 @@ export const GUEST_WAKE_NOTE =
  * The summary an agent gets when guests have commented on a shared project: who, what and where, worded so the agent
  * asks the user first. (The user can also just press Finish review, which sends them the usual way.)
  */
-export async function guestCommentsPrompt(store: Store, baseUrl: string, review: Review, comments: ReviewComment[]): Promise<string> {
+export async function guestCommentsPrompt(store: Store, baseUrl: string, review: Review, comments: ReviewComment[], url?: string): Promise<string> {
   const latest = review.versions.at(-1)!;
   const names = [...new Set(comments.map((c) => c.author).filter(Boolean))] as string[];
   const lines: string[] = [];
   lines.push(`# ${names.join(", ")} commented on ${review.title} (v${latest.number})`, "");
   lines.push(GUEST_WAKE_NOTE, "");
-  lines.push(`Review: ${reviewUrl(baseUrl, review.id)}`, "");
+  lines.push(`Review: ${url ?? reviewUrl(baseUrl, review.id)}`, "");
   const sorted = [...comments].sort(
     (a, b) => Number(!!b.wholeVideo) - Number(!!a.wholeVideo) || (a.panel ?? 0) - (b.panel ?? 0) || a.time - b.time,
   );
@@ -201,7 +201,7 @@ export async function feedbackPrompt(
   baseUrl: string,
   review: Review,
   comments: ReviewComment[],
-  opts: { message?: string } = {},
+  opts: { message?: string; url?: string } = {},
 ): Promise<string> {
   const latest = review.versions.at(-1)!;
   const storyboard = Boolean(latest.panels?.length);
@@ -213,7 +213,7 @@ export async function feedbackPrompt(
     latest.panels!.forEach((p, i) => lines.push(`  ${i + 1}. \`${p.sourcePath}\`${p.title ? ` — ${p.title}` : ""}`));
   }
   if (latest.videoPath) lines.push(`Render: \`${latest.videoPath}\``);
-  lines.push(`Review: ${reviewUrl(baseUrl, review.id)}`);
+  lines.push(`Review: ${opts.url ?? reviewUrl(baseUrl, review.id)}`);
   lines.push("");
   if (opts.message) {
     lines.push(`> ${opts.message.replace(/\n/g, "\n> ")}`, "");
