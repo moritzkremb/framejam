@@ -132,6 +132,8 @@ function mapVersion(v: WireVersion): ReviewVersion {
   };
 }
 
+const pointFrame = (commentId: string, point: number) => `${commentId}-p${point}.jpg`;
+
 function fileExists(file: string): boolean {
   try {
     return fs.statSync(file).isFile();
@@ -215,6 +217,13 @@ export class CloudStore implements Store {
 
   private mapComment(reviewId: string, c: WireComment): ReviewComment {
     const mine = fileExists(path.join(this.thumbsDir(reviewId), `${c.id}.jpg`));
+    const voice = c.voice && {
+      ...c.voice,
+      points: c.voice.points.map((p, i) => {
+        const file = pointFrame(c.id, i);
+        return { ...p, frame: fileExists(path.join(this.thumbsDir(reviewId), file)) || p.frame ? file : undefined };
+      }),
+    };
     return {
       id: c.id,
       version: c.version,
@@ -236,6 +245,7 @@ export class CloudStore implements Store {
       author: c.author,
       cloudId: c.cloudId,
       fromVersion: c.fromVersion,
+      voice,
     };
   }
 
@@ -751,6 +761,7 @@ export class CloudStore implements Store {
         author: input.author,
         cloudId: input.cloudId,
         fromVersion: input.fromVersion,
+        ...(input.voice ? { voice: { ...input.voice, points: input.voice.points.map(({ frame: _frame, ...p }) => p) } } : {}),
       }),
     );
     this.changed(reviewId);
@@ -771,14 +782,17 @@ export class CloudStore implements Store {
 
   async deleteComment(reviewId: string, commentId: string): Promise<void> {
     this.checkId(reviewId);
+    const points = (await this.entry(reviewId))?.wire.comments.find((c) => c.id === commentId)?.voice?.points.length ?? 0;
     await guard(this.api.deleteComment(reviewId, commentId));
     fs.rmSync(path.join(this.thumbsDir(reviewId), `${commentId}.jpg`), { force: true });
+    for (let i = 0; i < points; i++) fs.rmSync(path.join(this.thumbsDir(reviewId), pointFrame(commentId, i)), { force: true });
     this.changed(reviewId);
   }
 
-  async saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array): Promise<string> {
+  async saveThumbnail(reviewId: string, commentId: string, jpeg: Uint8Array, point?: number): Promise<string> {
     this.checkId(reviewId);
     if (!ID.test(commentId)) throw new StoreError(`Comment not found: ${commentId}`, 404);
+    if (point !== undefined) return this.savePointFrame(reviewId, commentId, jpeg, point);
     const name = `${commentId}.jpg`;
     fs.mkdirSync(this.thumbsDir(reviewId), { recursive: true });
     fs.writeFileSync(path.join(this.thumbsDir(reviewId), name), jpeg);
@@ -800,13 +814,26 @@ export class CloudStore implements Store {
     return name;
   }
 
+  /** A pointing phrase's frame stays on this computer until FrameJam Cloud keeps voice on cloud projects. */
+  private async savePointFrame(reviewId: string, commentId: string, jpeg: Uint8Array, point: number): Promise<string> {
+    const comment = (await this.getReview(reviewId)).comments.find((c) => c.id === commentId);
+    if (!comment) throw new StoreError(`Comment not found: ${commentId}`, 404);
+    if (!Number.isInteger(point) || !comment.voice?.points[point]) throw new StoreError(`Comment ${commentId} has no pointing phrase ${point}`);
+    const name = pointFrame(commentId, point);
+    fs.mkdirSync(this.thumbsDir(reviewId), { recursive: true });
+    fs.writeFileSync(path.join(this.thumbsDir(reviewId), name), jpeg);
+    this.changed(reviewId);
+    return name;
+  }
+
   async thumbnailFile(reviewId: string, file: string): Promise<string | null | undefined> {
     this.checkId(reviewId);
     const full = safeJoin(this.thumbsDir(reviewId), file);
     if (!full) return null;
     if (fileExists(full)) return full;
-    const id = file.replace(/\.jpg$/, "");
-    const url = (await this.entry(reviewId))?.wire.comments.find((c) => c.id === id)?.frameUrl;
+    const [, id, point] = file.match(/^(.+?)(?:-p(\d+))?\.jpg$/) ?? [];
+    const wire = (await this.entry(reviewId))?.wire.comments.find((c) => c.id === id);
+    const url = point === undefined ? wire?.frameUrl : wire?.voice?.points[Number(point)]?.frame;
     return url ? await this.download(url, full) : undefined;
   }
 

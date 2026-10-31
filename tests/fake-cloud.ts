@@ -54,6 +54,7 @@ interface C {
   author?: string;
   externalId?: string;
   fromVersion?: number;
+  voice?: WireComment["voice"];
 }
 
 interface B {
@@ -172,6 +173,7 @@ export class FakeCloud implements CloudApi {
       author: c.author,
       cloudId: c.externalId ?? (c.author ? c.id : undefined),
       fromVersion: c.fromVersion,
+      voice: c.voice,
     }));
     const batches: WireBatch[] = p.batches.map((b) => ({
       id: b.id,
@@ -417,6 +419,7 @@ export class FakeCloud implements CloudApi {
       author: input.author?.trim() || undefined,
       externalId: input.cloudId || undefined,
       fromVersion: input.fromVersion !== undefined && input.fromVersion !== number ? input.fromVersion : undefined,
+      voice: input.voice,
     };
     p.comments.push(c);
     this.touch(p);

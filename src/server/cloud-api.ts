@@ -3,6 +3,7 @@
  * comments and rounds, plus the upload and link calls the same signed-in user already has. `CloudStore` is the only
  * caller; tests give it an in-memory one.
  */
+import type { VoiceComment } from "../core/types.ts";
 import {
   type FetchLike,
   type LinkSettings,
@@ -57,6 +58,8 @@ export interface WireComment {
   author?: string;
   cloudId?: string;
   fromVersion?: number;
+  /** A spoken comment. Each point's frame is a URL when the cloud has it. */
+  voice?: VoiceComment;
 }
 
 export interface WireBatch {
@@ -120,6 +123,8 @@ export interface CloudComment {
   author?: string;
   cloudId?: string;
   fromVersion?: number;
+  /** Sent only for a spoken comment, so a deployment without voice on cloud projects never sees the field. */
+  voice?: VoiceComment;
 }
 
 export interface CloudLink {
