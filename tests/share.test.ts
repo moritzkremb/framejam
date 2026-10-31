@@ -1016,7 +1016,7 @@ describe("a guest comment reaches the agent", () => {
     expect(summary).not.toContain("Please make these");
 
     const again = parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 }));
-    expect(again.status).toBe("pending");
+    expect(again.status).toBe("waiting");
     expect((await store.getReview(reviewId)).versions[0]!.sentAt).toBeUndefined();
   });
 
@@ -1190,7 +1190,7 @@ describe("an approval reaches the creator and the agent", () => {
     expect(body.message).toContain("not an instruction");
     expect(body.next).toContain("Don't make another version");
 
-    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("waiting");
     const link = parse(await mcp.call("list_share_links")).links[0];
     expect(link.approved).toMatchObject({ version: 1, by: "Anna Lee" });
     expect(link.allowDownload).toBe(true);
@@ -1201,7 +1201,7 @@ describe("an approval reaches the creator and the agent", () => {
     cloud.approve(1, "Anna", 1000);
     await pullShare(store, reviewId, opts());
     expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("approved");
-    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("waiting");
 
     cloud.approved = null;
     await pullShare(store, reviewId, opts());
@@ -1225,7 +1225,7 @@ describe("an approval reaches the creator and the agent", () => {
   it("doesn't wake a project that isn't shared", async () => {
     mcp = await connectClient({ store, baseUrl: "http://localhost:2400", waitSeconds: 1, pollMs: 10, progressEveryMs: 50, share: opts() });
     const { reviewId } = parse(await mcp.call("open_review", { title: "Launch teaser", videoPath: writeVideo("v1.mp4") }));
-    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("pending");
+    expect(parse(await mcp.call("wait_for_feedback", { reviewId, timeoutSeconds: 1 })).status).toBe("waiting");
   });
 
   it("keeps the download switch and what the agent was told when another version is shared", async () => {

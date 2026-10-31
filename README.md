@@ -291,6 +291,14 @@ account when you turn it off. `framejam cloud` shows which mode you're in. Cloud
 signed out, projects stay local. While an agent waits for feedback in cloud mode, the app asks the cloud for changes
 about once a second or two; the free tier is fine for a few projects at a time.
 
+**Connect by URL.** FrameJam Cloud also runs the same tools as a remote server, for agents that can't run FrameJam on
+your computer (the project page then lives in the cloud). Add the server's URL and sign in when your app asks:
+`claude mcp add --transport http framejam <server url>` in Claude Code, or `{ "mcpServers": { "framejam": { "url":
+"<server url>" } } }` in Cursor's `mcp.json`. The remote tools take uploads instead of file paths: `request_upload`
+returns a command that uploads a render, and `add_version` takes the returned `assetId`, or a public link (or Google
+Drive link) when the agent has no shell. `wait_for_feedback` comes back with `status: "waiting"` and a `cursor` so no
+call outlasts the client's timeout; the local tool answers the same way.
+
 **What stays local.** Your projects, comments, styles and playbooks stay in `~/.framejam`, unless you turned on cloud
 mode (above). Nothing is uploaded until you run `framejam share` or ask your agent to share (or you make a cloud project), and then it is only the version you picked (its render, or a
 storyboard's panels, plus a poster frame) and the guests' comments on it. Your login token is in
