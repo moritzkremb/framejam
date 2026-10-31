@@ -1,5 +1,6 @@
 import { ConvexClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
+import type { SpokenWord } from "../../core/voice";
 import type { CommentKind, Review, ReviewComment, ReviewVersion } from "@/lib/api";
 import type { NewComment, ReviewDataSource } from "@/lib/data-source";
 
@@ -38,6 +39,15 @@ export interface ShareView {
     resolvedIn?: number;
     drawing?: number[][];
     at: number;
+    /** A spoken comment: `text` is the transcript, or empty when there isn't one. */
+    voice?: {
+      status: "transcribed" | "pending" | "failed";
+      text?: string;
+      duration?: number;
+      audioUrl?: string;
+      note?: string;
+      points: Array<{ phrase: string; at: number; time: number; x?: number; y?: number; frameUrl?: string; drawing?: number[][] }>;
+    };
   }>;
   approvals: Array<{ version: number; guestName: string; at: number }>;
   /** A guest approved the latest version: the link carries only that version, no comments, and maybe a download. */
@@ -61,6 +71,17 @@ export interface SentComment {
   text: string;
   drawing?: number[][];
   frame?: { key: string; bytes: number };
+  voice?: { id: string; points: Array<{ phrase: string; at: number; time: number; x?: number; y?: number; drawing?: number[][]; frame?: { key: string; bytes: number } }> };
+}
+
+/** What `voice.transcribe` returns for an uploaded recording. */
+export interface VoiceResult {
+  voiceId: string;
+  status: "transcribed" | "pending" | "failed";
+  text?: string;
+  words: SpokenWord[];
+  duration?: number;
+  note?: string;
 }
 
 /** The cloud calls the share page makes; `convexShareBackend` is the real one, tests pass a fake. */
@@ -69,6 +90,8 @@ export interface ShareBackend {
   watch(link: string, onView: (view: ShareView | null) => void, onError: (e: Error) => void): () => void;
   view(link: string): Promise<ShareView | null>;
   frameUpload(link: string): Promise<{ uploadUrl: string; storageKey: string }>;
+  voiceUpload(link: string, mime: string): Promise<{ uploadUrl: string; storageKey: string; mime: string }>;
+  voiceTranscribe(args: { link: string; storageKey: string; bytes: number; mime: string; duration?: number }): Promise<VoiceResult>;
   send(args: { link: string; version: number; name: string; email: string; comments: SentComment[] }): Promise<{ ids: string[] }>;
   approve(args: { link: string; version: number; name: string; email: string }): Promise<{ at: number }>;
   /** A short-lived link that saves the approved video's original file. */
@@ -77,6 +100,8 @@ export interface ShareBackend {
 
 const viewRef = makeFunctionReference<"query", { link: string }, ShareView | null>("guest:view");
 const frameUploadRef = makeFunctionReference<"action", { link: string }, { uploadUrl: string; storageKey: string }>("guest:frameUpload");
+const voiceUploadRef = makeFunctionReference<"action", { link: string; mime: string }, { uploadUrl: string; storageKey: string; mime: string }>("voice:upload");
+const voiceTranscribeRef = makeFunctionReference<"action", Parameters<ShareBackend["voiceTranscribe"]>[0], VoiceResult>("voice:transcribe");
 const sendRef = makeFunctionReference<"mutation", Parameters<ShareBackend["send"]>[0], { ids: string[] }>("guest:send");
 const approveRef = makeFunctionReference<"mutation", Parameters<ShareBackend["approve"]>[0], { at: number }>("guest:approve");
 const downloadRef = makeFunctionReference<"action", { link: string }, { url: string; filename: string }>("guest:downloadUrl");
@@ -96,6 +121,8 @@ export function convexShareBackend(url: string): ShareBackend {
     watch: (link, onView, onError) => client.onUpdate(viewRef, { link }, onView, onError),
     view: (link) => client.query(viewRef, { link }),
     frameUpload: (link) => client.action(frameUploadRef, { link }),
+    voiceUpload: (link, mime) => client.action(voiceUploadRef, { link, mime }),
+    voiceTranscribe: (args) => client.action(voiceTranscribeRef, args),
     send: (args) => client.mutation(sendRef, args),
     approve: (args) => client.mutation(approveRef, args),
     downloadUrl: (link) => client.action(downloadRef, { link }),
@@ -112,7 +139,15 @@ export type SharedReview = Review & {
   /** Poster image of each video version, by version number. */
   posters: Record<number, string>;
 };
-export type NewSharedComment = NewComment & { drawing?: number[][] };
+/** A spoken comment before it is sent: the transcript, and the frame each pointing phrase shows. */
+export interface DraftVoice {
+  id: string;
+  status: "transcribed" | "pending" | "failed";
+  note?: string;
+  duration?: number;
+  points: Array<{ phrase: string; at: number; time: number; x?: number; y?: number; drawing?: number[][]; frame?: string }>;
+}
+export type NewSharedComment = NewComment & { drawing?: number[][]; voice?: DraftVoice };
 
 interface Draft {
   id: string;
@@ -128,6 +163,7 @@ interface Draft {
   drawing?: number[][];
   /** JPEG data URL of the frame, with the pin and drawing burned in. */
   frame?: string;
+  voice?: DraftVoice;
   createdAt: string;
 }
 
@@ -140,6 +176,8 @@ export class LinkClosedError extends Error {
 export interface CloudShareSource extends ReviewDataSource {
   review(id: string): Promise<SharedReview>;
   addComment(id: string, body: NewSharedComment): Promise<SharedComment>;
+  /** Uploads a recording and has it transcribed. The audio is kept even when transcription isn't available. */
+  transcribeVoice(id: string, blob: Blob, mime: string, duration: number): Promise<VoiceResult>;
   guest(): Guest | null;
   setGuest(guest: Guest): void;
   approve(id: string, version: number): Promise<void>;
@@ -182,6 +220,21 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
   const views = new Map<string, ShareView | null>();
   const listeners = new Map<string, Set<() => void>>();
   const notify = (link: string) => listeners.get(link)?.forEach((l) => l());
+  /** Playback for recordings made in this tab; a reloaded draft keeps its transcript but not its audio. */
+  const audioUrls = new Map<string, string>();
+
+  /** The frame helps whoever reads the comment, but the words matter most: a failed upload sends without it. */
+  const uploadFrame = async (link: string, dataUrl: string | undefined): Promise<{ key: string; bytes: number } | undefined> => {
+    if (!dataUrl) return undefined;
+    try {
+      const blob = await dataUrlBlob(dataUrl);
+      const { uploadUrl, storageKey } = await backend.frameUpload(link);
+      const res = await fetchFn(uploadUrl, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: blob });
+      return res.ok ? { key: storageKey, bytes: blob.size } : undefined;
+    } catch {
+      return undefined;
+    }
+  };
 
   const drafts = (link: string) => readJson<Draft[]>(storage, draftsKey(link), []);
   const saveDrafts = (link: string, list: Draft[]) => {
@@ -236,6 +289,13 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       createdAt: iso(c.at),
       author: c.guestName,
       drawing: c.drawing,
+      voice: c.voice && {
+        status: c.voice.status,
+        duration: c.voice.duration,
+        audioUrl: c.voice.audioUrl,
+        note: c.voice.note,
+        points: c.voice.points.map((p) => ({ phrase: p.phrase, at: p.at, time: p.time, x: p.x, y: p.y, frame: p.frameUrl, drawn: p.drawing?.length ? true : undefined })),
+      },
     }));
     const mine: SharedComment[] = drafts(link).map((d) => ({
       id: d.id,
@@ -253,6 +313,13 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       createdAt: d.createdAt,
       author: me,
       drawing: d.drawing,
+      voice: d.voice && {
+        status: d.voice.status,
+        duration: d.voice.duration,
+        audioUrl: audioUrls.get(d.voice.id),
+        note: d.voice.note,
+        points: d.voice.points.map((p) => ({ phrase: p.phrase, at: p.at, time: p.time, x: p.x, y: p.y, frame: p.frame, drawn: p.drawing?.length ? true : undefined })),
+      },
     }));
     const first = view.versions[0]?.at ?? 0;
     const last = view.versions.at(-1)?.at ?? first;
@@ -317,16 +384,32 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
         text: body.text.trim(),
         drawing: body.drawing?.length ? body.drawing : undefined,
         frame: body.thumbnailDataUrl,
+        voice: body.voice,
         createdAt: new Date().toISOString(),
       };
       saveDrafts(id, [...drafts(id), draft]);
       return toReview(id, view).comments.find((c) => c.id === draft.id)!;
     },
 
+    async transcribeVoice(id, blob, mime, duration) {
+      await requireView(id);
+      try {
+        const up = await backend.voiceUpload(id, mime);
+        const put = await fetchFn(up.uploadUrl, { method: "PUT", headers: { "Content-Type": up.mime }, body: blob });
+        if (!put.ok) throw new Error("The recording couldn't be uploaded. Try again.");
+        const result = await backend.voiceTranscribe({ link: id, storageKey: up.storageKey, bytes: blob.size, mime: up.mime, duration });
+        audioUrls.set(result.voiceId, URL.createObjectURL(blob));
+        return result;
+      } catch (e) {
+        throw new Error(cloudMessage(e));
+      }
+    },
+
     async updateComment(id, commentId, body) {
       const list = drafts(id);
       const draft = list.find((d) => d.id === commentId);
       if (!draft) throw new Error("Sent comments can't be changed");
+      if (draft.voice) throw new Error("Voice comments can't be edited");
       draft.text = body.text.trim();
       saveDrafts(id, list);
       return draft;
@@ -354,18 +437,13 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
       for (const [version, group] of byVersion) {
         const comments: SentComment[] = [];
         for (const d of group) {
-          let frame: SentComment["frame"];
-          if (d.frame) {
-            // The frame helps the creator see what you meant, but the words matter most: send without it if the upload fails.
-            try {
-              const blob = await dataUrlBlob(d.frame);
-              const { uploadUrl, storageKey } = await backend.frameUpload(id);
-              const res = await fetchFn(uploadUrl, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: blob });
-              if (res.ok) frame = { key: storageKey, bytes: blob.size };
-            } catch {
-              frame = undefined;
-            }
-          }
+          const frame = await uploadFrame(id, d.frame);
+          const voice: SentComment["voice"] = d.voice && {
+            id: d.voice.id,
+            points: await Promise.all(
+              d.voice.points.map(async (p) => ({ phrase: p.phrase, at: p.at, time: p.time, x: p.x, y: p.y, drawing: p.drawing, frame: await uploadFrame(id, p.frame) })),
+            ),
+          };
           comments.push({
             kind: d.kind,
             time: d.time,
@@ -374,9 +452,10 @@ export function cloudShareSource(backend: ShareBackend, storage: Storage = windo
             y: d.y,
             panel: d.panel,
             wholeVideo: d.wholeVideo,
-            text: d.text,
+            text: d.voice ? "" : d.text,
             drawing: d.drawing,
             frame,
+            voice,
           });
         }
         try {

@@ -167,6 +167,22 @@ export function storeContract(name: string, create: (dataDir: string) => Store |
         expect((await thrown(() => store.deleteComment(id, pin.id))).status).toBe(404);
       });
 
+      it("keeps a spoken comment's pointing phrases, each with its own frame image", async () => {
+        const id = await open();
+        const c = await store.addComment(id, {
+          time: 1,
+          text: "This is too small",
+          voice: { status: "transcribed", duration: 3, points: [{ phrase: "This", at: 0.4, time: 1 }, { phrase: "here", at: 2, time: 2 }] },
+        });
+        expect(c.voice?.points.map((p) => p.phrase)).toEqual(["This", "here"]);
+        const file = await store.saveThumbnail(id, c.id, Buffer.from("second"), 1);
+        expect((await store.getReview(id)).comments[0]!.voice!.points.map((p) => p.frame)).toEqual([undefined, file]);
+        expect((await store.readThumbnail(id, file))?.toString()).toBe("second");
+        await thrown(() => store.saveThumbnail(id, c.id, Buffer.from("x"), 5));
+        await store.deleteComment(id, c.id);
+        expect(await store.thumbnailFile(id, file)).toBeUndefined();
+      });
+
       it("locks a version on submit and delivers the batch once", async () => {
         const id = await open();
         const c = await store.addComment(id, { time: 1, text: "First" });

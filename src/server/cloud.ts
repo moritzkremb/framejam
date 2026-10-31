@@ -163,6 +163,16 @@ export interface GuestComment {
   text: string;
   guestName: string;
   frameUrl?: string;
+  /** A spoken comment: `text` is the transcript, and each pointing phrase has the frame it showed. */
+  voice?: GuestVoice;
+}
+
+export interface GuestVoice {
+  status: "transcribed" | "pending" | "failed";
+  duration?: number;
+  audioUrl?: string;
+  note?: string;
+  points: Array<{ phrase: string; at: number; time: number; x?: number; y?: number; frameUrl?: string; drawing?: number[][] }>;
 }
 
 export interface GuestApproval {

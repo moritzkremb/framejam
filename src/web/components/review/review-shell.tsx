@@ -8,7 +8,7 @@ import { CommentList } from "@/components/review/comment-list";
 import { Handoff } from "@/components/review/dock";
 import { ShareStatus } from "@/components/review/share-status";
 import type { ReviewState } from "@/components/review/use-review";
-import { copyText, relativeTime, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
+import { copyText, relativeTime, thumbUrl, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
 import { cn, MOD_KEY } from "@/lib/utils";
 
@@ -298,6 +298,7 @@ export function ReviewSidebar({
   tab = "comments",
   onTab,
   onSelect,
+  onPoint,
 }: {
   r: ReviewState;
   side: SidebarState;
@@ -312,6 +313,8 @@ export function ReviewSidebar({
   tab?: SidebarTab;
   onTab?(tab: SidebarTab): void;
   onSelect(c: ReviewComment): void;
+  /** A pointing phrase in a spoken comment was clicked. */
+  onPoint?(c: ReviewComment, point: number): void;
 }) {
   if (!side.open) return null;
   const count = comments.length > 0 && <span className={cn("fc-count", r.isOpen ? "draft" : "sent")}>{comments.length}</span>;
@@ -349,6 +352,8 @@ export function ReviewSidebar({
             selectedId={selectedId}
             label={label}
             onSelect={onSelect}
+            frameUrl={(file) => thumbUrl(r.review?.id ?? "", file)}
+            onPoint={onPoint}
             onSave={r.saveComment}
             onDelete={r.deleteComment}
           />

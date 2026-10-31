@@ -499,6 +499,42 @@ describe("pulling guests' comments", () => {
     expect(comments[1]!.thumbnail).toBeUndefined();
   });
 
+  it("adds a spoken comment with its transcript, and downloads one frame per pointing phrase", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    cloud.guest("cmt_v", 1, "This logo is too small. And over here the subtitle needs contrast.", {
+      frameUrl: "https://media.test/frames/main.jpg",
+      voice: {
+        status: "transcribed",
+        duration: 6,
+        audioUrl: "https://media.test/voice/r1.webm",
+        points: [
+          { phrase: "This", at: 0.5, time: 1.5, x: 0.4, y: 0.6, frameUrl: "https://media.test/frames/p0.jpg" },
+          { phrase: "over here", at: 3.7, time: 3, frameUrl: "https://media.test/frames/p1.jpg", drawing: [[0.1, 0.1, 0.2, 0.2]] },
+        ],
+      },
+    });
+    expect(await pullShare(store, id, opts())).toMatchObject({ added: 1 });
+    const [c] = (await store.getReview(id)).comments;
+    expect(c!.text).toContain("This logo is too small");
+    expect(c!.voice).toMatchObject({ status: "transcribed", duration: 6, audioUrl: "https://media.test/voice/r1.webm" });
+    expect(c!.voice!.points.map((p) => [p.phrase, p.drawn])).toEqual([["This", undefined], ["over here", true]]);
+    expect(net.gets).toEqual(["https://media.test/frames/main.jpg", "https://media.test/frames/p0.jpg", "https://media.test/frames/p1.jpg"]);
+    for (const p of c!.voice!.points) expect((await store.readThumbnail(id, p.frame!))!.byteLength).toBe(4);
+    expect(c!.thumbnail).toBeTruthy();
+    await store.deleteComment(id, c!.id);
+    expect(await store.thumbnailFile(id, c!.voice!.points[0]!.frame!)).toBeUndefined();
+  });
+
+  it("keeps a recording that has no transcript, with the reason", async () => {
+    const id = await openLaunch();
+    await shareVersion(store, id, opts());
+    cloud.guest("cmt_p", 1, "Voice comment (transcription pending)", { voice: { status: "pending", note: "Transcription pending", audioUrl: "https://media.test/voice/r2.webm", points: [] } });
+    await pullShare(store, id, opts());
+    const [c] = (await store.getReview(id)).comments;
+    expect(c!.voice).toMatchObject({ status: "pending", note: "Transcription pending", points: [] });
+  });
+
   it("ignores a frame that isn't an image or isn't http", async () => {
     const id = await openLaunch();
     await shareVersion(store, id, opts());

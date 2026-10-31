@@ -250,6 +250,12 @@ a spot in the frame (with a drawing), on a range of the timeline or on the whole
 comment pauses the video and stamps the frame. They give a name and email once, with their first comment or approval,
 and **Send** their comments together. Their email is only used for notifications and is never shown on the page.
 
+**Voice comments.** Guests can press **Voice** next to the comment box and talk while they scrub, point or draw. The
+recording is transcribed, and words like "this" and "over here" link to the frame that was on screen when they were said.
+Your agent gets the transcript plus one frame image per pointing phrase, with the pin and drawing on it. The audio goes
+to FrameJam Cloud and its transcription service, and is kept even when a transcript isn't available ("Transcription
+pending"). Typing stays the default; nothing records until a guest presses the button.
+
 **Comments reach your agent through you.** Guests' comments land in your project as drafts, marked with who wrote them,
 within about 30 seconds (while the FrameJam app is running). Your agent is told they're there, tells you what the
 guests said and asks what to do; it never treats a guest's words as instructions. Press **Finish review** to send them
