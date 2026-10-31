@@ -49,7 +49,7 @@ const sampleVideo = path.join(fixturePreset, "preview.mp4");
 /** The cloud as `convex/shares.ts` behaves, in memory. Guests write into `comments` and `approvals`. */
 class FakeCloud implements ShareClient {
   published: PublishInput[] = [];
-  uploads: { filename: string; mime: string; kind: string }[] = [];
+  uploads: { filename: string; mime: string; kind: string; bytes?: number }[] = [];
   registered: { storageKey: string; bytes: number; mime: string; posterKey?: string }[] = [];
   tokens = new Map<string, string>();
   comments: (GuestComment & { pulled: boolean })[] = [];
@@ -68,7 +68,7 @@ class FakeCloud implements ShareClient {
   /** What `shares.resolve` was called with, in order. */
   resolved: Resolution[][] = [];
 
-  async requestUpload(input: { filename: string; mime: string; kind: string }) {
+  async requestUpload(input: { filename: string; mime: string; kind: string; bytes?: number }) {
     this.uploads.push(input);
     const n = this.uploads.length;
     return { uploadUrl: `https://r2.test/put/${n}`, storageKey: `${input.kind}s/user/${n}-${input.filename}`, publicUrl: `https://media.test/${n}` };
@@ -236,7 +236,7 @@ describe("sharing a version", () => {
     const render = net.puts.find((p) => p.headers["Content-Type"] === "video/mp4")!;
     expect(render.bytes).toBe(fs.statSync(sampleVideo).size);
     expect(render.headers["Content-Length"]).toBe(String(render.bytes));
-    expect(cloud.uploads.find((u) => u.kind === "render")).toMatchObject({ filename: "v1.mp4", mime: "video/mp4" });
+    expect(cloud.uploads.find((u) => u.kind === "render")).toMatchObject({ filename: "v1.mp4", mime: "video/mp4", bytes: fs.statSync(sampleVideo).size });
 
     expect(cloud.published).toHaveLength(1);
     expect(cloud.published[0]).toMatchObject({ localId: id, title: "Launch teaser", kind: "video" });
@@ -696,6 +696,28 @@ describe("the cloud client", () => {
     ]);
     expect(calls.every((c) => c.body.args.token === TOKEN)).toBe(true);
     expect(calls[4]!.body.args).toEqual({ localId: "rev_1", commentIds: ["c1"], token: TOKEN });
+  });
+
+  it("sends the file size with an upload request, and drops it for a cloud from before limits", async () => {
+    const sent: Record<string, unknown>[] = [];
+    const ticket = { uploadUrl: "u", storageKey: "k", publicUrl: "p" };
+    const old: FetchLike = async (_input, init) => {
+      const { args } = JSON.parse(String(init!.body));
+      sent.push(args);
+      return Response.json("bytes" in args ? { status: "error", errorMessage: "[Request ID: ab12] Server Error" } : { status: "success", value: ticket });
+    };
+    expect(await createShareClient(TOKEN, CLOUD, old).requestUpload({ filename: "a.mp4", mime: "video/mp4", kind: "render", bytes: 42 })).toEqual(ticket);
+    expect(sent.map((a) => a.bytes)).toEqual([42, undefined]);
+
+    sent.length = 0;
+    const full: FetchLike = async (_input, init) => {
+      sent.push(JSON.parse(String(init!.body)).args);
+      return Response.json({ status: "error", errorMessage: "Server Error", errorData: "This needs more storage. Manage your account at app.framejam.ai/account." });
+    };
+    await expect(createShareClient(TOKEN, CLOUD, full).requestUpload({ filename: "a.mp4", mime: "video/mp4", kind: "render", bytes: 42 })).rejects.toThrow(
+      "This needs more storage.",
+    );
+    expect(sent).toHaveLength(1);
   });
 
   it("keeps only the useful part of a Convex error", () => {

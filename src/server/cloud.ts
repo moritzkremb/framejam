@@ -74,13 +74,15 @@ export interface RetryOptions {
 
 /**
  * A failed cloud call. `transient` means the network or a 5xx, where trying again later can work. `status` is set when
- * the cloud refused a rule with the status a local store would give (404 not found, 409 conflict).
+ * the cloud refused a rule with the status a local store would give (404 not found, 409 conflict). `refused` means a
+ * function turned the call down with its own message, not a bare server error.
  */
 export class CloudError extends Error {
   constructor(
     message: string,
     readonly transient: boolean,
     readonly status?: 400 | 404 | 409,
+    readonly refused = false,
   ) {
     super(message);
     this.name = "CloudError";
@@ -156,10 +158,11 @@ async function convexCallOnce<T>(
   const data = body.errorData;
   if (data && typeof data === "object" && typeof (data as { message?: unknown }).message === "string") {
     const { message, status } = data as { message: string; status?: unknown };
-    throw new CloudError(message, false, status === 404 || status === 409 || status === 400 ? status : undefined);
+    throw new CloudError(message, false, status === 404 || status === 409 || status === 400 ? status : undefined, true);
   }
   const thrown = typeof data === "string" && data.trim() ? data.trim() : undefined;
-  throw new CloudError(thrown ?? cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`, false);
+  if (thrown) throw new CloudError(thrown, false, undefined, true);
+  throw new CloudError(cloudMessage(body.errorMessage) ?? `FrameJam Cloud returned ${res.status}.`, false);
 }
 
 /**
@@ -279,9 +282,32 @@ export interface LinkSettings {
   showNotes?: boolean;
 }
 
+export interface UploadRequest {
+  filename: string;
+  mime: string;
+  kind: AssetKind;
+  /** The file's size, so FrameJam Cloud can refuse a file the account has no room for before it goes up. */
+  bytes?: number;
+}
+
+/**
+ * Calls `uploads.request` with the file's size. A deployment from before limits rejects the extra argument with a bare
+ * server error, so that case is tried once more without it.
+ */
+export async function requestUpload(call: (args: Record<string, unknown>) => Promise<UploadTicket>, input: UploadRequest): Promise<UploadTicket> {
+  const { bytes, ...rest } = input;
+  if (bytes === undefined) return call(rest);
+  try {
+    return await call({ ...rest, bytes });
+  } catch (err) {
+    if (!(err instanceof CloudError) || err.transient || err.refused) throw err;
+    return call(rest);
+  }
+}
+
 /** What sharing needs from FrameJam Cloud, for the signed-in user's API token. */
 export interface ShareClient {
-  requestUpload(input: { filename: string; mime: string; kind: AssetKind }): Promise<UploadTicket>;
+  requestUpload(input: UploadRequest): Promise<UploadTicket>;
   registerUpload(input: RegisterInput): Promise<{ assetId: string }>;
   publish(input: PublishInput): Promise<Published>;
   pending(localId: string): Promise<PendingShare | null>;
@@ -302,7 +328,7 @@ export function createShareClient(
   const call = <T>(kind: ConvexKind, path: string, args: Record<string, unknown>) =>
     convexCall<T>(base, kind, path, { ...args, token }, fetchFn, retry);
   return {
-    requestUpload: (input) => call<UploadTicket>("action", "uploads:request", input),
+    requestUpload: (input) => requestUpload((args) => call<UploadTicket>("action", "uploads:request", args), input),
     registerUpload: (input) => call<{ assetId: string }>("mutation", "uploads:register", { ...input }),
     publish: (input) => call<Published>("mutation", "shares:publish", { ...input }),
     pending: (localId) => call<PendingShare | null>("query", "shares:pending", { localId }),

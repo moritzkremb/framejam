@@ -649,7 +649,7 @@ export class CloudStore implements Store {
 
   private async putOne(file: string, kind: "render" | "panel" | "poster" | "source", onBytes?: (sent: number) => void, extra: { posterKey?: string } = {}) {
     const mime = mimeFor(file);
-    const ticket = await this.api.requestUpload({ filename: path.basename(file), mime, kind });
+    const ticket = await this.api.requestUpload({ filename: path.basename(file), mime, kind, bytes: fs.statSync(file).size });
     const bytes = await putFile(ticket.uploadUrl, file, mime, this.fetchFn, onBytes, { attempts: 3, retryDelayMs: this.retryDelayMs });
     const { assetId } = await this.api.registerUpload({ storageKey: ticket.storageKey, bytes, mime, ...extra });
     return { assetId, storageKey: ticket.storageKey };
@@ -798,7 +798,7 @@ export class CloudStore implements Store {
     fs.writeFileSync(path.join(this.thumbsDir(reviewId), name), jpeg);
     this.changed(reviewId);
     try {
-      const ticket = await this.api.requestUpload({ filename: name, mime: "image/jpeg", kind: "frame" });
+      const ticket = await this.api.requestUpload({ filename: name, mime: "image/jpeg", kind: "frame", bytes: jpeg.byteLength });
       const res = await this.fetchFn(ticket.uploadUrl, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: jpeg as BodyInit });
       if (!res.ok) throw new Error(`Uploading to FrameJam Cloud failed (${res.status}).`);
       const { assetId } = await this.api.registerUpload({ storageKey: ticket.storageKey, bytes: jpeg.byteLength, mime: "image/jpeg" });

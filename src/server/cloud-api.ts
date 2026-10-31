@@ -8,10 +8,11 @@ import {
   type FetchLike,
   type LinkSettings,
   type RegisterInput,
+  type UploadRequest,
   type UploadTicket,
-  type AssetKind,
   cloudUrl,
   convexCall,
+  requestUpload,
 } from "./cloud.ts";
 
 export type UploadState = { state: "uploading" | "ready" | "failed"; bytes: number; total: number; error?: string };
@@ -177,7 +178,7 @@ export interface CloudApi {
   markDelivered(reviewId: string, batchIds: string[]): Promise<null>;
   resolveComments(reviewId: string, ids: string[], note?: string): Promise<{ resolved: string[]; missing: string[] }>;
 
-  requestUpload(input: { filename: string; mime: string; kind: AssetKind }): Promise<UploadTicket>;
+  requestUpload(input: UploadRequest): Promise<UploadTicket>;
   registerUpload(input: RegisterInput): Promise<{ assetId: string }>;
 
   share(reviewId: string, version?: number): Promise<CloudLink & { version: number; newOnLink: boolean }>;
@@ -214,7 +215,7 @@ export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn:
     reopen: (reviewId) => call("mutation", "cloud:reopen", { reviewId }),
     markDelivered: (reviewId, batchIds) => call("mutation", "cloud:markDelivered", { reviewId, batchIds }),
     resolveComments: (reviewId, ids, note) => call("mutation", "cloud:resolveComments", { reviewId, ids, note }),
-    requestUpload: (input) => call("action", "uploads:request", input),
+    requestUpload: (input) => requestUpload((args) => call("action", "uploads:request", args), input),
     registerUpload: (input) => call("mutation", "uploads:register", { ...input }),
     share: (reviewId, version) => call("mutation", "cloud:share", { reviewId, version }),
     link: (reviewId) => call("query", "cloud:link", { reviewId }),

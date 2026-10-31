@@ -157,7 +157,7 @@ export async function findProject(store: Store, ref: string): Promise<Review> {
 
 async function uploadFile(client: ShareClient, file: string, kind: AssetKind, fetchFn: FetchLike, extra: { posterKey?: string } = {}) {
   const mime = mimeFor(file);
-  const ticket = await client.requestUpload({ filename: path.basename(file), mime, kind });
+  const ticket = await client.requestUpload({ filename: path.basename(file), mime, kind, bytes: fs.statSync(file).size });
   const bytes = await putFile(ticket.uploadUrl, file, mime, fetchFn);
   const { assetId } = await client.registerUpload({ storageKey: ticket.storageKey, bytes, mime, ...extra });
   return { assetId, storageKey: ticket.storageKey };
