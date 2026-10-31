@@ -13,7 +13,7 @@ import { AppStore } from "./app-store.ts";
 import { readAuth } from "./auth.ts";
 import { cloudModeOn, setCloudMode } from "./cloud-mode.ts";
 import { describeShare, findProject, shareVersion, startSharePuller } from "./share.ts";
-import { DEFAULT_CLOUD_URL } from "./cloud.ts";
+import { DEFAULT_CLOUD_URL, cloudReviewUrl } from "./cloud.ts";
 import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
 import { VERSION, compareVersions } from "./version.ts";
@@ -261,7 +261,7 @@ async function runShare(): Promise<never> {
 if (positionals[0] === "share") await runShare();
 const catalogSettings = catalogConfig();
 let catalogClient: CatalogClient | undefined;
-const ctx = { store, baseUrl, catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient) };
+const ctx = { store, baseUrl, reviewUrl: async (id: string) => ((await store.isCloud(id)) ? cloudReviewUrl(id) : undefined), catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient) };
 
 /** Cloud mode at startup: says if it's on but signed out, and finishes uploads a stopped app left half-done. */
 function startCloud() {

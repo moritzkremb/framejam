@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, Copy, Download, Keyboard, Loader2, MessageSquare, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Columns2, Copy, Download, Keyboard, Loader2, MessageSquare, X } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -197,18 +197,20 @@ export function ReviewHeader({
   subline,
   shortcuts,
   onPickVersion,
+  onCompare,
 }: {
   r: ReviewState;
   subline: string;
   shortcuts: Shortcut[];
   onPickVersion(n: number): void;
+  onCompare?: () => void;
 }) {
   const { review, version, latest } = r;
   if (!review || !version || !latest) return null;
   return (
     <>
     <BackHeader to="/" title={review.title} sub={subline}>
-      <ShareStatus data={r.data} reviewId={review.id} />
+      <ShareStatus data={r.data} reviewId={review.id} latestVersion={latest.number} />
       <ShortcutsButton shortcuts={shortcuts} />
       <Menu
         label="Versions and more"
@@ -231,6 +233,11 @@ export function ReviewHeader({
           </MenuItem>
         ))}
         <MenuSeparator />
+        {onCompare && (
+          <MenuItem icon={<Columns2 className="fc-i sm" />} onSelect={onCompare}>
+            Compare versions
+          </MenuItem>
+        )}
         <MenuItem
           icon={<Copy className="fc-i sm" />}
           onSelect={async () => {
@@ -252,6 +259,26 @@ export function ReviewHeader({
       </Menu>
     </BackHeader>
     <UploadState version={version} />
+    </>
+  );
+}
+
+/** A cloud project's newest version while its video is still on the way up: header, upload progress and the poster. */
+export function UploadWait({ r, poster, onCompare }: { r: ReviewState; poster?: string; onCompare?: () => void }) {
+  const version = r.version!;
+  return (
+    <>
+      <ReviewHeader
+        r={r}
+        subline={`Version ${version.number} · uploading`}
+        shortcuts={[]}
+        onPickVersion={(n) => r.setActiveVersion(n)}
+        onCompare={onCompare}
+      />
+      <div className="fc-upload-wait" data-testid="upload-wait">
+        {poster ? <img src={poster} alt="" /> : <div className="fc-skel" style={{ aspectRatio: "16 / 9", borderRadius: 14 }} />}
+        <p>The video plays here as soon as it's uploaded. Comments open then.</p>
+      </div>
     </>
   );
 }

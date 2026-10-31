@@ -529,3 +529,19 @@ describe("playbooks", () => {
     expect(fx.store.getReview(opened.reviewId)).toMatchObject({ playbookId: "test-cut", styleId: "bauhaus-grid" });
   });
 });
+
+describe("cloud projects", () => {
+  it("returns the web app's address for a project that lives in the cloud", async () => {
+    const cloudMcp = await connectClient({ ...fx.ctx, reviewUrl: (id: string) => (id.startsWith("rev_") ? `https://app.example.com/p/${id}` : undefined) });
+    try {
+      const res = parse(await cloudMcp.call("open_review", { title: "Cloud cut", videoPath: fx.video }));
+      expect(res.url).toBe(`https://app.example.com/p/${res.reviewId}`);
+      const added = parse(await cloudMcp.call("add_version", { reviewId: res.reviewId, videoPath: fx.video }));
+      expect(added.url).toBe(`https://app.example.com/p/${res.reviewId}`);
+      const listed = parse(await cloudMcp.call("list_reviews", {}));
+      expect(listed.reviews[0].url).toBe(`https://app.example.com/p/${res.reviewId}`);
+    } finally {
+      await cloudMcp.close();
+    }
+  });
+});
