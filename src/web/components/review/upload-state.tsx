@@ -22,7 +22,7 @@ export function UploadState({ version }: { version: ReviewVersion }) {
           <div className="line">
             <strong>v{version.number} didn't finish uploading</strong>
           </div>
-          <div className="note">{u.error ? `${u.error} ` : ""}Ask your agent to open it again to retry. You can keep reviewing here meanwhile.</div>
+          <div className="note">{u.error ? `${u.error} ` : ""}FrameJam tries again when it restarts, or ask your agent to open it again. You can keep reviewing here meanwhile.</div>
         </div>
       </div>
     );

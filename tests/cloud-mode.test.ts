@@ -27,7 +27,7 @@ beforeEach(() => {
   video = path.join(root, "v1.mp4");
   fs.copyFileSync(path.join(fixturePreset, "preview.mp4"), video);
   cloud = new FakeCloud();
-  store = new AppStore(new JsonStore(path.join(root, "data")), { api: cloud, fetch: cloud.fetch, cacheMs: 0, posterFrame: poster });
+  store = new AppStore(new JsonStore(path.join(root, "data")), { api: cloud, fetch: cloud.fetch, cacheMs: 0, retryDelayMs: 0, posterFrame: poster });
   ctx = { store, baseUrl: "http://localhost:2400", waitSeconds: 2, pollMs: 20, progressEveryMs: 100 };
 });
 
@@ -93,16 +93,35 @@ describe("cloud mode on", () => {
     expect(cloud.objects.get(key!)!.bytes.length).toBe(fs.statSync(video).size);
   });
 
-  it("marks a failed upload and retries it when the project is opened again", async () => {
-    cloud.failNextPut = 500;
+  it("tries a dropped upload again before giving up", async () => {
+    cloud.failPuts = 2;
+    const { review } = await store.openReview({ title: "Shaky", videoPath: video });
+    await cloudStore().waitForUpload(review.id, 1);
+    expect((await store.getReview(review.id)).versions[0]!.upload).toBeUndefined();
+    expect(cloud.failPuts).toBe(0);
+  });
+
+  it("marks a failed upload, and retries it when the project is opened again or the app restarts", async () => {
+    cloud.failPuts = 99;
     const { review } = await store.openReview({ title: "Flaky", videoPath: video });
     await expect(cloudStore().waitForUpload(review.id, 1, 5_000)).rejects.toThrow(/didn't finish uploading/);
     expect((await store.getReview(review.id)).versions[0]!.upload?.state).toBe("failed");
 
+    cloud.failPuts = 0;
     const again = await store.openReview({ title: "Flaky", videoPath: video, reviewId: review.id });
     expect(again.created).toBe(false);
     await cloudStore().waitForUpload(review.id, 1);
     expect((await store.getReview(review.id)).versions[0]!.upload).toBeUndefined();
+
+    cloud.failPuts = 99;
+    fs.appendFileSync(video, "next");
+    await store.addVersion(review.id, { videoPath: video });
+    await expect(cloudStore().waitForUpload(review.id, 2, 5_000)).rejects.toThrow(/didn't finish uploading/);
+    cloud.failPuts = 0;
+    const restarted = new AppStore(new JsonStore(store.local.root), { api: cloud, fetch: cloud.fetch, cacheMs: 0, retryDelayMs: 0, posterFrame: poster });
+    expect(await restarted.cloud()!.resumeUploads()).toBe(1);
+    await restarted.cloud()!.waitForUpload(review.id, 2);
+    expect((await restarted.getReview(review.id)).versions[1]!.upload).toBeUndefined();
   });
 
   it("keeps an earlier version's file when the agent overwrites the render", async () => {

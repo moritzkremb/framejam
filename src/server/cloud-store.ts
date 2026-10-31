@@ -62,6 +62,8 @@ export interface CloudStoreOptions {
   autoUpload?: boolean;
   /** How long a read of the cloud is reused. */
   cacheMs?: number;
+  /** Pause before an upload is tried again (tests make it 0). */
+  retryDelayMs?: number;
   /** Replaces ffmpeg's poster frame (tests). */
   posterFrame?: (video: string) => Promise<Uint8Array | undefined>;
 }
@@ -134,6 +136,7 @@ export class CloudStore implements Store {
   private readonly fetchFn: FetchLike;
   private readonly autoUpload: boolean;
   private readonly cacheMs: number;
+  private readonly retryDelayMs: number;
   private readonly posterFrame: (video: string) => Promise<Uint8Array | undefined>;
   private readonly entries = new Map<string, Entry>();
   private readonly metas = new Map<string, MetaEntry>();
@@ -151,6 +154,7 @@ export class CloudStore implements Store {
     this.fetchFn = options.fetch ?? fetch;
     this.autoUpload = options.autoUpload ?? true;
     this.cacheMs = options.cacheMs ?? CLOUD_CACHE_MS;
+    this.retryDelayMs = options.retryDelayMs ?? 1_000;
     this.posterFrame = options.posterFrame ?? ((video) => extractFrame(video, 1));
   }
 
@@ -542,7 +546,7 @@ export class CloudStore implements Store {
   private async putOne(file: string, kind: "render" | "panel" | "poster", onBytes?: (sent: number) => void, extra: { posterKey?: string } = {}) {
     const mime = mimeFor(file);
     const ticket = await this.api.requestUpload({ filename: path.basename(file), mime, kind });
-    const bytes = await putFile(ticket.uploadUrl, file, mime, this.fetchFn, onBytes);
+    const bytes = await putFile(ticket.uploadUrl, file, mime, this.fetchFn, onBytes, { attempts: 3, retryDelayMs: this.retryDelayMs });
     const { assetId } = await this.api.registerUpload({ storageKey: ticket.storageKey, bytes, mime, ...extra });
     return { assetId, storageKey: ticket.storageKey };
   }
@@ -604,15 +608,16 @@ export class CloudStore implements Store {
   }
 
   /**
-   * Picks up versions whose upload was left half-done by a process that stopped (no progress for a while), when
-   * their files are still in this computer's cache. Called when the app starts.
+   * Picks up versions whose upload failed, or was left half-done by a process that stopped (no progress for a
+   * while), when their files are still in this computer's cache. Called when the app starts.
    */
   async resumeUploads(): Promise<number> {
     let resumed = 0;
     for (const wire of await guard(this.api.list())) {
       const stalled = Date.now() - Date.parse(wire.updatedAt) > STALLED_UPLOAD_MS;
       for (const v of wire.versions) {
-        if (v.upload.state !== "uploading" || !stalled || this.jobs.has(`${wire.id}:${v.number}`)) continue;
+        const left = v.upload.state === "failed" || (v.upload.state === "uploading" && stalled);
+        if (!left || this.jobs.has(`${wire.id}:${v.number}`)) continue;
         const cached =
           wire.kind === "storyboard" ? fs.existsSync(path.join(this.versionsDir(wire.id), `v${v.number}-panels`)) : Boolean(this.cachedVideo(wire.id, v.number));
         if (!cached) continue;

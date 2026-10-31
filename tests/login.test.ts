@@ -226,6 +226,7 @@ describe("login / logout / whoami", () => {
       text: "Ada Lovelace <ada@example.com>",
     });
     expect(formatAccount({ name: "  ", email: "ada@example.com" })).toBe("ada@example.com");
+    expect(formatAccount({ name: null, email: "ada@example.com" })).toBe("ada@example.com");
   });
 });
 

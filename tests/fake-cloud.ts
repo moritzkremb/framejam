@@ -92,6 +92,9 @@ export class FakeCloud implements CloudApi {
   readonly calls: string[] = [];
   /** Makes the next PUT to R2 fail with this status (once), for the failed-upload path. */
   failNextPut?: number;
+  /** Fails this many PUTs to R2 in a row with `failStatus`, to look at retries. */
+  failPuts = 0;
+  failStatus = 500;
   /** Holds PUTs until released, so a test can look at the "uploading" state. */
   gate?: Promise<void>;
   tick = 0;
@@ -538,6 +541,10 @@ export class FakeCloud implements CloudApi {
     const key = url.pathname.slice(1);
     if ((init?.method ?? "GET") === "PUT") {
       if (this.gate) await this.gate;
+      if (this.failPuts > 0) {
+        this.failPuts--;
+        return new Response("no", { status: this.failStatus });
+      }
       if (this.failNextPut) {
         const status = this.failNextPut;
         this.failNextPut = undefined;

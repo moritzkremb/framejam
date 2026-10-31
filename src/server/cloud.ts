@@ -27,7 +27,8 @@ export type DevicePoll =
   | { status: "approved"; token: string; tokenType: "bearer" };
 
 export interface CloudWhoami {
-  name: string;
+  /** Null for accounts that signed up with just an email address. */
+  name: string | null;
   email: string;
 }
 

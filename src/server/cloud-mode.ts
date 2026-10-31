@@ -50,6 +50,7 @@ export interface CloudSessionOptions {
   fetch?: FetchLike;
   autoUpload?: boolean;
   cacheMs?: number;
+  retryDelayMs?: number;
   posterFrame?: (video: string) => Promise<Uint8Array | undefined>;
 }
 
@@ -90,6 +91,7 @@ export class CloudSession {
       fetch: this.options.fetch,
       autoUpload: this.options.autoUpload,
       cacheMs: this.options.cacheMs,
+      retryDelayMs: this.options.retryDelayMs,
       posterFrame: this.options.posterFrame,
     });
     this.current = { key, store };
