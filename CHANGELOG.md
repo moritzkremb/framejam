@@ -21,9 +21,6 @@ this npm release for all of it.
   renders and `.env` or key files, up to 500 MB. The project page has a Notes tab with a source download, and the new
   `get_version` tool hands both to another agent so it can continue in a different app. Guests see notes only when
   you turn on **Show version notes** (`share_project` with `showNotes`); they never get the source.
-- **Live view.** For a Hyperframes version with its source attached, **Live** next to **Render** plays the composition
-  in a sandboxed frame. A comment there also carries the element under the pin (`source: "live"` and `element`), and
-  `upload_files` refreshes the view without a new render.
 - Uploads retry a dropped connection, resume after a failure and send the file size first, so FrameJam Cloud can
   refuse a file over your plan's limit before it's uploaded. An older cloud that doesn't know the size gets the
   request without it.
@@ -74,7 +71,7 @@ go to FrameJam Cloud and its transcription service. `README.md` and `plugin/READ
 ### Before you publish
 
 Ship the framejam-cloud side to production first: cloud projects (H2.1), the project page (H2.2), notes and source
-(H2.6), the remote MCP server and waiting cursor (H3.2), voice (H2.7), upload sizes (H2.4) and the Live view (H4.3).
+(H2.6), the remote MCP server and waiting cursor (H3.2), voice (H2.7) and upload sizes (H2.4).
 `mcp.framejam.ai` must answer before this README goes out. 0.7.0 was never published, so this release also carries
 its sharing changes; `npm version` records skill version 7 in `skills/framejam/versions.json`.
 

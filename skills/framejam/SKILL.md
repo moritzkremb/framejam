@@ -129,8 +129,6 @@ guessed, like the footage for an edit. Useful shortcuts when the request is shor
    - A **spoken comment** (`voice`) has the reviewer's words as its text, and one frame image per pointing phrase
      ("this", "over here"), labelled with the phrase and its time. Match each phrase to its frame to see what it
      points at. If `voice.status` isn't `transcribed`, there's no text yet: say so and ask the user what was meant.
-   - A comment made on the **Live** view of a cloud project (`source: "live"`) has no frame image. Instead `element`
-     names what was under the pin: its selector and text, its Hyperframes clip and the tweens on it.
 7. **Ship the next version.** Re-render to `renders/v2.mp4`, then call
    `add_version({ reviewId, videoPath, note })` (or `open_review` again with the same `title`), plus a new
    `transcriptPath` if the timing of the speech changed.
@@ -294,9 +292,7 @@ Chrome or ffmpeg on your side:
    says `succeeded` (the render is the project's next version, with the files as its source) or `failed` (read the
    log, fix the files with `read_files` and `upload_files`, and render again).
 
-If it answers that rendering isn't enabled, render on the user's computer instead. While the user looks at the
-**Live** view of a version, `upload_files({ reviewId, files })` updates that view in place without a render, which is
-the fastest way to try a small change; render when the user is happy with it.
+If it answers that rendering isn't enabled, render on the user's computer instead.
 
 ## Updating FrameJam
 

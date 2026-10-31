@@ -308,11 +308,6 @@ stay on your computer, and cloud projects stay in your account when you turn it 
 at a time), your project list and your account. Sharing a cloud project needs no extra upload, and guests' comments
 land in the same project as they arrive.
 
-**Live view.** For a version made with Hyperframes whose source files are attached, **Live** next to **Render** plays
-the composition itself, in a sandboxed frame. A comment there carries the time and spot like any other, plus the
-element under your pin (its text, clip and animations). When the agent changes the files with `upload_files`, the Live
-view updates in place without a new render; the next render becomes the next version.
-
 **Notes and source files.** `add_version` and `open_review` take `notes`, a longer markdown handoff than the one-line
 `note` (what changed, which comments it answers, how to continue), and `source`, the project folder or a `.zip` of it.
 FrameJam packs a folder itself, leaving out `node_modules`, `.git`, build output, renders and `.env` or key files, up to
