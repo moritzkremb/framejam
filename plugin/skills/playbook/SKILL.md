@@ -9,3 +9,6 @@ Follow the FrameJam `start` skill. Open the FrameJam pick page for playbooks onl
 `open_picker({ kinds: ["playbook"] })`, open the returned url in the browser if you have a browser tool and post it in
 chat as a clickable link, then call `wait_for_pick`. Load the picked playbook with `get_playbook` and make the video
 with it, using what the user said about the video, if anything.
+
+The pick page needs the local FrameJam tools. With only FrameJam Cloud (web and mobile chats), ask in one line what
+kind of video it is and make it.

@@ -102,8 +102,10 @@ node dist/server/cli.js install   # points your apps at this clone instead of np
 
 `npx -y framejam install` does all of this for you. The plugin lives in [`plugin/`](plugin): one folder that Claude
 Code, ChatGPT and Cursor all read, listed in this repo's marketplaces (`.claude-plugin/marketplace.json` for Claude,
-`.agents/plugins/marketplace.json` for ChatGPT). To install it by hand, then run `npx -y framejam start` to start the
-UI:
+`.agents/plugins/marketplace.json` for ChatGPT). The plugin also lists FrameJam Cloud's server (`framejam-cloud`,
+`https://mcp.framejam.ai/mcp`) for web and mobile chats, which can't run FrameJam on your computer. Where the local
+server runs, your agent uses it and you never need to sign in. To install it by hand, then run `npx -y framejam start`
+to start the UI:
 
 <details open>
 <summary><b>Claude Code</b></summary>
@@ -348,8 +350,9 @@ turn on cloud mode. Sharing uploads only the version you pick (its render, or a 
 frame), and the app then checks the link for guests' comments, approvals and opens. In cloud mode, new projects are
 stored in your account: each version's render or panels and a poster frame, your comments and their frame images, and
 any notes and source files your agent attaches. Guests' voice recordings go to FrameJam Cloud and its transcription
-service. Your login token is in `~/.framejam/auth.json`. Nothing else is sent to FrameJam Cloud, and nothing from your
-agent's conversation. The cloud's own code isn't part of this repo.
+service. Your login token is in `~/.framejam/auth.json`. Apps that load the plugin may contact `mcp.framejam.ai` to
+see whether you signed in to FrameJam Cloud there; nothing about your projects goes with it. Nothing else is sent to
+FrameJam Cloud, and nothing from your agent's conversation. The cloud's own code isn't part of this repo.
 
 ## Styles
 
