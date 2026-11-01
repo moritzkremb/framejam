@@ -20,7 +20,7 @@ What makes a generated song work for this method:
 
 Options (no default; pick by availability and preference):
 - **Supplied track** from the director (its lyrics win over any transcript).
-- **ElevenLabs Music API** (structured plan with lyrics and per-chunk styles): ready-made helper `tools/providers/elevenlabs_song.py`, plan format in its docstring and `examples/which-frame/song_plan.json`. Used for the reference build.
+- **ElevenLabs Music API** (structured plan with lyrics and per-chunk styles): ready-made helper `tools/providers/elevenlabs_song.py`, plan format in its docstring and `which-frame/song_plan.json`. Used for the reference build.
 - **Suno** (custom mode: lyrics field + style field + exclude field), usually in the browser with the user logged in, or any Suno API wrapper they use. Put direction tags in brackets (`[Verse]`, `[gang vocals]`), keep the style field to genre, BPM, voices, instruments.
 - **Udio**, **Stable Audio**, **MiniMax Music**, a model on fal/Replicate, a musician friend: anything that returns a vocal master.
 

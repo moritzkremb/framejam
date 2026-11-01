@@ -3,7 +3,7 @@
   "name": "Anchor and Overlay Reel",
   "tagline": "A talking-head recording goes in, a vertical reel where you stay on screen and a picture pops up for every thing you name comes out.",
   "description": "You stay full-frame the whole time, and small pictures pop in over the top of the screen for each thing you say: a product, a number, a place. One-word captions follow your voice, the odd big word lands in the middle, numbered labels and little asides sit at the top, and something changes about every second. Pauses and earlier takes are cut out, and the music turns up at the pivot.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "inspiredBy": [{ "name": "@nolan_killeen", "url": "https://www.instagram.com/reels/DeKpTUoJbJJ/" }],

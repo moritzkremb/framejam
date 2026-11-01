@@ -60,12 +60,14 @@ Work these out from the request and the files. Where nothing is said, use the de
 - A request to make the video already allows local renders; don't ask again.
 
 Requirements: Python 3 with NumPy and Pillow, ffmpeg, Node 22 (for `npx hyperframes`).
+GSAP and the fonts ship with the template. If `npx hyperframes render` can't download its browser (a sandbox with
+limited network), set `HYPERFRAMES_BROWSER_PATH` to an installed Chrome.
 
 ## Setup
 
 ```bash
 npx -y hyperframes init my-reel --example blank --resolution portrait --non-interactive
-cp -R <playbook>/template/. my-reel/          # build.py, edit.example.json, assets/fonts
+cp -R <playbook>/template/. my-reel/          # build.py, edit.example.json, fonts, gsap.min.js
 cp -R <playbook>/scripts my-reel/scripts
 mkdir -p my-reel/{source,transcripts,working,assets/vis,renders}
 ```
@@ -209,7 +211,8 @@ captions are regenerated.
   graphic types, lowercase mono captions, sound effects placed per graphic, theme, deterministic GSAP timeline).
   `python3 build.py --help`.
 - `template/edit.example.json`: the starter scene (24.6 s, 8 beats, 9 graphics) to copy from.
-- `template/assets/fonts/`: Inter, Geist Mono and Caveat (SIL Open Font License, texts included).
+- `template/fonts/`: Inter, Geist Mono and Caveat (SIL Open Font License, texts included).
+- `template/gsap.min.js`: GSAP 3.14.2 (GSAP standard license), loaded locally so renders need no network.
 - `scripts/make_starter.py`: placeholder presenter, voice, word times and thumbnails for the starter scene.
 - `scripts/prepare_edit.py`: the cut (silence pass, removals, frame-accurate render, retimed transcripts).
 - `scripts/make_captions.py`: edited-time words to 2–3 word captions with word times (`captions.json`, `.srt`).

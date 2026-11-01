@@ -8,8 +8,9 @@ Writes words.json:
   { "text": "...", "words": [ { "w": "Yesterday,", "s": 0.10, "e": 0.52 }, ... ] }
 
 Needs ffmpeg and whisper.cpp's `whisper-cli` (macOS: `brew install whisper-cpp`).
-Without --model it uses ~/.cache/whisper.cpp/ggml-base.en.bin and downloads it once
-(~150 MB, free, from huggingface.co/ggerganov/whisper.cpp) if it's missing.
+Without --model it uses a model already in ~/.cache/whisper.cpp, ~/.cache/whisper-cpp or
+~/.cache/hyperframes/whisper/models, else downloads ggml-base.en.bin once
+(~150 MB, free, from huggingface.co/ggerganov/whisper.cpp).
 
 Already have a transcript from a service (ElevenLabs Scribe, OpenAI Whisper API, Deepgram)?
 Convert its word list to the same shape instead of running this.
@@ -30,6 +31,15 @@ def ensure_model(path, lang):
     if path:
         return path
     name = "ggml-base.en.bin" if lang == "en" else "ggml-base.bin"
+    sizes = ["base", "small", "medium", "large-v3-turbo"]
+    names = [f"ggml-{s}.bin" for s in sizes]
+    if lang == "en":
+        names = [f"ggml-{s}.en.bin" for s in sizes[:3]] + names
+    for d in ("~/.cache/whisper.cpp", "~/.cache/whisper-cpp", "~/.cache/hyperframes/whisper/models"):
+        for n in names:
+            found = os.path.join(os.path.expanduser(d), n)
+            if os.path.exists(found):
+                return found
     cache = os.path.expanduser("~/.cache/whisper.cpp")
     os.makedirs(cache, exist_ok=True)
     dest = os.path.join(cache, name)

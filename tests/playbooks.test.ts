@@ -157,4 +157,24 @@ describe("built-in playbooks", () => {
       expect(fs.existsSync(path.join(p.dir, "previews", x.id, "preview.mp4"))).toBe(false);
     }
   });
+
+  // Claude's cloud sessions can only read files up to 7 folders below a connected folder, and the catalog cache
+  // (~/.framejam/catalog/items/playbook/<id>/<version>/) already uses 5 of them.
+  it.each(dirs)("%s keeps every file within two folders of its root", (dir) => {
+    const root = path.join(builtinPlaybooksDir, dir);
+    const deep = fs
+      .readdirSync(root, { recursive: true, encoding: "utf8" })
+      .filter((f) => f.split(path.sep).length > 3 && fs.statSync(path.join(root, f)).isFile());
+    expect(deep).toEqual([]);
+  });
+
+  it.each(dirs)("%s template renders without downloading code or fonts", (dir) => {
+    const template = path.join(builtinPlaybooksDir, dir, "template");
+    if (!fs.existsSync(template)) return;
+    const remote = fs
+      .readdirSync(template, { recursive: true, encoding: "utf8" })
+      .filter((f) => /\.(html|py|js|css)$/.test(f) && !f.endsWith(".min.js"))
+      .filter((f) => /https:\/\/(cdn\.jsdelivr\.net|unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com)/.test(fs.readFileSync(path.join(template, f), "utf8")));
+    expect(remote).toEqual([]);
+  });
 });

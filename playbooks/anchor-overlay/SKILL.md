@@ -59,7 +59,7 @@ AAC (Homebrew, apt, a static build). The renderer draws text with Pillow, so ffm
 
 ```bash
 mkdir my-reel && cd my-reel
-cp -R <playbook>/template/. .            # assets/fonts, edit.example.json, words.example.json, captions.example.json
+cp -R <playbook>/template/. .            # fonts, edit.example.json, words.example.json, captions.example.json
 cp -R <playbook>/scripts scripts
 mkdir -p source transcripts working renders assets/vis
 ```
@@ -205,7 +205,7 @@ removals, then every time in the plan moves through the new `final.edl.json` and
 - `scripts/anchorlib.py`: shared geometry, defaults and filter graphs (the defaults for `theme` and `checks` live here).
 - `template/edit.example.json`, `words.example.json`, `captions.example.json`: a 26 s plan that uses every element, its
   words and its captions. It points at `assets/speech.mp4`, `assets/vis/*.png` and `assets/music.wav`, which you make.
-- `template/assets/fonts/`: Inter and Anton (SIL Open Font License, texts included).
+- `template/fonts/`: Inter and Anton (SIL Open Font License, texts included).
 - `references/format.md`: geometry, layers, text rules, `theme` and `checks` fields, `edit.json` shape, the ffmpeg
   recipe for other tools.
 - `references/reference-breakdown.md`: the measurements the defaults come from.

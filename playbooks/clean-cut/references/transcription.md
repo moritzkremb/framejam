@@ -15,16 +15,22 @@ npx -y hyperframes transcribe working/source-16k.wav --dir transcripts --model s
 
 Use `--model medium.en` for accents or noisy rooms, `--language de` (and a non-`.en` model) for other languages.
 
+**Can't download a model** (a sandbox with limited network)? Look for one already on the computer first:
+`~/.cache/hyperframes/whisper/models/`, `~/.cache/whisper.cpp/` and `~/.cache/whisper-cpp/` hold whisper.cpp models
+(`ggml-*.bin`, for `whisper-cli -m <file>`); `~/.cache/whisper/` holds openai-whisper models (`*.pt`). If a large model
+is too big to move to where you run, a smaller one (`base.en`, ~150 MB, or `small.en`, ~470 MB) is fine for the cut,
+as long as the short-window retake check below still runs.
+
 **Long recordings (over ~10 minutes), and any transcript you check for retakes:** whisper.cpp with
 `large-v3-turbo` and DTW word timing. It is free, local and fast (a 37-minute recording in 85 s on an M-series Mac),
 and it keeps far more retakes than `small.en`: on that recording `small.en` merged most restarts into clean
 sentences, turbo kept every one the reviewer later pointed at.
 
 ```bash
-# once: brew install whisper-cpp; model ~1.6 GB
-curl -L -o ~/.cache/whisper-large-v3-turbo.bin \
+# once: brew install whisper-cpp; model ~1.6 GB (skip if it's already in one of the folders above)
+mkdir -p ~/.cache/whisper.cpp && curl -L -o ~/.cache/whisper.cpp/ggml-large-v3-turbo.bin \
   https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin
-whisper-cli -m ~/.cache/whisper-large-v3-turbo.bin -dtw large.v3.turbo -f working/source-16k.wav \
+whisper-cli -m ~/.cache/whisper.cpp/ggml-large-v3-turbo.bin -dtw large.v3.turbo -f working/source-16k.wav \
   -ojf -ml 1 -sow -t 8 -np -of transcripts/source.words
 # -> transcripts/source.words.json, one word per entry; prepare_edit.py and find_retakes.py read it as is
 ```

@@ -5,8 +5,8 @@
     python scripts/word_times.py --force
 
 Uses whisper.cpp (`whisper-cli`, free and local: `brew install whisper-cpp`, or build it from
-https://github.com/ggml-org/whisper.cpp). The model is found in $WHISPER_MODEL, ~/.cache/whisper-cpp or
-~/.cache/hyperframes/whisper/models, else ggml-base.en.bin (~150 MB) is downloaded once.
+https://github.com/ggml-org/whisper.cpp). The model is found in $WHISPER_MODEL, ~/.cache/whisper-cpp,
+~/.cache/whisper.cpp or ~/.cache/hyperframes/whisper/models, else ggml-base.en.bin (~150 MB) is downloaded once.
 Without whisper-cli it falls back to an estimate (words spread by length over the clip) and says so.
 """
 import argparse
@@ -32,8 +32,9 @@ def duration(p):
 def find_model():
     if os.environ.get("WHISPER_MODEL"):
         return Path(os.environ["WHISPER_MODEL"])
-    dirs = [Path.home() / ".cache" / "whisper-cpp", Path.home() / ".cache" / "hyperframes" / "whisper" / "models"]
-    for name in ("ggml-small.en.bin", "ggml-base.en.bin", "ggml-medium.en.bin"):
+    cache = Path.home() / ".cache"
+    dirs = [cache / "whisper-cpp", cache / "whisper.cpp", cache / "hyperframes" / "whisper" / "models"]
+    for name in ("ggml-small.en.bin", "ggml-base.en.bin", "ggml-medium.en.bin", "ggml-large-v3-turbo.bin"):
         for d in dirs:
             if (d / name).exists():
                 return d / name

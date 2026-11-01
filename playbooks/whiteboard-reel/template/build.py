@@ -53,11 +53,11 @@ DEFAULT_THEME = {
     "boardHeight": 900,
     "shift": 260,
     "sans": "Inter",
-    "sansFile": "assets/fonts/inter.woff2",
+    "sansFile": "fonts/inter.woff2",
     "mono": "Geist Mono",
-    "monoFile": "assets/fonts/geist-mono-latin-wght-normal.woff2",
+    "monoFile": "fonts/geist-mono-latin-wght-normal.woff2",
     "hand": "Caveat",
-    "handFile": "assets/fonts/caveat.woff2",
+    "handFile": "fonts/caveat.woff2",
 }
 LAYOUTS = ("speaker", "board", "cutaway")
 VIDEO_EXT = (".mp4", ".webm", ".mov", ".m4v")
@@ -574,7 +574,7 @@ html,body{{width:{W}px;height:{H}px;overflow:hidden;background:#000}}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width={W}, height={H}">
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script src="gsap.min.js"></script>
 <style>{css}</style>
 </head>
 <body>

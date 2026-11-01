@@ -22,7 +22,7 @@ A song goes in; a motion designer's showreel cut to the track comes out. Kinetic
 
 The method is fixed; the generators are not. Song, images and optional video clips can come from any tool the user has (`references/providers.md` defines what each step must deliver and lists options such as Suno, ElevenLabs Music, Udio, Midjourney, Higgsfield, GPT Image, Nano Banana, Seedance, Kling, Veo). Ready-made helpers for two of them live in `scripts/providers/`; they are options, not defaults.
 
-Reference build: **"Which Frame?"**: 2:13, 1080p60, a comedy song for FrameJam parodying the "I'm not sending my deck anymore" pitch-call music video, made with zero generated video (24 illustrated stills + real app recordings + the engine). Its lyrics, song plan, STYLE, TREATMENT, timeline and one full scene are in `references/examples/which-frame/`. Match that quality bar.
+Reference build: **"Which Frame?"**: 2:13, 1080p60, a comedy song for FrameJam parodying the "I'm not sending my deck anymore" pitch-call music video, made with zero generated video (24 illustrated stills + real app recordings + the engine). Its lyrics, song plan, STYLE, TREATMENT, timeline and one full scene are in `references/which-frame/`. Match that quality bar.
 
 How the work splits:
 - **Song:** any source that delivers a vocal master (`providers.md` §1). If the user brings a finished song, skip generation.
@@ -114,5 +114,5 @@ When nothing is said, choose creative defaults (and still stop before any paid s
 - `assets/`: `timeline.template.js`, `scene.template.js`, `smoke.template.js`; `fonts/` (Geist, Geist Mono, OFL).
 - `scripts/`: setup (`scaffold.sh`), analysis (`audio_analysis.py`, `lyrics_align.py`, `lyrics_fix.py`, `plot_lyrics.py`), stills and footage prep (`prep_stills.py`, `prep_video.py`, `prep_clip.sh`, `matte.swift`, `fixmatte.py`, `matte_keyed.py`, `matte_fallback.py`, `track.py`), clip helpers (`synth_beat.py`, `beatwarp.py`), sync checks (`av_sync_check.py`, `lipsync_check.py`, `dance_sync_check.py`), render and review (`render.mjs`, `still.mjs`, `serve.mjs`, `sheet.py`). In the project they live in `tools/`.
 - `scripts/providers/` (optional, paid services): `elevenlabs_song.py` (ElevenLabs Music plan → takes), `kie_seedance.py` (Seedance on kie.ai, ledger and credit floor). Add helpers for other services the same way.
-- `references/`: `providers.md` (contracts and options per step), `pipeline.md` (every command), `engine_api.md`, `kit_api.md`, `motion_library.md`, `lessons.md`, `agent_brief_template.md`, `examples/which-frame/`.
+- `references/`: `providers.md` (contracts and options per step), `pipeline.md` (every command), `engine_api.md`, `kit_api.md`, `motion_library.md`, `lessons.md`, `agent_brief_template.md`, `which-frame/`.
 - `THIRD_PARTY_LICENSE`: MIT, Scenario.

@@ -3,7 +3,7 @@
   "name": "Motion Design Showreel",
   "tagline": "Give it your logo and a few things to show off, get a short motion piece cut to the beat.",
   "description": "A 12–25 second show-off video for a product, a brand or your own motion skills. One shape from your brand, like the logo mark, stays on screen and does a new trick every bar: clicks, trails, colour floods, words that land on the beat, 3D type and grids, then it lands as your logo. It comes with a ready project that's already timed to the music.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.6.0",
   "creator": {
     "id": "moritz",
@@ -55,7 +55,7 @@
   "featuredStyles": [
     {
       "id": "bauhaus-grid",
-      "note": "Cream ground, black type, a cobalt accent and flat red, blue, black and cream floods, Outfit with JetBrains Mono. Set the :root variables, the ACCENT/NIGHT/INK/PAPER constants and CELL_COLORS in template/index.html to these values, and the cursor's fill/stroke to paper/night; the fonts ship in template/assets/fonts.",
+      "note": "Cream ground, black type, a cobalt accent and flat red, blue, black and cream floods, Outfit with JetBrains Mono. Set the :root variables, the ACCENT/NIGHT/INK/PAPER constants and CELL_COLORS in template/index.html to these values, and the cursor's fill/stroke to paper/night; the fonts ship in template/fonts.",
       "settings": {
         "vars": {
           "night": "#ece6d6",
@@ -73,14 +73,14 @@
           "#ece6d6"
         ],
         "font": "Outfit",
-        "fontFile": "assets/fonts/outfit.woff2",
+        "fontFile": "fonts/outfit.woff2",
         "monoFont": "JetBrains Mono",
-        "monoFontFile": "assets/fonts/jetbrains-mono.woff2"
+        "monoFontFile": "fonts/jetbrains-mono.woff2"
       }
     },
     {
       "id": "pop-zine",
-      "note": "Navy ground, cream type, a hot-pink accent and pink, yellow, periwinkle and orange floods, condensed Anton with Share Tech Mono. Set the :root variables, the ACCENT/NIGHT/INK/PAPER constants and CELL_COLORS in template/index.html to these values, and the cursor's fill/stroke to paper/night; the fonts ship in template/assets/fonts.",
+      "note": "Navy ground, cream type, a hot-pink accent and pink, yellow, periwinkle and orange floods, condensed Anton with Share Tech Mono. Set the :root variables, the ACCENT/NIGHT/INK/PAPER constants and CELL_COLORS in template/index.html to these values, and the cursor's fill/stroke to paper/night; the fonts ship in template/fonts.",
       "settings": {
         "vars": {
           "night": "#2e3a6b",
@@ -100,9 +100,9 @@
           "#ff6fae"
         ],
         "font": "Anton",
-        "fontFile": "assets/fonts/anton.woff2",
+        "fontFile": "fonts/anton.woff2",
         "monoFont": "Share Tech Mono",
-        "monoFontFile": "assets/fonts/share-tech-mono.woff2"
+        "monoFontFile": "fonts/share-tech-mono.woff2"
       }
     }
   ],

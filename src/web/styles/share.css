@@ -20,6 +20,9 @@
 .fc-share-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .55); animation: fc-fade .15s ease-out; }
 .fc-share-who { display: flex; flex-direction: column; gap: 12px; width: min(400px, 100%); padding: 20px; border-radius: var(--radius-xl); background: var(--surface); box-shadow: var(--shadow-pop); }
 .fc-share-who p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--text-2); }
+.fc-share-who .fc-share-privacy { font-size: 12px; line-height: 17px; color: var(--text-3); }
+.fc-share-privacy a { color: var(--text-2); text-decoration: underline; text-underline-offset: 2px; }
+.fc-share-privacy a:hover { color: var(--text); }
 .fc-share-who label { display: flex; flex-direction: column; gap: 6px; font: 500 12px/16px var(--font-sans); color: var(--text-2); }
 
 .fc-share-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px; }

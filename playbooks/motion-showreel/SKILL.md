@@ -41,7 +41,7 @@ Work these out from the request and the files. Where nothing is said, use the de
   (usually paid). See `references/beat-grid.md`.
 - **Look:** Use the style picked for this video, if any (from `wait_for_pick`, or `get_preset` when the user names one). A FrameJam style is a starting point: take its palette (cut to 3 colours: a
   ground, an ink, one accent), its fonts (one display, one mono) and its motion feel, then design this reel's own
-  look from it. No style: use the brand, or the template's look. Two styles are made for this playbook (Bauhaus Grid, Pop Zine): when one is picked, `get_playbook` returns it as `styleForThisPlaybook` with ready values for the template's `:root` variables, its colour constants and `CELL_COLORS`; the fonts are already in `template/assets/fonts`.
+  look from it. No style: use the brand, or the template's look. Two styles are made for this playbook (Bauhaus Grid, Pop Zine): when one is picked, `get_playbook` returns it as `styleForThisPlaybook` with ready values for the template's `:root` variables, its colour constants and `CELL_COLORS`; the fonts are already in `template/fonts`.
 - **Tool:** starting fresh, use the bundled Hyperframes template (`project: new`). **Existing project made with
   another tool** (Remotion, Motion Canvas, After Effects scripts...): don't convert it. Follow the same method with
   that tool; `references/tricks.md` gives each trick tool-independently, and `beat_grid.py` and
@@ -69,7 +69,7 @@ When nothing is said: the hero from the logo, 6 tricks from the subject, the inc
 ```bash
 bash <playbook>/scripts/scaffold.sh <project-dir>
 ```
-This runs `npx hyperframes init`, copies `template/` (index.html, Geist fonts, the 24 s, 120 BPM track in
+This runs `npx hyperframes init`, copies `template/` (index.html, GSAP, Geist fonts, the 24 s, 120 BPM track in
 `assets/music.mp3`) and the tools into `tools/`, so it renders at once
 (`npx hyperframes render --output renders/v0.mp4`, ~20 s). With a real track: put it in `assets/`, point the
 `<audio>` at it, run `python3 tools/beat_grid.py assets/<track> --out analysis/beats.json`, set `BPM`/`OFFSET` and
@@ -126,7 +126,7 @@ an `onUpdate` so seeking redraws them; no `Math.random()` or clocks.
 
 ## Files in this playbook
 - `template/index.html`: the beat-addressed Hyperframes starter (the FrameJam reel: send → onion skin → timeline →
-  flood → 3D type → grid → lockup, HUD index, beat dots, timecode). `template/assets/fonts/`: Geist and Geist Mono
+  flood → 3D type → grid → lockup, HUD index, beat dots, timecode). `template/fonts/`: Geist and Geist Mono
   (OFL).
 - `scripts/scaffold.sh`: new project from the template (with its music track), tools copied.
 - `template/assets/music.mp3`: 24 s, 120 BPM, full level from the first beat, bars from 0 s; free to use in your videos.

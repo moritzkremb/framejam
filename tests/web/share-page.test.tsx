@@ -226,6 +226,8 @@ describe("share page", () => {
     act(() => typeInto(q<HTMLTextAreaElement>("comment-box")!, "Make it pop"));
     await act(async () => q<HTMLButtonElement>("add-comment")!.click());
     expect(q("guest-form")).not.toBeNull();
+    expect(q("guest-privacy")?.textContent).toContain("never used to train AI");
+    expect(q("guest-privacy")?.querySelector("a")?.getAttribute("href")).toBe("https://www.framejam.ai/privacy#guests");
     const [name, email] = [...q("guest-form")!.querySelectorAll("input")];
     act(() => typeInto(name!, "Anna"));
     act(() => typeInto(email!, "anna@example.com"));

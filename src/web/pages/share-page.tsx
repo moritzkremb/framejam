@@ -511,6 +511,12 @@ function GuestForm({ initial, reason, onCancel, onSave }: { initial: Guest | nul
           <span>Email</span>
           <input className="fc-input" type="email" autoComplete="email" inputMode="email" value={email} maxLength={254} onChange={(e) => setEmail(e.target.value)} />
         </label>
+        <p className="fc-share-privacy" data-testid="guest-privacy">
+          Your name, email, comments, approvals and any voice notes are stored by FrameJam for the person who shared this link and to run the link. They're never used to train AI or shared with anyone else. Voice notes are recorded and transcribed.{" "}
+          <a href="https://www.framejam.ai/privacy#guests" target="_blank" rel="noreferrer">
+            Privacy policy
+          </a>
+        </p>
         <div className="fc-row" style={{ justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
           <button type="button" className="fc-btn ghost" onClick={onCancel}>
             Cancel

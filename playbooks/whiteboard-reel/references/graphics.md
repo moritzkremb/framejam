@@ -104,7 +104,7 @@ Rules:
 | `hand`, `handFile` | Caveat | note cards and the badge tag |
 
 For a FrameJam style, map its background to `board`, its text colour to `ink`, its accent to `accent` (and `tag` a
-shade darker), and its display font to `sans` (bundle the font file and its license in `assets/fonts`). Keep the board
+shade darker), and its display font to `sans` (bundle the font file and its license in `fonts/`). Keep the board
 light and the cards lighter still; check contrast with `npx hyperframes check`.
 
 ## Motion
