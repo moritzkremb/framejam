@@ -34,7 +34,7 @@ release for all of it.
 
 ### Connect by URL
 
-- FrameJam Cloud runs the review tools as a remote MCP server at `https://mellow-dalmatian-42.convex.site/mcp` (the
+- FrameJam Cloud runs the review tools as a remote MCP server at `https://mcp.framejam.ai/mcp` (the
   URL app.framejam.ai shows), for ChatGPT or Claude in the browser and anyone who'd rather install nothing. Renders go
   up with `request_upload` (or a public or Google Drive link), and projects made this way are cloud projects. Cloud
   rendering isn't offered yet.

@@ -322,12 +322,13 @@ While an agent waits for feedback in cloud mode, the app asks the cloud for chan
 
 ### Connect by URL
 
-FrameJam Cloud also runs the review tools as a remote MCP server at `https://mellow-dalmatian-42.convex.site/mcp`
+FrameJam Cloud also runs the review tools as a remote MCP server at `https://mcp.framejam.ai/mcp`
 (the URL app.framejam.ai shows after you sign in), for agents that can't run FrameJam on your computer (ChatGPT or
 Claude in the browser) or when you'd rather install nothing. Sign in at app.framejam.ai and follow the steps for your
 app there, or add it yourself and sign in when your app asks:
-`claude mcp add --transport http framejam https://mellow-dalmatian-42.convex.site/mcp` in Claude Code, or
-`{ "mcpServers": { "framejam": { "url": "https://mellow-dalmatian-42.convex.site/mcp" } } }` in Cursor's `mcp.json`.
+`claude mcp add --transport http framejam https://mcp.framejam.ai/mcp` in Claude Code, or
+`{ "mcpServers": { "framejam": { "url": "https://mcp.framejam.ai/mcp" } } }` in Cursor's `mcp.json`.
+Connectors added at the older `https://mellow-dalmatian-42.convex.site/mcp` keep working.
 
 Projects made this way are cloud projects. The server can't read files on your computer, so your agent uploads each
 render: `request_upload` returns a command that checks and uploads it, and `open_review` or `add_version` take the
