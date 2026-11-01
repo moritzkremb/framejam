@@ -1,0 +1,78 @@
+{
+  "id": "saraev-talking-head",
+  "name": "Saraev-like Talking Head",
+  "tagline": "Raw talking-head footage goes in; a tight, voice-led cut with a swivel teaser and editorial graphics comes out.",
+  "description": "A deterministic workflow grounded in observed public Nick Saraev videos: Silero voice-activity cuts around half-second silences, Whisper word times and the spoken \"cut cut\" marker, high-pass/EQ/compression to about -16 LUFS, a low-saturation grade, an optional continuous-voice swivel teaser, three graphics modes, no word-by-word captions, and hardware export with a software fallback. Unexposed private settings remain configurable.",
+  "version": "1.1.0",
+  "minAppVersion": "0.6.0",
+  "creator": {
+    "id": "moritz",
+    "name": "Moritz Kremb",
+    "url": "https://x.com/promptwarrior"
+  },
+  "inspiredBy": [
+    {
+      "name": "Nick Saraev",
+      "url": "https://www.youtube.com/watch?v=S3kdxriOESk"
+    }
+  ],
+  "license": "MIT",
+  "bring": [
+    "Your raw talking-head recording",
+    "Optional: real screenshots, articles, charts or screen recordings for graphics",
+    "Optional: an earlier render or locally held reference for side-by-side comparison"
+  ],
+  "get": "A clean 16:9 talking-head video, an auditable edit plan, optional evidence-backed graphics, and short comparison renders",
+  "format": "16:9",
+  "project": "any",
+  "needs": [
+    {
+      "name": "Edit template and deterministic helper scripts",
+      "where": "included"
+    },
+    {
+      "name": "Python 3 and ffmpeg",
+      "where": "computer"
+    },
+    {
+      "name": "Silero VAD",
+      "where": "computer",
+      "optional": true,
+      "examples": [
+        "silero-vad Python package"
+      ]
+    },
+    {
+      "name": "Speech to text with word timestamps",
+      "where": "service",
+      "cost": "free",
+      "examples": [
+        "whisper on your computer (free)",
+        "ElevenLabs Scribe (paid)",
+        "OpenAI (paid)"
+      ]
+    }
+  ],
+  "styles": "parts",
+  "stylesNote": "grade, graphic panels, labels and teaser treatment",
+  "steps": [
+    "Inspect and transcribe the raw recording",
+    "Detect speech and build an auditable cut around half-second gaps",
+    "Remove marked bad takes when Whisper finds the spoken \"cut cut\"",
+    "Enhance audio, grade picture, and add the optional teaser and evidence-backed graphics",
+    "Render short samples, compare them, then export with a supported encoder",
+    "Review each version in FrameJam until it is approved"
+  ],
+  "tags": [
+    "talking head",
+    "youtube",
+    "vad",
+    "silence removal",
+    "bad takes",
+    "editorial graphics",
+    "color grade",
+    "audio enhancement",
+    "hardware acceleration"
+  ],
+  "skill": "SKILL.md"
+}
