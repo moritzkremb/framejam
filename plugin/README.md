@@ -5,6 +5,8 @@ any tool (Hyperframes, Remotion, Motion Canvas, ffmpeg or screen recordings), th
 or a spot in the frame, say what to change, press **Finish review**, and the agent makes the next version.
 
 Everything runs on your computer. There's no account unless you run `framejam login` (optional; FrameJam Cloud).
+Web and mobile chats (claude.ai, the Claude apps, ChatGPT) can't run FrameJam on your computer, so there the plugin
+connects to FrameJam Cloud instead (`framejam-cloud`, `https://mcp.framejam.ai/mcp`) once you sign in to it.
 Your videos and comments are only uploaded when you share a version (with `framejam share`, or when you ask your agent to share it) or turn on cloud projects (`framejam cloud on`); projects are saved in
 `~/.framejam` otherwise.
 
@@ -27,6 +29,11 @@ What leaves your computer, and only to framejam.ai, npm, Hugging Face or FrameJa
 - If you press **Transcribe** and have no speech model yet, the app downloads one (574 MB) from Hugging Face.
   Transcription itself runs on your computer; your videos are never uploaded.
 - `framejam login` talks to FrameJam Cloud to sign you in and stores a token in `~/.framejam/auth.json`.
+- The plugin's second server, `framejam-cloud`, is FrameJam Cloud at `https://mcp.framejam.ai/mcp`. Apps that load the
+  plugin may contact it to see whether you signed in; nothing about your projects goes with that. In a web or mobile
+  chat, once you sign in to it, the agent uploads each render (or a link to one) there and your project, its versions
+  and comments are stored in your FrameJam Cloud account. Where the local server runs (Claude Code, Codex, Cursor),
+  the agent uses the local one and doesn't ask you to sign in.
 - `framejam share` (or your agent, when you ask it to share a version) uploads the version you choose (its render, or a
   storyboard's panels, and a poster frame) to FrameJam Cloud, and the app then checks the cloud for comments guests
   left on the link and brings them into your project. When your agent ships a fix for a guest's comment, the app tells

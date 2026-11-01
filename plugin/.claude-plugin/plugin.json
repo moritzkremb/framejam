@@ -2,7 +2,7 @@
   "name": "framejam",
   "displayName": "FrameJam",
   "version": "0.6.0",
-  "description": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.",
+  "description": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer; web and mobile chats connect to FrameJam Cloud.",
   "author": {
     "name": "Moritz Kremb",
     "url": "https://www.framejam.ai"
@@ -26,6 +26,10 @@
         "framejam@0.6.0",
         "--stdio"
       ]
+    },
+    "framejam-cloud": {
+      "type": "http",
+      "url": "https://mcp.framejam.ai/mcp"
     }
   }
 }

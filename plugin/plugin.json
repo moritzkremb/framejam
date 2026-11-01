@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "framejam",
   "version": "0.6.0",
-  "description": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.",
+  "description": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer; web and mobile chats connect to FrameJam Cloud.",
   "author": {
     "name": "Moritz Kremb",
     "url": "https://www.framejam.ai"
@@ -23,7 +23,7 @@
       "interface": {
         "displayName": "FrameJam",
         "shortDescription": "Make videos with your agent and review them frame by frame",
-        "longDescription": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.",
+        "longDescription": "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer; web and mobile chats connect to FrameJam Cloud.",
         "developerName": "Moritz Kremb",
         "category": "Productivity",
         "websiteURL": "https://www.framejam.ai",

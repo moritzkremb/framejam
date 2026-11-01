@@ -9,6 +9,10 @@
         "framejam@0.6.0",
         "--stdio"
       ]
+    },
+    "framejam-cloud": {
+      "type": "streamable-http",
+      "url": "https://mcp.framejam.ai/mcp"
     }
   }
 }

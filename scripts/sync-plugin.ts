@@ -3,8 +3,10 @@
  * never drifts from a release. `npm run sync:plugin`; `npm version` runs it; tests/plugin.test.ts fails when it's stale.
  *
  * One folder serves both apps. Claude Code reads `.claude-plugin/plugin.json`; ChatGPT (Work and Codex) reads the
- * portable `plugin.json` and `mcp.json`. Both read `skills/`. The MCP server is pinned to the same npm release, so
- * the skill and the tools always match. The repo lists the plugin in `.claude-plugin/marketplace.json` (Claude) and
+ * portable `plugin.json` and `mcp.json`. Both read `skills/`. The local MCP server is pinned to the same npm release,
+ * so the skill and the tools always match. Next to it is FrameJam Cloud's remote server (`framejam-cloud`), which web
+ * and mobile chats offer as a connector because they can't run the local one; the skill uses the local tools whenever
+ * both are there. The repo lists the plugin in `.claude-plugin/marketplace.json` (Claude) and
  * `.agents/plugins/marketplace.json` (ChatGPT).
  */
 import fs from "node:fs";
@@ -16,7 +18,7 @@ import { skillFile } from "../src/server/skill.ts";
 export const pluginRoot = path.join(packageRoot, "plugin");
 
 const DESCRIPTION =
-  "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer.";
+  "Make videos with your agent: pick a style or a playbook, then comment on the render at a time or a spot in the frame and get the next version. Works with any video tool. Runs on your computer; web and mobile chats connect to FrameJam Cloud.";
 const about = {
   author: { name: "Moritz Kremb", url: "https://www.framejam.ai" },
   homepage: "https://www.framejam.ai",
@@ -39,6 +41,8 @@ export function startSkill(skill: string): string {
 
 const json = (data: unknown) => `${JSON.stringify(data, null, 2)}\n`;
 
+export const CLOUD_MCP_URL = "https://mcp.framejam.ai/mcp";
+
 /** Every generated file, keyed by its path in `plugin/`. */
 export function pluginFiles(version: string, skill: string): Record<string, string> {
   const server = { command: "npx", args: ["-y", `framejam@${version}`, "--stdio"] };
@@ -49,7 +53,8 @@ export function pluginFiles(version: string, skill: string): Record<string, stri
       version,
       description: DESCRIPTION,
       ...about,
-      mcpServers: { framejam: server },
+      // Claude Code finds OAuth from the server's 401; `oauth: true` fails `claude plugin validate --strict`.
+      mcpServers: { framejam: server, "framejam-cloud": { type: "http", url: CLOUD_MCP_URL } },
     }),
     "plugin.json": json({
       $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
@@ -79,7 +84,12 @@ export function pluginFiles(version: string, skill: string): Record<string, stri
     }),
     "mcp.json": json({
       $schema: "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
-      mcpServers: { framejam: { type: "stdio", ...server } },
+      mcpServers: {
+        framejam: { type: "stdio", ...server },
+        // No `extensions["com.openai"].auth`: the 1.0.0 schema rejects extra keys on a server, and OAuth is
+        // discovered from the server's 401 and protected-resource metadata.
+        "framejam-cloud": { type: "streamable-http", url: CLOUD_MCP_URL },
+      },
     }),
     "skills/start/SKILL.md": startSkill(skill),
   };
