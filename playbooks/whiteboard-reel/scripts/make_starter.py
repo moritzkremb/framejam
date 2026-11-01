@@ -40,7 +40,7 @@ WALL, SOFA, TEE = (124, 114, 100), (34, 34, 40), (56, 64, 82)
 
 def font(size, root, bold=False):
     try:
-        f = ImageFont.truetype(str(root / "assets/fonts/inter.woff2"), size)
+        f = ImageFont.truetype(str(root / "fonts/inter.woff2"), size)
         if bold:
             try:
                 f.set_variation_by_axes([800])

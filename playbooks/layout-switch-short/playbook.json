@@ -3,7 +3,7 @@
   "name": "Dynamic Layout Short",
   "tagline": "A raw talking-head recording goes in, a vertical short that switches layout with what you say comes out.",
   "description": "A how-to short that never sits still: you alone for the big claims, split screen when you name something, the thing full-screen with you cut out in front when you show a process, and a step list that comes back at every new step. Pauses and earlier takes are cut out, and short captions sit where each layout leaves room.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",
@@ -26,43 +26,43 @@
   "featuredStyles": [
     {
       "id": "pop-zine",
-      "note": "Cream paper with hot-pink, periwinkle and yellow fields, condensed Anton type, navy ink and a hot-pink highlighter. Put settings.theme into edit.json; the fonts ship in template/assets/fonts.",
+      "note": "Cream paper with hot-pink, periwinkle and yellow fields, condensed Anton type, navy ink and a hot-pink highlighter. Put settings.theme into edit.json; the fonts ship in template/fonts.",
       "settings": {
         "theme": {
           "base": "#efe6d2", "blobs": ["#ff6fae", "#6f7fb8", "#f5c84b", "#ff4f9a"], "grain": 1.0,
           "ink": "#2e3a6b", "onInk": "#efe6d2", "accent": "#ff4f9a", "accentInk": "#232b52",
           "card": "#f3ead6", "radius": 12, "stepBg": "rgba(243,234,214,0.72)",
           "captionBg": "rgba(35,43,82,0.94)", "captionText": "#efe6d2", "captionActive": "#ff6fae", "captionSize": 66,
-          "font": "Anton", "fontFile": "assets/fonts/anton.woff2",
-          "labelFont": "Share Tech Mono", "labelFontFile": "assets/fonts/share-tech-mono.woff2"
+          "font": "Anton", "fontFile": "fonts/anton.woff2",
+          "labelFont": "Share Tech Mono", "labelFontFile": "fonts/share-tech-mono.woff2"
         }
       }
     },
     {
       "id": "midnight-launch",
-      "note": "Near-black with slow purple, plum and blue glows, light Inter type, dark cards and one orange accent. Put settings.theme into edit.json; the fonts ship in template/assets/fonts.",
+      "note": "Near-black with slow purple, plum and blue glows, light Inter type, dark cards and one orange accent. Put settings.theme into edit.json; the fonts ship in template/fonts.",
       "settings": {
         "theme": {
           "base": "#0a0a0b", "blobs": ["#2a1745", "#3a1a22", "#16204a", "#241433"], "grain": 0.45,
           "ink": "#f2f2f3", "onInk": "#0a0a0b", "accent": "#ff5b3a", "accentInk": "#0a0a0b",
           "card": "#151518", "radius": 26, "stepBg": "rgba(255,255,255,0.06)",
           "captionBg": "rgba(21,21,24,0.94)", "captionText": "#f2f2f3", "captionActive": "#ff5b3a", "captionSize": 60,
-          "font": "Inter", "fontFile": "assets/fonts/inter.woff2",
-          "labelFont": "Inter", "labelFontFile": "assets/fonts/inter.woff2"
+          "font": "Inter", "fontFile": "fonts/inter.woff2",
+          "labelFont": "Inter", "labelFontFile": "fonts/inter.woff2"
         }
       }
     },
     {
       "id": "mono-changelog",
-      "note": "Black on near-white with no colour and no grain, IBM Plex Sans and Mono, square-ish cards; the spoken caption word lights white on grey. Put settings.theme into edit.json; the fonts ship in template/assets/fonts.",
+      "note": "Black on near-white with no colour and no grain, IBM Plex Sans and Mono, square-ish cards; the spoken caption word lights white on grey. Put settings.theme into edit.json; the fonts ship in template/fonts.",
       "settings": {
         "theme": {
           "base": "#fafafa", "blobs": ["#ececec", "#e3e3e3", "#f2f2f2"], "grain": 0,
           "ink": "#0a0a0a", "onInk": "#fafafa", "accent": "#0a0a0a", "accentInk": "#fafafa",
           "card": "#ffffff", "radius": 8, "stepBg": "rgba(10,10,10,0.04)",
           "captionBg": "rgba(10,10,10,0.94)", "captionText": "#a3a3a3", "captionActive": "#ffffff", "captionSize": 58,
-          "font": "IBM Plex Sans", "fontFile": "assets/fonts/ibm-plex-sans.woff2",
-          "labelFont": "IBM Plex Mono", "labelFontFile": "assets/fonts/ibm-plex-mono.woff2"
+          "font": "IBM Plex Sans", "fontFile": "fonts/ibm-plex-sans.woff2",
+          "labelFont": "IBM Plex Mono", "labelFontFile": "fonts/ibm-plex-mono.woff2"
         }
       }
     }

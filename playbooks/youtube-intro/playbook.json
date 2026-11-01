@@ -3,7 +3,7 @@
   "name": "YouTube Hook",
   "tagline": "Your intro script or recording goes in, the 20–60 second opening that keeps people watching your long video comes out.",
   "description": "The opening that keeps people watching: what happened with the proof on screen, why it matters, the three things the video will show, then straight into the video. It follows the formula from Moritz Kremb's own channel, either as an edited talking head with captions, cards and a graphic, or as a framed screen recording with your camera beside it.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.6.0",
   "creator": {
     "id": "moritz",

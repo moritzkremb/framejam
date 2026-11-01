@@ -3,7 +3,7 @@
   "name": "Launch Teaser",
   "tagline": "A name, one promise and a few real clips go in, a 15-second teaser that lands the name on the beat comes out.",
   "description": "A short teaser for launch day or the week before: a few big words, fast glimpses of the real product, a beat drop on the name, and the date, link or install command. It makes people curious instead of explaining everything. Good as a post on its own or at the end of a thread.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",

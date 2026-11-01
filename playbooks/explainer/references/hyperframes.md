@@ -8,6 +8,7 @@ npx hyperframes init videos/<slug> --non-interactive --example=blank
 cd videos/<slug>
 mkdir -p scripts && cp <playbook>/scripts/* scripts/
 cp <playbook>/template/index.template.html <playbook>/template/build_html.py <playbook>/template/panels.py scripts/
+cp <playbook>/template/gsap.min.js .
 cp <playbook>/template/script.json .            # the example; replace with yours
 python3 -m venv .venv && source .venv/bin/activate && pip install numpy kokoro-onnx soundfile
 python scripts/fetch_fonts.py "Gochi Hand" "Patrick Hand"   # or the style's fonts
@@ -35,7 +36,7 @@ Re-run from `build_timing.py` after any voice change, from `mix.py` after sound 
 
 ## Rules that keep renders correct
 - Entrances use `fromTo` (explicit start state); state changes use `tl.set` at a time. No CSS transitions or `@keyframes`, no `Math.random`/`Date.now`, no `repeat: -1`.
-- Fonts are local files (`assets/fonts/`, `@font-face`), images local (`assets/`). The GSAP script tag is the only network load.
+- Fonts are local files (`assets/fonts/`, `@font-face`), images local (`assets/`). GSAP is the local `gsap.min.js` next to `index.html`, so renders need no network.
 - SVG drawn shapes: give paths `pathLength="1"` so `draw` works on any path.
 - `lint` warns that scenes "should be sub-compositions" for single-file projects; that's advice for big projects, not an error. Split scenes into `compositions/*.html` with `data-composition-src` only when one file gets unwieldy (> ~1500 lines) or several agents build scenes in parallel.
 - `check` layout warnings name the element: fix overflow by resizing the child, or mark intentional overflow with `data-layout-allow-overflow`.

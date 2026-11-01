@@ -3,7 +3,7 @@
   "name": "Whiteboard Reel",
   "tagline": "A raw talking-head recording goes in, a vertical reel comes out where every idea you explain is drawn on a white board above you.",
   "description": "For sharing a tool, a method or a lesson to camera. When you explain something, a clean white board drops over the top of the frame and the idea draws itself on it: numbered steps, a tree, a mind map, a fan of cards revealed one by one, a title with a hand-drawn underline. Your results and the people you learned from pop up as cards, a series badge names your show, and the reel ends on a comment keyword. Pauses and earlier takes are cut out, lowercase captions run the whole way, and a light music bed and quiet sound effects are made for you.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "inspiredBy": [{ "name": "@aiwithremy", "url": "https://www.instagram.com/reels/DeeroIoRpnr/" }],

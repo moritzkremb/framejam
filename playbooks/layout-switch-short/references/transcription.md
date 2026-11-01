@@ -14,6 +14,13 @@ npx -y hyperframes transcribe working/source-16k.wav --dir transcripts --model s
 ```
 
 Use `--model medium.en` for accents or noisy rooms, `--language de` (and a non-`.en` model) for other languages.
+
+**Can't download a model** (a sandbox with limited network)? Look for one already on the computer first:
+`~/.cache/hyperframes/whisper/models/`, `~/.cache/whisper.cpp/` and `~/.cache/whisper-cpp/` hold whisper.cpp models
+(`ggml-*.bin`, for `whisper-cli -m <file>`); `~/.cache/whisper/` holds openai-whisper models (`*.pt`). If a large model
+is too big to move to where you run, a smaller one (`base.en`, ~150 MB, or `small.en`, ~470 MB) is fine for the cut,
+as long as the short-window retake check below still runs.
+
 Other free routes that give word timings: `whisper-cli -m ggml-small.en.bin -f clip.wav -ojf` (whisper.cpp),
 `whisper clip.wav --word_timestamps True --output_format json` (openai-whisper), or faster-whisper with
 `word_timestamps=True`. The scripts in this playbook accept all of these formats (see `prepare_edit.py --help`).

@@ -14,8 +14,8 @@ cp -R <playbook>/template/hyperframes/* videos/<product>-launch/
 cd videos/<product>-launch
 ```
 
-Put assets under `assets/` (`ui/`, `logos/`, `fonts/`, `music/`). Vendor GSAP locally (`assets/vendor/gsap.min.js`)
-for offline renders, or keep the CDN link in the template.
+Put assets under `assets/` (`ui/`, `logos/`, `fonts/`, `music/`). GSAP ships next to the template's `index.html`
+(`gsap.min.js`), so renders need no network.
 
 ## Composition basics
 

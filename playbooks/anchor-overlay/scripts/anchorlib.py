@@ -12,13 +12,13 @@ KINDS = ("thumb", "card", "tall")
 VIDEO_EXT = (".mp4", ".webm", ".mov", ".m4v", ".mkv")
 
 DEFAULT_THEME = {
-    "captionFont": "Inter ExtraBold", "captionFontFile": "assets/fonts/inter.ttf", "captionSize": 64,
+    "captionFont": "Inter ExtraBold", "captionFontFile": "fonts/inter.ttf", "captionSize": 64,
     "captionColor": "#FFFFFF", "captionStroke": "#000000", "captionStrokeWidth": 5,
     "captionCase": "asis", "captionY": 1230, "captionMaxWords": 1, "captionMaxChars": 16, "captionMaxWidth": 840,
-    "bigFont": "Anton", "bigFontFile": "assets/fonts/anton.ttf", "bigSize": 170, "bigCase": "upper", "bigY": 780,
+    "bigFont": "Anton", "bigFontFile": "fonts/anton.ttf", "bigSize": 170, "bigCase": "upper", "bigY": 780,
     "bigMaxWidth": 960,
-    "labelFont": "Anton", "labelFontFile": "assets/fonts/anton.ttf", "labelSize": 52, "labelCase": "upper", "labelY": 400,
-    "asideFont": "Inter ExtraBold", "asideFontFile": "assets/fonts/inter.ttf", "asideSize": 44, "asideY": 330,
+    "labelFont": "Anton", "labelFontFile": "fonts/anton.ttf", "labelSize": 52, "labelCase": "upper", "labelY": 400,
+    "asideFont": "Inter ExtraBold", "asideFontFile": "fonts/inter.ttf", "asideSize": 44, "asideY": 330,
     "overlayBorder": None,
 }
 

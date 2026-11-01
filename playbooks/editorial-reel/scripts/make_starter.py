@@ -42,7 +42,7 @@ GREEN, CREAM, GOLD = (27, 58, 46), (243, 238, 225), (201, 168, 106)
 
 
 def font(size, root):
-    for f in (root / "assets/fonts/inter.woff2", root / "assets/fonts/playfair-display.woff2"):
+    for f in (root / "fonts/inter.woff2", root / "fonts/playfair-display.woff2"):
         try:
             return ImageFont.truetype(str(f), size)
         except OSError:

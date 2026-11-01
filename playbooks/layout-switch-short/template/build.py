@@ -38,9 +38,9 @@ DEFAULT_THEME = {
     "captionActive": None,
     "captionSize": 62,
     "font": "Bricolage Grotesque",
-    "fontFile": "assets/fonts/bricolage-grotesque-latin-wght-normal.woff2",
+    "fontFile": "fonts/bricolage-grotesque-latin-wght-normal.woff2",
     "labelFont": "Geist Mono",
-    "labelFontFile": "assets/fonts/geist-mono-latin-wght-normal.woff2",
+    "labelFontFile": "fonts/geist-mono-latin-wght-normal.woff2",
     "grainFile": "assets/grain.png",
     "progress": False,
 }
@@ -429,7 +429,7 @@ html,body{{width:{W}px;height:{H}px;overflow:hidden;background:#000}}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width={W}, height={H}">
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script src="gsap.min.js"></script>
 <style>{css}</style>
 </head>
 <body>

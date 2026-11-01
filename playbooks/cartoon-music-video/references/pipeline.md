@@ -26,7 +26,7 @@ Creates `audio/`, the `engine/` (with `lib.js`), `tools/`, fonts (Geist ships wi
 Skip if the director supplies a master (its lyrics then win over any transcript). Otherwise any song generator works; see `providers.md` §1 for the contract and options (ElevenLabs Music API helper, Suno, Udio, others).
 
 1. Write the lyrics like a comedy/pop topliner: one frame device for the whole song, call-and-response verses (short lines, the reply as a shouted hook), one simple chorus hook repeated 3 times with a different last line the final time, a fast Q&A or list bridge, and a deadpan spoken punchline at the end. Spell acronyms with spaces ("M C P", "N P X"), respell names phonetically. Keep them in `analysis/lyrics_draft.md`.
-2. Translate them into the chosen generator's format: section tags, a direction for each answering line (e.g. `{gang shout}` in an ElevenLabs plan, `[gang vocals]` in Suno), styles naming genre, BPM, the two voices, instruments. ~2:10 fits X's 2:20 cap. ElevenLabs example: `examples/which-frame/song_plan.json` with `python3 tools/providers/elevenlabs_song.py a 11 & python3 tools/providers/elevenlabs_song.py b 42 & wait` (both in one shell call).
+2. Translate them into the chosen generator's format: section tags, a direction for each answering line (e.g. `{gang shout}` in an ElevenLabs plan, `[gang vocals]` in Suno), styles naming genre, BPM, the two voices, instruments. ~2:10 fits X's 2:20 cap. ElevenLabs example: `which-frame/song_plan.json` with `python3 tools/providers/elevenlabs_song.py a 11 & python3 tools/providers/elevenlabs_song.py b 42 & wait` (both in one shell call).
 3. Get at least two takes into `audio/takes/`.
 4. Pick a take: transcribe each quickly with any local or hosted transcriber (e.g. `whisper-cli` with a small English model, or `tools/lyrics_align.py transcribe` on a test project) and choose the one whose transcript contains every line in order; check `ffprobe` duration. You cannot hear it: say so, and let the director judge the sound.
 5. `cp audio/takes/<pick>.mp3 audio/master.mp3`.
@@ -83,7 +83,7 @@ Image generation: whatever is available (`providers.md` §2: the runtime's nativ
 
 ## 6. Engine, kit and agents
 
-1. Set `PAL` in `engine/core.js` (brand tokens if any), `HUD` + `TIMELINE` + `POST` in `engine/timeline.js` (sections on downbeats; the spine as `fmt:'text'` counters with step keys, see `examples/which-frame/timeline.js`).
+1. Set `PAL` in `engine/core.js` (brand tokens if any), `HUD` + `TIMELINE` + `POST` in `engine/timeline.js` (sections on downbeats; the spine as `fmt:'text'` counters with step keys, see `which-frame/timeline.js`).
 2. Copy official brand files to `assets/brand/` (logo PNG/SVG, fonts) and take colours from the brand's tokens.
 3. Placeholder scene per timeline id (a field + the id) so the engine boots while agents work.
 4. **Smoke:** `engine/scenes/_smoke.js` (from the template: set STILL and WORD), timeline entry with `variant:"smoke"`, render one still and a 5 s clip:
@@ -92,7 +92,7 @@ Image generation: whatever is available (`providers.md` §2: the runtime's nativ
    node tools/render.mjs --only _smoke,hud --from <a> --to <b> --fps 30 --scale 0.5 --out out/smoke/smoke.mp4 --force
    ```
 5. **Kit test:** one frame using every kit helper you expect agents to use (a window of app footage, call tiles, card, timeline, button, pill, sticker, pin, cursor, confetti). Loading stills/clip frames belongs in `prepare()`, never `render()`.
-6. Write `STYLE.md`, `TREATMENT.md` (sections, lyrics, must-haves per line, footage map) and `AGENTS_BRIEF.md` (from `agent_brief_template.md`). Examples: `examples/which-frame/`.
+6. Write `STYLE.md`, `TREATMENT.md` (sections, lyrics, must-haves per line, footage map) and `AGENTS_BRIEF.md` (from `agent_brief_template.md`). Examples: `which-frame/`.
 7. Launch the scene agents in parallel in ONE message (background), one per section group, each owning only its scene files; log their ids in `analysis/agents.md`. Prompt shape per agent: project path, read-first list, its files, time ranges, lyrics, must-haves, the stills/clips to use, "do not edit other files, do not generate images", and the report format.
 8. Review each report: Read its best stills; fix kit/engine issues yourself (they affect everyone) and tell running agents.
 

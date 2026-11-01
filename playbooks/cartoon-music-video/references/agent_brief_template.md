@@ -1,6 +1,6 @@
 # Scene-agent brief (template)
 
-Copy to `AGENTS_BRIEF.md` in the project and fill in every `<…>`. Delete lines that don't apply. Each scene agent gets a short prompt (project path, its files, times, lyrics, must-haves, stills/clips, report format) and is told to read this brief first. Reference: `examples/which-frame/` was built from this brief by 6 agents in parallel.
+Copy to `AGENTS_BRIEF.md` in the project and fill in every `<…>`. Delete lines that don't apply. Each scene agent gets a short prompt (project path, its files, times, lyrics, must-haves, stills/clips, report format) and is told to read this brief first. Reference: `which-frame/` was built from this brief by 6 agents in parallel.
 
 You are one of <N> motion designers. Each of you builds one or two sections of a <duration> music video, "<song>", <what it is for / about>. It is rendered entirely in JavaScript (three.js + Canvas2D) by a deterministic frame-stepping engine at 1080p60, over AI-generated stills of <cast> that we cut out with mattes<, plus real screen recordings of <product>><, plus generated clips of …>.
 

@@ -3,7 +3,7 @@
   "name": "Explainer",
   "tagline": "A topic, article or script goes in, a narrated animated explainer comes out.",
   "description": "A 1–3 minute faceless explainer: a voiceover walks through one idea while drawings, diagrams, big words and numbers appear exactly as they're named. It's for creators, teachers and teams who want to explain something clearly without filming anything. What makes it good: a sharp hook, one idea per scene, and every picture landing on its word.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "0.6.0",
   "creator": { "id": "moritz", "name": "Moritz Kremb", "url": "https://x.com/promptwarrior" },
   "license": "MIT",

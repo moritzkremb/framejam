@@ -23,7 +23,7 @@ let n = 0;
 function project(edit: Plan, extra: Record<string, unknown> = {}) {
   const dir = path.join(root, `p${n++}`);
   fs.mkdirSync(dir, { recursive: true });
-  fs.cpSync(path.join(template, "assets"), path.join(dir, "assets"), { recursive: true });
+  fs.cpSync(path.join(template, "fonts"), path.join(dir, "fonts"), { recursive: true });
   fs.writeFileSync(path.join(dir, "edit.json"), JSON.stringify(edit));
   for (const [name, data] of Object.entries(extra)) fs.writeFileSync(path.join(dir, name), JSON.stringify(data));
   return dir;

@@ -50,12 +50,12 @@ DEFAULT_THEME = {
     "captionSize": 50,
     "captionY": 1350,
     "serif": "Playfair Display",
-    "serifFile": "assets/fonts/playfair-display.woff2",
-    "serifItalicFile": "assets/fonts/playfair-display-italic.woff2",
+    "serifFile": "fonts/playfair-display.woff2",
+    "serifItalicFile": "fonts/playfair-display-italic.woff2",
     "sans": "Inter",
-    "sansFile": "assets/fonts/inter.woff2",
+    "sansFile": "fonts/inter.woff2",
     "mono": "Geist Mono",
-    "monoFile": "assets/fonts/geist-mono-latin-wght-normal.woff2",
+    "monoFile": "fonts/geist-mono-latin-wght-normal.woff2",
 }
 LAYOUTS = ("speaker", "hook", "word", "magazine", "grid")
 CUT_LAYOUTS = ("hook", "word", "magazine")
@@ -623,7 +623,7 @@ html,body{{width:{W}px;height:{H}px;overflow:hidden;background:#000}}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width={W}, height={H}">
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script src="gsap.min.js"></script>
 <style>{css}</style>
 </head>
 <body>

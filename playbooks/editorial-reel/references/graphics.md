@@ -120,7 +120,7 @@ Rules:
 | `mono`, `monoFile` | Geist Mono | timecode, labels, issue line |
 
 For another FrameJam style, map its background to `ground`, its text colour to `ink`, its accent to `accent` and its
-display font to `serif` (bundle the font files and their license next to the others in `assets/fonts`). Keep a dark
+display font to `serif` (bundle the font files and their license next to the others in `fonts/`). Keep a dark
 `ground` with light `ink`, or a light `ground` with dark `ink` and a darker `captionBg`; check contrast with
 `npx hyperframes check`.
 

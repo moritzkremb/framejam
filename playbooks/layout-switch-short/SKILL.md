@@ -47,7 +47,7 @@ Work these out from the request and the files. Where nothing is said, use the de
   data-driven build and checks). For a fresh project, use Hyperframes with the template in `template/`.
 - **Look.** The template's default look is ready to use. Three styles are made for this playbook (Pop Zine, Midnight
   Glow, Mono Plex): when one is picked, `get_playbook` returns it as `styleForThisPlaybook`, and its
-  `settings.theme` goes into edit.json as `theme` unchanged (the fonts are already in `template/assets/fonts`). For any
+  `settings.theme` goes into edit.json as `theme` unchanged (the fonts are already in `template/fonts`). For any
   other FrameJam style (from `wait_for_pick`, or `get_preset` when the user names one), map it onto `theme` in edit.json (fields in `references/layouts.md`, "Look"): background
   colours, ink and accent, fonts (bundle the files and their license), caption pill, card radius. Layouts, timing and
   caption positions stay as described.
@@ -58,12 +58,14 @@ Work these out from the request and the files. Where nothing is said, use the de
 - A request to make the video already allows local renders; don't ask again.
 
 Requirements: Python 3 with NumPy, ffmpeg, Node 22 (for `npx hyperframes`).
+GSAP and the fonts ship with the template. If `npx hyperframes render` can't download its browser (a sandbox with
+limited network), set `HYPERFRAMES_BROWSER_PATH` to an installed Chrome.
 
 ## Setup
 
 ```bash
 npx -y hyperframes init my-short --example blank --resolution portrait --non-interactive
-cp -R <playbook>/template/. my-short/          # build.py, edit.example.json, assets/fonts, assets/grain.png
+cp -R <playbook>/template/. my-short/          # build.py, edit.example.json, fonts, gsap.min.js, assets/grain.png
 cp -R <playbook>/scripts my-short/scripts
 mkdir -p my-short/{source,transcripts,working,assets/vis,renders}
 ```
@@ -190,9 +192,10 @@ moved through the new `final.edl.json`, the cut-outs re-made and the captions re
   background, cards, focus zooms, galleries, roadmap slab, punch-ins, captions with the spoken word lit, theme,
   deterministic GSAP timeline). `python3 build.py --help`.
 - `template/edit.example.json`: the beat plan of the preview video (76 s, 36 beats) to copy from.
-- `template/assets/fonts/`: Bricolage Grotesque and Geist Mono for the default look, plus Anton, Share Tech Mono,
+- `template/fonts/`: Bricolage Grotesque and Geist Mono for the default look, plus Anton, Share Tech Mono,
   Inter, IBM Plex Sans and IBM Plex Mono for the styles made for this playbook (SIL Open Font License, texts included);
   `template/assets/grain.png`: the grain texture.
+- `template/gsap.min.js`: GSAP 3.14.2 (GSAP standard license), loaded locally so renders need no network.
 - `scripts/prepare_edit.py`: the cut (silence pass, removals, frame-accurate render, retimed transcripts).
 - `scripts/check_pacing.py`: beats, changes per second and every hold over 2.5 s in a plan.
 - `scripts/make_captions.py`: edited-time words to 1–3 word captions with word times (`captions.json`, `.srt`).
