@@ -214,8 +214,11 @@ it hands out are reachable.
 reads `/framejam:start`), next to `playbook` and `style`. Without the plugin, `npx skills add moritzkremb/framejam`
 installs it for most agents (there it's `/framejam`); you can also drop it into `AGENTS.md`. It walks the agent through: ask what to make → pick a preset →
 build with the project's tool → render → `open_review` → `wait_for_feedback` (and call it again with its `cursor`
-while the result is `waiting`, for about 10 minutes in total) → edit → `add_version` with a note, until you say it's done. `.cursor/rules/framejam.mdc` is the same text
-as a Cursor rule; regenerate it with `npm run sync:rule` after editing the skill.
+while the result is `waiting`, for about 10 minutes in total) → edit → `add_version` with a note, until you say it's done.
+The skill is a short core; the rest (sharing, storyboards, handing a project over, FrameJam Cloud and more) is in
+[`skills/framejam/guides/`](skills/framejam/guides), which the agent reads with the `get_guide` tool when it needs one,
+so web chats load less. `.cursor/rules/framejam.mdc` is the same core as a Cursor rule; regenerate it with
+`npm run sync:rule` after editing the skill, and `npm run sync:plugin` after editing a guide.
 
 </details>
 
@@ -611,7 +614,7 @@ npm run lint
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). |
 | `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
-| `skills/framejam/` | The agent skill (also mirrored as the Cursor rule in `.cursor/rules/framejam.mdc`). |
+| `skills/framejam/` | The agent skill (also mirrored as the Cursor rule in `.cursor/rules/framejam.mdc`), and its guides in `guides/`, served by `get_guide` (`src/core/guides.ts`, `src/server/guides.ts`). |
 | `plugin/` | The plugin for Claude Code, ChatGPT and Cursor: both manifests, `mcp.json` and the skills `start`, `playbook` and `style`. `npm run sync:plugin` regenerates the manifests and `start` from `package.json` and the skill. |
 
 Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_HOST` (default 127.0.0.1),

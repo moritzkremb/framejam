@@ -29,8 +29,10 @@ describe("plugin for Claude Code and ChatGPT", () => {
     const skill = fs.readFileSync(path.join(pluginRoot, "skills", "start", "SKILL.md"), "utf8");
     expect(skill).toContain("## Which FrameJam you have");
     expect(skill).toMatch(/If `framejam-cloud` is listed too, don't use it and don't ask the user\s+to sign in to it/);
-    expect(skill).toContain("## On FrameJam Cloud");
-    expect(skill).toMatch(/Don't wait: on this server `wait_for_feedback` returns right away/);
+    expect(skill).toContain("Read the `cloud` guide first");
+    const cloud = fs.readFileSync(path.join(pluginRoot, "skills", "start", "guides", "cloud.md"), "utf8");
+    expect(cloud).toContain("# On FrameJam Cloud");
+    expect(cloud).toMatch(/Don't wait: on this server `wait_for_feedback` returns right away/);
   });
 
   it("names the main skill start, so the command reads /framejam:start", () => {

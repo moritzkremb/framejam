@@ -3,6 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { FeedbackBatch, Review, ReviewComment, ReviewVersion } from "./types.ts";
 import { GUEST_SENT_NOTE, GUEST_WAKE_NOTE, feedbackPrompt, guestCommentsPrompt, latestComments, parseProjectRef, reviewUrl, toAgentComment, versionComments } from "./feedback.ts";
+import { GET_GUIDE_DESCRIPTION, type Guide, guideText } from "./guides.ts";
 import { costBadge, playbookUpdateNotice, projectLabel, stylesSentence } from "./playbooks.ts";
 import type { ShareHooks, ShareLinkSummary } from "./share.ts";
 import { LISTEN_HEARTBEAT_MS, PICK_HEARTBEAT_MS, type Store } from "./store.ts";
@@ -27,6 +28,8 @@ export interface CoreContext {
   reviewUrl?: (reviewId: string) => Promise<string | undefined> | string | undefined;
   /** What open_review adds about sync: the phone link of a synced project, or a tip for someone not syncing. */
   syncFields?: (reviewId: string, created: boolean) => Record<string, unknown> | undefined;
+  /** The skill's guides, for get_guide; absent leaves the tool off. */
+  guides?: () => Guide[];
 }
 
 const MAX_IMAGES = 6;
@@ -808,6 +811,26 @@ export function createMcpServer(ctx: CoreContext): McpServer {
       }
     },
   );
+
+  if (ctx.guides) {
+    const guides = ctx.guides;
+    server.registerTool(
+      "get_guide",
+      {
+        title: "Read a FrameJam guide",
+        description: GET_GUIDE_DESCRIPTION,
+        inputSchema: { topic: z.string().optional().describe("picking, feedback, sharing, handover, storyboards, tools or cloud") },
+        annotations: { readOnlyHint: true },
+      },
+      async ({ topic }) => {
+        try {
+          return { content: [{ type: "text", text: guideText(guides(), topic).text }] };
+        } catch (err) {
+          return errorResult(err);
+        }
+      },
+    );
+  }
 
   server.registerTool(
     "list_presets",

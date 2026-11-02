@@ -14,6 +14,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { packageRoot } from "../src/server/paths.ts";
 import { skillFile } from "../src/server/skill.ts";
+import { guidesDir } from "../src/server/guides.ts";
 
 export const pluginRoot = path.join(packageRoot, "plugin");
 
@@ -44,7 +45,7 @@ const json = (data: unknown) => `${JSON.stringify(data, null, 2)}\n`;
 export const CLOUD_MCP_URL = "https://mcp.framejam.ai/mcp";
 
 /** Every generated file, keyed by its path in `plugin/`. */
-export function pluginFiles(version: string, skill: string): Record<string, string> {
+export function pluginFiles(version: string, skill: string, guides: Record<string, string> = {}): Record<string, string> {
   const server = { command: "npx", args: ["-y", `framejam@${version}`, "--stdio"] };
   return {
     ".claude-plugin/plugin.json": json({
@@ -92,12 +93,20 @@ export function pluginFiles(version: string, skill: string): Record<string, stri
       },
     }),
     "skills/start/SKILL.md": startSkill(skill),
+    ...Object.fromEntries(Object.entries(guides).map(([name, text]) => [`skills/start/guides/${name}`, text])),
   };
 }
 
 export function currentPluginFiles() {
   const { version } = JSON.parse(fs.readFileSync(path.join(packageRoot, "package.json"), "utf8")) as { version: string };
-  return pluginFiles(version, fs.readFileSync(skillFile, "utf8"));
+  const guides = Object.fromEntries(
+    fs
+      .readdirSync(guidesDir)
+      .filter((f) => f.endsWith(".md"))
+      .sort()
+      .map((f) => [f, fs.readFileSync(path.join(guidesDir, f), "utf8")]),
+  );
+  return pluginFiles(version, fs.readFileSync(skillFile, "utf8"), guides);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {

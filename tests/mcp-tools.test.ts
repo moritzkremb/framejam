@@ -28,6 +28,7 @@ describe("tool registry", () => {
       [
         "add_version",
         "get_feedback",
+        "get_guide",
         "get_playbook",
         "get_preset",
         "get_selected_playbook",
@@ -45,6 +46,14 @@ describe("tool registry", () => {
         "wait_for_pick",
       ].sort(),
     );
+  });
+
+  it("hands out the skill's guides, and lists them for an unknown topic", async () => {
+    const sharing = (await mcp.call("get_guide", { topic: "sharing" })) as ToolResult;
+    expect(sharing.content[0]!.text).toMatch(/^# Sharing with a client/);
+    const list = (await mcp.call("get_guide", { topic: "nope" })) as ToolResult;
+    expect(list.content[0]!.text).toContain('There\'s no guide called "nope"');
+    expect(list.content[0]!.text).toContain("`storyboards`");
   });
 
   it("remembers which harness connected", () => {
