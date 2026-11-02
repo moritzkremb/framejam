@@ -5,10 +5,10 @@ import type { CatalogStatus } from "./catalog.ts";
 import { createShareHooks, type ShareOptions } from "./share.ts";
 import { currentSkillVersion } from "./skill.ts";
 import { UPDATE_COMMAND } from "./update.ts";
+import type { SyncEngine } from "./sync.ts";
+import { loadGuides } from "./guides.ts";
 
 /** The local app's context: the core one, minus what this computer fills in, plus options for the HTTP routes. */
-import type { SyncEngine } from "./sync.ts";
-
 export interface McpContext extends Omit<CoreContext, "skillVersion" | "updateCommand" | "share"> {
   /** Replaces the npm registry lookup behind the UI's "new version" notice (tests). */
   fetchLatestVersion?: () => Promise<string | null>;
@@ -34,5 +34,6 @@ export function createMcpServer(ctx: McpContext): McpServer {
     skillVersion: currentSkillVersion(),
     updateCommand: UPDATE_COMMAND,
     share: share === false ? undefined : createShareHooks(ctx.store, share),
+    guides: rest.guides ?? (() => loadGuides()),
   });
 }
