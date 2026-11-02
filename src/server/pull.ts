@@ -1,7 +1,7 @@
 /**
  * `framejam pull <project>` (H3.9): unpacks a project's latest source into a folder, so a local agent continues work
- * that started on the phone, in a web chat or on another computer. Never replaces a file changed after that version
- * was made unless told to.
+ * that started on the phone, in a web chat or on another computer, and downloads its footage (H3.8) into `footage/`
+ * there. Never replaces a file changed after that version was made unless told to.
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -9,6 +9,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { Review } from "../core/types.ts";
+import type { CloudFootage } from "./cloud-api.ts";
 import type { FetchLike } from "./cloud.ts";
 import type { JsonStore } from "./json-store.ts";
 import { findProject } from "./share.ts";
@@ -45,6 +46,76 @@ const slug = (title: string) =>
     .slice(0, 60) || "framejam-project";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
+
+/** The project's footage in the cloud; none when it isn't synced or the cloud doesn't keep footage yet. */
+async function footageOf(opts: PullOptions, id: string): Promise<CloudFootage[]> {
+  const session = opts.engine.api();
+  if (!session || !opts.engine.isSynced(id)) return [];
+  try {
+    return await session.api.footageList(id);
+  } catch {
+    return [];
+  }
+}
+
+/** A file name that is safe in one folder, unique among the footage. */
+function footageNames(items: CloudFootage[]): string[] {
+  const seen = new Set<string>();
+  return items.map((item) => {
+    const clean = path.basename(item.filename).replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_").replace(/^\.+/, "") || "footage";
+    const ext = path.extname(clean);
+    let name = clean;
+    for (let n = 2; seen.has(name.toLowerCase()); n++) name = `${clean.slice(0, clean.length - ext.length)} (${n})${ext}`;
+    seen.add(name.toLowerCase());
+    return name;
+  });
+}
+
+/** Downloads footage into `<dir>/footage`, skipping files already there at the same size. A different file there is kept unless forced. */
+async function pullFootage(dir: string, items: CloudFootage[], opts: PullOptions): Promise<string> {
+  if (!items.length) return "";
+  const into = path.join(dir, "footage");
+  const names = footageNames(items);
+  let written = 0;
+  let same = 0;
+  const kept: string[] = [];
+  const failed: string[] = [];
+  for (const [i, item] of items.entries()) {
+    const name = names[i]!;
+    const dest = path.join(into, name);
+    const size = fs.existsSync(dest) ? fs.statSync(dest).size : undefined;
+    if (size === item.bytes) {
+      same++;
+      continue;
+    }
+    if (size !== undefined && !opts.force) {
+      kept.push(name);
+      continue;
+    }
+    if (!item.downloadUrl) {
+      failed.push(name);
+      continue;
+    }
+    fs.mkdirSync(into, { recursive: true });
+    const part = `${dest}.part`;
+    try {
+      const res = await (opts.fetch ?? fetch)(item.downloadUrl);
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+      await pipeline(Readable.fromWeb(res.body as Parameters<typeof Readable.fromWeb>[0]), fs.createWriteStream(part));
+      fs.renameSync(part, dest);
+      written++;
+    } catch {
+      fs.rmSync(part, { force: true });
+      failed.push(name);
+    }
+  }
+  let text = ` Footage: ${plural(written, "file")} downloaded into ${into}${same ? ` (${same} already there)` : ""}.`;
+  if (kept.length) text += ` Kept your own ${kept.slice(0, 5).join(", ")}${kept.length > 5 ? ` and ${kept.length - 5} more` : ""} (a different file of the same name is there); --force replaces ${kept.length === 1 ? "it" : "them"}.`;
+  if (failed.length) text += ` Couldn't download ${failed.join(", ")}; run framejam pull again.`;
+  return text;
+}
 
 /** The project here, or the cloud one the ref names (by id or exact title), brought to this computer. */
 async function resolve(opts: PullOptions): Promise<Review | PullResult> {
@@ -88,14 +159,22 @@ export async function pullProject(opts: PullOptions): Promise<PullResult> {
   const version = review.versions.at(-1);
   if (!version) return { ok: false, text: `"${review.title}" has no versions yet.` };
   const name = `version ${version.number} of "${review.title}"`;
+  const Name = `${name[0]!.toUpperCase()}${name.slice(1)}`;
   const next = `\nProject id: ${review.id}. Comments and versions stay in FrameJam; add the next one with add_version.`;
+  const footage = await footageOf(opts, review.id);
 
   if (version.sourcePath && !opts.into && fs.existsSync(version.sourcePath)) {
-    return { ok: true, dir: version.sourcePath, text: `${name[0]!.toUpperCase()}${name.slice(1)} was made on this computer. Its files are in ${version.sourcePath}${next}` };
+    const got = await pullFootage(version.sourcePath, footage, opts);
+    return { ok: true, dir: version.sourcePath, text: `${Name} was made on this computer. Its files are in ${version.sourcePath}.${got}${next}` };
   }
   if (!version.source) {
     const render = version.videoPath ? ` Its render is at ${version.videoPath}.` : "";
-    return { ok: false, text: `${name[0]!.toUpperCase()}${name.slice(1)} has no source files, only what was reviewed.${render} Ask the agent that made it to pass source with the next version.` };
+    if (footage.length) {
+      const dir = path.resolve(opts.cwd, opts.into ?? slug(review.title));
+      const got = await pullFootage(dir, footage, opts);
+      return { ok: true, dir, text: `${Name} has no source files, only what was reviewed.${render}${got}${next}` };
+    }
+    return { ok: false, text: `${Name} has no source files, only what was reviewed.${render} Ask the agent that made it to pass source with the next version.` };
   }
 
   let download;
@@ -148,7 +227,8 @@ export async function pullProject(opts: PullOptions): Promise<PullResult> {
       fs.writeFileSync(p.dest, p.data);
     }
     const unchanged = same ? ` (${same} already up to date)` : "";
-    return { ok: true, dir, text: `Unpacked ${name} into ${dir}: ${plan.length} file${plan.length === 1 ? "" : "s"} written${unchanged}.${next}` };
+    const got = await pullFootage(dir, footage, opts);
+    return { ok: true, dir, text: `Unpacked ${name} into ${dir}: ${plural(plan.length, "file")} written${unchanged}.${got}${next}` };
   } catch (err) {
     return { ok: false, text: err instanceof Error ? err.message : String(err) };
   } finally {

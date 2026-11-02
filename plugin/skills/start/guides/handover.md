@@ -20,8 +20,8 @@ keeps both on this computer only.
   version). Read the notes, then get the source:
   - With a shell on the user's computer, run `npx -y framejam pull <project id or title>`. It brings the project here
     if it started somewhere else, unpacks the newest version's source into a folder named after the project (or
-    `--into <folder>`), and refuses to replace files changed since that version (`--force` replaces them). For a
-    project made on this computer it names its existing folder.
+    `--into <folder>`), downloads its footage into `footage/` there, and refuses to replace files changed since that
+    version (`--force` replaces them). For a project made on this computer it names its existing folder.
   - Otherwise download and unzip the source into a new folder with the `command` `get_version` returns (the link lasts
     about five minutes; call `get_version` again for a fresh one).
 
