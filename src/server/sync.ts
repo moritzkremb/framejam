@@ -19,7 +19,7 @@ import { type CloudApi, createCloudApi, type SyncComment, type VersionInput, typ
 import { CloudError, type FetchLike } from "./cloud.ts";
 import { mimeFor } from "./files.ts";
 import { type JsonStore, newId } from "./json-store.ts";
-import { resolveCloudUrl } from "./login.ts";
+import { SYNC_PLANS_URL, resolveCloudUrl } from "./login.ts";
 import { PANEL_EXTENSIONS, panelsKey } from "./media.ts";
 import { isProjectSynced, readSync, setProjectSync } from "./sync-settings.ts";
 import { extractFrame } from "./thumbs.ts";
@@ -134,6 +134,18 @@ export class SyncEngine {
 
   enabled(): boolean {
     return readSync(this.local.root).enabled === true;
+  }
+
+  /** Why the signed-in account can't sync (its plan doesn't include it), or undefined when it can or we're offline. */
+  async refusal(): Promise<string | undefined> {
+    const session = this.api();
+    if (!session) return undefined;
+    try {
+      await session.api.syncIndex();
+      return undefined;
+    } catch (err) {
+      return refused(err) ? `Sync comes with Pro. Plans: ${SYNC_PLANS_URL}` : undefined;
+    }
   }
 
   isSynced(reviewId: string): boolean {

@@ -251,6 +251,11 @@ async function runSync(): Promise<never> {
     if (!readAuth(root)) return await finish({ ok: false, text: "Sign in first: framejam login" });
     const who = await whoami();
     if (!who.ok) return await finish({ ok: false, text: `Couldn't confirm your FrameJam Cloud account (${who.text}). Run framejam login.` });
+    const refusal = await new SyncEngine({ local }).refusal();
+    if (refusal) {
+      setSyncEnabled(false, root);
+      return await finish({ ok: false, text: `Sync isn't on for ${who.text}. ${refusal}` });
+    }
     setSyncEnabled(true, root);
     const { projects } = localProjects(root);
     return await finish({

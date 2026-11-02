@@ -406,6 +406,14 @@ describe("the sync question at login", () => {
     expect(readSync(root).enabled).toBe(true);
   });
 
+  it("says sync comes with Pro when the plan doesn't include it", async () => {
+    root = tmpRoot();
+    const client = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer", sync: "none", syncIncluded: false }] });
+    const result = await login({ client, root, sleep: async () => {}, local: { projects: 3, bytes: 1000 } });
+    expect(result.text).toContain("Sync comes with Pro");
+    expect(readSync(root).enabled).toBe(false);
+  });
+
   it("doesn't ask again once the user chose, or with nothing to sync", async () => {
     root = tmpRoot();
     setSyncEnabled(false, root);

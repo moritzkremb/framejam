@@ -32,7 +32,7 @@ export interface DeviceStart {
 export type DevicePoll =
   | { status: "pending" | "expired" | "unknown" }
   /** `sync` is what the user chose on the sign-in page when this computer had projects to sync. */
-  | { status: "approved"; token: string; tokenType: "bearer"; sync?: "all" | "none" };
+  | { status: "approved"; token: string; tokenType: "bearer"; sync?: "all" | "none"; syncIncluded?: boolean };
 
 /** What's on this computer, so the sign-in page can ask "Sync your projects?" with their count and size. */
 export interface LocalProjects {

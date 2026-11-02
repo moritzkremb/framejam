@@ -103,8 +103,10 @@ export class FakeCloud implements CloudApi {
   /** Fails this many PUTs to R2 in a row with `failStatus`, to look at retries. */
   failPuts = 0;
   failStatus = 500;
-  /** How many projects sync may keep (the Free plan's 2), or unlimited. */
+  /** How many projects sync may keep, or unlimited. */
   syncLimit = Infinity;
+  /** False for a plan without sync (Free): every sync call is refused, as in convex/sync.ts. */
+  syncIncluded = true;
   /** Holds PUTs until released, so a test can look at the "uploading" state. */
   gate?: Promise<void>;
   tick = 0;
@@ -677,6 +679,7 @@ export class FakeCloud implements CloudApi {
 
   async syncIndex(): Promise<SyncIndexItem[]> {
     this.count("syncIndex");
+    if (!this.syncIncluded) throw fail("Sync isn't included on this account. Manage your account at app.framejam.ai/account.");
     return [...this.projects.values()]
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .map((p) => ({ id: p.id, title: p.title, kind: p.kind, updatedAt: p.updatedAt, versions: p.versions.at(-1)?.number ?? 0 }));
