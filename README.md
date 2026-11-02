@@ -300,6 +300,7 @@ npx -y framejam login              # asks "Sync your projects?" in the browser, 
 npx -y framejam sync on            # or turn it on (or off) any time
 npx -y framejam sync off "Teaser"  # leave one project out; its copy in your account is removed
 npx -y framejam sync               # what syncs
+npx -y framejam pull "Teaser"      # unpack a project's latest source files here to continue it
 ```
 
 With sync on, every project on this computer has a copy in your FrameJam Cloud account, and both stay up to date.
@@ -325,6 +326,11 @@ project link and it can `get_version`, read the notes, download the source and s
 different app. Guests never see source files, and see notes only if you turn on **Show version notes** in the link
 menu (or `share_project` with `showNotes`). A project that doesn't sync keeps its notes and the source folder's path
 here; the source is packed and uploaded once it syncs.
+
+**Continue here.** `framejam pull <project>` unpacks the newest version's source into a folder named after the project
+(or `--into <folder>`), bringing the project to this computer first if it started somewhere else, so your agent picks
+up where the phone or a web chat left off. It never replaces a file you changed after that version was made unless you
+add `--force`. For a project made on this computer it just names its folder.
 
 ### Connect by URL
 
@@ -596,7 +602,7 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam sync on|off [project]` syncs projects with FrameJam Cloud or leaves them out (`src/server/sync.ts`, `sync-settings.ts`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam sync on|off [project]` syncs projects with FrameJam Cloud or leaves them out (`src/server/sync.ts`, `sync-settings.ts`); `framejam pull <project>` unpacks a synced project's latest source to continue it (`src/server/pull.ts`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/core/` | Code that runs anywhere (no Node or filesystem): shared types, playbook display helpers, feedback formatting, the MCP tool definitions (`mcp.ts`, given a store and base URL) and the `Store` interface (`store.ts`: everything FrameJam keeps, such as projects, comments, picks, state, styles and playbooks). |
 | `src/server/mcp.ts` | The core MCP tools with this computer's skill version. |
 | `src/server/json-store.ts` | `JsonStore`, the JSON file implementation of `Store`. Every call re-reads from disk, so several processes can share `~/.framejam`. |

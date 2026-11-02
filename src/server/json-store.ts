@@ -697,7 +697,6 @@ export class JsonStore implements Store {
     writeJsonAtomic(this.pickFile(pick.id), pick);
   }
 
-  /** Local projects keep no source files: that's a FrameJam Cloud feature. */
   /** Set by the app when sync runs: a synced version's source zip is downloaded from FrameJam Cloud. */
   remoteSource?: (reviewId: string, version: number) => Promise<SourceDownload | undefined>;
 

@@ -318,6 +318,73 @@ export function listZip(file: string): ZipEntry[] {
   }
 }
 
+export interface ZipFile {
+  /** Relative path with forward slashes. */
+  name: string;
+  size: number;
+  read(): Buffer;
+}
+
+/**
+ * The files in a zip (folders left out), each read on demand. Handles stored and deflated entries, which is what
+ * FrameJam and the common zip tools write. Refuses names that would land outside the folder they're unpacked into.
+ */
+export function readZip(file: string): ZipFile[] {
+  const fd = fs.openSync(file, "r");
+  try {
+    const length = fs.fstatSync(fd).size;
+    const tail = Buffer.alloc(Math.min(length, 22 + 65_535));
+    fs.readSync(fd, tail, 0, tail.length, length - tail.length);
+    const end = tail.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+    if (end < 0) throw new StoreError(`${path.basename(file)} isn't a readable zip file.`);
+    const count = tail.readUInt16LE(end + 10);
+    const size = tail.readUInt32LE(end + 12);
+    const start = tail.readUInt32LE(end + 16);
+    if (count === 0xffff || size === 0xffffffff || start === 0xffffffff) throw new StoreError(`${path.basename(file)} is a zip64 file, which FrameJam can't unpack.`);
+    const dir = Buffer.alloc(size);
+    fs.readSync(fd, dir, 0, size, start);
+    const files: ZipFile[] = [];
+    let at = 0;
+    for (let i = 0; i < count; i++) {
+      if (dir.readUInt32LE(at) !== 0x02014b50) throw new StoreError(`${path.basename(file)} has a broken file list.`);
+      const method = dir.readUInt16LE(at + 10);
+      const compressed = dir.readUInt32LE(at + 20);
+      const entrySize = dir.readUInt32LE(at + 24);
+      const nameLength = dir.readUInt16LE(at + 28);
+      const extraLength = dir.readUInt16LE(at + 30);
+      const commentLength = dir.readUInt16LE(at + 32);
+      const offset = dir.readUInt32LE(at + 42);
+      const name = dir.toString("utf8", at + 46, at + 46 + nameLength).replace(/\\/g, "/");
+      at += 46 + nameLength + extraLength + commentLength;
+      if (name.endsWith("/")) continue;
+      if (name.startsWith("/") || /^[a-zA-Z]:/.test(name) || name.split("/").includes("..")) {
+        throw new StoreError(`${path.basename(file)} has a file that would land outside its folder: ${name}`);
+      }
+      if (method !== 0 && method !== 8) throw new StoreError(`${path.basename(file)} packs ${name} in a way FrameJam can't unpack (method ${method}).`);
+      files.push({
+        name,
+        size: entrySize,
+        read: () => {
+          const rfd = fs.openSync(file, "r");
+          try {
+            const local = Buffer.alloc(30);
+            fs.readSync(rfd, local, 0, 30, offset);
+            const dataAt = offset + 30 + local.readUInt16LE(26) + local.readUInt16LE(28);
+            const data = Buffer.alloc(compressed);
+            fs.readSync(rfd, data, 0, compressed, dataAt);
+            return method === 0 ? data : zlib.inflateRawSync(data);
+          } finally {
+            fs.closeSync(rfd);
+          }
+        },
+      });
+    }
+    return files;
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
 /** Checks a zip the agent made: readable, within the cap, and without dependencies, version control or secrets. */
 export function checkZip(file: string, maxBytes = MAX_SOURCE_BYTES): { files: number; bytes: number } {
   const bytes = fs.statSync(file).size;

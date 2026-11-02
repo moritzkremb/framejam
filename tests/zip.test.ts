@@ -6,7 +6,7 @@ import path from "node:path";
 import zlib from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { StoreError } from "../src/core/store.ts";
-import { checkZip, listZip, zipFolder } from "../src/server/zip.ts";
+import { checkZip, listZip, readZip, zipFolder } from "../src/server/zip.ts";
 
 let tmp: string;
 let project: string;
@@ -161,6 +161,20 @@ describe("checkZip", () => {
     end.writeUInt32LE(offset, 16);
     fs.writeFileSync(file, Buffer.concat([...parts, dir, end]));
   }
+
+  it("reads stored and deflated files back, and refuses names that leave the folder", async () => {
+    const stored = path.join(tmp, "stored.zip");
+    handMade(stored, ["index.html", "src/"]);
+    expect(readZip(stored).map((f) => [f.name, f.read().toString()])).toEqual([["index.html", "x"]]);
+
+    put("scenes/intro.js", "export const intro = 1;");
+    const packed = await zipFolder(project, path.join(tmp, "packed.zip"));
+    expect(readZip(packed.file).map((f) => [f.name, f.read().toString()])).toEqual([["scenes/intro.js", "export const intro = 1;"]]);
+
+    const evil = path.join(tmp, "evil.zip");
+    handMade(evil, ["../outside.txt"]);
+    expect(() => readZip(evil)).toThrow(/outside its folder/);
+  });
 
   it("accepts a clean zip and reports what's in it", () => {
     const file = path.join(tmp, "ok.zip");

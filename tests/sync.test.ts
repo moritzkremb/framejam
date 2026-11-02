@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/server/app.ts";
 import { JsonStore } from "../src/server/json-store.ts";
+import { pullProject } from "../src/server/pull.ts";
 import { shareVersion, shareThroughSync } from "../src/server/share.ts";
 import { readSync, setProjectSync, setSyncEnabled } from "../src/server/sync-settings.ts";
 import { SyncEngine } from "../src/server/sync.ts";
@@ -214,6 +215,73 @@ describe("two computers", () => {
   });
 });
 
+describe("framejam pull", () => {
+  function madeOnA() {
+    const a = computer("a");
+    const src = path.join(root, "teaser");
+    fs.mkdirSync(path.join(src, "scenes"), { recursive: true });
+    fs.writeFileSync(path.join(src, "index.html"), "<h1>v1</h1>");
+    fs.writeFileSync(path.join(src, "scenes", "intro.js"), "export const intro = 1;");
+    const { review } = a.local.openReview({ title: "Launch Teaser", videoPath: video, source: src });
+    return { a, src, id: review.id };
+  }
+
+  it("brings a project made elsewhere and unpacks its source into a folder named after it", async () => {
+    const { a, id } = madeOnA();
+    await a.run();
+    const b = computer("b");
+    const cwd = path.join(root, "work");
+    fs.mkdirSync(cwd);
+    const result = await pullProject({ store: b.local, engine: b.sync, ref: "launch teaser", cwd, appSyncs: false, fetch: cloud.fetch });
+    expect(result).toMatchObject({ ok: true, dir: path.join(cwd, "launch-teaser") });
+    expect(result.text).toContain(id);
+    expect(fs.readFileSync(path.join(cwd, "launch-teaser", "scenes", "intro.js"), "utf8")).toBe("export const intro = 1;");
+    expect(b.local.findReview(id)?.title).toBe("Launch Teaser");
+
+    const again = await pullProject({ store: b.local, engine: b.sync, ref: id, cwd, appSyncs: false, fetch: cloud.fetch });
+    expect(again.text).toContain("0 files written (2 already up to date)");
+  });
+
+  it("won't replace a file changed after the version was made, unless forced", async () => {
+    const { a, id } = madeOnA();
+    await a.run();
+    const b = computer("b");
+    const cwd = path.join(root, "work");
+    fs.mkdirSync(cwd);
+    await pullProject({ store: b.local, engine: b.sync, ref: id, cwd, appSyncs: false, fetch: cloud.fetch });
+    const page = path.join(cwd, "launch-teaser", "index.html");
+    fs.writeFileSync(page, "<h1>my edit</h1>");
+
+    const refused = await pullProject({ store: b.local, engine: b.sync, ref: id, cwd, appSyncs: false, fetch: cloud.fetch });
+    expect(refused).toMatchObject({ ok: false });
+    expect(refused.text).toContain("index.html");
+    expect(fs.readFileSync(page, "utf8")).toBe("<h1>my edit</h1>");
+
+    const forced = await pullProject({ store: b.local, engine: b.sync, ref: id, cwd, force: true, appSyncs: false, fetch: cloud.fetch });
+    expect(forced.ok).toBe(true);
+    expect(fs.readFileSync(page, "utf8")).toBe("<h1>v1</h1>");
+  });
+
+  it("points at the working folder on the computer that made it, and explains what's missing", async () => {
+    const { a, src, id } = madeOnA();
+    const here = await pullProject({ store: a.local, engine: a.sync, ref: id, cwd: root, appSyncs: false });
+    expect(here).toMatchObject({ ok: true, dir: src });
+
+    const plain = a.local.openReview({ title: "No source", videoPath: video });
+    expect((await pullProject({ store: a.local, engine: a.sync, ref: plain.review.id, cwd: root, appSyncs: false })).text).toContain("has no source files");
+    expect((await pullProject({ store: a.local, engine: a.sync, ref: "Nothing like this", cwd: root, appSyncs: false })).ok).toBe(false);
+  });
+
+  it("asks for sync before bringing a cloud project here", async () => {
+    const { a } = madeOnA();
+    await a.run();
+    const b = computer("b");
+    setSyncEnabled(false, b.local.root);
+    const result = await pullProject({ store: b.local, engine: b.sync, ref: "Launch Teaser", cwd: root, appSyncs: false, fetch: cloud.fetch });
+    expect(result.text).toContain("framejam sync on");
+  });
+});
+
 describe("limits and sharing", () => {
   it("pauses projects over the plan's limit with the cloud's reason", async () => {
     cloud.syncLimit = 2;
@@ -223,6 +291,16 @@ describe("limits and sharing", () => {
     expect(cloud.projects.size).toBe(2);
     const paused = ids.find((id) => !cloud.projects.has(id))!;
     expect(a.sync.status(paused)).toMatchObject({ state: "paused", error: expect.stringContaining("can sync 2 projects") });
+
+    const check = () => (a.sync as unknown as { checkCloud(): Promise<void> }).checkCloud();
+    await check();
+    const kept = ids.find((id) => id !== paused)!;
+    setProjectSync(kept, false, a.local.root);
+    await a.sync.forget(kept);
+    await check();
+    await a.sync.idle();
+    expect(cloud.projects.has(paused)).toBe(true);
+    expect(a.sync.status(paused).state).toBe("synced");
   });
 
   it("shares a synced project through its cloud copy without uploading again", async () => {

@@ -109,6 +109,7 @@ export class SyncEngine {
   private readonly waiting = new Map<string, number>();
   private timers: NodeJS.Timeout[] = [];
   private checking = false;
+  private cloudCount?: number;
 
   constructor(options: SyncOptions) {
     this.local = options.local;
@@ -217,6 +218,11 @@ export class SyncEngine {
         if (!this.isSynced(item.id)) continue;
         if (this.seenCloud.get(item.id) !== item.updatedAt) void this.sync(item.id);
       }
+      // A project left the account, so one held back by the plan's limit may fit now.
+      if (this.cloudCount !== undefined && index.length < this.cloudCount) {
+        for (const [id, err] of this.errors) if (!err.offline && this.isSynced(id)) void this.sync(id);
+      }
+      this.cloudCount = index.length;
       await this.importNew(session.api, index);
     } catch {
       // Offline: the next check tries again.
@@ -253,6 +259,20 @@ export class SyncEngine {
     if (session && this.readBase(reviewId)) await session.api.syncForget(reviewId);
     this.dropBase(reviewId);
     this.errors.delete(reviewId);
+  }
+
+  /**
+   * Brings a synced project up to date now, importing it first when it's only in the cloud (`framejam pull`). False
+   * while its first version is still uploading. Throws what stopped the pass.
+   */
+  async bring(reviewId: string): Promise<boolean> {
+    const session = this.api();
+    if (!session) throw new Error("Sign in first: framejam login");
+    if (!this.local.findReview(reviewId) && !(await this.importProject(session.api, reviewId))) return false;
+    await this.sync(reviewId);
+    const err = this.errors.get(reviewId);
+    if (err) throw new Error(err.message);
+    return true;
   }
 
   // --- One project ----------------------------------------------------------------------------------------------

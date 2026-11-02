@@ -12,6 +12,7 @@ import { login, logout, shouldOpenBrowser, whoami } from "./login.ts";
 import { readAuth } from "./auth.ts";
 import { localProjects, markNudged, readSync, setProjectSync, setSyncEnabled } from "./sync-settings.ts";
 import { SyncEngine } from "./sync.ts";
+import { pullProject } from "./pull.ts";
 import { describeShare, findProject, shareVersion, startSharePuller, shareThroughSync } from "./share.ts";
 import { DEFAULT_CLOUD_URL, cloudReviewUrl } from "./cloud.ts";
 import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
@@ -31,6 +32,7 @@ Usage:
   framejam share <project>  Put a project's latest version on its share link and pull in guests' comments
   framejam sync on|off      Sync your projects with FrameJam Cloud (on) or keep them on this computer only (off)
   framejam sync on|off <project>   Sync one project or leave it out; "sync" alone shows what syncs
+  framejam pull <project>   Unpack a synced project's latest source files into a folder here, to continue it
 
 Options:
   --port <n>        HTTP port (default ${DEFAULT_PORT}, env FRAMEJAM_PORT)
@@ -39,6 +41,8 @@ Options:
   --browser         With start: also open the UI in the system browser
   --no-browser      With login: print the URL but don't open a browser
   --version <n>     With share: share this version instead of the latest
+  --into <dir>      With pull: unpack here instead of a folder named after the project
+  --force           With pull: replace files changed after that version was made
   -h, --help
 
 FrameJam Cloud: FRAMEJAM_CLOUD_URL or FRAMEJAM_CONVEX_URL (default ${DEFAULT_CLOUD_URL})
@@ -54,6 +58,8 @@ const { values, positionals } = parseArgs({
     browser: { type: "boolean", default: false },
     "no-browser": { type: "boolean", default: false },
     version: { type: "string" },
+    into: { type: "string" },
+    force: { type: "boolean", default: false },
     help: { type: "boolean", short: "h", default: false },
   },
 });
@@ -289,6 +295,16 @@ async function runShare(): Promise<never> {
   }
 }
 if (positionals[0] === "share") await runShare();
+
+/** `framejam pull <project>`: the latest source files of a synced project, unpacked to continue it here. */
+async function runPull(): Promise<never> {
+  const ref = positionals.slice(1).join(" ").trim();
+  if (!ref) await finish({ ok: false, text: "Usage: framejam pull <project id or title> [--into <folder>] [--force]" });
+  const running = await runningHealth();
+  const appSyncs = Boolean(running && (!running.dataDir || path.resolve(running.dataDir) === path.resolve(store.root)));
+  return await finish(await pullProject({ store, engine: syncEngine, ref, into: values.into, force: values.force, cwd: process.cwd(), appSyncs }));
+}
+if (positionals[0] === "pull") await runPull();
 const catalogSettings = catalogConfig();
 let catalogClient: CatalogClient | undefined;
 const ctx = {
