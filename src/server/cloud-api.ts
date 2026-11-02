@@ -1,7 +1,7 @@
 /**
- * What cloud mode needs from FrameJam Cloud (H2.1): the `cloud.*` functions that keep a creator's projects, versions,
- * comments and rounds, plus the upload and link calls the same signed-in user already has. `CloudStore` is the only
- * caller; tests give it an in-memory one.
+ * What sync needs from FrameJam Cloud (H2.1): the `cloud.*` and `sync.*` functions that keep a creator's projects,
+ * versions, comments and rounds, plus the upload and link calls the same signed-in user already has. `SyncEngine` and
+ * sharing are the callers; tests give them an in-memory one.
  */
 import type { VoiceComment } from "../core/types.ts";
 import {
@@ -145,6 +145,56 @@ export interface CloudLink {
   guestCommentsWaiting: number;
 }
 
+/** A cloud project in the list sync compares against (`sync.index`). */
+export interface SyncIndexItem {
+  id: string;
+  title: string;
+  kind: "video" | "storyboard";
+  /** Milliseconds since the epoch. */
+  updatedAt: number;
+  /** The newest version's number. */
+  versions: number;
+}
+
+export interface SyncProject {
+  id: string;
+  title: string;
+  kind: "video" | "storyboard";
+  projectKey?: string;
+  playbookId?: string;
+  styleId?: string;
+}
+
+/** A local comment as sync sends it (`sync.putComments`). Times are milliseconds since the epoch. */
+export interface SyncComment {
+  id: string;
+  row?: string;
+  version: number;
+  kind: "pin" | "range" | "panel" | "general";
+  time: number;
+  endTime?: number;
+  x?: number;
+  y?: number;
+  panel?: number;
+  wholeVideo?: boolean;
+  text: string;
+  status: "draft" | "sent" | "resolved";
+  sentAt?: number;
+  resolvedAt?: number;
+  resolution?: { note?: string; version: number };
+  author?: string;
+  fromVersion?: number;
+}
+
+export interface SyncBatch {
+  id: string;
+  version: number;
+  comments: string[];
+  message?: string;
+  sentAt?: number;
+  deliveredAt?: number;
+}
+
 export interface CloudApi {
   /** Where the cloud lives, so a project's cache isn't mixed up between deployments. */
   readonly url: string;
@@ -186,6 +236,13 @@ export interface CloudApi {
   links(): Promise<{ reviewId: string; title: string; latestVersion: number; link: CloudLink }[]>;
   approvalSeen(reviewId: string): Promise<null>;
   configure(reviewId: string, settings: { expiresAt?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean; reopen?: boolean }): Promise<LinkSettings>;
+
+  syncIndex(): Promise<SyncIndexItem[]>;
+  syncEnsure(project: SyncProject, update?: { title?: string; playbookId?: string | null; styleId?: string | null }): Promise<{ created: boolean }>;
+  syncAddVersions(reviewId: string, versions: { number: number; version: VersionInput }[]): Promise<{ upload: number[] }>;
+  syncPutComments(reviewId: string, comments: SyncComment[]): Promise<{ ids: Record<string, string> }>;
+  syncPutBatch(reviewId: string, batch: SyncBatch): Promise<{ id: string }>;
+  syncForget(reviewId: string): Promise<null>;
 }
 
 export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): CloudApi {
@@ -222,5 +279,11 @@ export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn:
     links: () => call("query", "cloud:links"),
     approvalSeen: (reviewId) => call("mutation", "cloud:approvalSeen", { reviewId }),
     configure: (reviewId, settings) => call("mutation", "shares:configure", { localId: reviewId, ...settings }),
+    syncIndex: () => call("query", "sync:index"),
+    syncEnsure: (project, update) => call("mutation", "sync:ensure", { project, ...(update ? { update } : {}) }),
+    syncAddVersions: (reviewId, versions) => call("mutation", "sync:addVersions", { reviewId, versions }),
+    syncPutComments: (reviewId, comments) => call("mutation", "sync:putComments", { reviewId, comments }),
+    syncPutBatch: (reviewId, batch) => call("mutation", "sync:putBatch", { reviewId, batch }),
+    syncForget: (reviewId) => call("mutation", "sync:forget", { reviewId }),
   };
 }

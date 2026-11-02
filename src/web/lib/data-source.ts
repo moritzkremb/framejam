@@ -34,6 +34,8 @@ export interface ReviewDataSource {
   publishShare?(id: string, version?: number): Promise<ShareInfo>;
   /** The creator page can set link expiry and turn a turned-off link back on. */
   shareSettings?: boolean;
+  /** This computer's app, where a project can sync with FrameJam Cloud. */
+  sync?: boolean;
   /** Two versions side by side. Offered where every version's video is on hand. */
   compare?: boolean;
   /** A still of the version while its video is still uploading. */
@@ -44,6 +46,7 @@ export interface ReviewDataSource {
 
 /** The local FrameJam server. */
 export const localDataSource: ReviewDataSource = {
+  sync: true,
   review: api.review,
   subscribe(id, onChange) {
     const es = new EventSource(`/api/reviews/${id}/events`);

@@ -127,8 +127,10 @@ export interface ReviewVersion {
   note?: string;
   /** Handoff notes (H2.6): what changed, which comments it answers, how to continue the project. */
   notes?: string;
-  /** The project's source files for another agent to continue from. Cloud projects only. */
+  /** The project's source files for another agent to continue from, once sync has packed them. Synced projects only. */
   source?: VersionSource;
+  /** The folder (or zip) the agent passed as `source`; sync packs it when the version goes to FrameJam Cloud. */
+  sourcePath?: string;
   createdAt: string;
   /** Set when the user pressed Send on this version. A sent version is locked: no new or edited comments. */
   sentAt?: string;

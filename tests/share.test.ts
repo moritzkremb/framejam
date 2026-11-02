@@ -1334,10 +1334,10 @@ describe("the download switch", () => {
     expect(on.allowDownload).toBe(true);
   });
 
-  it("keeps notes on the link to cloud projects, as the creator's own choice", async () => {
+  it("keeps notes on the link to synced projects, as the creator's own choice", async () => {
     const id = await openLaunch();
     await shareVersion(store, id, opts());
-    await expect(configureShare(store, id, { showNotes: true }, opts())).rejects.toThrow("cloud projects");
+    await expect(configureShare(store, id, { showNotes: true }, opts())).rejects.toThrow("synced projects");
   });
 
   it("share_project passes allowDownload without uploading anything", async () => {

@@ -19,11 +19,27 @@ import {
   type OpenReviewInput,
   PICK_IDLE_MS,
   type PicksChoice,
+  type SourceDownload,
   type Store,
   StoreError,
 } from "../core/store.ts";
 
 const now = () => new Date().toISOString();
+
+/** The source folder or zip an agent passed, checked now so a typo fails the call instead of the upload later. */
+function sourcePathOf(source: string | undefined): string | undefined {
+  if (!source) return undefined;
+  const target = path.resolve(source);
+  let stat: fs.Stats;
+  try {
+    stat = fs.statSync(target);
+  } catch {
+    throw new StoreError(`source does not exist: ${target}`);
+  }
+  if (stat.isFile() && path.extname(target).toLowerCase() !== ".zip") throw new StoreError(`source has to be the project folder or a .zip file: ${target}`);
+  if (!stat.isFile() && !stat.isDirectory()) throw new StoreError(`source has to be the project folder or a .zip file: ${target}`);
+  return target;
+}
 
 export function newId(prefix: string): string {
   return `${prefix}_${randomBytes(5).toString("hex")}`;
@@ -186,14 +202,14 @@ export class JsonStore implements Store {
         const review = this.setTranscript(existing.id, latest.number, transcript.transcript, transcript.sourcePath);
         return { review, version: review.versions.at(-1)!, created: false };
       }
-      const review = this.addResolvedVersion(existing.id, media, input.note, transcript, input.notes);
+      const review = this.addResolvedVersion(existing.id, media, input.note, transcript, input.notes, input.source);
       if (input.title && input.title !== review.title) {
         review.title = input.title;
         this.save(review);
       }
       return { review, version: review.versions.at(-1)!, created: false };
     }
-    const version: ReviewVersion = { number: 1, ...media, note: input.note, notes: input.notes?.trim() || undefined, createdAt: now() };
+    const version: ReviewVersion = { number: 1, ...media, note: input.note, notes: input.notes?.trim() || undefined, sourcePath: sourcePathOf(input.source), createdAt: now() };
     const id = newId("rev");
     this.snapshotVideo(id, version);
     this.snapshotPanels(id, version);
@@ -230,10 +246,10 @@ export class JsonStore implements Store {
     } else {
       media = resolveMedia(input);
     }
-    return this.addResolvedVersion(reviewId, media, input.note, loadTranscript(input.transcriptPath, media), input.notes);
+    return this.addResolvedVersion(reviewId, media, input.note, loadTranscript(input.transcriptPath, media), input.notes, input.source);
   }
 
-  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string, transcript?: LoadedTranscript, notes?: string): Review {
+  private addResolvedVersion(reviewId: string, media: ResolvedMedia, note?: string, transcript?: LoadedTranscript, notes?: string, source?: string): Review {
     return this.update(reviewId, (review) => {
       const prev = review.versions.at(-1);
       const version: ReviewVersion = {
@@ -241,6 +257,7 @@ export class JsonStore implements Store {
         ...media,
         note,
         notes: notes?.trim() || undefined,
+        sourcePath: sourcePathOf(source),
         createdAt: now(),
       };
       this.snapshotVideo(reviewId, version);
@@ -680,9 +697,53 @@ export class JsonStore implements Store {
     writeJsonAtomic(this.pickFile(pick.id), pick);
   }
 
-  /** Local projects keep no source files: that's a FrameJam Cloud feature. */
-  sourceFor(_reviewId: string, _version: number): undefined {
-    return undefined;
+  /** Set by the app when sync runs: a synced version's source zip is downloaded from FrameJam Cloud. */
+  remoteSource?: (reviewId: string, version: number) => Promise<SourceDownload | undefined>;
+
+  async sourceFor(reviewId: string, version: number): Promise<SourceDownload | undefined> {
+    const v = this.getReview(reviewId).versions.find((x) => x.number === version);
+    if (!v) throw new StoreError(`${reviewId} has no version ${version}.`, 404);
+    if (!v.source || !this.remoteSource) return undefined;
+    try {
+      return await this.remoteSource(reviewId, version);
+    } catch (err) {
+      throw new StoreError((err as Error).message, 409);
+    }
+  }
+
+  /**
+   * Sync: makes a project that started somewhere else (the phone, a web chat, another computer) under the id it has
+   * there, with its first version. Not part of `Store`; only sync calls it.
+   */
+  importReview(
+    id: string,
+    meta: { title: string; projectKey?: string; playbookId?: string; styleId?: string },
+    first: MediaInput & { note?: string },
+  ): Review {
+    this.reviewFile(id);
+    if (this.findReview(id)) throw new StoreError(`Review already exists: ${id}`, 409);
+    const media = resolveMedia(first);
+    const version: ReviewVersion = { number: 1, ...media, note: first.note, notes: first.notes?.trim() || undefined, createdAt: now() };
+    this.snapshotVideo(id, version);
+    this.snapshotPanels(id, version);
+    const review: Review = {
+      id,
+      title: meta.title,
+      projectKey: meta.projectKey ?? `project:${id}`,
+      createdAt: now(),
+      updatedAt: now(),
+      versions: [version],
+      comments: [],
+      batches: [],
+      playbookId: meta.playbookId,
+      styleId: meta.styleId,
+    };
+    return this.save(review);
+  }
+
+  /** Sync: applies what changed in the cloud (a round, a resolve, a rename) to the project as it is. Not part of `Store`. */
+  change(reviewId: string, fn: (review: Review) => void): Review {
+    return this.update(reviewId, fn);
   }
 
   /** Remembers the playbook and style picked for a project, so later versions and new chats keep them. */

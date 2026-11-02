@@ -28,9 +28,25 @@ export interface ReviewListItem {
   hasVideo: boolean;
   /** Panels in the latest version; 0 for videos. */
   panels: number;
-  /** Set on cloud projects; `upload` is the latest version's upload while its files are still on their way. */
-  cloud?: boolean;
-  upload?: ReviewVersion["upload"] | null;
+  /** Whether the project syncs with FrameJam Cloud; missing where this app doesn't sync. */
+  sync?: SyncStatus;
+}
+
+/** A project's sync with FrameJam Cloud, as `GET /api/reviews/:id/sync` reports it. */
+export interface SyncStatus {
+  state: "off" | "signed-out" | "left-out" | "syncing" | "synced" | "paused" | "offline";
+  error?: string;
+  syncedAt?: string;
+  upload?: { version: number; bytes: number; total: number };
+}
+
+/** Whether this computer syncs, for the banners. `asked` is false until the user chose either way. */
+export interface SyncInfo {
+  enabled: boolean;
+  asked: boolean;
+  signedIn: boolean;
+  /** The signed-out tip may show (at most once a week). */
+  nudge: boolean;
 }
 
 export interface UpdateInfo {
@@ -52,7 +68,7 @@ export interface Health {
   app: string;
   version?: string;
   dataDir: string;
-  cloud?: { on: boolean; signedOut: boolean };
+  sync?: SyncInfo | null;
   baseUrl: string;
   agent: AgentInfo | null;
   setup?: { mcpCommand: string[]; installCommand?: string[]; skillPath: string };
@@ -101,6 +117,10 @@ export const api = {
   setShare: (id: string, change: { allowDownload?: boolean; revoked?: boolean; showNotes?: boolean; reopen?: boolean }) =>
     request<ShareInfo>(`/api/reviews/${id}/share/settings`, { method: "POST", body: JSON.stringify(change) }),
   health: () => request<Health>("/api/health"),
+  setSync: (enabled: boolean) => request<SyncInfo>("/api/sync", { method: "POST", body: JSON.stringify({ enabled }) }),
+  dismissSyncTip: () => request<SyncInfo>("/api/sync/nudge", { method: "POST" }),
+  projectSync: (id: string) => request<SyncStatus>(`/api/reviews/${id}/sync`),
+  setProjectSync: (id: string, synced: boolean) => request<SyncStatus>(`/api/reviews/${id}/sync`, { method: "POST", body: JSON.stringify({ synced }) }),
   update: () => request<UpdateInfo>("/api/update"),
   skillStatus: () => request<SkillStatus>("/api/skill-status"),
   reviews: () => request<ReviewListItem[]>("/api/reviews"),

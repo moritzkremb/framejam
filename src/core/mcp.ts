@@ -25,6 +25,8 @@ export interface CoreContext {
   share?: ShareHooks;
   /** The page for a project when it isn't this app's own: a cloud project opens at its address on the web app. */
   reviewUrl?: (reviewId: string) => Promise<string | undefined> | string | undefined;
+  /** What open_review adds about sync: the phone link of a synced project, or a tip for someone not syncing. */
+  syncFields?: (reviewId: string, created: boolean) => Record<string, unknown> | undefined;
 }
 
 const MAX_IMAGES = 6;
@@ -45,7 +47,7 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-const LOCAL_SOURCE_NOTE = "Source files are kept for FrameJam Cloud projects. This project is on this computer, so nothing was attached; the notes were kept.";
+const LOCAL_SOURCE_NOTE = "Remembered with the version. Its files are packed and uploaded when the project syncs with FrameJam Cloud (framejam sync on); until then nothing leaves this computer.";
 
 /** What the agent learns about the notes and source it passed: whether they were kept. */
 function handoffFields(version: ReviewVersion, given: { notes?: string; source?: string }): Record<string, unknown> {
@@ -54,7 +56,9 @@ function handoffFields(version: ReviewVersion, given: { notes?: string; source?:
   if (given.source) {
     out.source = version.source
       ? { filename: version.source.filename, bytes: version.source.bytes, status: version.source.ready ? "ready" : "uploading with the version", download: "get_version returns a download link once it is ready" }
-      : { attached: false, why: LOCAL_SOURCE_NOTE };
+      : version.sourcePath
+        ? { attached: true, status: "kept on this computer", why: LOCAL_SOURCE_NOTE }
+        : { attached: false, why: "This FrameJam doesn't keep source files." };
   }
   return out;
 }
@@ -338,6 +342,7 @@ export function createMcpServer(ctx: CoreContext): McpServer {
               ...handoffFields(version, args),
               ...(fixed.length ? { resolvedGuestComments: fixed.length } : {}),
               ...(await shareFields(review.id, version.number, share)),
+              ...ctx.syncFields?.(review.id, created),
               next: "Open the url in the harness's built-in browser and post it in chat as a clickable markdown link (e.g. [Open the video in FrameJam](url)), then call wait_for_feedback with this reviewId right away — don't end your turn first, or the user's feedback has nobody to go to.",
             }),
           ],

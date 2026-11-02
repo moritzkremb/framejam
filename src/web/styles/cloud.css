@@ -34,6 +34,7 @@
   letter-spacing: 0.01em;
 }
 .fc-cloud-tag .fc-i { width: 11px; height: 11px; }
+.fc-cloud-tag.off { background: var(--surface-2); color: var(--text-2); }
 
 /* The creator page: compare two versions, and the wait while a version's video uploads. */
 .fc-upload-wait {

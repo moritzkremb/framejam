@@ -17,6 +17,7 @@ import {
   createCloudClient,
 } from "../src/server/cloud.ts";
 import { formatAccount, login, logout, shouldOpenBrowser, whoami } from "../src/server/login.ts";
+import { readSync, setSyncEnabled } from "../src/server/sync-settings.ts";
 import { packageRoot } from "../src/server/paths.ts";
 
 const run = promisify(execFile);
@@ -44,8 +45,8 @@ function fakeClient(opts: {
   const polls = [...(opts.polls ?? [])];
   return {
     calls,
-    async start() {
-      calls.push("start");
+    async start(local) {
+      calls.push(local ? `start:${local.projects}` : "start");
       if (opts.start instanceof Error) throw opts.start;
       return opts.start ?? startPayload;
     },
@@ -389,5 +390,57 @@ describe("framejam CLI (logged out)", () => {
     const out = await cli(["logout"]);
     expect(out.code).toBe(0);
     expect(out.stdout.trim()).toBe("Already logged out.");
+  });
+});
+
+describe("the sync question at login", () => {
+  let root: string;
+  afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  it("sends what's on this computer and keeps the answer", async () => {
+    root = tmpRoot();
+    const client = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer", sync: "all" }] });
+    const result = await login({ client, root, sleep: async () => {}, local: { projects: 3, bytes: 1000 } });
+    expect(client.calls[0]).toBe("start:3");
+    expect(result.text).toContain("Your projects are syncing");
+    expect(readSync(root).enabled).toBe(true);
+  });
+
+  it("says sync comes with Pro when the plan doesn't include it", async () => {
+    root = tmpRoot();
+    const client = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer", sync: "none", syncIncluded: false }] });
+    const result = await login({ client, root, sleep: async () => {}, local: { projects: 3, bytes: 1000 } });
+    expect(result.text).toContain("Sync comes with Pro");
+    expect(readSync(root).enabled).toBe(false);
+  });
+
+  it("doesn't ask again once the user chose, or with nothing to sync", async () => {
+    root = tmpRoot();
+    setSyncEnabled(false, root);
+    const answered = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer" }] });
+    await login({ client: answered, root, sleep: async () => {}, local: { projects: 3, bytes: 1000 } });
+    expect(answered.calls[0]).toBe("start");
+    expect(readSync(root).enabled).toBe(false);
+
+    fs.rmSync(path.join(root, "sync.json"));
+    const empty = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer" }] });
+    await login({ client: empty, root, sleep: async () => {}, local: { projects: 0, bytes: 0 } });
+    expect(empty.calls[0]).toBe("start");
+    expect(readSync(root).enabled).toBeUndefined();
+  });
+
+  it("still signs in against a FrameJam Cloud from before sync", async () => {
+    root = tmpRoot();
+    let tries = 0;
+    const client = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer" }] });
+    const start = client.start.bind(client);
+    client.start = async (local) => {
+      tries++;
+      if (local) throw new CloudError("ArgumentValidationError: Object contains extra field `local`", false, 400);
+      return start();
+    };
+    const result = await login({ client, root, sleep: async () => {}, local: { projects: 2, bytes: 10 } });
+    expect(result.ok).toBe(true);
+    expect(tries).toBe(2);
   });
 });

@@ -22,8 +22,7 @@ import {
   type ShareClient,
   createShareClient,
 } from "./cloud.ts";
-import { AppStore } from "./app-store.ts";
-import type { CloudStore } from "./cloud-store.ts";
+import type { CloudApi } from "./cloud-api.ts";
 import type { CloudLink } from "./cloud-api.ts";
 import { mimeFor } from "./files.ts";
 import { resolveCloudUrl } from "./login.ts";
@@ -189,7 +188,7 @@ export async function shareVersion(
   reviewId: string,
   opts: ShareOptions & { version?: number } = {},
 ): Promise<ShareResult> {
-  const cloud = await cloudOf(store, reviewId);
+  const cloud = cloudOf(reviewId);
   if (cloud) return await cloudShareVersion(cloud, store, reviewId, opts.version);
   const { client, cloudUrl } = requireSession(store.root, opts);
   const fetchFn = opts.fetch ?? fetch;
@@ -403,6 +402,8 @@ export async function pullAll(store: Store, opts: ShareOptions = {}): Promise<{ 
   let pulled = 0;
   if (!readAuth(store.root)) return { pulled, errors };
   for (const id of sharedProjectIds(store.root)) {
+    // A synced project's guest comments come with sync.
+    if (cloudOf(id)) continue;
     try {
       const result = await pullShare(store, id, opts);
       pulled += result.added;
@@ -497,6 +498,7 @@ export function summarizeShare(review: Review, state: ShareState): ShareLinkSumm
 export async function listShares(store: Store): Promise<ShareLinkSummary[]> {
   const out: { at: string; summary: ShareLinkSummary }[] = [];
   for (const id of sharedProjectIds(store.root)) {
+    if (cloudOf(id)) continue;
     const state = readShareState(store.root, id);
     if (!state) continue;
     let review: Review;
@@ -507,11 +509,13 @@ export async function listShares(store: Store): Promise<ShareLinkSummary[]> {
     }
     out.push({ at: state.sharedAt, summary: summarizeShare(review, state) });
   }
-  const cloud = store instanceof AppStore ? store.cloud() : undefined;
-  if (cloud) {
+  const api = syncedCloud?.api();
+  if (api) {
+    const listed = new Set(out.map((x) => x.summary.reviewId));
     try {
-      for (const item of await cloud.api.links()) {
-        if (item.link.sharedVersion === null) continue;
+      for (const item of await api.links()) {
+        const cloud = cloudOf(item.reviewId);
+        if (!cloud || item.link.sharedVersion === null || listed.has(item.reviewId)) continue;
         const review = await store.getReview(item.reviewId);
         out.push({ at: new Date(item.link.createdAt).toISOString(), summary: summarizeShare(review, cloudStateOf(cloud, review, item.link)!) });
       }
@@ -533,8 +537,8 @@ export async function configureShare(
   change: { expiresInDays?: number | null; revoked?: boolean; allowDownload?: boolean; showNotes?: boolean; reopen?: boolean },
   opts: ShareOptions = {},
 ): Promise<ShareLinkSummary> {
-  const cloud = await cloudOf(store, reviewId);
-  if (change.showNotes !== undefined && !cloud) throw new ShareError("Version notes on the link are for cloud projects. Turn on cloud mode first.");
+  const cloud = cloudOf(reviewId);
+  if (change.showNotes !== undefined && !cloud) throw new ShareError("Version notes on the link are for synced projects. Turn on sync first: framejam sync on");
   const { client, cloudUrl } = cloud ? { client: { configure: (id: string, settings: Parameters<ShareClient["configure"]>[1]) => cloud.api.configure(id, settings) }, cloudUrl: cloud.api.url } : requireSession(store.root, opts);
   const state = cloud ? await cloudState(cloud, store, reviewId) : readShareState(store.root, reviewId);
   if (!state || state.cloudUrl !== cloudUrl) throw new ShareError("This project isn't shared yet. Share a version first.");
@@ -568,7 +572,7 @@ export async function configureShare(
 
 /** Remembers that an agent was told about the link's current approval. */
 export async function markApprovalSeen(target: Store | string, reviewId: string): Promise<void> {
-  const cloud = typeof target === "string" ? undefined : await cloudOf(target, reviewId);
+  const cloud = typeof target === "string" ? undefined : cloudOf(reviewId);
   if (cloud) {
     await cloud.api.approvalSeen(reviewId);
     return;
@@ -609,15 +613,39 @@ export function createShareHooks(store: Store, opts: ShareOptions = {}): ShareHo
   };
 }
 
-// --- Projects that live in FrameJam Cloud: the files are already there, so sharing is only the link -------------------
+// --- Synced projects: the files are already in FrameJam Cloud, so sharing is only the link ---------------------------
 
-/** The cloud store that holds a project, or undefined when it's a local one (or cloud mode is off). */
-export async function cloudOf(store: Store, reviewId: string): Promise<CloudStore | undefined> {
-  return store instanceof AppStore ? await store.cloudFor(reviewId) : undefined;
+/** What sharing needs from sync: the signed-in cloud, and whether a version's files are up. */
+export interface SyncedCloud {
+  api(): CloudApi | undefined;
+  isSynced(reviewId: string): boolean;
+  waitForUpload(reviewId: string, version: number): Promise<void>;
+}
+
+/** A synced project's handle on FrameJam Cloud. */
+interface CloudProject {
+  api: CloudApi;
+  waitForUpload(reviewId: string, version: number): Promise<void>;
+  refresh(reviewId: string): void;
+}
+
+let syncedCloud: SyncedCloud | undefined;
+
+/** Synced projects share through their copy in FrameJam Cloud instead of uploading to the link. Set by the app. */
+export function shareThroughSync(sync: SyncedCloud | undefined): void {
+  syncedCloud = sync;
+}
+
+/** The cloud copy of a synced project, or undefined when the project isn't synced. */
+export function cloudOf(reviewId: string): CloudProject | undefined {
+  const api = syncedCloud?.isSynced(reviewId) ? syncedCloud.api() : undefined;
+  if (!api || !syncedCloud) return undefined;
+  const sync = syncedCloud;
+  return { api, waitForUpload: (id, n) => sync.waitForUpload(id, n), refresh: () => {} };
 }
 
 /** The link as the local code reads it, built from the cloud's answer; undefined until a version is on it. */
-function cloudStateOf(cloud: CloudStore, review: Review, link: CloudLink | null): ShareState | undefined {
+function cloudStateOf(cloud: CloudProject, review: Review, link: CloudLink | null): ShareState | undefined {
   if (!link || link.sharedVersion === null) return undefined;
   const upTo = link.sharedVersion;
   return {
@@ -637,18 +665,24 @@ function cloudStateOf(cloud: CloudStore, review: Review, link: CloudLink | null)
   };
 }
 
-async function cloudState(cloud: CloudStore, store: Store, reviewId: string): Promise<ShareState | undefined> {
-  return cloudStateOf(cloud, await store.getReview(reviewId), await cloud.linkOf(reviewId));
+async function cloudState(cloud: CloudProject, store: Store, reviewId: string): Promise<ShareState | undefined> {
+  return cloudStateOf(cloud, await store.getReview(reviewId), await cloud.api.link(reviewId));
 }
 
 /** A project's link: from the cloud for a cloud project, from this computer's share file otherwise. */
 export async function loadShareState(store: Store, reviewId: string): Promise<ShareState | undefined> {
-  const cloud = await cloudOf(store, reviewId);
-  return cloud ? await cloudState(cloud, store, reviewId) : readShareState(store.root, reviewId);
+  const cloud = cloudOf(reviewId);
+  if (!cloud) return readShareState(store.root, reviewId);
+  try {
+    return await cloudState(cloud, store, reviewId);
+  } catch {
+    // Not in the cloud yet, or offline: the link this computer knows, if any.
+    return readShareState(store.root, reviewId);
+  }
 }
 
 /** Puts a version on a cloud project's link. Nothing is uploaded here: it waits for the version's own upload to finish. */
-async function cloudShareVersion(cloud: CloudStore, store: Store, reviewId: string, requested: number | undefined): Promise<ShareResult> {
+async function cloudShareVersion(cloud: CloudProject, store: Store, reviewId: string, requested: number | undefined): Promise<ShareResult> {
   const review = await store.getReview(reviewId);
   const number = requested ?? review.versions.at(-1)!.number;
   if (!review.versions.some((v) => v.number === number)) throw new ShareError(`${review.title} has no version ${number}.`);

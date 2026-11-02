@@ -8,7 +8,8 @@ import { sendFile, safeJoin } from "./files.ts";
 import { createMcpServer, type McpContext } from "./mcp.ts";
 import { downloadsDir, setupInfo, webDistDir } from "./paths.ts";
 import { chooseSavePath } from "./save-dialog.ts";
-import { AppStore } from "./app-store.ts";
+import { readAuth } from "./auth.ts";
+import { markNudged, readSync, setProjectSync, setSyncEnabled } from "./sync-settings.ts";
 import { configureShare, loadShareState, ShareError, type ShareState, shareStateMtime, shareUrl } from "./share.ts";
 import { isPickListening, StoreError, type NewCommentInput } from "../core/store.ts";
 import { extractFrame } from "./thumbs.ts";
@@ -19,6 +20,18 @@ import { VERSION } from "./version.ts";
 
 export function createApp(ctx: McpContext) {
   const { store } = ctx;
+  /** Whether this computer syncs, for the app's banners. `asked` is false until the user chose either way. */
+  const syncInfo = () => {
+    if (!ctx.sync) return null;
+    const settings = readSync(store.root);
+    const nudgedAt = settings.nudgedAt ? Date.parse(settings.nudgedAt) : 0;
+    return {
+      enabled: settings.enabled === true,
+      asked: settings.enabled !== undefined,
+      signedIn: Boolean(readAuth(store.root)),
+      nudge: settings.enabled === undefined && Date.now() - nudgedAt > 7 * 24 * 60 * 60 * 1000,
+    };
+  };
   const { presets, playbooks } = store;
   const app = new Hono();
   const checkUpdate = createUpdateChecker(ctx.fetchLatestVersion);
@@ -45,7 +58,7 @@ export function createApp(ctx: McpContext) {
       version: VERSION,
       pid: process.pid,
       dataDir: store.root,
-      cloud: store instanceof AppStore ? { on: Boolean(store.cloud()), signedOut: store.cloudSignedOut } : { on: false, signedOut: false },
+      sync: syncInfo(),
       baseUrl: ctx.baseUrl,
       agent: (await store.getState()).agent ?? null,
       setup: setupInfo(),
@@ -78,7 +91,7 @@ export function createApp(ctx: McpContext) {
             agentListening: await store.agentListening(r.id),
             hasVideo: r.versions.some((v) => v.videoPath),
             panels: latest.panels?.length ?? 0,
-            ...(store instanceof AppStore && (await store.isCloud(r.id)) ? { cloud: true, upload: latest.upload ?? null } : {}),
+            ...(ctx.sync ? { sync: ctx.sync.status(r.id) } : {}),
           };
         }),
       ),
@@ -118,7 +131,48 @@ export function createApp(ctx: McpContext) {
     ...(await store.getReview(id)),
     agentListening: await store.agentListening(id),
     agentOutdated: await store.agentOutdated(),
-    ...(store instanceof AppStore && (await store.isCloud(id)) ? { cloud: true } : {}),
+    ...(ctx.sync ? { sync: ctx.sync.status(id) } : {}),
+  });
+
+  // --- Sync ----------------------------------------------------------------------------------------------------
+
+  app.post("/api/sync", async (c) => {
+    if (!ctx.sync) return c.json({ error: "Sync isn't available here." }, 400);
+    const body = (await c.req.json().catch(() => ({}))) as { enabled?: unknown };
+    if (typeof body.enabled !== "boolean") return c.json({ error: "enabled is required" }, 400);
+    if (body.enabled && !readAuth(store.root)) return c.json({ error: "Sign in first: run framejam login in a terminal." }, 409);
+    const refusal = body.enabled ? await ctx.sync.refusal() : undefined;
+    if (refusal) {
+      setSyncEnabled(false, store.root);
+      return c.json({ error: refusal }, 403);
+    }
+    setSyncEnabled(body.enabled, store.root);
+    if (body.enabled) void ctx.sync.syncAll().catch(() => {});
+    return c.json(syncInfo());
+  });
+
+  app.post("/api/sync/nudge", (c) => {
+    markNudged(store.root);
+    return c.json(syncInfo());
+  });
+
+  app.get("/api/reviews/:id/sync", async (c) => {
+    if (!ctx.sync) return c.json({ state: "off" });
+    const id = c.req.param("id");
+    await store.getReview(id);
+    return c.json(ctx.sync.status(id));
+  });
+
+  app.post("/api/reviews/:id/sync", async (c) => {
+    if (!ctx.sync) return c.json({ error: "Sync isn't available here." }, 400);
+    const id = c.req.param("id");
+    await store.getReview(id);
+    const body = (await c.req.json().catch(() => ({}))) as { synced?: unknown };
+    if (typeof body.synced !== "boolean") return c.json({ error: "synced is required" }, 400);
+    setProjectSync(id, body.synced, store.root);
+    if (body.synced) void ctx.sync.sync(id).catch(() => {});
+    else await ctx.sync.forget(id);
+    return c.json(ctx.sync.status(id));
   });
 
   app.get("/api/reviews/:id", async (c) => c.json(await reviewJson(c.req.param("id"))));

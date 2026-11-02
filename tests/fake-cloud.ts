@@ -5,6 +5,10 @@ import type {
   CloudApi,
   CloudComment,
   CloudLink,
+  SyncBatch,
+  SyncComment,
+  SyncIndexItem,
+  SyncProject,
   VersionInput,
   WireBatch,
   WireComment,
@@ -65,6 +69,7 @@ interface B {
   deliveredAt?: number;
   retractedAt?: number;
   replaces?: string;
+  externalId?: string;
 }
 
 interface P {
@@ -97,6 +102,10 @@ export class FakeCloud implements CloudApi {
   /** Fails this many PUTs to R2 in a row with `failStatus`, to look at retries. */
   failPuts = 0;
   failStatus = 500;
+  /** How many projects sync may keep, or unlimited. */
+  syncLimit = Infinity;
+  /** False for a plan without sync (Free): every sync call is refused, as in convex/sync.ts. */
+  syncIncluded = true;
   /** Holds PUTs until released, so a test can look at the "uploading" state. */
   gate?: Promise<void>;
   tick = 0;
@@ -646,5 +655,137 @@ export class FakeCloud implements CloudApi {
     if (settings.allowDownload !== undefined) p.link.allowDownload = settings.allowDownload;
     if (settings.showNotes !== undefined) p.link.showNotes = settings.showNotes;
     return { token: p.link.token, expiresAt: p.link.expiresAt ?? null, revokedAt: p.link.revokedAt ?? null, allowDownload: p.link.allowDownload !== false, showNotes: p.link.showNotes === true };
+  }
+
+  // --- Sync, with the rules of convex/sync.ts ---------------------------------------------------------------------
+
+  async syncIndex(): Promise<SyncIndexItem[]> {
+    this.count("syncIndex");
+    if (!this.syncIncluded) throw fail("Sync isn't included on this account. Manage your account at app.framejam.ai/account.");
+    return [...this.projects.values()]
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .map((p) => ({ id: p.id, title: p.title, kind: p.kind, updatedAt: p.updatedAt, versions: p.versions.at(-1)?.number ?? 0 }));
+  }
+
+  async syncEnsure(project: SyncProject, update?: { title?: string; playbookId?: string | null; styleId?: string | null }) {
+    this.count("syncEnsure");
+    let p = this.projects.get(project.id);
+    const created = !p;
+    if (!p) {
+      if (this.projects.size >= this.syncLimit) throw fail(`This account can sync ${this.syncLimit} projects and has reached that.`, 409);
+      p = {
+        id: project.id,
+        title: project.title.trim(),
+        kind: project.kind,
+        projectKey: project.projectKey ?? `project:${project.id}`,
+        createdAt: this.ms(),
+        updatedAt: this.ms(),
+        playbookId: project.playbookId,
+        styleId: project.styleId,
+        versions: [],
+        comments: [],
+        batches: [],
+      };
+      this.projects.set(p.id, p);
+    }
+    if (update?.title?.trim()) p.title = update.title.trim();
+    if (update?.playbookId !== undefined) p.playbookId = update.playbookId ?? undefined;
+    if (update?.styleId !== undefined) p.styleId = update.styleId ?? undefined;
+    if (update) this.touch(p);
+    return { created };
+  }
+
+  async syncAddVersions(reviewId: string, versions: { number: number; version: VersionInput }[]) {
+    this.count("syncAddVersions");
+    const p = this.project(reviewId);
+    const upload: number[] = [];
+    for (const { number, version } of [...versions].sort((a, b) => a.number - b.number)) {
+      const have = p.versions.find((v) => v.number === number);
+      if (have) {
+        if (have.upload.state !== "ready") {
+          have.upload = { state: "uploading", bytes: 0, total: version.total };
+          upload.push(number);
+        }
+        continue;
+      }
+      this.check(p.kind, version);
+      p.versions.push({ number, input: { ...version }, createdAt: this.ms(), upload: { state: "uploading", bytes: 0, total: version.total }, transcript: version.transcript });
+      p.versions.sort((a, b) => a.number - b.number);
+      upload.push(number);
+    }
+    this.touch(p);
+    return { upload };
+  }
+
+  async syncPutComments(reviewId: string, comments: SyncComment[]) {
+    this.count("syncPutComments");
+    const p = this.project(reviewId);
+    const ids: Record<string, string> = {};
+    for (const input of comments) {
+      const found = (input.row ? p.comments.find((c) => c.id === input.row) : undefined) ?? p.comments.find((c) => c.externalId === input.id);
+      if (found) {
+        ids[input.id] = found.id;
+        if (found.status === "draft") {
+          found.text = input.text.trim();
+          if (p.versions.some((v) => v.number === input.version)) found.version = input.version;
+        }
+        if (input.status === "resolved" && found.status !== "resolved") {
+          Object.assign(found, { status: "resolved", resolvedAt: input.resolvedAt ?? this.ms(), resolution: input.resolution });
+        }
+        continue;
+      }
+      if (!p.versions.some((v) => v.number === input.version)) throw fail(`Unknown version ${input.version}`);
+      const c: C = {
+        id: id("c"),
+        version: input.version,
+        kind: input.kind,
+        time: input.time,
+        endTime: input.endTime,
+        x: input.x,
+        y: input.y,
+        panel: input.panel,
+        wholeVideo: input.wholeVideo,
+        text: input.text.trim(),
+        status: input.status,
+        createdAt: this.ms(),
+        sentAt: input.status === "draft" ? undefined : input.sentAt,
+        resolvedAt: input.status === "resolved" ? (input.resolvedAt ?? this.ms()) : undefined,
+        resolution: input.status === "resolved" ? input.resolution : undefined,
+        author: input.author,
+        externalId: input.id,
+        fromVersion: input.fromVersion,
+      };
+      p.comments.push(c);
+      ids[input.id] = c.id;
+    }
+    this.touch(p);
+    return { ids };
+  }
+
+  async syncPutBatch(reviewId: string, input: SyncBatch) {
+    this.count("syncPutBatch");
+    const p = this.project(reviewId);
+    const existing = p.batches.find((b) => b.externalId === input.id || b.id === input.id);
+    if (existing) {
+      if (input.deliveredAt !== undefined && existing.deliveredAt === undefined) existing.deliveredAt = input.deliveredAt;
+      return { id: existing.id };
+    }
+    const v = this.version(p, input.version);
+    const sentAt = input.sentAt ?? this.ms();
+    const b: B = { id: id("b"), createdAt: sentAt, commentIds: input.comments, message: input.message, deliveredAt: input.deliveredAt, replaces: v.reopenedFrom, externalId: input.id };
+    p.batches.push(b);
+    for (const c of p.comments) {
+      if (!input.comments.includes(c.id)) continue;
+      Object.assign(c, { status: c.status === "resolved" ? "resolved" : "sent", sentAt: c.sentAt ?? sentAt, batchId: b.id });
+    }
+    if (v.sentAt === undefined) Object.assign(v, { sentAt, batchId: b.id, reopenedFrom: undefined });
+    this.touch(p);
+    return { id: b.id };
+  }
+
+  async syncForget(reviewId: string) {
+    this.count("syncForget");
+    this.projects.delete(reviewId);
+    return null;
   }
 }

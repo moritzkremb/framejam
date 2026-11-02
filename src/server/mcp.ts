@@ -7,6 +7,8 @@ import { currentSkillVersion } from "./skill.ts";
 import { UPDATE_COMMAND } from "./update.ts";
 
 /** The local app's context: the core one, minus what this computer fills in, plus options for the HTTP routes. */
+import type { SyncEngine } from "./sync.ts";
+
 export interface McpContext extends Omit<CoreContext, "skillVersion" | "updateCommand" | "share"> {
   /** Replaces the npm registry lookup behind the UI's "new version" notice (tests). */
   fetchLatestVersion?: () => Promise<string | null>;
@@ -20,6 +22,8 @@ export interface McpContext extends Omit<CoreContext, "skillVersion" | "updateCo
   catalog?: () => CatalogStatus;
   /** Replaces how sharing reaches FrameJam Cloud (tests), or `false` to leave sharing off. */
   share?: ShareOptions | false;
+  /** Two-way sync with FrameJam Cloud, in the process that serves the app. */
+  sync?: SyncEngine;
 }
 
 /** The MCP server for this computer: the core tools with the installed skill's version. */
