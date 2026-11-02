@@ -6,7 +6,7 @@ alwaysApply: false
 
 # FrameJam: styles, playbooks + one-click video and storyboard review
 
-Skill version: 9
+Skill version: 10
 
 FrameJam gives you three things the chat is bad at: **choosing a style** (a look, with an example video), **following a
 playbook** (the full method for one kind of video) and **precise feedback** (timestamped, pinned comments with a frame

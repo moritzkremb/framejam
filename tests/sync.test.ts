@@ -273,6 +273,46 @@ describe("framejam pull", () => {
     expect((await pullProject({ store: a.local, engine: a.sync, ref: "Nothing like this", cwd: root, appSyncs: false })).ok).toBe(false);
   });
 
+  it("downloads the project's footage into footage/, once, and keeps a different file of the same name", async () => {
+    const { a, id } = madeOnA();
+    await a.run();
+    cloud.addFootage(id, "IMG_0042.MOV", Buffer.from("clip-one"), "video/quicktime");
+    cloud.addFootage(id, "IMG_0042.MOV", Buffer.from("clip-two!"), "video/quicktime");
+    cloud.addFootage(id, "../logo.png", Buffer.from("png"), "image/png");
+    const b = computer("b");
+    const cwd = path.join(root, "work");
+    fs.mkdirSync(cwd);
+    const pull = (force = false) => pullProject({ store: b.local, engine: b.sync, ref: id, cwd, force, appSyncs: false, fetch: cloud.fetch });
+
+    const first = await pull();
+    const dir = path.join(cwd, "launch-teaser", "footage");
+    expect(first.text).toContain(`Footage: 3 files downloaded into ${dir}`);
+    expect(fs.readFileSync(path.join(dir, "IMG_0042.MOV"), "utf8")).toBe("clip-one");
+    expect(fs.readFileSync(path.join(dir, "IMG_0042 (2).MOV"), "utf8")).toBe("clip-two!");
+    expect(fs.readFileSync(path.join(dir, "logo.png"), "utf8")).toBe("png");
+    expect(fs.readdirSync(dir).some((f) => f.endsWith(".part"))).toBe(false);
+
+    expect((await pull()).text).toContain("0 files downloaded");
+    fs.writeFileSync(path.join(dir, "logo.png"), "my own logo");
+    const kept = await pull();
+    expect(kept.text).toContain("Kept your own logo.png");
+    expect(fs.readFileSync(path.join(dir, "logo.png"), "utf8")).toBe("my own logo");
+    await pull(true);
+    expect(fs.readFileSync(path.join(dir, "logo.png"), "utf8")).toBe("png");
+  });
+
+  it("brings footage for a project with no source files", async () => {
+    const a = computer("a");
+    const { review } = a.local.openReview({ title: "Phone cut", videoPath: video });
+    await a.run();
+    cloud.addFootage(review.id, "music.mp3", Buffer.from("mp3"), "audio/mpeg");
+    const b = computer("b");
+    const result = await pullProject({ store: b.local, engine: b.sync, ref: review.id, cwd: root, appSyncs: false, fetch: cloud.fetch });
+    expect(result).toMatchObject({ ok: true, dir: path.join(root, "phone-cut") });
+    expect(result.text).toContain("has no source files");
+    expect(fs.readFileSync(path.join(root, "phone-cut", "footage", "music.mp3"), "utf8")).toBe("mp3");
+  });
+
   it("asks for sync before bringing a cloud project here", async () => {
     const { a } = madeOnA();
     await a.run();

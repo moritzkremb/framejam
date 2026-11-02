@@ -32,7 +32,7 @@ Usage:
   framejam share <project>  Put a project's latest version on its share link and pull in guests' comments
   framejam sync on|off      Sync your projects with FrameJam Cloud (on) or keep them on this computer only (off)
   framejam sync on|off <project>   Sync one project or leave it out; "sync" alone shows what syncs
-  framejam pull <project>   Unpack a synced project's latest source files into a folder here, to continue it
+  framejam pull <project>   Unpack a synced project's latest source files and footage into a folder here, to continue it
 
 Options:
   --port <n>        HTTP port (default ${DEFAULT_PORT}, env FRAMEJAM_PORT)

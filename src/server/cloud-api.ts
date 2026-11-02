@@ -195,6 +195,16 @@ export interface SyncBatch {
   deliveredAt?: number;
 }
 
+/** A file a project's video is edited from (H3.8), with a link that lasts an hour. */
+export interface CloudFootage {
+  id: string;
+  filename: string;
+  bytes: number;
+  mime: string;
+  addedAt: number;
+  downloadUrl?: string;
+}
+
 export interface CloudApi {
   /** Where the cloud lives, so a project's cache isn't mixed up between deployments. */
   readonly url: string;
@@ -243,6 +253,8 @@ export interface CloudApi {
   syncPutComments(reviewId: string, comments: SyncComment[]): Promise<{ ids: Record<string, string> }>;
   syncPutBatch(reviewId: string, batch: SyncBatch): Promise<{ id: string }>;
   syncForget(reviewId: string): Promise<null>;
+
+  footageList(reviewId: string): Promise<CloudFootage[]>;
 }
 
 export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn: FetchLike = fetch): CloudApi {
@@ -285,5 +297,6 @@ export function createCloudApi(token: string, url: string = cloudUrl(), fetchFn:
     syncPutComments: (reviewId, comments) => call("mutation", "sync:putComments", { reviewId, comments }),
     syncPutBatch: (reviewId, batch) => call("mutation", "sync:putBatch", { reviewId, batch }),
     syncForget: (reviewId) => call("mutation", "sync:forget", { reviewId }),
+    footageList: (reviewId) => call("action", "footage:list", { reviewId }),
   };
 }

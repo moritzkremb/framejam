@@ -97,6 +97,7 @@ export class FakeCloud implements CloudApi {
   readonly objects = new Map<string, { mime: string; bytes: Buffer }>();
   readonly assets = new Map<string, { storageKey: string; posterKey?: string }>();
   readonly calls: string[] = [];
+  readonly footage = new Map<string, { filename: string; storageKey: string }[]>();
   /** Makes the next PUT to R2 fail with this status (once), for the failed-upload path. */
   failNextPut?: number;
   /** Fails this many PUTs to R2 in a row with `failStatus`, to look at retries. */
@@ -557,6 +558,23 @@ export class FakeCloud implements CloudApi {
     const assetId = `asset_${this.assets.size + 1}`;
     this.assets.set(assetId, { storageKey: input.storageKey, posterKey: input.posterKey });
     return { assetId };
+  }
+
+  /** Footage someone added to a project elsewhere (a phone, a web chat). */
+  addFootage(reviewId: string, filename: string, bytes: Buffer, mime = "video/mp4") {
+    this.project(reviewId);
+    const storageKey = `footage/u/${this.now()}-${filename.replace(/[^\w.-]/g, "_")}`;
+    this.objects.set(storageKey, { mime, bytes });
+    this.footage.set(reviewId, [...(this.footage.get(reviewId) ?? []), { filename, storageKey }]);
+  }
+
+  async footageList(reviewId: string) {
+    this.count("footageList");
+    this.project(reviewId);
+    return (this.footage.get(reviewId) ?? []).map((f, i) => {
+      const object = this.objects.get(f.storageKey)!;
+      return { id: `ft_${i}`, filename: f.filename, bytes: object.bytes.length, mime: object.mime, addedAt: 0, downloadUrl: `${R2}/${f.storageKey}` };
+    });
   }
 
   /** The `fetch` the store uses for R2: PUT stores the body, GET returns it. */
