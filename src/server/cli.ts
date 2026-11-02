@@ -9,10 +9,10 @@ import { createMcpServer } from "./mcp.ts";
 import { type CatalogClient, catalogConfig, catalogStatus, startCatalog } from "./catalog.ts";
 import { APPS, type App, NEXT_STEP, detectApps, install, isApp } from "./install.ts";
 import { login, logout, shouldOpenBrowser, whoami } from "./login.ts";
-import { AppStore } from "./app-store.ts";
 import { readAuth } from "./auth.ts";
-import { cloudModeOn, setCloudMode } from "./cloud-mode.ts";
-import { describeShare, findProject, shareVersion, startSharePuller } from "./share.ts";
+import { localProjects, markNudged, readSync, setProjectSync, setSyncEnabled } from "./sync-settings.ts";
+import { SyncEngine } from "./sync.ts";
+import { describeShare, findProject, shareVersion, startSharePuller, shareThroughSync } from "./share.ts";
 import { DEFAULT_CLOUD_URL, cloudReviewUrl } from "./cloud.ts";
 import { DEFAULT_PORT, catalogDir, dataDir, env, setupInfo } from "./paths.ts";
 import { JsonStore } from "./json-store.ts";
@@ -29,7 +29,8 @@ Usage:
   framejam logout           Sign out of FrameJam Cloud
   framejam whoami           Show the signed-in FrameJam Cloud account
   framejam share <project>  Put a project's latest version on its share link and pull in guests' comments
-  framejam cloud on|off     Keep new projects in FrameJam Cloud (on) or on this computer (off); "cloud" alone shows which
+  framejam sync on|off      Sync your projects with FrameJam Cloud (on) or keep them on this computer only (off)
+  framejam sync on|off <project>   Sync one project or leave it out; "sync" alone shows what syncs
 
 Options:
   --port <n>        HTTP port (default ${DEFAULT_PORT}, env FRAMEJAM_PORT)
@@ -202,6 +203,7 @@ async function finish(result: { ok: boolean; text: string }): Promise<never> {
 if (positionals[0] === "login") {
   await finish(
     await login({
+      local: localProjects(),
       write: log,
       openUrl: values["no-browser"] || !shouldOpenBrowser() ? undefined : openBrowser,
     }),
@@ -212,36 +214,64 @@ if (positionals[0] === "whoami") await finish(await whoami());
 if (positionals[0] === "start") await start();
 if (positionals[0] === "install") await runInstall();
 
-/** `framejam cloud [on|off|status]`: whether new projects live in FrameJam Cloud. Running apps notice on their own. */
-async function runCloud(): Promise<never> {
+/** `framejam sync [on|off|status] [project]`: whether projects sync with FrameJam Cloud. Running apps notice on their own. */
+async function runSync(): Promise<never> {
   const action = positionals[1] ?? "status";
+  const ref = positionals.slice(2).join(" ").trim();
   const root = dataDir();
+  const local = new JsonStore(root);
+  if ((action === "on" || action === "off") && ref) {
+    let project;
+    try {
+      project = await findProject(local, ref);
+    } catch (err) {
+      return await finish({ ok: false, text: err instanceof Error ? err.message : `No project matches ${ref}.` });
+    }
+    if (action === "on") {
+      setProjectSync(project.id, true, root);
+      const on = readSync(root).enabled === true;
+      return await finish({ ok: true, text: on ? `"${project.title}" syncs again.` : `"${project.title}" will sync once sync is on: framejam sync on` });
+    }
+    const engine = new SyncEngine({ local });
+    setProjectSync(project.id, false, root);
+    try {
+      await engine.forget(project.id);
+    } catch (err) {
+      return await finish({ ok: false, text: `"${project.title}" stopped syncing, but its copy in FrameJam Cloud couldn't be removed (${err instanceof Error ? err.message : "offline"}). Try again later.` });
+    }
+    return await finish({ ok: true, text: `"${project.title}" stays on this computer only. Its copy in FrameJam Cloud was removed.` });
+  }
   if (action === "on") {
     if (!readAuth(root)) return await finish({ ok: false, text: "Sign in first: framejam login" });
     const who = await whoami();
     if (!who.ok) return await finish({ ok: false, text: `Couldn't confirm your FrameJam Cloud account (${who.text}). Run framejam login.` });
-    setCloudMode(true, root);
-    const local = fs.existsSync(path.join(root, "reviews")) ? fs.readdirSync(path.join(root, "reviews")).filter((f) => f.endsWith(".json")).length : 0;
+    setSyncEnabled(true, root);
+    const { projects } = localProjects(root);
     return await finish({
       ok: true,
-      text: `Cloud mode is on for ${who.text}.\nNew projects are made in FrameJam Cloud, and their videos upload in the background.\n${local ? `Your ${local} existing project${local === 1 ? "" : "s"} stay on this computer.\n` : ""}Open FrameJam apps pick this up by themselves.`,
+      text: `Sync is on for ${who.text}.\n${projects ? `Your ${projects} project${projects === 1 ? "" : "s"} upload in the background. ` : ""}Open FrameJam apps pick this up by themselves.`,
     });
   }
   if (action === "off") {
-    const wasOn = cloudModeOn(root);
-    setCloudMode(false, root);
-    return await finish({ ok: true, text: wasOn ? "Cloud mode is off. New projects stay on this computer. What you made in cloud mode is still in your account: turn it on again to open it." : "Cloud mode is off." });
+    const wasOn = readSync(root).enabled === true;
+    setSyncEnabled(false, root);
+    return await finish({ ok: true, text: wasOn ? "Sync is off. Your projects stay on this computer, and their copies stay in your FrameJam Cloud account." : "Sync is off." });
   }
   if (action === "status") {
-    if (!cloudModeOn(root)) return await finish({ ok: true, text: "Cloud mode is off. New projects stay on this computer. Turn it on with: framejam cloud on" });
+    const settings = readSync(root);
+    if (settings.enabled !== true) return await finish({ ok: true, text: "Sync is off. Projects stay on this computer. Turn it on with: framejam sync on" });
     const who = readAuth(root) ? await whoami() : undefined;
-    return await finish({ ok: true, text: who?.ok ? `Cloud mode is on for ${who.text}.` : "Cloud mode is on, but you're signed out, so projects stay on this computer for now. Run: framejam login" });
+    const left = settings.optOut.length ? `\n${settings.optOut.length} project${settings.optOut.length === 1 ? " is" : "s are"} left out.` : "";
+    return await finish({ ok: true, text: who?.ok ? `Sync is on for ${who.text}.${left}` : "Sync is on, but you're signed out, so nothing syncs for now. Run: framejam login" });
   }
-  return await finish({ ok: false, text: "Usage: framejam cloud on | off | status" });
+  return await finish({ ok: false, text: "Usage: framejam sync on | off | status [project]" });
 }
-if (positionals[0] === "cloud") await runCloud();
+if (positionals[0] === "sync") await runSync();
 
-const store = new AppStore(new JsonStore());
+const store = new JsonStore();
+const syncEngine = new SyncEngine({ local: store });
+store.remoteSource = (id, version) => syncEngine.sourceFor(id, version);
+shareThroughSync({ api: () => syncEngine.api()?.api, isSynced: (id) => syncEngine.isSynced(id), waitForUpload: (id, n) => syncEngine.waitForUpload(id, n) });
 
 /** `framejam share <project>`: uploads a version to the project's link and pulls in what guests wrote. */
 async function runShare(): Promise<never> {
@@ -261,16 +291,34 @@ async function runShare(): Promise<never> {
 if (positionals[0] === "share") await runShare();
 const catalogSettings = catalogConfig();
 let catalogClient: CatalogClient | undefined;
-const ctx = { store, baseUrl, reviewUrl: async (id: string) => ((await store.isCloud(id)) ? cloudReviewUrl(id) : undefined), catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient) };
+const ctx = {
+  store,
+  baseUrl,
+  sync: syncEngine,
+  syncFields: (id: string, created: boolean) => syncFields(id, created),
+  catalog: () => catalogStatus(catalogDir(store.root), catalogSettings, catalogClient),
+};
 
-/** Cloud mode at startup: says if it's on but signed out, and finishes uploads a stopped app left half-done. */
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** A synced project's phone link; for someone who isn't syncing, a tip at most once a week, on a new project. */
+function syncFields(id: string, created: boolean): Record<string, unknown> | undefined {
+  if (syncEngine.isSynced(id) && syncEngine.api()) {
+    return created
+      ? { phoneUrl: cloudReviewUrl(id), phoneNote: "This project syncs with FrameJam Cloud. Mention once, in passing, that they can also review it on their phone at phoneUrl." }
+      : { phoneUrl: cloudReviewUrl(id) };
+  }
+  const settings = readSync(store.root);
+  if (!created || settings.enabled !== undefined || syncEngine.api()) return undefined;
+  if (settings.nudgedAt && Date.now() - Date.parse(settings.nudgedAt) < WEEK_MS) return undefined;
+  markNudged(store.root);
+  return { tip: "Once, in passing (don't repeat it): running `npx framejam login` and choosing to sync lets them review on their phone and share a link with clients." };
+}
+
+/** Only the process that serves the app syncs, so two never push the same change. */
 function startCloud() {
-  if (store.cloudSignedOut) log("framejam: cloud mode is on but you're signed out, so projects stay on this computer. Run: framejam login");
-  store
-    .cloud()
-    ?.resumeUploads()
-    .then((n) => n && log(`framejam: finishing ${n} upload${n === 1 ? "" : "s"} to FrameJam Cloud`))
-    .catch(() => {});
+  if (syncEngine.enabled() && !syncEngine.api()) log("framejam: sync is on but you're signed out, so nothing syncs. Run: framejam login");
+  syncEngine.start();
 }
 
 function startHttp(): Promise<boolean> {

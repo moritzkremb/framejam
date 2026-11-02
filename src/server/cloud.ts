@@ -31,7 +31,14 @@ export interface DeviceStart {
 
 export type DevicePoll =
   | { status: "pending" | "expired" | "unknown" }
-  | { status: "approved"; token: string; tokenType: "bearer" };
+  /** `sync` is what the user chose on the sign-in page when this computer had projects to sync. */
+  | { status: "approved"; token: string; tokenType: "bearer"; sync?: "all" | "none" };
+
+/** What's on this computer, so the sign-in page can ask "Sync your projects?" with their count and size. */
+export interface LocalProjects {
+  projects: number;
+  bytes: number;
+}
 
 export interface CloudWhoami {
   /** Null for accounts that signed up with just an email address. */
@@ -40,7 +47,7 @@ export interface CloudWhoami {
 }
 
 export interface CloudClient {
-  start(): Promise<DeviceStart>;
+  start(local?: LocalProjects): Promise<DeviceStart>;
   poll(deviceCode: string): Promise<DevicePoll>;
   whoami(token: string): Promise<CloudWhoami>;
   revoke(token: string): Promise<{ ok: true }>;
@@ -100,7 +107,7 @@ export function createCloudClient(url: string = cloudUrl(), fetchFn: FetchLike =
   const call = <T>(kind: ConvexKind, path: string, args: Record<string, unknown>) =>
     convexCall<T>(base, kind, path, args, fetchFn, retry);
   return {
-    start: () => call<DeviceStart>("mutation", "deviceAuth:start", {}),
+    start: (local) => call<DeviceStart>("mutation", "deviceAuth:start", local ? { local } : {}),
     poll: (deviceCode) => call<DevicePoll>("mutation", "deviceAuth:poll", { deviceCode }),
     whoami: (token) => call<CloudWhoami>("query", "deviceAuth:whoami", { token }),
     revoke: (token) => call<{ ok: true }>("mutation", "deviceAuth:revoke", { token }),

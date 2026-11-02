@@ -7,7 +7,7 @@ metadata:
 
 # FrameJam: styles, playbooks + one-click video and storyboard review
 
-Skill version: 7
+Skill version: 8
 
 FrameJam runs next to your chat at http://localhost:2400. It gives you three things the chat is bad at:
 **choosing a style** (a structured `style.json` that describes a look, plus an example video), **following a playbook**
@@ -47,9 +47,9 @@ As soon as this skill is used, open FrameJam where the user can see it, without 
 - **Other harnesses:** use their browser/preview tool if there is one. Otherwise give the user the link.
 - **Which page:** the project's `url` when there is one, the pick page when you opened one, and
   `http://localhost:2400` (Projects) otherwise.
-- **Cloud mode:** when the user ran `framejam cloud on`, a new project's `url` is its page on app.framejam.ai (the user
-  signs in there once). Open it and post it the same way, right away: the version uploads in the background and the
-  page shows an upload bar until it plays.
+- **Sync:** when the user syncs with FrameJam Cloud, `open_review` also returns `phoneUrl`, the project's page on
+  app.framejam.ai. Keep opening `url` here. If the result has `phoneNote` or `tip`, say it once in passing and never
+  again for that project.
 - If the page doesn't load, nothing is hosting the UI. Run `npx -y framejam start` (it starts the UI in the background,
   or reuses a running one, and prints the URL), then open that URL. Never ask the user to start it.
 - If you have no FrameJam tools at all and you can run commands, run `npx -y framejam install <app>` with the app you're running
@@ -197,9 +197,9 @@ frame, a time range or the whole video, and can approve. It needs the user to be
 
 ## Notes and source files (handing a project over)
 
-A cloud project (the user is signed in and `framejam cloud on`) keeps what you leave with each version, so another
-agent, in another chat or another app, can carry on from the project link alone. Local projects keep `notes` but not
-source files.
+A synced project (the user signed in and chose to sync) keeps what you leave with each version in FrameJam Cloud, so
+another agent, in another chat or another app, can carry on from the project link alone. A project that doesn't sync
+keeps both on this computer only.
 
 - **Notes:** pass `notes` to `open_review` or `add_version` when the next person will need more than the one-line
   `note`: what changed, which comments it answers (quote or link them, e.g. the `?v=` link), and how to continue (the

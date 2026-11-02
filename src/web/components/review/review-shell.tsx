@@ -10,6 +10,7 @@ import { Handoff } from "@/components/review/dock";
 import { Logo } from "@/components/review/logo";
 import type { ReviewRole } from "@/components/review/numbering";
 import { ShareStatus } from "@/components/review/share-status";
+import { SyncStatusButton } from "@/components/review/sync-status";
 import type { ReviewState } from "@/components/review/use-review";
 import { copyText, relativeTime, thumbUrl, type Review, type ReviewComment, type ReviewVersion } from "@/lib/api";
 import type { ReviewDataSource } from "@/lib/data-source";
@@ -266,6 +267,7 @@ export function ReviewHeader({
   return (
     <>
     <BackHeader to="/" title={review.title} sub={subline}>
+      {r.data.sync && <SyncStatusButton reviewId={review.id} />}
       <ShareStatus data={r.data} reviewId={review.id} latestVersion={latest.number} />
       {shortcuts.length > 0 && <ShortcutsButton shortcuts={shortcuts} />}
       <Menu label="Versions and more" trigger={trigger}>

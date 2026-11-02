@@ -45,8 +45,8 @@ you can always see what changed and why.
 until you share a version. The Styles and Playbooks pages stream their example videos from framejam.ai, the
 app downloads playbook updates from framejam.ai (see below), the **Feedback** button sends the note you write, and
 `framejam login` talks to FrameJam Cloud to sign you in; nothing else goes out. Sharing happens only when you run
-`framejam share` or ask your agent to share (its `share` option or `share_project`), and cloud projects exist only if you
-turn on `framejam cloud on`. See [FrameJam Cloud](#framejam-cloud).
+`framejam share` or ask your agent to share (its `share` option or `share_project`), and projects sync to your account
+only if you choose to sync (at `framejam login`, or `framejam sync on`). See [FrameJam Cloud](#framejam-cloud).
 
 ## How it works
 
@@ -293,23 +293,28 @@ approves, and a digest of new comments (one email for a batch, not one per comme
 opens and the guest comments waiting for you. It reads your computer, so it works offline. Both are in the MCP
 tools list under **The review page**.
 
-### Cloud projects
+### Sync
 
 ```bash
-npx -y framejam cloud on    # new projects go to your FrameJam Cloud account
-npx -y framejam cloud off   # new projects stay on this computer again
+npx -y framejam login              # asks "Sync your projects?" in the browser, with their count and size
+npx -y framejam sync on            # or turn it on (or off) any time
+npx -y framejam sync off "Teaser"  # leave one project out; its copy in your account is removed
+npx -y framejam sync               # what syncs
 ```
 
-With cloud mode on, new projects live in your account instead of `~/.framejam`: the project, its versions, comments and
-resolved state. Your agent works the same way (`open_review`, `wait_for_feedback`, `add_version`, `resolve_comments`),
-and the link it gives you opens your project page on app.framejam.ai, signed in, on a computer or a phone. Each
-version uploads in the background; the page shows an upload bar until it plays. Running apps and agents follow
-`cloud on` and `cloud off` without a restart, and `framejam cloud` shows which mode you're in. Projects you already have
-stay on your computer, and cloud projects stay in your account when you turn it off. Cloud mode needs
-`framejam login`; signed out, projects stay local.
+With sync on, every project on this computer has a copy in your FrameJam Cloud account, and both stay up to date.
+Your agent works the same way, on the same local files, and the app here stays as fast as before. Open the project on
+app.framejam.ai from a phone or another computer: comments, **Finish review**, reopening and resolves made there come
+back here (an agent waiting for feedback gets them within seconds), and versions made somewhere else (another computer,
+a web chat) download here with the same numbers. Projects started somewhere else show up here too. Each version
+uploads in the background, and the project's sync button in the review header shows how far it is.
+
+Turning sync off keeps every project here and leaves the copies in your account. Leaving one project out (the sync
+button, or `framejam sync off <project>`) removes its copy from your account; it stays here. Signed out, nothing syncs.
+The Free plan syncs 2 projects, newest first; the rest wait with a note on their card.
 
 **The project page.** Everything the local review page has, plus a side-by-side compare of two versions (in sync or one
-at a time), your project list and your account. Sharing a cloud project needs no extra upload, and guests' comments
+at a time), your project list and your account. Sharing a synced project needs no extra upload, and guests' comments
 land in the same project as they arrive.
 
 **Notes and source files.** `add_version` and `open_review` take `notes`, a longer markdown handoff than the one-line
@@ -318,9 +323,8 @@ FrameJam packs a folder itself, leaving out `node_modules`, `.git`, build output
 500 MB. The project page shows the notes in a Notes tab with a Download button for the source. Give another agent the
 project link and it can `get_version`, read the notes, download the source and ship the next version, even in a
 different app. Guests never see source files, and see notes only if you turn on **Show version notes** in the link
-menu (or `share_project` with `showNotes`). Local projects keep notes but not source files.
-
-While an agent waits for feedback in cloud mode, the app asks the cloud for changes about once every second or two.
+menu (or `share_project` with `showNotes`). A project that doesn't sync keeps its notes and the source folder's path
+here; the source is packed and uploaded once it syncs.
 
 ### Connect by URL
 
@@ -331,7 +335,7 @@ app there, or add it yourself and sign in when your app asks:
 `claude mcp add --transport http framejam https://mellow-dalmatian-42.convex.site/mcp` in Claude Code, or
 `{ "mcpServers": { "framejam": { "url": "https://mellow-dalmatian-42.convex.site/mcp" } } }` in Cursor's `mcp.json`.
 
-Projects made this way are cloud projects. The server can't read files on your computer, so your agent uploads each
+Projects made this way live in your account, and come to your computer if it syncs. The server can't read files on your computer, so your agent uploads each
 render: `request_upload` returns a command that checks and uploads it, and `open_review` or `add_version` take the
 returned `assetId`. An app without a terminal can pass a public link or a Google Drive link instead. People's comments
 come back marked as data, never as instructions.
@@ -346,9 +350,9 @@ the agent calls it again with the cursor. The local tool answers the same way.
 ### What leaves your computer
 
 Your projects, comments, styles and playbooks stay in `~/.framejam` until you sign in and either share a version or
-turn on cloud mode. Sharing uploads only the version you pick (its render, or a storyboard's panels, plus a poster
-frame), and the app then checks the link for guests' comments, approvals and opens. In cloud mode, new projects are
-stored in your account: each version's render or panels and a poster frame, your comments and their frame images, and
+choose to sync. Sharing uploads only the version you pick (its render, or a storyboard's panels, plus a poster
+frame), and the app then checks the link for guests' comments, approvals and opens. With sync on, each synced project
+is copied to your account: each version's render or panels and a poster frame, your comments and their frame images, and
 any notes and source files your agent attaches. Guests' voice recordings go to FrameJam Cloud and its transcription
 service. Your login token is in `~/.framejam/auth.json`. Apps that load the plugin may contact `mcp.framejam.ai` to
 see whether you signed in to FrameJam Cloud there; nothing about your projects goes with it. Nothing else is sent to
@@ -593,11 +597,11 @@ npm run lint
 
 | Path | Contents |
 | --- | --- |
-| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam cloud on|off` keeps new projects in FrameJam Cloud or on this computer (`src/server/cloud-mode.ts`, `cloud-store.ts`, `app-store.ts`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
+| `src/server/cli.ts` | CLI entry. `framejam install [cursor\|claude\|codex]` installs the FrameJam plugin in each app (`src/server/install.ts`; from a clone it adds the MCP server and skill instead) and starts the UI; `framejam start` starts the UI in the background (log in `~/.framejam/server.log`) and prints the URL, `--browser` also opens it; `framejam login` / `logout` / `whoami` sign in to FrameJam Cloud (device code; token in `~/.framejam/auth.json`); `framejam sync on|off [project]` syncs projects with FrameJam Cloud or leaves them out (`src/server/sync.ts`, `sync-settings.ts`); `framejam share <project>` puts a version on the project's share link and pulls in guests' comments (`src/server/share.ts`; the link's details are in `~/.framejam/shares/`); `framejam` starts HTTP in the foreground; `framejam --stdio` runs MCP on stdio and also hosts the UI when the port is free. |
 | `src/core/` | Code that runs anywhere (no Node or filesystem): shared types, playbook display helpers, feedback formatting, the MCP tool definitions (`mcp.ts`, given a store and base URL) and the `Store` interface (`store.ts`: everything FrameJam keeps, such as projects, comments, picks, state, styles and playbooks). |
 | `src/server/mcp.ts` | The core MCP tools with this computer's skill version. |
 | `src/server/json-store.ts` | `JsonStore`, the JSON file implementation of `Store`. Every call re-reads from disk, so several processes can share `~/.framejam`. |
-| `src/server/cloud-store.ts` | `CloudStore`, the `Store` for cloud mode: projects, versions, comments and resolve state in FrameJam Cloud, files cached locally and uploaded in the background. `src/server/app-store.ts` routes each project to it or to `JsonStore`. |
+| `src/server/sync.ts` | `SyncEngine`, two-way sync with FrameJam Cloud: each synced project in `~/.framejam` gets a copy in the account, local changes go up, and comments, rounds and versions made elsewhere come back. What both sides last agreed on is in `~/.framejam/sync/`. `sync-settings.ts` keeps `framejam sync on|off` and the projects left out (`~/.framejam/sync.json`). |
 | `src/server/app.ts` | Hono routes: REST, SSE change feed, media with HTTP range support, `/mcp`. |
 | `src/web/` | React front end styled by the design system (`src/web/styles/`, generated from `design/`). |
 | `design/` | The FrameJam design system: brand book, tokens, component CSS and screen mockups. Open `design/index.html`. |
@@ -609,7 +613,7 @@ Configuration: `--port` / `FRAMEJAM_PORT` (default 2400), `--host` / `FRAMEJAM_H
 `FRAMEJAM_PREVIEW_URL` (where the Styles page streams built-in previews from), `FRAMEJAM_PLAYBOOK_PREVIEW_URL` (the
 same for the Playbooks page), `FRAMEJAM_CATALOG_URL` (where playbook and style updates come from; `off` turns them off, see
 [docs/catalog.md](docs/catalog.md)), `FRAMEJAM_CLOUD_URL` / `FRAMEJAM_CONVEX_URL` (FrameJam Cloud Convex URL, default
-`https://mellow-dalmatian-42.convex.cloud`; used by `framejam login`, `framejam share` and cloud mode), `FRAMEJAM_APP_URL`
+`https://mellow-dalmatian-42.convex.cloud`; used by `framejam login`, `framejam share` and sync), `FRAMEJAM_APP_URL`
 (where cloud project pages live, default `https://app.framejam.ai`), `FRAMEJAM_WHISPER` and `FRAMEJAM_WHISPER_MODEL` (the whisper.cpp program and
 model for transcripts, when they aren't found on their own), and `FRAMEJAM_NO_UPDATE_CHECK=1` (don't look for a newer
 version on npm or for playbook updates).

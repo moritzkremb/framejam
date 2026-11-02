@@ -1,4 +1,4 @@
-import { ChevronRight, Cloud, Film, Inbox, LayoutGrid } from "lucide-react";
+import { ChevronRight, Cloud, CloudOff, Film, Inbox, LayoutGrid } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CommunityCard, MadeBy } from "@/components/community";
@@ -6,7 +6,8 @@ import { HomeHeader } from "@/components/header";
 import { CodeBlock, FIRST_VIDEO_PROMPT, PromptBlock, SetupSteps } from "@/components/setup-steps";
 import { isOffline, Offline } from "@/components/states";
 import { UpdateNotice } from "@/components/update-notice";
-import { agentLabel, api, posterUrl, relativeTime, type Health, type ReviewListItem } from "@/lib/api";
+import { toast } from "sonner";
+import { agentLabel, api, posterUrl, relativeTime, type Health, type ReviewListItem, type SyncInfo } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { reviewStatus } from "../../core/review-status";
 
@@ -43,9 +44,14 @@ function ProjectCard({ review }: { review: ReviewListItem }) {
       <div className="fc-grow">
         <div className="name">
           {review.title}
-          {review.cloud && (
-            <span className="fc-cloud-tag" data-testid="cloud-tag" style={{ marginLeft: 8, verticalAlign: "middle" }}>
-              <Cloud className="fc-i" /> Cloud
+          {(review.sync?.state === "synced" || review.sync?.state === "syncing") && (
+            <span className="fc-cloud-tag" data-testid="sync-tag" style={{ marginLeft: 8, verticalAlign: "middle" }}>
+              <Cloud className="fc-i" /> Synced
+            </span>
+          )}
+          {review.sync?.state === "paused" && (
+            <span className="fc-cloud-tag off" data-testid="sync-tag" title={review.sync.error} style={{ marginLeft: 8, verticalAlign: "middle" }}>
+              <CloudOff className="fc-i" /> Not syncing
             </span>
           )}
         </div>
@@ -67,6 +73,70 @@ function ProjectCard({ review }: { review: ReviewListItem }) {
       <ChevronRight className="fc-i sm fc-t3" />
     </Link>
   );
+}
+
+/**
+ * Sync, on the home page: the question for someone signed in who never answered it, a fix for sync that's on while
+ * signed out, and for someone not signed in a tip (at most once a week, after their first finished review).
+ */
+function SyncBanner({ sync, reviews, onChange }: { sync: SyncInfo; reviews: ReviewListItem[]; onChange: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const act = async (call: () => Promise<unknown>) => {
+    setBusy(true);
+    try {
+      await call();
+      onChange();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (sync.signedIn && !sync.asked && reviews.length > 0) {
+    return (
+      <section className="fc-card fc-col" style={{ gap: 10 }} aria-label="Sync" data-testid="sync-ask">
+        <div>
+          <b>Sync your projects?</b>{" "}
+          <span className="fc-t2">Review them on your phone and share links from your FrameJam Cloud account. You can leave out any project.</span>
+        </div>
+        <div className="fc-row" style={{ gap: 8 }}>
+          <button type="button" className="fc-btn primary sm" disabled={busy} onClick={() => void act(() => api.setSync(true))} data-testid="sync-all">
+            Sync all
+          </button>
+          <button type="button" className="fc-btn sm" disabled={busy} onClick={() => void act(() => api.setSync(false))}>
+            Not now
+          </button>
+        </div>
+      </section>
+    );
+  }
+  if (sync.enabled && !sync.signedIn) {
+    return (
+      <section className="fc-card fc-col" style={{ gap: 10 }} aria-label="Sync" data-testid="sync-signed-out">
+        <div>
+          <b>Sync is on, but you're signed out.</b> <span className="fc-t2">Nothing syncs until you sign in. Paste this in a terminal:</span>
+        </div>
+        <CodeBlock code="npx -y framejam login" />
+      </section>
+    );
+  }
+  const reviewed = reviews.some((r) => r.latestSent || r.versions > 1);
+  if (!sync.signedIn && !sync.asked && sync.nudge && reviewed) {
+    return (
+      <section className="fc-card fc-col" style={{ gap: 10 }} aria-label="Sync" data-testid="sync-tip">
+        <div>
+          <b>Review on your phone.</b> <span className="fc-t2">Sign in and choose to sync, and your projects open on any device. Share a link with clients from there too.</span>
+        </div>
+        <CodeBlock code="npx -y framejam login" />
+        <div>
+          <button type="button" className="fc-btn sm ghost" disabled={busy} onClick={() => void act(() => api.dismissSyncTip())}>
+            Not now
+          </button>
+        </div>
+      </section>
+    );
+  }
+  return null;
 }
 
 /** Home: every project, the ones waiting on you first. Setup shows here only until an agent has connected. */
@@ -100,16 +170,9 @@ export function ProjectsPage() {
       <HomeHeader />
       <main className="fc-main fc-narrow">
         <UpdateNotice />
-        {health?.cloud?.signedOut && (
-          <section className="fc-card fc-col" style={{ gap: 10 }} aria-label="Cloud mode" data-testid="cloud-signed-out">
-            <div>
-              <b>Cloud mode is on, but you're signed out.</b> <span className="fc-t2">New projects stay on this computer until you sign in. Paste this in a terminal:</span>
-            </div>
-            <CodeBlock code="npx -y framejam login" />
-          </section>
-        )}
+        {health?.sync && reviews && <SyncBanner sync={health.sync} reviews={reviews} onChange={load} />}
         <div>
-          <p className="fc-kicker">{health?.cloud?.on && !health.cloud.signedOut ? "Cloud mode" : "On this computer"}</p>
+          <p className="fc-kicker">{health?.sync?.enabled && health.sync.signedIn ? "Synced with FrameJam Cloud" : "On this computer"}</p>
           <h1 className="fc-h1">Projects</h1>
         </div>
         {error && !reviews ? (

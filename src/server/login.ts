@@ -1,6 +1,7 @@
 import { deleteAuth, readAuth, writeAuth } from "./auth.ts";
-import { type CloudClient, type CloudWhoami, cloudUrl, createCloudClient, isTransientCloudError } from "./cloud.ts";
+import { type CloudClient, type CloudWhoami, CloudError, type LocalProjects, cloudUrl, createCloudClient, isTransientCloudError } from "./cloud.ts";
 import { dataDir, env } from "./paths.ts";
+import { readSync, setSyncEnabled } from "./sync-settings.ts";
 
 export interface CommandResult {
   ok: boolean;
@@ -15,6 +16,8 @@ export interface AuthCommandOpts {
   openUrl?: (url: string) => void;
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
+  /** The projects on this computer; the sign-in page asks whether to sync them. */
+  local?: LocalProjects;
 }
 
 const DEFAULT_INTERVAL_S = 5;
@@ -51,9 +54,15 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
   const wait = opts.sleep ?? delay;
   const now = opts.now ?? Date.now;
   const client = resolveClient(opts);
+  // Asked only once: someone who already chose (framejam sync on|off) isn't asked again.
+  const ask = opts.local && opts.local.projects > 0 && readSync(root).enabled === undefined ? opts.local : undefined;
   let started;
   try {
-    started = await client.start();
+    started = await client.start(ask).catch((err) => {
+      // A FrameJam Cloud from before sync doesn't take the project count.
+      if (ask && err instanceof CloudError && !err.transient) return client.start();
+      throw err;
+    });
   } catch (err) {
     return { ok: false, text: err instanceof Error ? err.message : "Couldn't reach FrameJam Cloud." };
   }
@@ -83,11 +92,18 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
     if (poll.status === "approved") {
       const savedUrl = resolveCloudUrl();
       writeAuth({ token: poll.token, cloudUrl: savedUrl }, root);
+      if (poll.sync) setSyncEnabled(poll.sync === "all", root);
+      const synced =
+        poll.sync === "all"
+          ? "\nYour projects are syncing. Open FrameJam apps start by themselves; stop with: framejam sync off"
+          : poll.sync === "none"
+            ? "\nYour projects stay on this computer. Sync them any time with: framejam sync on"
+            : "";
       try {
         const user = await resolveClient(opts, savedUrl).whoami(poll.token);
-        return { ok: true, text: `Logged in as ${formatAccount(user)}` };
+        return { ok: true, text: `Logged in as ${formatAccount(user)}${synced}` };
       } catch {
-        return { ok: true, text: "Logged in." };
+        return { ok: true, text: `Logged in.${synced}` };
       }
     }
     if (poll.status === "expired") return { ok: false, text: "The code expired. Run framejam login again." };
