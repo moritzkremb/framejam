@@ -315,7 +315,8 @@ uploads in the background, and the project's sync button in the review header sh
 
 Turning sync off keeps every project here and leaves the copies in your account. Leaving one project out (the sync
 button, or `framejam sync off <project>`) removes its copy from your account; it stays here. Signed out, nothing syncs.
-The Free plan syncs 2 projects, newest first; the rest wait with a note on their card.
+Sync comes with Pro. On a Free account, `framejam login` and `framejam sync on` say so and nothing syncs; sharing
+links still works.
 
 **The project page.** Everything the local review page has, plus a side-by-side compare of two versions (in sync or one
 at a time), your project list and your account. Sharing a synced project needs no extra upload, and guests' comments

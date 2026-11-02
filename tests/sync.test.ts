@@ -6,6 +6,7 @@ import { createApp } from "../src/server/app.ts";
 import { JsonStore } from "../src/server/json-store.ts";
 import { pullProject } from "../src/server/pull.ts";
 import { shareVersion, shareThroughSync } from "../src/server/share.ts";
+import { writeAuth } from "../src/server/auth.ts";
 import { readSync, setProjectSync, setSyncEnabled } from "../src/server/sync-settings.ts";
 import { SyncEngine } from "../src/server/sync.ts";
 import { fixturePreset } from "./helpers.ts";
@@ -340,5 +341,18 @@ describe("the app's sync routes", () => {
     expect(health.sync).toMatchObject({ enabled: false, asked: false, signedIn: false });
     const res = await app.request("/api/sync", { method: "POST", body: JSON.stringify({ enabled: true }), headers: { "content-type": "application/json" } });
     expect(res.status).toBe(409);
+  });
+
+  it("won't turn sync on for a plan without it, and doesn't ask again", async () => {
+    const { local, sync } = computer("free");
+    setSyncEnabled(false, local.root);
+    fs.rmSync(path.join(local.root, "sync.json"));
+    writeAuth({ token: "fj_test", cloudUrl: cloud.url }, local.root);
+    cloud.syncIncluded = false;
+    const app = createApp({ store: local, baseUrl: "http://localhost:2400", sync });
+    const res = await app.request("/api/sync", { method: "POST", body: JSON.stringify({ enabled: true }), headers: { "content-type": "application/json" } });
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toMatch(/Sync comes with Pro/);
+    expect(readSync(local.root).enabled).toBe(false);
   });
 });
