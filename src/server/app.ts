@@ -141,6 +141,11 @@ export function createApp(ctx: McpContext) {
     const body = (await c.req.json().catch(() => ({}))) as { enabled?: unknown };
     if (typeof body.enabled !== "boolean") return c.json({ error: "enabled is required" }, 400);
     if (body.enabled && !readAuth(store.root)) return c.json({ error: "Sign in first: run framejam login in a terminal." }, 409);
+    const refusal = body.enabled ? await ctx.sync.refusal() : undefined;
+    if (refusal) {
+      setSyncEnabled(false, store.root);
+      return c.json({ error: refusal }, 403);
+    }
     setSyncEnabled(body.enabled, store.root);
     if (body.enabled) void ctx.sync.syncAll().catch(() => {});
     return c.json(syncInfo());

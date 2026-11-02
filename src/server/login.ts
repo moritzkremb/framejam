@@ -3,6 +3,9 @@ import { type CloudClient, type CloudWhoami, CloudError, type LocalProjects, clo
 import { dataDir, env } from "./paths.ts";
 import { readSync, setSyncEnabled } from "./sync-settings.ts";
 
+/** Where a plan without sync is sent. */
+export const SYNC_PLANS_URL = "https://www.framejam.ai/pricing";
+
 export interface CommandResult {
   ok: boolean;
   text: string;
@@ -96,9 +99,11 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
       const synced =
         poll.sync === "all"
           ? "\nYour projects are syncing. Open FrameJam apps start by themselves; stop with: framejam sync off"
-          : poll.sync === "none"
-            ? "\nYour projects stay on this computer. Sync them any time with: framejam sync on"
-            : "";
+          : poll.sync === "none" && poll.syncIncluded === false
+            ? `\nYour projects stay on this computer. Sync comes with Pro: ${SYNC_PLANS_URL}`
+            : poll.sync === "none"
+              ? "\nYour projects stay on this computer. Sync them any time with: framejam sync on"
+              : "";
       try {
         const user = await resolveClient(opts, savedUrl).whoami(poll.token);
         return { ok: true, text: `Logged in as ${formatAccount(user)}${synced}` };
