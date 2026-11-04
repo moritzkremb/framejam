@@ -19,7 +19,7 @@ import { type CloudApi, createCloudApi, type SyncComment, type VersionInput, typ
 import { CloudError, type FetchLike } from "./cloud.ts";
 import { mimeFor } from "./files.ts";
 import { type JsonStore, newId } from "./json-store.ts";
-import { SYNC_PLANS_URL, resolveCloudUrl } from "./login.ts";
+import { PLANS_URL, resolveCloudUrl } from "./login.ts";
 import { PANEL_EXTENSIONS, panelsKey } from "./media.ts";
 import { isProjectSynced, readSync, setProjectSync } from "./sync-settings.ts";
 import { extractFrame } from "./thumbs.ts";
@@ -136,7 +136,7 @@ export class SyncEngine {
     return readSync(this.local.root).enabled === true;
   }
 
-  /** Why the signed-in account can't sync (its plan doesn't include it), or undefined when it can or we're offline. */
+  /** Why the signed-in account can't sync (it has no plan), or undefined when it can or we're offline. */
   async refusal(): Promise<string | undefined> {
     const session = this.api();
     if (!session) return undefined;
@@ -144,7 +144,7 @@ export class SyncEngine {
       await session.api.syncIndex();
       return undefined;
     } catch (err) {
-      return refused(err) ? `Sync comes with Pro. Plans: ${SYNC_PLANS_URL}` : undefined;
+      return refused(err) ? `FrameJam Cloud needs a plan: ${PLANS_URL}` : undefined;
     }
   }
 

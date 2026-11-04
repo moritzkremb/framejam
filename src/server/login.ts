@@ -4,7 +4,8 @@ import { dataDir, env } from "./paths.ts";
 import { readSync, setSyncEnabled } from "./sync-settings.ts";
 
 /** Where a plan without sync is sent. */
-export const SYNC_PLANS_URL = "https://www.framejam.ai/pricing";
+/** Where an account picks its FrameJam Cloud plan. */
+export const PLANS_URL = "https://app.framejam.ai/account";
 
 export interface CommandResult {
   ok: boolean;
@@ -72,6 +73,7 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
   const url = started.verificationUriComplete || started.verificationUri;
   write(`Your code: ${started.userCode}`);
   write(`Open ${url}`);
+  write("Signing in needs a FrameJam Cloud plan. The page lets you choose one first; this app stays free without it.");
   if (url) opts.openUrl?.(url);
 
   const intervalMs = Math.max(0, (started.interval ?? DEFAULT_INTERVAL_S) * 1000);
@@ -95,12 +97,14 @@ export async function login(opts: AuthCommandOpts = {}): Promise<CommandResult> 
     if (poll.status === "approved") {
       const savedUrl = resolveCloudUrl();
       writeAuth({ token: poll.token, cloudUrl: savedUrl }, root);
-      if (poll.sync) setSyncEnabled(poll.sync === "all", root);
+      // The account's plan can end between Approve and this poll; then nothing syncs, whatever was answered.
+      const noPlan = poll.syncIncluded === false;
+      if (poll.sync) setSyncEnabled(poll.sync === "all" && !noPlan, root);
       const synced =
-        poll.sync === "all"
-          ? "\nYour projects are syncing. Open FrameJam apps start by themselves; stop with: framejam sync off"
-          : poll.sync === "none" && poll.syncIncluded === false
-            ? `\nYour projects stay on this computer. Sync comes with Pro: ${SYNC_PLANS_URL}`
+        poll.sync && noPlan
+          ? `\nYour projects stay on this computer. FrameJam Cloud needs a plan: ${PLANS_URL}`
+          : poll.sync === "all"
+            ? "\nYour projects are syncing. Open FrameJam apps start by themselves; stop with: framejam sync off"
             : poll.sync === "none"
               ? "\nYour projects stay on this computer. Sync them any time with: framejam sync on"
               : "";

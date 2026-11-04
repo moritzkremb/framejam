@@ -406,11 +406,11 @@ describe("the sync question at login", () => {
     expect(readSync(root).enabled).toBe(true);
   });
 
-  it("says sync comes with Pro when the plan doesn't include it", async () => {
+  it("says FrameJam Cloud needs a plan, and doesn't sync, when the account has none", async () => {
     root = tmpRoot();
-    const client = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer", sync: "none", syncIncluded: false }] });
+    const client = fakeClient({ polls: [{ status: "approved", token: "tok_1", tokenType: "bearer", sync: "all", syncIncluded: false }] });
     const result = await login({ client, root, sleep: async () => {}, local: { projects: 3, bytes: 1000 } });
-    expect(result.text).toContain("Sync comes with Pro");
+    expect(result.text).toContain("FrameJam Cloud needs a plan");
     expect(readSync(root).enabled).toBe(false);
   });
 

@@ -125,7 +125,7 @@ function SyncBanner({ sync, reviews, onChange }: { sync: SyncInfo; reviews: Revi
     return (
       <section className="fc-card fc-col" style={{ gap: 10 }} aria-label="Sync" data-testid="sync-tip">
         <div>
-          <b>Review on your phone.</b> <span className="fc-t2">Sign in to share a link with clients. With Pro, your projects also sync and open on any device.</span>
+          <b>Review on your phone.</b> <span className="fc-t2">FrameJam Cloud syncs your projects to any device and adds share links for clients. It's a paid plan; this app stays free.</span>
         </div>
         <CodeBlock code="npx -y framejam login" />
         <div>
