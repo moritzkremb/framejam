@@ -392,7 +392,7 @@ describe("the app's sync routes", () => {
     const app = createApp({ store: local, baseUrl: "http://localhost:2400", sync });
     const res = await app.request("/api/sync", { method: "POST", body: JSON.stringify({ enabled: true }), headers: { "content-type": "application/json" } });
     expect(res.status).toBe(403);
-    expect((await res.json()).error).toMatch(/Sync comes with Pro/);
+    expect((await res.json()).error).toMatch(/FrameJam Cloud needs a plan/);
     expect(readSync(local.root).enabled).toBe(false);
   });
 });
